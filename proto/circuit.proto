@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package anyon.thunderhead.qpu;
+option go_package = "anyonsys.com/thunderhead/qpu/api_proto";
+
+
+
+message Instruction {
+    string symbol = 1;
+    message Parameter {
+        string name = 1;
+        float value = 2;
+    }
+    repeated Parameter parameters = 2;
+    repeated uint64 qubits = 3;
+    repeated uint64 classical_bits = 4;
+}
+
+message Circuit {
+    repeated Instruction instructions = 1;
+}
+
+message Result {
+	repeated bool bits = 1;
+	uint64 count = 2;
+}
+

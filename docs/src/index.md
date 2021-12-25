@@ -1,3 +1,3 @@
-# JKet.jl
+# Snowflake.jl
 
-Documentation for JKet.jl
+Documentation for Snowflake.jl

@@ -1,15 +1,12 @@
-import StatsBase
-
-using Base
-
-using UUIDs: UUID, uuid1
+using StatsBase
 
 export Circuit, pushGate!, popGate!, simulate, simulateShots
 
 Base.@kwdef struct Circuit
     qubit_count::Int
     bit_count::Int
-    id::UUID = uuid1()
+    id::UUID = UUIDs.uuid1()
+    # Circuit(qubit_count, bit_count) = new(qubit_count, bit_count, UUIDs.uuid1(), [])
     pipeline::Array{Array{Gate}} = []
 end 
 
@@ -61,7 +58,7 @@ function Base.show(io::IO, circuit::Circuit)
                 if (i_qubit in gate.target)
                     id_wire = 2 * (i_qubit - 1) + 1
                     id = findfirst(isequal(i_qubit), gate.target)
-                    circuit_layout[id_wire , i_step] = "--$(gate.symbol[id])--"
+                    circuit_layout[id_wire , i_step] = "--$(gate.display_symbol[id])--"
                     if length(gate.target) > 1 && gate.target[1] == i_qubit
                         circuit_layout[id_wire + 1 , i_step] = "  |  "
                     end
@@ -76,7 +73,10 @@ function Base.show(io::IO, circuit::Circuit)
     
     for i_wire in range(1, length=wire_count)
         for i_step in range(1, length=length(circuit.pipeline) + 1)
-            print(io, circuit_layout[i_wire, i_step])
+            # print(io, circuit_layout[i_wire, i_step])
+            # println(io, "  i_wire=", i_wire, " i_step=", i_step)
+            print(io, circuit_layout[i_wire,i_step])
+
         end
         println(io, "")
     end
@@ -112,7 +112,7 @@ function simulateShots(c::Circuit, shots_count::Int=100)
 
     ##preparing the labels
     labels = String[]
-    for i in range(0, length(ψ) - 1, step=1)
+    for i in range(0, length=length(ψ) - 1)
         s = bitstring(i)
         n = length(s)
         s_trimed = s[n - c.qubit_count + 1:n]
@@ -123,6 +123,4 @@ function simulateShots(c::Circuit, shots_count::Int=100)
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
 end
-
-
 
