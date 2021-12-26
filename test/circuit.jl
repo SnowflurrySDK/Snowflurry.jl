@@ -1,8 +1,8 @@
 using Snowflake
 using Test
 
-@testset "cnot" begin
-    
+@testset "bellstate" begin
+
     Ψ_up = fock(2, 1)
     Ψ_down = fock(2, 2)
    

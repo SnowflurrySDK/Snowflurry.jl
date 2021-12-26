@@ -1,5 +1,5 @@
 module Snowflake
-include("protobuf/AnyonClients.jl")
+include("../protobuf/AnyonClients.jl")
 using LinearAlgebra:getproperty
 using UUIDs
 using .AnyonClients

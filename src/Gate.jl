@@ -29,10 +29,8 @@ sigma_z() = Operator(reshape(Complex.([1.,0.,0.,-1.]), 2, 2))
 hadamard() = Operator(1. / sqrt(2.0) * reshape(Complex.([1.0,1.0,1.0,-1.0]), 2, 2))
 eye() = Operator(Matrix{Complex}(1.0I, 2, 2))
 
-sigma_x(target) = Gate(["x"], "x", sigma_x(), target)
-sigma_y(target) = Gate(["y"], "y", sigma_y(), target)
-
-
+sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
+sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
 hadamard(target) = Gate(["H"], "ha", hadamard(), target)
 
