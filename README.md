@@ -4,6 +4,8 @@
 
 ![unit tests](https://github.com/anyonlabs/Snowflake.jl/actions/workflows/test.yml/badge.svg)
 
+[![codecov](https://codecov.io/gh/anyonlabs/Snowflake.jl/branch/b'next'/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/anyonlabs/Snowflake.jl)
+
 Snowflake is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
 
 # Documentation
