@@ -21,6 +21,8 @@ function Base.show(io::IO, gate::Gate)
 end
 
 Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
+Base.kron(x::Gate, y::Operator) = kron(x.operator, y)
+Base.kron(x::Operator, y::Gate) = kron(x, y.gate)
 
 # Single Qubit Gates
 sigma_x() = Operator(reshape(Complex.([0.,1.,1.,0.]), 2, 2))
