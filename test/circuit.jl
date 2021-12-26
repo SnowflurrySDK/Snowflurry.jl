@@ -1,6 +1,24 @@
 using Snowflake
 using Test
 
+@testset "push_pop_gate" begin
+    c = Circuit(qubit_count=2, bit_count=0)
+    pushGate!(c, [hadamard(1)])
+    @test length(c.pipeline) == 1
+
+    
+    pushGate!(c, [control_x(1, 2)])
+    @test length(c.pipeline) == 2
+    popGate!(c)
+    @test length(c.pipeline) == 1
+
+    pushGate!(c, control_x(1, 2))
+    @test length(c.pipeline) == 2
+
+    print(c)
+end
+
+
 @testset "bellstate" begin
 
     Ψ_up = fock(2, 1)
@@ -13,7 +31,13 @@ using Test
     pushGate!(c, [control_x(1, 2)])
     ψ = simulate(c)
     @test ψ ≈ 1 / sqrt(2.) * (kron(Ψ_up, Ψ_up) + kron(Ψ_down, Ψ_down))
-end
+
+    readings = simulateShots(c, 101)
+    @test ("00" in readings)
+    @test ("11" in readings)
+    @test ~("10" in readings)
+    @test ~("01" in readings)
+    end
 
 @testset "phase_kickback" begin
     

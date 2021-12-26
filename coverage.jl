@@ -18,7 +18,7 @@ covered_lines, total_lines = get_summary(coverage)
 # @show get_summary(process_file(joinpath("src", "Snowflake.jl")
 
 # clean .cov files
-# clean_folder("src")
-# clean_folder("test")
+clean_folder("src")
+clean_folder("test")
 
 return covered_lines, total_lines 
