@@ -112,13 +112,12 @@ function simulateShots(c::Circuit, shots_count::Int=100)
 
     ##preparing the labels
     labels = String[]
-    for i in range(0, length=length(ψ) - 1)
+    for i in range(0, length=length(ψ))
         s = bitstring(i)
         n = length(s)
         s_trimed = s[n - c.qubit_count + 1:n]
     push!(labels, s_trimed)
     end
-
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
