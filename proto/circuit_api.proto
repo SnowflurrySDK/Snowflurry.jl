@@ -25,6 +25,7 @@ message SubmitJobRequest {
     Circuit circuit = 1;
     uint64 shots_count = 2;
     string owner=3;
+    string token=4;
 }
 
 message SubmitJobReply {
@@ -34,6 +35,8 @@ message SubmitJobReply {
 
 message JobStatusRequest {
     string job_uuid = 1;
+    string owner=2;
+    string token=3;
 }
 
 message JobStatusReply {

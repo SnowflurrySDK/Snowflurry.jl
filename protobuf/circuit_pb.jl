@@ -153,18 +153,15 @@ function meta(::Type{Result})
     ProtoBuf.metalock() do
         if !isassigned(__meta_Result)
             __meta_Result[] = target = ProtoMeta(Result)
-            pack = Symbol[:bits]
-            allflds = Pair{Symbol,Union{Type,String}}[:bits => Base.Vector{Bool}, :count => UInt64]
-            meta(target, Result, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, pack, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
+            allflds = Pair{Symbol,Union{Type,String}}[:shot_read_out => Base.Vector{AbstractString}]
+            meta(target, Result, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
         end
         __meta_Result[]
     end
 end
 function Base.getproperty(obj::Result, name::Symbol)
-    if name === :bits
-        return (obj.__protobuf_jl_internal_values[name])::Base.Vector{Bool}
-    elseif name === :count
-        return (obj.__protobuf_jl_internal_values[name])::UInt64
+    if name === :shot_read_out
+        return (obj.__protobuf_jl_internal_values[name])::Base.Vector{AbstractString}
     else
         getfield(obj, name)
     end

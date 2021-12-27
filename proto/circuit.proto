@@ -21,7 +21,6 @@ message Circuit {
 }
 
 message Result {
-	repeated bool bits = 1;
-	uint64 count = 2;
+	repeated string shot_read_out = 1;
 }
 

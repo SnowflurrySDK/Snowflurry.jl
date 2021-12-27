@@ -77,7 +77,7 @@ function meta(::Type{SubmitJobRequest})
     ProtoBuf.metalock() do
         if !isassigned(__meta_SubmitJobRequest)
             __meta_SubmitJobRequest[] = target = ProtoMeta(SubmitJobRequest)
-            allflds = Pair{Symbol,Union{Type,String}}[:circuit => Circuit, :shots_count => UInt64, :owner => AbstractString]
+            allflds = Pair{Symbol,Union{Type,String}}[:circuit => Circuit, :shots_count => UInt64, :owner => AbstractString, :token => AbstractString]
             meta(target, SubmitJobRequest, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
         end
         __meta_SubmitJobRequest[]
@@ -89,6 +89,8 @@ function Base.getproperty(obj::SubmitJobRequest, name::Symbol)
     elseif name === :shots_count
         return (obj.__protobuf_jl_internal_values[name])::UInt64
     elseif name === :owner
+        return (obj.__protobuf_jl_internal_values[name])::AbstractString
+    elseif name === :token
         return (obj.__protobuf_jl_internal_values[name])::AbstractString
     else
         getfield(obj, name)
@@ -161,7 +163,7 @@ function meta(::Type{JobStatusRequest})
     ProtoBuf.metalock() do
         if !isassigned(__meta_JobStatusRequest)
             __meta_JobStatusRequest[] = target = ProtoMeta(JobStatusRequest)
-            allflds = Pair{Symbol,Union{Type,String}}[:job_uuid => AbstractString]
+            allflds = Pair{Symbol,Union{Type,String}}[:job_uuid => AbstractString, :owner => AbstractString, :token => AbstractString]
             meta(target, JobStatusRequest, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
         end
         __meta_JobStatusRequest[]
@@ -169,6 +171,10 @@ function meta(::Type{JobStatusRequest})
 end
 function Base.getproperty(obj::JobStatusRequest, name::Symbol)
     if name === :job_uuid
+        return (obj.__protobuf_jl_internal_values[name])::AbstractString
+    elseif name === :owner
+        return (obj.__protobuf_jl_internal_values[name])::AbstractString
+    elseif name === :token
         return (obj.__protobuf_jl_internal_values[name])::AbstractString
     else
         getfield(obj, name)
