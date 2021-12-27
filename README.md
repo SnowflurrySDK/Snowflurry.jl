@@ -114,4 +114,5 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 
 Snowflake is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
 
+
 Copyright (c) 2021 by Snowflake Developers and Anyon Systems, Inc.
