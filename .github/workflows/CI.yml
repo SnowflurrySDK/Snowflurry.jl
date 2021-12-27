@@ -24,6 +24,9 @@ jobs:
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
+          SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
+          SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
+          SNOWFLAKE_HOST: ${{secrets.SNOWFLAKE_HOST}}
         with:
           path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
