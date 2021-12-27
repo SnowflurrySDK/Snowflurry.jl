@@ -16,7 +16,9 @@ end
 struct Bra
     data::LinearAlgebra.Adjoint{Any,Vector{Complex}}
     Bra(x::Ket) = new(adjoint(x.data))
-    Bra(x::LinearAlgebra.Adjoint{Any,Vector{Complex}}) = new(x)
+    
+    # This construcor is used when a Bra is multiplied by an Operator
+    Bra(x::LinearAlgebra.Adjoint{Any,Vector{Any}}) = new(x)
 end
 
 struct Operator 
@@ -66,12 +68,12 @@ function Base.show(io::IO, x::Operator)
     end
 end
 
-Base.size(x::Ket) = Base.size(x.data)
 Base.length(x::Ket) = Base.length(x.data)
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket)  = isapprox(x.data, y.data)
+Base.:isapprox(x::Bra, y::Bra)  = isapprox(x.data, y.data)
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -80,6 +82,7 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:size(M::Operator) = size(M.data)
 
 # iterator for Ket object
 Base.iterate(x::Ket, state=1) = state > length(x.data) ? nothing : (x.data[state], state + 1)

@@ -1,12 +1,11 @@
-module Anyon
+module anyon
   const _ProtoBuf_Top_ = @static isdefined(parentmodule(@__MODULE__), :_ProtoBuf_Top_) ? (parentmodule(@__MODULE__))._ProtoBuf_Top_ : parentmodule(@__MODULE__)
-  module Iris
+  module thunderhead
     const _ProtoBuf_Top_ = @static isdefined(parentmodule(@__MODULE__), :_ProtoBuf_Top_) ? (parentmodule(@__MODULE__))._ProtoBuf_Top_ : parentmodule(@__MODULE__)
-    module Proto
+    module qpu
       const _ProtoBuf_Top_ = @static isdefined(parentmodule(@__MODULE__), :_ProtoBuf_Top_) ? (parentmodule(@__MODULE__))._ProtoBuf_Top_ : parentmodule(@__MODULE__)
-      include("Circuit_pb.jl")
-      include("CircuitResult_pb.jl")
-      include("CircuitAPI_pb.jl")
+      include("circuit_pb.jl")
+      include("circuit_api_pb.jl")
     end
   end
 end

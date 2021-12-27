@@ -1,10 +1,10 @@
 using Documenter
-using JKet
+using Snowflake
 
 makedocs(
-    sitename="JKet",
+    sitename="Snowflake",
     format=Documenter.HTML(),
-    modules=[JKet]
+    modules=[Snowflake]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

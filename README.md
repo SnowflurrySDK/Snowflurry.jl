@@ -2,9 +2,10 @@
 
 # Snowflake.jl
 
-![unit tests](https://github.com/anyonlabs/Snowflake.jl/actions/workflows/test.yml/badge.svg)
+![CI tests](https://github.com/anyonlabs/Snowflake.jl/actions/workflows/CI.yml/badge.svg)
+[![codecov](https://codecov.io/gh/anyonlabs/Snowflake.jl/branch/next/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/anyonlabs/Snowflake.jl)
 
-Snowflake is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators. The project is sponsored by Anyon Systems, Inc.
+Snowflake is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
 
 # Documentation
 
@@ -17,9 +18,6 @@ Launch julia REPL and add Snowflake package using the following commands
 ```julia
 import Pkg
 Pkg.add("Snowflake")
-
-# if you want the latest features:
-Pkg.pkg"add Plots#master"
 ```
 
 # Get Started
@@ -116,4 +114,5 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 
 Snowflake is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
 
-Copyright (c) 2021 by Anyon Systems, Inc.
+
+Copyright (c) 2021 by Snowflake Developers and Anyon Systems, Inc.
