@@ -16,7 +16,7 @@ pushGate!(c, [x_90(2)]);
 owner = ENV["SNOWFLAKE_ID"]
 token = ENV["SNOWFLAKE_TOKEN"]
 host = ENV["SNOWFLAKE_HOST"]
-job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 101, host = host)
+job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 1001, host = host)
 
 
 # Checking circuit status and postprocessing. Here we are using a while loop. This is not the recommanded the way. 
