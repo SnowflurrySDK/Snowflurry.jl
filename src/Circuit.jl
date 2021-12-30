@@ -7,7 +7,7 @@ using gRPCClient
 
 export Circuit, pushGate!, popGate!, simulate, simulateShots, submitCircuit, createJobRequest, getCircuitStatus, JobStatus
 
-@enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 COMPLETED = 3 FAILED = 4 CANCELED = 5
+@enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 SUCCEEDED = 3 FAILED = 4 CANCELED = 5
 Base.@kwdef struct Circuit
     qubit_count::Int
     bit_count::Int
@@ -31,7 +31,6 @@ function popGate!(circuit::Circuit)
     pop!(circuit.pipeline)
     return circuit
 end
-
 
 function Base.show(io::IO, circuit::Circuit)
     println(io, "Circuit Object:")

@@ -2,10 +2,15 @@ using Snowflake
 
 #Build a two qubit circuit
 c = Circuit(qubit_count = 2, bit_count = 0)
-#apply a hadamrd gate to qubit 1
-pushGate!(c, [hadamard(1)])
-#apply a CNOT gate with qubit 1 being the control qubit and qubit 2 being the target qubit
-pushGate!(c, [control_x(1, 2)])
+
+#apply a hadamrd gate to qubit 1 and then a cnot gate.
+#pushGate!(c, [hadamard(1)]); pushGate!(c, [control_x(1, 2)])
+
+#testing iswap
+#pushGate!(c, [sigma_x(1)]);
+#pushGate!(c, [iswap(1, 2)]);
+pushGate!(c, [x_90(2)]);
+
 
 #User credentials issued by Anyon Systems from envirnoment variables. Change according to your setting.
 owner = ENV["SNOWFLAKE_ID"]
@@ -20,9 +25,9 @@ job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 101, h
 
 while true
     id, st, msg = getCircuitStatus(job_uuid, owner = owner, token = token, host = host)
-    println("id:" * job_uuid * "  status code:" * string(st) * " messag:" * msg)
-    if (st == Int32(Snowflake.COMPLETED))
-        println("Good news: Job completed!")
+    println("id:" * job_uuid * "  status code:" * string(st) * " message:" * msg)
+    if (st == Int32(Snowflake.SUCCEEDED))
+        println("Good news: Job SUCCEEDED!")
         ## add postprocessing and continue with your calculations.
         break
     end
