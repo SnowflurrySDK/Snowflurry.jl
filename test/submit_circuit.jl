@@ -13,7 +13,7 @@ using Test
     try
         job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 101, host = host)
         id, st, msg = getCircuitStatus(job_uuid, owner = owner, token = token, host = host)
-        println("id:" * job_uuid * "  status code:" * string(status) * " message:" * msg)
+        println("id:" * job_uuid * "  status code:" * string(st) * " message:" * msg)
     catch e
         println(e)
 
