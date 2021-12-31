@@ -1,7 +1,7 @@
 using Snowflake
 using Test
 
-@testset "submit_job_bellstate" begin
+@testset "submit_job_iswap" begin
     c = Circuit(qubit_count = 2, bit_count = 0)
     pushGate!(c, [sigma_x(1)])
     pushGate!(c, [iswap(1, 2)])
@@ -12,7 +12,8 @@ using Test
 
     try
         job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 101, host = host)
-        @test status == Int32(Snowflake.QUEUED)
+        id, st, msg = getCircuitStatus(job_uuid, owner = owner, token = token, host = host)
+        println("id:" * job_uuid * "  status code:" * string(status) * " message:" * msg)
     catch e
         println(e)
 

@@ -5,9 +5,13 @@ using UUIDs
 using .AnyonClients
 using gRPCClient
 
-export Circuit, pushGate!, popGate!, simulate, simulateShots, submitCircuit, createJobRequest, getCircuitStatus, JobStatus
+export Circuit, pushGate!, popGate!, simulate, simulateShots, submitCircuit, createJobRequest, getCircuitStatus, JobStatus, JobStatusMap
 
 @enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 SUCCEEDED = 3 FAILED = 4 CANCELED = 5
+
+JobStatusMap = Dict[UNKNOWN=>"UNKNOWN", QUEUED=>"QUEUED", RUNNING=>"RUNNING", SUCCEEDED=>"SUCCEEDED", FAILED=>"FAILED", CANCELED=>"CANCELED"]
+
+
 Base.@kwdef struct Circuit
     qubit_count::Int
     bit_count::Int
@@ -16,6 +20,9 @@ Base.@kwdef struct Circuit
     pipeline::Array{Array{Gate}} = []
 end
 
+function Base.string(status::JobStatus)
+    return JobStatusMap[status]
+end
 
 function pushGate!(circuit::Circuit, gate::Gate)
     push!(circuit.pipeline, [gate])
