@@ -3,8 +3,8 @@ using Test
 
 @testset "submit_job_bellstate" begin
     c = Circuit(qubit_count = 2, bit_count = 0)
-    pushGate!(c, [hadamard(1)])
-    pushGate!(c, [control_x(1, 2)])
+    pushGate!(c, [sigma_x(1)])
+    pushGate!(c, [iswap(1, 2)])
 
     owner = ENV["SNOWFLAKE_ID"]
     token = ENV["SNOWFLAKE_TOKEN"]
