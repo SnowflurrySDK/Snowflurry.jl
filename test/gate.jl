@@ -8,6 +8,8 @@ using Test
     @test H.instruction_symbol == "ha"
     @test H.display_symbol == ["H"]
 
+    println(H)
+
     X = sigma_x(1)
     @test X.instruction_symbol == "x"
     @test X.display_symbol == ["X"]
@@ -26,6 +28,7 @@ using Test
     CZ = control_z(1, 2)
     @test CZ.instruction_symbol == "cz"
 end
+
 
 @testset "tensor_product_single_qubit_gate" begin
 

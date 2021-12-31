@@ -13,7 +13,7 @@ function Base.string(status::JobStatus)
     return JobStatusMap[status]
 end
 
-function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String = "localhost:60051")
+function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String)
     client = AnyonClients.CircuitAPIClient(host)
     # client = AnyonClients.CircuitAPIBlockingClient(host)
     request = createJobRequest(circuit, owner = owner, token = token, shots = shots)
