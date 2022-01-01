@@ -8,13 +8,14 @@ export JobStatus, JobStatusMap, submitCircuit, getCircuitStatus
 
 @enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 SUCCEEDED = 3 FAILED = 4 CANCELED = 5
 JobStatusMap = Dict(UNKNOWN=>"UNKNOWN", QUEUED=>"QUEUED", RUNNING=>"RUNNING", SUCCEEDED=>"SUCCEEDED", FAILED=>"FAILED", CANCELED=>"CANCELED")
+IntToJobStatusMap = Dict(0 =>UNKNOWN, 1=>QUEUED, 2=>RUNNING, 3=>SUCCEEDED, 4=>FAILED, 5=>CANCELED)
 
 function Base.string(status::JobStatus)
     return JobStatusMap[status]
 end
 
-function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String)
-    client = AnyonClients.CircuitAPIClient(host)
+function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String, verbose::Bool=false)
+    client = AnyonClients.CircuitAPIClient(host, verbose=verbose, negotiation=:http2_prior_knowledge)
     # client = AnyonClients.CircuitAPIBlockingClient(host)
     request = createJobRequest(circuit, owner = owner, token = token, shots = shots)
     try
@@ -23,7 +24,7 @@ function submitCircuit(circuit::Circuit; owner::String, token::String, shots::In
         status = getproperty(reply[1], :status)
         message = getproperty(status, :message)
         status_type = getproperty(status, :_type)
-        return job_uuid, status_type
+        return job_uuid, IntToJobStatusMap[status_type]
     catch e
         println(e)
         return e
@@ -70,7 +71,7 @@ function getCircuitStatus(job_uuid::String; owner::String = "", token::String = 
         status = getproperty(status_obj, :_type)
 
 
-        return job_uuid, status, msg
+        return job_uuid, IntToJobStatusMap[status], msg
     catch e
         println(e)
         return e

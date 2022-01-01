@@ -26,13 +26,13 @@ job_uuid, status = submitCircuit(c, owner = owner, token = token, shots = 1001, 
 while true
     id, st, msg = getCircuitStatus(job_uuid, owner = owner, token = token, host = host)
     println("id:" * job_uuid * "  status code:" * string(st) * " message:" * msg)
-    if (st == Int32(Snowflake.SUCCEEDED))
+    if (st == Snowflake.SUCCEEDED)
         println("Good news: Job SUCCEEDED!")
         ## add postprocessing and continue with your calculations.
         break
     end
 
-    if (st == Int32(Snowflake.FAILED))
+    if (st == Snowflake.FAILED)
         println("Job failed: " * msg)
         break
     end
