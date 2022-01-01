@@ -16,7 +16,6 @@ end
 struct Bra
     data::LinearAlgebra.Adjoint{Any,Vector{Any}}
     Bra(x::Ket) = new(adjoint(x.data))
-
     # This construcor is used when a Bra is multiplied by an Operator
     Bra(x::LinearAlgebra.Adjoint{Any,Vector{Any}}) = new(x)
 end

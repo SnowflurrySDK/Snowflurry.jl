@@ -3,14 +3,9 @@ using Snowflake
 #Build a two qubit circuit
 c = Circuit(qubit_count = 2, bit_count = 0)
 
-#apply a hadamrd gate to qubit 1 and then a cnot gate.
-#pushGate!(c, [hadamard(1)]); pushGate!(c, [control_x(1, 2)])
-
 #testing iswap
-#pushGate!(c, [sigma_x(1)]);
-#pushGate!(c, [iswap(1, 2)]);
 pushGate!(c, [x_90(2)]);
-
+pushGate!(c, [iswap(1, 2)]);
 
 #User credentials issued by Anyon Systems from envirnoment variables. Change according to your setting.
 owner = ENV["SNOWFLAKE_ID"]

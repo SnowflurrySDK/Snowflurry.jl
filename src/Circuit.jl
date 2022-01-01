@@ -8,10 +8,8 @@ Base.@kwdef struct Circuit
     qubit_count::Int
     bit_count::Int
     id::UUID = UUIDs.uuid1()
-    # Circuit(qubit_count, bit_count) = new(qubit_count, bit_count, UUIDs.uuid1(), [])
     pipeline::Array{Array{Gate}} = []
 end
-
 
 
 function pushGate!(circuit::Circuit, gate::Gate)
@@ -124,9 +122,3 @@ function simulateShots(c::Circuit, shots_count::Int = 100)
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
 end
-
-
-
-
-
-

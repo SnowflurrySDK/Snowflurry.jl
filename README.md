@@ -17,8 +17,10 @@ Launch julia REPL and add Snowflake latest revision using the following commands
 
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl#next")
+Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="BRANCH_NAME")
 ```
+
+**Note:** Replace the `BRANCH_NAME` with the name of the branch you want to use. The stable release is `main` and the most up-to-date one is `next`.
 
 # Get Started
 
