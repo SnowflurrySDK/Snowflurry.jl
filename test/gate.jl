@@ -4,10 +4,11 @@ using Test
 
 @testset "gate_set" begin
     H = hadamard(1)
+
     @test H.instruction_symbol == "ha"
     @test H.display_symbol == ["H"]
 
-    print(H)
+    println(H)
 
     X = sigma_x(1)
     @test X.instruction_symbol == "x"

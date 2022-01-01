@@ -3,22 +3,24 @@
 # Snowflake.jl
 
 ![CI tests](https://github.com/anyonlabs/Snowflake.jl/actions/workflows/CI.yml/badge.svg)
-[![codecov](https://codecov.io/gh/anyonlabs/Snowflake.jl/branch/next/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/anyonlabs/Snowflake.jl)
+[![codecov](https://codecov.io/gh/anyonlabs/Snowflake.jl/branch/feat/status_dict/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/anyonlabs/Snowflake.jl)
 
 Snowflake is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
 
-# Documentation
+# Get Started
 
-Snowflake documentation is available at
+Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
 # Installation
 
-Launch julia REPL and add Snowflake package using the following commands
+Launch julia REPL and add Snowflake latest revision using the following commands
 
 ```julia
 import Pkg
-Pkg.add("Snowflake")
+Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="BRANCH_NAME")
 ```
+
+**Note:** Replace the `BRANCH_NAME` with the name of the branch you want to use. The stable release is `main` and the most up-to-date one is `next`.
 
 # Get Started
 
@@ -113,6 +115,5 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 # Alpha Disclaimer
 
 Snowflake is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
-
 
 Copyright (c) 2021 by Snowflake Developers and Anyon Systems, Inc.

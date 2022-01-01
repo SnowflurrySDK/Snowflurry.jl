@@ -7,6 +7,7 @@ using Plots:size
 include("QObj.jl")
 include("Gate.jl")
 include("Circuit.jl")
+include("remote/CircuitJobs.jl")
 include("Visualize.jl")
 
 

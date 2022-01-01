@@ -14,14 +14,13 @@ function Base.show(io::IO, x::Ket)
 end
 
 struct Bra
-    data::LinearAlgebra.Adjoint{Any,Vector{Complex}}
+    data::LinearAlgebra.Adjoint{Any,Vector{Any}}
     Bra(x::Ket) = new(adjoint(x.data))
-    
     # This construcor is used when a Bra is multiplied by an Operator
     Bra(x::LinearAlgebra.Adjoint{Any,Vector{Any}}) = new(x)
 end
 
-struct Operator 
+struct Operator
     data::Matrix{Complex}
 end
 
@@ -38,9 +37,9 @@ function getEmbedOperator(op::Operator, target_body_index::Int, system::MultiBod
     for hilbert_size_per_body in system.hilbert_space_structure
         hilber_space_size *= hilbert_size_per_body
     end
-    
+
     result = Operator(Matrix{Complex}(I, system.hilbert_space_structure[1], system.hilbert_space_structure[1]))
-    if (target_body_index == 1) 
+    if (target_body_index == 1)
         result = op
     end
 
@@ -60,8 +59,8 @@ function Base.show(io::IO, x::Operator)
     println(io, "\t$(size(x.data))-element Iris.Operator:")
     println(io, "\tUnderlying data $(typeof(x.data)) : ")
     (nrow, ncol) = size(x.data)
-    for i in range(1, stop=nrow)
-        for j in range(1, stop=ncol)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
             print(io, "\t\t$(x.data[i, j])")
         end
         println(io)
@@ -72,8 +71,8 @@ Base.length(x::Ket) = Base.length(x.data)
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
-Base.:isapprox(x::Ket, y::Ket)  = isapprox(x.data, y.data)
-Base.:isapprox(x::Bra, y::Bra)  = isapprox(x.data, y.data)
+Base.:isapprox(x::Ket, y::Ket) = isapprox(x.data, y.data)
+Base.:isapprox(x::Bra, y::Bra) = isapprox(x.data, y.data)
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -85,7 +84,7 @@ Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:size(M::Operator) = size(M.data)
 
 # iterator for Ket object
-Base.iterate(x::Ket, state=1) = state > length(x.data) ? nothing : (x.data[state], state + 1)
+Base.iterate(x::Ket, state = 1) = state > length(x.data) ? nothing : (x.data[state], state + 1)
 
 
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
