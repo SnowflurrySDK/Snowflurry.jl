@@ -1,4 +1,4 @@
-![Snowflake](https://repository-images.githubusercontent.com/441460066/2fac88f2-d91f-4159-b35c-82d56d3719f5)
+![Snowflake](https://repository-images.githubusercontent.com/441460066/a4572ad1-6421-4679-aa31-4c2a45829dc6)
 
 # Snowflake.jl
 
