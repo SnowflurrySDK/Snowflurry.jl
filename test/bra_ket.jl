@@ -2,12 +2,12 @@ using Snowflake
 using Test
 
 @testset "simple_bra_ket" begin
-    Ψ_0 = fock(2, 1)
+    Ψ_0 = fock(1, 2)
     Ψ_1 = fock(2, 2)
     print(Ψ_0)
-    
-    Ψ_p = (1. / sqrt(2.0)) * (Ψ_0 + Ψ_1)
-    Ψ_m = (1. / sqrt(2.0)) * (Ψ_0 - Ψ_1)
+
+    Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
+    Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_0 - Ψ_1)
     _Ψ = Bra(Ψ_p)
 
     # test if adjoin operations work properly
@@ -19,7 +19,7 @@ using Test
 
     M_0 = Ψ_0 * Bra(Ψ_0)
     @test size(M_0) == (2, 2)
-    
+
     H = hadamard(1)
     X = sigma_x(1)
     Y = sigma_y(1)
@@ -29,7 +29,7 @@ using Test
     @test H * Ψ_0 ≈ Ψ_p
     @test H * Ψ_1 ≈ Ψ_m
 
-  
+
 
     # Bit flip gate (sigma_x)
     @test X * Ψ_0 ≈ Ψ_1
@@ -44,11 +44,11 @@ using Test
 end
 
 @testset "multi_body" begin
-    Ψ_up = fock(2, 1)
+    Ψ_up = fock(1, 2)
     Ψ_down = fock(2, 2)
-    
-    Ψ_p = (1. / sqrt(2.0)) * (Ψ_up + Ψ_down)
-    Ψ_m = (1. / sqrt(2.0)) * (Ψ_up - Ψ_down)
+
+    Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_up + Ψ_down)
+    Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_up - Ψ_down)
 
     qubit_count = 2
     hilber_space_size_per_qubit = 2
@@ -62,16 +62,16 @@ end
 
     ##Get embedded operators
     target_qubit = 1
-    H = getEmbedOperator(h.operator, target_qubit, system)
-    X = getEmbedOperator(x.operator, target_qubit, system)
-    Y = getEmbedOperator(y.operator, target_qubit, system)
-    Z = getEmbedOperator(z.operator, target_qubit, system)
-    
+    H = get_embed_operator(h.operator, target_qubit, system)
+    X = get_embed_operator(x.operator, target_qubit, system)
+    Y = get_embed_operator(y.operator, target_qubit, system)
+    Z = get_embed_operator(z.operator, target_qubit, system)
+
     Ψ_init = kron(Ψ_up, Ψ_up)
-    
+
     # Bit-flip on qubit 1 
     @test (X * Ψ_init) ≈ kron(Ψ_down, Ψ_up)
-    
-    
+
+
 
 end

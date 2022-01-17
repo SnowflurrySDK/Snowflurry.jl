@@ -18,10 +18,13 @@ struct CircuitAPIClient
     end
 end
 
-Base.show(io::IO, client::CircuitAPIClient) = print(io, "CircuitAPIClient(", client.channel.baseurl, ")")
+Base.show(io::IO, client::CircuitAPIClient) =
+    print(io, "CircuitAPIClient(", client.channel.baseurl, ")")
 
-submitJob(client::CircuitAPIClient, request::SubmitJobRequest) = anyon.thunderhead.qpu.submitJob(client.stub, client.controller, request)
-getJobStatus(client::CircuitAPIClient, request::JobStatusRequest) = anyon.thunderhead.qpu.getJobStatus(client.stub, client.controller, request)
+submitJob(client::CircuitAPIClient, request::SubmitJobRequest) =
+    anyon.thunderhead.qpu.submitJob(client.stub, client.controller, request)
+getJobStatus(client::CircuitAPIClient, request::JobStatusRequest) =
+    anyon.thunderhead.qpu.getJobStatus(client.stub, client.controller, request)
 
 export submitJob, getJobStatus
 

@@ -14,7 +14,8 @@ mutable struct Instruction_Parameter <: ProtoType
         for nv in kwargs
             fldname, fldval = nv
             fldtype = symdict[fldname].jtyp
-            (fldname in keys(symdict)) || error(string(typeof(obj), " has no field with name ", fldname))
+            (fldname in keys(symdict)) ||
+                error(string(typeof(obj), " has no field with name ", fldname))
             if fldval !== nothing
                 values[fldname] = isa(fldval, fldtype) ? fldval : convert(fldtype, fldval)
             end
@@ -27,8 +28,20 @@ function meta(::Type{Instruction_Parameter})
     ProtoBuf.metalock() do
         if !isassigned(__meta_Instruction_Parameter)
             __meta_Instruction_Parameter[] = target = ProtoMeta(Instruction_Parameter)
-            allflds = Pair{Symbol,Union{Type,String}}[:name => AbstractString, :value => Float32]
-            meta(target, Instruction_Parameter, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
+            allflds =
+                Pair{Symbol,Union{Type,String}}[:name=>AbstractString, :value=>Float32]
+            meta(
+                target,
+                Instruction_Parameter,
+                allflds,
+                ProtoBuf.DEF_REQ,
+                ProtoBuf.DEF_FNUM,
+                ProtoBuf.DEF_VAL,
+                ProtoBuf.DEF_PACK,
+                ProtoBuf.DEF_WTYPES,
+                ProtoBuf.DEF_ONEOFS,
+                ProtoBuf.DEF_ONEOF_NAMES,
+            )
         end
         __meta_Instruction_Parameter[]
     end
@@ -55,7 +68,8 @@ mutable struct Instruction <: ProtoType
         for nv in kwargs
             fldname, fldval = nv
             fldtype = symdict[fldname].jtyp
-            (fldname in keys(symdict)) || error(string(typeof(obj), " has no field with name ", fldname))
+            (fldname in keys(symdict)) ||
+                error(string(typeof(obj), " has no field with name ", fldname))
             if fldval !== nothing
                 values[fldname] = isa(fldval, fldtype) ? fldval : convert(fldtype, fldval)
             end
@@ -68,9 +82,25 @@ function meta(::Type{Instruction})
     ProtoBuf.metalock() do
         if !isassigned(__meta_Instruction)
             __meta_Instruction[] = target = ProtoMeta(Instruction)
-            pack = Symbol[:qubits,:classical_bits]
-            allflds = Pair{Symbol,Union{Type,String}}[:symbol => AbstractString, :parameters => Base.Vector{Instruction_Parameter}, :qubits => Base.Vector{UInt64}, :classical_bits => Base.Vector{UInt64}]
-            meta(target, Instruction, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, pack, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
+            pack = Symbol[:qubits, :classical_bits]
+            allflds = Pair{Symbol,Union{Type,String}}[
+                :symbol=>AbstractString,
+                :parameters=>Base.Vector{Instruction_Parameter},
+                :qubits=>Base.Vector{UInt64},
+                :classical_bits=>Base.Vector{UInt64},
+            ]
+            meta(
+                target,
+                Instruction,
+                allflds,
+                ProtoBuf.DEF_REQ,
+                ProtoBuf.DEF_FNUM,
+                ProtoBuf.DEF_VAL,
+                pack,
+                ProtoBuf.DEF_WTYPES,
+                ProtoBuf.DEF_ONEOFS,
+                ProtoBuf.DEF_ONEOF_NAMES,
+            )
         end
         __meta_Instruction[]
     end
@@ -101,7 +131,8 @@ mutable struct Circuit <: ProtoType
         for nv in kwargs
             fldname, fldval = nv
             fldtype = symdict[fldname].jtyp
-            (fldname in keys(symdict)) || error(string(typeof(obj), " has no field with name ", fldname))
+            (fldname in keys(symdict)) ||
+                error(string(typeof(obj), " has no field with name ", fldname))
             if fldval !== nothing
                 values[fldname] = isa(fldval, fldtype) ? fldval : convert(fldtype, fldval)
             end
@@ -114,8 +145,20 @@ function meta(::Type{Circuit})
     ProtoBuf.metalock() do
         if !isassigned(__meta_Circuit)
             __meta_Circuit[] = target = ProtoMeta(Circuit)
-            allflds = Pair{Symbol,Union{Type,String}}[:instructions => Base.Vector{Instruction}]
-            meta(target, Circuit, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
+            allflds =
+                Pair{Symbol,Union{Type,String}}[:instructions=>Base.Vector{Instruction}]
+            meta(
+                target,
+                Circuit,
+                allflds,
+                ProtoBuf.DEF_REQ,
+                ProtoBuf.DEF_FNUM,
+                ProtoBuf.DEF_VAL,
+                ProtoBuf.DEF_PACK,
+                ProtoBuf.DEF_WTYPES,
+                ProtoBuf.DEF_ONEOFS,
+                ProtoBuf.DEF_ONEOF_NAMES,
+            )
         end
         __meta_Circuit[]
     end
@@ -140,7 +183,8 @@ mutable struct Result <: ProtoType
         for nv in kwargs
             fldname, fldval = nv
             fldtype = symdict[fldname].jtyp
-            (fldname in keys(symdict)) || error(string(typeof(obj), " has no field with name ", fldname))
+            (fldname in keys(symdict)) ||
+                error(string(typeof(obj), " has no field with name ", fldname))
             if fldval !== nothing
                 values[fldname] = isa(fldval, fldtype) ? fldval : convert(fldtype, fldval)
             end
@@ -153,8 +197,20 @@ function meta(::Type{Result})
     ProtoBuf.metalock() do
         if !isassigned(__meta_Result)
             __meta_Result[] = target = ProtoMeta(Result)
-            allflds = Pair{Symbol,Union{Type,String}}[:shot_read_out => Base.Vector{AbstractString}]
-            meta(target, Result, allflds, ProtoBuf.DEF_REQ, ProtoBuf.DEF_FNUM, ProtoBuf.DEF_VAL, ProtoBuf.DEF_PACK, ProtoBuf.DEF_WTYPES, ProtoBuf.DEF_ONEOFS, ProtoBuf.DEF_ONEOF_NAMES)
+            allflds =
+                Pair{Symbol,Union{Type,String}}[:shot_read_out=>Base.Vector{AbstractString}]
+            meta(
+                target,
+                Result,
+                allflds,
+                ProtoBuf.DEF_REQ,
+                ProtoBuf.DEF_FNUM,
+                ProtoBuf.DEF_VAL,
+                ProtoBuf.DEF_PACK,
+                ProtoBuf.DEF_WTYPES,
+                ProtoBuf.DEF_ONEOFS,
+                ProtoBuf.DEF_ONEOF_NAMES,
+            )
         end
         __meta_Result[]
     end

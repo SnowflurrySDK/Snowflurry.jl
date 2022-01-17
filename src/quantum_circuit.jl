@@ -1,40 +1,29 @@
-using StatsBase
-include("../protobuf/AnyonClients.jl")
-using LinearAlgebra: getproperty
-using UUIDs
-using .AnyonClients
-using gRPCClient
 
-export Circuit, pushGate!, popGate!, simulate, simulateShots, submitCircuit, createJobRequest, getCircuitStatus, JobStatus
-
-@enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 COMPLETED = 3 FAILED = 4 CANCELED = 5
-Base.@kwdef struct Circuit
+Base.@kwdef struct QuantumCircuit
     qubit_count::Int
     bit_count::Int
     id::UUID = UUIDs.uuid1()
-    # Circuit(qubit_count, bit_count) = new(qubit_count, bit_count, UUIDs.uuid1(), [])
     pipeline::Array{Array{Gate}} = []
 end
 
 
-function pushGate!(circuit::Circuit, gate::Gate)
+function push_gate!(circuit::QuantumCircuit, gate::Gate)
     push!(circuit.pipeline, [gate])
     return circuit
 end
 
-function pushGate!(circuit::Circuit, gates::Array{Gate})
+function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
     push!(circuit.pipeline, gates)
     return circuit
 end
 
-function popGate!(circuit::Circuit)
+function pop_gate!(circuit::QuantumCircuit)
     pop!(circuit.pipeline)
     return circuit
 end
 
-
-function Base.show(io::IO, circuit::Circuit)
-    println(io, "Circuit Object:")
+function Base.show(io::IO, circuit::QuantumCircuit)
+    println(io, "Quantum Circuit Object:")
     println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
     println(io, "   bit_count: $(circuit.bit_count) ")
@@ -88,17 +77,20 @@ function Base.show(io::IO, circuit::Circuit)
     end
 end
 
-function simulate(circuit::Circuit)
+function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
     system = MultiBodySystem(circuit.qubit_count, 2)
-    ψ = fock(hilbert_space_size, 1)
+    # initial state 
+    ψ = fock(1,hilbert_space_size)
     for step in circuit.pipeline
         # U is the matrix corresponding the operations happening this step
         #        U = Operator(Matrix{Complex}(1.0I, hilbert_space_size, hilbert_space_size))  
         for gate in step
             # if single qubit gate, get the embedded operator
             # TODO: make sure embedding works for multi qubit system
-            S = (length(gate.target) == 1) ? getEmbedOperator(gate.operator, gate.target[1], system) : gate
+            S =
+                (length(gate.target) == 1) ?
+                get_embed_operator(gate.operator, gate.target[1], system) : gate
             ψ = S * ψ
         end
 
@@ -106,7 +98,7 @@ function simulate(circuit::Circuit)
     return ψ
 end
 
-function simulateShots(c::Circuit, shots_count::Int = 100)
+function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     # return simulateShots(c, shots_count)
     ψ = simulate(c)
     amplitudes = real.(ψ .* ψ)
@@ -128,72 +120,3 @@ function simulateShots(c::Circuit, shots_count::Int = 100)
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
 end
-
-
-function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String = "localhost:60051")
-    client = AnyonClients.CircuitAPIClient(host)
-    # client = AnyonClients.CircuitAPIBlockingClient(host)
-    request = createJobRequest(circuit, owner = owner, token = token, shots = shots)
-    try
-        reply = submitJob(client, request)
-        job_uuid = getproperty(reply[1], :job_uuid)
-        status = getproperty(reply[1], :status)
-        message = getproperty(status, :message)
-        status_type = getproperty(status, :_type)
-        return job_uuid, status_type
-    catch e
-        println(e)
-        return e
-    end
-end
-
-function createJobRequest(circuit::Circuit; owner::String, token::String, shots::Int)
-    pipeline = []
-    for step in circuit.pipeline
-        should_add_identity = fill(true, circuit.qubit_count)
-        for gate in step
-
-            # flag if the qubit is being operated on in this step
-            for i_qubit in gate.target
-                should_add_identity[i_qubit] = false
-            end
-
-            ##TODO: add classical bit targets and parameters
-            push!(pipeline, AnyonClients.Instruction(symbol = gate.instruction_symbol, qubits = gate.target))
-        end
-
-        for i_qubit in range(1, length = (circuit.qubit_count))
-            if (should_add_identity[i_qubit])
-                push!(pipeline, AnyonClients.Instruction(symbol = "i", qubits = [i_qubit]))
-            end
-        end
-
-    end
-
-    circuit_api = AnyonClients.anyon.thunderhead.qpu.Circuit(instructions = pipeline)
-    request = AnyonClients.SubmitJobRequest(owner = owner, token = token, shots_count = shots, circuit = circuit_api)
-
-    return request
-end
-
-function getCircuitStatus(job_uuid::String; owner::String = "", token::String = "", host = "localhost:60051")
-    client = AnyonClients.CircuitAPIClient(host)
-    request = AnyonClients.JobStatusRequest(job_uuid = job_uuid, owner = owner, token = token)
-    try
-        reply = getJobStatus(client, request)
-        job_uuid = getproperty(reply[1], :job_uuid)
-        status_obj = getproperty(reply[1], :status)
-        msg = getproperty(status_obj, :message)
-        status = getproperty(status_obj, :_type)
-
-
-        return job_uuid, status, msg
-    catch e
-        println(e)
-        return e
-    end
-end
-
-
-
-
