@@ -25,3 +25,7 @@ Manifest.toml
 
 .DS_Store
 .vscode/
+
+#coverage information
+coverage/
+coverage-lcov.info

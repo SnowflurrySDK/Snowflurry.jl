@@ -16,12 +16,14 @@ coverage = merge_coverage_counts(
         LCOV.readfolder("test"),
     ),
 )
+LCOV.writefile("lcov.info", coverage)
+
 # Get total coverage for all Julia files
 covered_lines, total_lines = get_summary(coverage)
 # Or process a single file
 # @show get_summary(process_file(joinpath("src", "Snowflake.jl")
 
-# clean .cov files
+#clean .cov files
 clean_folder("src")
 clean_folder("test")
 clean_folder("protobuf")
