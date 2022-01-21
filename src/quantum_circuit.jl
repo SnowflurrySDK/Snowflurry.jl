@@ -1,4 +1,27 @@
 
+"""
+            QuantumCircuit
+
+A data structure to represnts a *quantum circuit*.  
+**Fields**
+- `qubit_count` -- number of qubits (i.e. quantum register size).
+- `bit_count` -- number of classical bits (i.e. classical register size).
+# Examples
+Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
+```jldoctest
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
+Quantum Circuit Object:
+   id: b2d2be56-7af2-11ec-31a6-ed9e71cb3360 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:
+     
+q[2]:
+     
+
+
+```
+"""
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
     bit_count::Int
@@ -81,7 +104,7 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
     system = MultiBodySystem(circuit.qubit_count, 2)
     # initial state 
-    ψ = fock(1,hilbert_space_size)
+    ψ = fock(1, hilbert_space_size)
     for step in circuit.pipeline
         # U is the matrix corresponding the operations happening this step
         #        U = Operator(Matrix{Complex}(1.0I, hilbert_space_size, hilbert_space_size))  
