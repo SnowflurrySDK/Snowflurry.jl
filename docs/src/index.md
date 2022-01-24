@@ -2,7 +2,7 @@
 *A library for quantum computing using Julia*
 
 
-Snowflake is an open source library for quantum computing using Julia. Snowflakes allows one to easily design quantum circuits, experiments and applications and run them on real quantum computers and/or classical simulators. 
+Snowflake is a pure Julia quantum computing stack that allows you to easily design quantum circuits, algorithms, experiments and applications and run them on real quantum computers and/or classical simulators. 
 
 # Installation
 

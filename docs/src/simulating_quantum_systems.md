@@ -26,7 +26,3 @@ get_embed_operator
 ```@docs
 fock
 ```
-
-```@docs
-QuantumCircuit
-```

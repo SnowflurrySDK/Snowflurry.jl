@@ -24,9 +24,7 @@ export
     MultiBodySystem,
     QuantumCircuit,
     Gate,
-    submit_circuit,
-    get_circuit_status,
-
+    QPU,
 
     # Functions
     get_embed_operator,
@@ -36,6 +34,11 @@ export
     simulate,
     simulate_shots,
     plot_histogram,
+    submit_circuit,
+    get_circuit_status,
+
+    create_virtual_qpu,
+
 
     #  Enums
     JobStatus
@@ -43,6 +46,7 @@ export
 include("qobj.jl")
 include("quantum_gate.jl")
 include("quantum_circuit.jl")
+include("qpu.jl")
 include("remote/circuit_jobs.jl")
 include("visualize.jl")
 

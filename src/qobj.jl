@@ -113,7 +113,7 @@ function Base.show(io::IO, system::MultiBodySystem)
 end
 
 """
-    Snowflake.get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
+    get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
 
 Uses a local operator (`op`) which is defined for a particular body (e.g. qubit) with index `target_body_index` to build the corresponding operator for the hilbert soace of the  multi-body system given by `system`. 
 # Examples
@@ -235,27 +235,3 @@ function fock(i, hspace_size)
     d[i] = 1.0
     return Ket(d)
 end
-
-"""
-            QuantumCircuit
-
-A data structure to represnts a *quantum circuit*.  
-**Fields**
-- `qubit_count` -- number of qubits (i.e. quantum register size).
-- `bit_count` -- number of classical bits (i.e. classical register size).
-# Examples
-Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
-```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
-Quantum Circuit Object:
-   id: b2d2be56-7af2-11ec-31a6-ed9e71cb3360 
-   qubit_count: 2 
-   bit_count: 0 
-q[1]:
-     
-q[2]:
-     
-
-
-```
-"""

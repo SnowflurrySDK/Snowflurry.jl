@@ -1,13 +1,15 @@
 
 """
-            QuantumCircuit
+        QuantumCircuit(qubit_count = .., bit_count = ...)
 
 A data structure to represnts a *quantum circuit*.  
 **Fields**
-- `qubit_count` -- number of qubits (i.e. quantum register size).
-- `bit_count` -- number of classical bits (i.e. classical register size).
+- `qubit_count::Int` -- number of qubits (i.e. quantum register size).
+- `bit_count::Int` -- number of classical bits (i.e. classical register size).
+- `id::UUID` -- a universally unique identifier for the circuit. This id is automatically generated one an instance is created. 
+- `pipeline::Array{Array{Gate}}` -- the pipeline of gates to operate on qubits.
+
 # Examples
-Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
 julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
 Quantum Circuit Object:
@@ -17,9 +19,6 @@ Quantum Circuit Object:
 q[1]:
      
 q[2]:
-     
-
-
 ```
 """
 Base.@kwdef struct QuantumCircuit
@@ -29,7 +28,37 @@ Base.@kwdef struct QuantumCircuit
     pipeline::Array{Array{Gate}} = []
 end
 
+"""
+        push_gate!(circuit::QuantumCircuit, gate::Gate)
+        push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
 
+Pushes a single gate or an array of gates to the `circuit` pipeline. This function is mutable. 
+
+# Examples
+```jldoctest
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia> push_gate!(c, [hadamard(1),sigma_x(2)])
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+          
+
+
+julia> push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:--X----X--
+```
+"""
 function push_gate!(circuit::QuantumCircuit, gate::Gate)
     push!(circuit.pipeline, [gate])
     return circuit
@@ -40,6 +69,45 @@ function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
     return circuit
 end
 
+"""
+        pop_gate!(circuit::QuantumCircuit)
+
+Removes the last gate from `circuit.pipeline`. 
+
+# Examples
+```jldoctest
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia> push_gate!(c, [hadamard(1),sigma_x(2)])
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+          
+
+
+julia> push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:--X----X--
+
+julia> pop_gate!(c)
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+```
+"""
 function pop_gate!(circuit::QuantumCircuit)
     pop!(circuit.pipeline)
     return circuit
@@ -100,6 +168,45 @@ function Base.show(io::IO, circuit::QuantumCircuit)
     end
 end
 
+"""
+        simulate(circuit::QuantumCircuit)
+
+Simulates and returns the wavefunction of the quantum device after running `circuit`. 
+
+# Examples
+```jldoctest
+jjulia> push_gate!(c, hadamard(1))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:-----
+          
+
+
+julia> push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:-------X--
+               
+
+
+julia> simulate(c)
+4-element Ket:
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im
+0.7071067811865475 + 0.0im
+
+
+```
+"""
 function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
     system = MultiBodySystem(circuit.qubit_count, 2)
@@ -121,6 +228,50 @@ function simulate(circuit::QuantumCircuit)
     return ψ
 end
 
+"""
+        simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
+
+Emulates the function of a quantum computer by running a circuit for given number of shots and return measurement results.
+
+# Examples
+```jldoctest
+jjulia> push_gate!(c, hadamard(1))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:-----
+          
+
+
+julia> push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:-------X--
+               
+
+
+julia> simulate_shots(c, 100)
+100-element Vector{String}:
+ "00"
+ "00"
+ "11"
+ "00"
+ "11"
+ ⋮
+ "11"
+ "11"
+ "11"
+ "00"
+ "11"
+```
+"""
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     # return simulateShots(c, shots_count)
     ψ = simulate(c)
