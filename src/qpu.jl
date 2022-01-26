@@ -6,7 +6,7 @@ Represnts a Quantum Processing Unit (QPU).
 - `serial_number: String` -- qpu serial_number (e.g. "ANYK202201")
 - `host: String` -- the remote host url address to send the jobs to
 - `physical_qubit_count: UInt32` -- number of physical qubits on the machine
-- `native_gates: Array{String}` -- the array of native gates symbols supported by the qpu architecture
+- `native_gates: Vector{String}` -- the vector of native gates symbols supported by the qpu architecture
 ```
 """
 Base.@kwdef struct QPU
@@ -15,7 +15,7 @@ Base.@kwdef struct QPU
     serial_number:: String
     host:: String
     qubit_count:: Int
-    native_gates:: Array{String}
+    native_gates:: Vector{String}
 end
 
 function Base.show(io::IO, qpu::QPU)
@@ -47,7 +47,7 @@ Quantum Processing Unit:
 ```
 """
 function create_virtual_qpu(qubit_count::Int,
-                         native_gates::Array{String},
+                         native_gates::Vector{String},
                          host = "localhost:5600")
     return QPU(manufacturer="none", generation="none", serial_number="00", host=host, native_gates=native_gates, qubit_count=qubit_count)
 end

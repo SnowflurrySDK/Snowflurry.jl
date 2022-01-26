@@ -65,9 +65,19 @@ q[2]:-------X--
 
  The second line adds a CNOT gate (Control-X gate) with control qubit being qubit 1 and target qubit being qubit 2. 
 
- # Quantum Processor 
+ # Quantum Processor Unit (QPU)
 
-Quantum circuits cannot typically be executed immidiately on a quantum processor. This is because quantum processors can typically execute only a limited number of quantum gates directly on the hardware. Such gates are commonly referred to as *native gates*. This means that once a general quantum circuit is defined, it typically needs to be transpiled from its original form such that all gates are made from the *native gates* for the desired quantum processor. 
+Quantum circuits cannot typically be immidiately executed on a quantum processor. This is because QPUs typically execute only a limited number of quantum gates directly on the hardware. Such gates are commonly referred to as *native gates*. This means that once a general quantum circuit is defined, it needs to be transpiled such that it only makes use of *native gates* for a given QPU . 
 
-Snowflake introduces `QPU` to represent physical or virtual quantum processors. 
+Snowflake introduces `QPU` to represent physical or virtual quantum processors. For example the following command creates a virtual QPU assuming it can implement Pauli matrices and Control-Z:
 
+```jldoctest
+julia> push_gate!(c, [control_x(1, 2)])
+Quantum Circuit Object:
+   id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:-------X--
+```

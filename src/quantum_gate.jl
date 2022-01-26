@@ -1,5 +1,18 @@
 export Gate, sigma_x, sigma_y, sigma_z, hadamard, control_z, control_x, x_90, iswap, eye
 
+#STD_GATES = ["x", "y", "z", "p", "s", "sdg",  "t", "tdg",  "ha",  "i", "cz", "cnot", "cx", "iswap", ] #two qubit gates
+
+STD_GATES = Dict(
+    "x" => sigma_x,
+    "y" => sigma_y,
+    "z" => sigma_z,
+    "i" => eye,
+    "h" => hadamard,
+    "cx" => control_x,
+    "cz" => control_z, 
+    "iswap" =>iswap
+)
+
 struct Gate
     display_symbol::Array{String}
     instruction_symbol::String
@@ -32,11 +45,12 @@ sigma_y() = Operator(reshape(Complex.([0.0, im, -im, 0.0]), 2, 2))
 sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
 hadamard() = Operator(1.0 / sqrt(2.0) * reshape(Complex.([1.0, 1.0, 1.0, -1.0]), 2, 2))
 eye() = Operator(Matrix{Complex}(1.0I, 2, 2))
+ 
 
 sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
 sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
-hadamard(target) = Gate(["H"], "ha", hadamard(), target)
+hadamard(target) = Gate(["H"], "h", hadamard(), target)
 x_90(target) = Gate(
     ["X_90"],
     "x_90",
