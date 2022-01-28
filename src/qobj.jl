@@ -106,7 +106,11 @@ struct MultiBodySystem
 end
 
 function Base.show(io::IO, system::MultiBodySystem)
-    @printf(io, "Snowflake.Multibody system with %d bodies\n", length(system.hilbert_space_structure))
+    @printf(
+        io,
+        "Snowflake.Multibody system with %d bodies\n",
+        length(system.hilbert_space_structure)
+    )
     @printf(io, "   Hilbert space structure:\n")
     @printf(io, "   ")
     show(io, system.hilbert_space_structure)
@@ -200,6 +204,8 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+
 Base.:size(M::Operator) = size(M.data)
 
 # iterator for Ket object

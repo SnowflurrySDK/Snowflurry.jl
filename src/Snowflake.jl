@@ -36,9 +36,22 @@ export
     plot_histogram,
     submit_circuit,
     get_circuit_status,
-
     create_virtual_qpu,
 
+    # Gates
+    sigma_x,
+    sigma_y,
+    sigma_z,
+    hadamard,
+    x_90,
+    iswap,
+    pi_8,
+    phase,
+    eye,
+    control_z,
+    control_x,
+    STD_GATES,
+    
 
     #  Enums
     JobStatus

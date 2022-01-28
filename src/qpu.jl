@@ -10,12 +10,12 @@ Represnts a Quantum Processing Unit (QPU).
 ```
 """
 Base.@kwdef struct QPU
-    manufacturer:: String
-    generation:: String
-    serial_number:: String
-    host:: String
-    qubit_count:: Int
-    native_gates:: Vector{String}
+    manufacturer::String
+    generation::String
+    serial_number::String
+    host::String
+    qubit_count::Int
+    native_gates::Vector{String}
 end
 
 function Base.show(io::IO, qpu::QPU)
@@ -46,8 +46,13 @@ Quantum Processing Unit:
    native_gates: ["x" "ha"] 
 ```
 """
-function create_virtual_qpu(qubit_count::Int,
-                         native_gates::Vector{String},
-                         host = "localhost:5600")
-    return QPU(manufacturer="none", generation="none", serial_number="00", host=host, native_gates=native_gates, qubit_count=qubit_count)
+function create_virtual_qpu(qubit_count::Int, native_gates::Vector{String}, host = "localhost:5600")
+    return QPU(
+        manufacturer = "none",
+        generation = "none",
+        serial_number = "00",
+        host = host,
+        native_gates = native_gates,
+        qubit_count = qubit_count,
+    )
 end

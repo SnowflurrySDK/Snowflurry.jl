@@ -10,13 +10,10 @@ makedocs(
     modules = [Snowflake],
     pages = [
         "Home" => "index.md",
-        "Quantum Computing With Snowflake" => 
-            [
-                "Basics" => "qc/basics.md"
-            ],
+        "Quantum Computing With Snowflake" => ["Basics" => "qc/basics.md"],
         #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
-        "Library" => "library.md"
-        ]
+        "Library" => "library.md",
+    ],
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
