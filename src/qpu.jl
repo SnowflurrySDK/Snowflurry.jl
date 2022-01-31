@@ -1,12 +1,13 @@
 """
 Represnts a Quantum Processing Unit (QPU).
 **Fields**
-- `manufacturer: String` -- qpu manufacturer (e.g. "anyon")
-- `generation: String` -- qpu generation (e.g. "yukon")
-- `serial_number: String` -- qpu serial_number (e.g. "ANYK202201")
-- `host: String` -- the remote host url address to send the jobs to
-- `physical_qubit_count: UInt32` -- number of physical qubits on the machine
-- `native_gates: Vector{String}` -- the vector of native gates symbols supported by the qpu architecture
+- `manufacturer:: String` -- qpu manufacturer (e.g. "anyon")
+- `generation:: String` -- qpu generation (e.g. "yukon")
+- `serial_number:: String` -- qpu serial_number (e.g. "ANYK202201")
+- `host:: String` -- the remote host url address to send the jobs to
+- `qubit_count:: Int` -- number of physical qubits on the machine
+- `connectivity::SparseArrays.SparseMatrixCSC{Int}`
+- `native_gates:: Vector{String}` -- the vector of native gates symbols supported by the qpu architecture
 ```
 """
 Base.@kwdef struct QPU
@@ -15,6 +16,7 @@ Base.@kwdef struct QPU
     serial_number::String
     host::String
     qubit_count::Int
+    connectivity::SparseArrays.SparseMatrixCSC{Int}
     native_gates::Vector{String}
 end
 
@@ -26,6 +28,7 @@ function Base.show(io::IO, qpu::QPU)
     println(io, "   host: $(qpu.host) ")
     println(io, "   qubit_count: $(qpu.qubit_count) ")
     println(io, "   native_gates: $(qpu.native_gates) ")
+    println(io, "   connectivity = $(qpu.connectivity)")
 end
 
 """
@@ -46,7 +49,11 @@ Quantum Processing Unit:
    native_gates: ["x" "ha"] 
 ```
 """
-function create_virtual_qpu(qubit_count::Int, native_gates::Vector{String}, host = "localhost:5600")
+function create_virtual_qpu(qubit_count::Int, connectivity::Matrix{Int}, native_gates::Vector{String}, host = "localhost:5600")
+    return create_virtual_qpu(qubit_count, SparseArrays.sparse(connectivity), native_gates, host)
+end
+
+function create_virtual_qpu(qubit_count::Int, connectivity::SparseArrays.SparseMatrixCSC{Int}, native_gates::Vector{String}, host = "localhost:5600")
     return QPU(
         manufacturer = "none",
         generation = "none",
@@ -54,5 +61,34 @@ function create_virtual_qpu(qubit_count::Int, native_gates::Vector{String}, host
         host = host,
         native_gates = native_gates,
         qubit_count = qubit_count,
+        connectivity = connectivity
     )
+end
+
+
+function is_circuit_native_on_qpu(c::QuantumCircuit, qpu::QPU)
+    for step in c.pipeline
+        for gate in step
+            if !(gate.instruction_symbol in qpu.native_gates)
+                return false, gate.instruction_symbol
+            end
+        end
+    end
+    return true, nothing
+end
+
+function does_circuit_satisfy_qpu_connectivity(c::QuantumCircuit, qpu::QPU)
+    #this function makes sure all gates satisfy the qpu connectivity
+    connectivity_dense = Array(qpu.connectivity)# TODO: all operations should be done in Sparse matrix format.
+    for step in c.pipeline
+        for gate in step
+            i_row = gate.target[1]
+            for target_qubit in gate.target
+                if (connectivity_dense[i_row,target_qubit]==0)
+                    return false, gate
+                end
+            end
+        end
+    end        
+    return true, nothing
 end

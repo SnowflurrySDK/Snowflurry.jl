@@ -103,3 +103,10 @@ STD_GATES = Dict(
     "cz" => control_z,
     "iswap" => iswap,
 )
+
+PAULI_GATES = Dict(
+    "x" => sigma_x,
+    "y" => sigma_y,
+    "z" => sigma_z, 
+    "i" => eye
+)

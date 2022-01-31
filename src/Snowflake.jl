@@ -12,6 +12,7 @@ using StatsBase
 using UUIDs
 using Printf
 using Plots
+import SparseArrays
 
 
 
@@ -36,7 +37,11 @@ export
     plot_histogram,
     submit_circuit,
     get_circuit_status,
+   
     create_virtual_qpu,
+    is_circuit_native_on_qpu,
+    does_circuit_satisfy_qpu_connectivity,
+    transpile,
 
     # Gates
     sigma_x,
@@ -51,6 +56,7 @@ export
     control_z,
     control_x,
     STD_GATES,
+    PAULI_GATES,
     
 
     #  Enums
@@ -60,8 +66,10 @@ include("qobj.jl")
 include("quantum_gate.jl")
 include("quantum_circuit.jl")
 include("qpu.jl")
+include("transpile.jl")
 include("remote/circuit_jobs.jl")
 include("visualize.jl")
+
 
 
 end # end module
