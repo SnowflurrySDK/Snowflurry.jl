@@ -205,6 +205,13 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+Base.:*(s::Complex, A::Operator) = s*A.data
+Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
+Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+expect(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
 
 Base.:size(M::Operator) = size(M.data)
 
