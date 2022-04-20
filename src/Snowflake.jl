@@ -30,6 +30,9 @@ export
     # Functions
     get_embed_operator,
     fock,
+    eigen,
+    ket2dm,
+    fock_dm,
     push_gate!,
     pop_gate!,
     simulate,

@@ -196,6 +196,7 @@ Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket) = isapprox(x.data, y.data)
 Base.:isapprox(x::Bra, y::Bra) = isapprox(x.data, y.data)
+Base.:isapprox(x::Operator, y::Operator) = isapprox(x.data, y.data)
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -210,7 +211,7 @@ Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
-expect(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
 
 Base.:size(M::Operator) = size(M.data)
@@ -247,4 +248,50 @@ function fock(i, hspace_size)
     d = fill(Complex(0.0), hspace_size)
     d[i] = 1.0
     return Ket(d)
+end
+
+"""
+    Snowflake.ket2dm(ψ)
+
+Returns the density matrix corresponding to the pure state ψ 
+"""
+
+function ket2dm(ψ::Ket)
+    return ψ*Bra(ψ)
+end
+
+"""
+    Snowflake.fock_dm(i, hspace_size)
+
+Returns the density matrix corresponding to fock base `i` defined in a hilbert space size of `hspace_size`.
+"""
+fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
+
+
+function wigner(ρ::Operator, p::Vector{Real}, q::Vector{Real})
+
+end
+
+"""
+    Snowflake.laguerre(x::Real,n::UInt)
+    Returns the value of Laguerre polynomial of degree `n` for `x` using a recursive method. See https://en.wikipedia.org/wiki/Laguerre_polynomials
+"""
+function laguerre(x,n)
+    result =0.0
+    L_0 = 1
+    L_1 = 1.0-x
+    if (n==0)
+        return L_0
+    end
+    if (n==1)
+        return L_1
+    end
+
+    for k in 1:n-1
+        result = (2.0*k+1-x)*L_1-(k)*L_0
+        result = result/ (k+1.0)
+        L_0 = L_1
+        L_1 = result
+    end        
+    return result
 end
