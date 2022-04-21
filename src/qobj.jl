@@ -210,6 +210,8 @@ Base.:*(s::Complex, A::Operator) = s*A.data
 Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
+
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
@@ -268,18 +270,42 @@ Returns the density matrix corresponding to fock base `i` defined in a hilbert s
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
 
 
-function wigner(ρ::Operator, p::Vector{Real}, q::Vector{Real})
-
+function wigner(ρ::Operator, p::Real, q::Real)
+    hilbert_size, _ = size(ρ.data)
+    eta = q + p*im
+    w = 0.0
+    for m in 1:hilbert_size
+        for n in 1:m
+            if (n==m)
+                w = w + real(ρ[m,n]*moyal(eta, m, n))
+            else
+                w = w + 2.0*real(ρ[m,n]*moyal(eta, m, n))
+            end
+        end
+    end
+    return w
 end
+
+"""
+    Snowflake.moyal(m, n)
+
+Returns the Moyal function `w_mn(eta)` for fock states `m` and `n`.
+"""
+function moyal(eta, m,n)
+    L = genlaguerre(4.0*abs2(eta),m-n, n)
+    w_mn = 2.0*(-1)^n/pi*sqrt(factorial(n)/factorial(m))*(2.0*conj(eta))^(m-n)*exp(-2.0*abs2(eta))*L
+    return w_mn
+end
+
 
 """
     Snowflake.laguerre(x::Real,n::UInt)
     Returns the value of Laguerre polynomial of degree `n` for `x` using a recursive method. See https://en.wikipedia.org/wiki/Laguerre_polynomials
 """
-function laguerre(x,n)
+function genlaguerre(x,alpha, n)
     result =0.0
     L_0 = 1
-    L_1 = 1.0-x
+    L_1 = 1.0+alpha-x
     if (n==0)
         return L_0
     end
@@ -288,7 +314,7 @@ function laguerre(x,n)
     end
 
     for k in 1:n-1
-        result = (2.0*k+1-x)*L_1-(k)*L_0
+        result = (2.0*k+1.0+alpha-x)*L_1-(k+alpha)*L_0
         result = result/ (k+1.0)
         L_0 = L_1
         L_1 = result
