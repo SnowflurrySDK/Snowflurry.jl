@@ -206,7 +206,6 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
-Base.:*(s::Complex, A::Operator) = s*A.data
 Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
@@ -248,8 +247,47 @@ julia> ψ = Snowflake.fock(2, 3)
 """
 function fock(i, hspace_size)
     d = fill(Complex(0.0), hspace_size)
-    d[i] = 1.0
+    d[i+1] = 1.0
     return Ket(d)
+end
+
+function create(hspace_size)
+    a_dag = zeros(Complex, hspace_size,hspace_size)
+    for i in 2:hspace_size
+        a_dag[i,i-1]=sqrt((i-1.0))
+    end
+    return Operator(a_dag)
+end
+
+function destroy(hspace_size)
+    a= zeros(Complex, hspace_size,hspace_size)
+    for i in 2:hspace_size
+        a[i-1,i]=sqrt((i-1.0))
+    end
+    return Operator(a)
+end
+
+function number_op(hspace_size)
+    n= zeros(Complex, hspace_size,hspace_size)
+    for i in 2:hspace_size
+        n[i,i]=i-1.0
+    end
+    return Operator(n)
+end
+
+function coherent(alpha, hspace_size)
+    ψ = fock(0,hspace_size)
+    for i  in 1:hspace_size-1
+        ψ+=(alpha^i)/(sqrt(factorial(big(i))))*fock(i,hspace_size)
+    end
+    ψ = exp(-0.5*abs2(alpha))*ψ
+    return ψ 
+end
+
+function normalize!(x::Ket)
+    a = LinearAlgebra.norm(x.data,2)
+    x = 1.0/a*x
+    return x
 end
 
 """
@@ -293,7 +331,7 @@ Returns the Moyal function `w_mn(eta)` for fock states `m` and `n`.
 """
 function moyal(eta, m,n)
     L = genlaguerre(4.0*abs2(eta),m-n, n)
-    w_mn = 2.0*(-1)^n/pi*sqrt(factorial(n)/factorial(m))*(2.0*conj(eta))^(m-n)*exp(-2.0*abs2(eta))*L
+    w_mn = 2.0*(-1)^n/pi*sqrt(factorial(big(n))/factorial(big(m)))*(2.0*conj(eta))^(m-n)*exp(-2.0*abs2(eta))*L
     return w_mn
 end
 
