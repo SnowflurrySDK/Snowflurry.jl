@@ -211,7 +211,7 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
     system = MultiBodySystem(circuit.qubit_count, 2)
     # initial state 
-    ψ = fock(1, hilbert_space_size)
+    ψ = fock(0, hilbert_space_size)
     for step in circuit.pipeline
         # U is the matrix corresponding the operations happening this step
         #        U = Operator(Matrix{Complex}(1.0I, hilbert_space_size, hilbert_space_size))  

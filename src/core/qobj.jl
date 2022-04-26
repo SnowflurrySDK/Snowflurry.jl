@@ -194,9 +194,9 @@ Base.length(x::Ket) = Base.length(x.data)
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
-Base.:isapprox(x::Ket, y::Ket) = isapprox(x.data, y.data)
-Base.:isapprox(x::Bra, y::Bra) = isapprox(x.data, y.data)
-Base.:isapprox(x::Operator, y::Operator) = isapprox(x.data, y.data)
+Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -288,6 +288,14 @@ function normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
     x = 1.0/a*x
     return x
+end
+
+function commute(A::Operator, B::Operator)
+    return A*B-B*A
+end
+
+function anticommute(A::Operator, B::Operator)
+    return A*B+B*A
 end
 
 """

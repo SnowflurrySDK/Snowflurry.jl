@@ -5,6 +5,5 @@ function transpile(c::QuantumCircuit, native_gates::Vector{String})
             throw(ErrorException("The native gates must include single qubit pauli gates"))
         end
     end
-
     return c
 end

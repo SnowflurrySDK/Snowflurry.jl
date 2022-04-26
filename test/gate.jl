@@ -32,10 +32,10 @@ end
 @testset "tensor_product_single_qubit_gate" begin
 
 
-    Ψ1_0 = fock(1, 2) # |0> for qubit_1
-    Ψ1_1 = fock(2, 2) # |1> for qubit_1
-    Ψ2_0 = fock(1, 2) # |0> for qubit_2
-    Ψ2_1 = fock(2, 2) # |0> for qubit_2
+    Ψ1_0 = fock(0, 2) # |0> for qubit_1
+    Ψ1_1 = fock(1, 2) # |1> for qubit_1
+    Ψ2_0 = fock(0, 2) # |0> for qubit_2
+    Ψ2_1 = fock(1, 2) # |0> for qubit_2
     ψ_init = kron(Ψ1_0, Ψ2_0)
 
     U = kron(sigma_x(), eye())

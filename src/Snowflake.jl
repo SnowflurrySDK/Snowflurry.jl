@@ -28,6 +28,8 @@ export
     QPU,
 
     # Functions
+    commute, 
+    anticommute, 
     get_embed_operator,
     fock,
     coherent,
@@ -73,13 +75,14 @@ export
     #  Enums
     JobStatus
 
-include("qobj.jl")
-include("quantum_gate.jl")
-include("quantum_circuit.jl")
-include("qpu.jl")
-include("transpile.jl")
+include("core/qobj.jl")
+include("core/quantum_gate.jl")
+include("core/quantum_circuit.jl")
+include("core/qpu.jl")
+include("core/transpile.jl")
+include("core/visualize.jl")
 include("remote/circuit_jobs.jl")
-include("visualize.jl")
+
 
 
 
