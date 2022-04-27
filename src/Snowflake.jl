@@ -43,6 +43,7 @@ export
     normalize!,
     wigner, 
     viz_wigner, 
+    sesolve,
     push_gate!,
     pop_gate!,
     simulate,
@@ -76,6 +77,7 @@ export
     JobStatus
 
 include("core/qobj.jl")
+include("core/master_eq.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/qpu.jl")
