@@ -6,7 +6,7 @@ using Snowflake
 DocMeta.setdocmeta!(Snowflake, :DocTestSetup, :(using Snowflake); recursive = true)
 makedocs(
     sitename = "Snowflake",
-    format = Documenter.HTML(),
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
     modules = [Snowflake],
     pages = [
         "Home" => "index.md",
@@ -19,6 +19,8 @@ makedocs(
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
-#= deploydocs(
-    repo = "<repository url>"
-) =#
+deploydocs(
+    repo = "github.com/anyonlabs/Snowflake.jl.git",
+)
+
+

@@ -87,3 +87,15 @@ end
 @testset "coherent state" begin
     @test coherent(0.25im, 5) ≈ Ket([0.969233234, 0.0 + 0.2423083086190im, -0.042834462040, -0.006182622047433im,7.7282775592e-4]) atol=1.0e-4
 end
+
+@testset "cat states" begin
+    alpha = 0.25
+    hspace_size=8
+    ψ_0 = normalize!(coherent(alpha, hspace_size)+coherent(-alpha,hspace_size))
+    ψ_1 = normalize!(coherent(alpha, hspace_size)-coherent(-alpha,hspace_size))
+
+    @test Bra(ψ_0)*ψ_1 ≈ 0.0
+    @test wigner(ket2dm(ψ_0),0.0,0.0) ≈ -0.636619772367581382432888403855 atol=1.0e-4
+    p=q=-3.0:0.1:3
+    viz_wigner(ket2dm(ψ_0),p,q)
+end

@@ -15,6 +15,8 @@ using Test
     push_gate!(c, control_x(1, 2))
     @test length(c.pipeline) == 2
 
+    plot_histogram(c,100)
+
     print(c)
 end
 

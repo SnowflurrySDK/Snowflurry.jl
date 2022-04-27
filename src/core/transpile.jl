@@ -5,5 +5,9 @@ function transpile(c::QuantumCircuit, native_gates::Vector{String})
             throw(ErrorException("The native gates must include single qubit pauli gates"))
         end
     end
+
+    @warn "Circuit transpiling is not implemented yet."
+    #TODO: implement the tranpiler
+
     return c
 end

@@ -27,6 +27,25 @@ using Test
 
     CZ = control_z(1, 2)
     @test CZ.instruction_symbol == "cz"
+
+    ψ_0 = fock(0,2)
+    ψ_1 = fock(1,2)
+
+    S = phase(1)
+    @test S.instruction_symbol == "s"
+    @test S*ψ_0 ≈ ψ_0
+    @test S*ψ_1 ≈ im*ψ_1
+
+    T = pi_8(1)
+    @test T.instruction_symbol == "t"
+    @test T*ψ_0 ≈ ψ_0
+    @test T*ψ_1 ≈ exp(im*pi/4.0)*ψ_1
+
+    x90 = x_90(1)
+    @test x90.instruction_symbol == "x_90"
+    @test x90*ψ_0 ≈ -im*ψ_1 
+    @test x90*ψ_1 ≈ -im*ψ_0 
+
 end
 
 @testset "tensor_product_single_qubit_gate" begin

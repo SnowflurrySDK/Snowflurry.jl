@@ -4,6 +4,9 @@
 
 Snowflake is a pure Julia quantum computing stack that allows you to easily design quantum circuits, algorithms, experiments and applications and run them on real quantum computers and/or classical simulators. 
 
+!!! warning
+    The documentation of Snowflake is still a work in progress. That being said, a lot can be learnt from the unit tests in the test folder.
+
 # Installation
 
 Make sure your system has Julia (v.1.6 or a more recent version)   installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).

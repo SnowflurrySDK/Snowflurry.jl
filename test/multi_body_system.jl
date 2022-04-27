@@ -11,6 +11,7 @@ using Test
     qubit_count = 2
     hilber_space_size_per_qubit = 2
     system = MultiBodySystem(qubit_count, hilber_space_size_per_qubit)
+    println(system)
 
     ##Single Qubit Gates for a single register
     h = hadamard(1)

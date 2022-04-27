@@ -74,9 +74,8 @@ sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
 sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
 hadamard(target) = Gate(["H"], "h", hadamard(), target)
-phase(target) = Gate("S", "s", phase, target)
-pi_8(target) = Gate("T", "t", pi_8, target)
-
+phase(target) = Gate(["S"], "s", phase(), target)
+pi_8(target) = Gate(["T"], "t", pi_8(), target)
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 
 
