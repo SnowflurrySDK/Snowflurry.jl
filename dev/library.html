@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Library · Snowflake</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="Snowflake logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">Snowflake</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Home</a></li><li><span class="tocitem">Quantum Computing With Snowflake</span><ul><li><a class="tocitem" href="qc/basics.html">Basics</a></li></ul></li><li class="is-active"><a class="tocitem" href="library.html">Library</a><ul class="internal"><li><a class="tocitem" href="#Quantum-Circuit"><span>Quantum Circuit</span></a></li><li><a class="tocitem" href="#Quantum-Processing-Unit"><span>Quantum Processing Unit</span></a></li><li><a class="tocitem" href="#Quantum-Toolkit"><span>Quantum Toolkit</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="library.html">Library</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="library.html">Library</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/anyonlabs/Snowflake.jl/blob/master/docs/src/library.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Library"><a class="docs-heading-anchor" href="#Library">Library</a><a id="Library-1"></a><a class="docs-heading-anchor-permalink" href="#Library" title="Permalink"></a></h1><h2 id="Quantum-Circuit"><a class="docs-heading-anchor" href="#Quantum-Circuit">Quantum Circuit</a><a id="Quantum-Circuit-1"></a><a class="docs-heading-anchor-permalink" href="#Quantum-Circuit" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Snowflake.QuantumCircuit" href="#Snowflake.QuantumCircuit"><code>Snowflake.QuantumCircuit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">    QuantumCircuit(qubit_count = .., bit_count = ...)</code></pre><p>A data structure to represnts a <em>quantum circuit</em>.   <strong>Fields</strong></p><ul><li><code>qubit_count::Int</code> – number of qubits (i.e. quantum register size).</li><li><code>bit_count::Int</code> – number of classical bits (i.e. classical register size).</li><li><code>id::UUID</code> – a universally unique identifier for the circuit. This id is automatically generated one an instance is created. </li><li><code>pipeline::Array{Array{Gate}}</code> – the pipeline of gates to operate on qubits.</li></ul><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
+Quantum Circuit Object:
+   id: b2d2be56-7af2-11ec-31a6-ed9e71cb3360 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:
+     
+q[2]:</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/quantum_circuit.jl#L2-L23">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.push_gate!" href="#Snowflake.push_gate!"><code>Snowflake.push_gate!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">    push_gate!(circuit::QuantumCircuit, gate::Gate)
+    push_gate!(circuit::QuantumCircuit, gates::Array{Gate})</code></pre><p>Pushes a single gate or an array of gates to the <code>circuit</code> pipeline. This function is mutable. </p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia&gt; push_gate!(c, [hadamard(1),sigma_x(2)])
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+          
+
+
+julia&gt; push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:--X----X--</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/quantum_circuit.jl#L31-L61">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.pop_gate!" href="#Snowflake.pop_gate!"><code>Snowflake.pop_gate!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">    pop_gate!(circuit::QuantumCircuit)</code></pre><p>Removes the last gate from <code>circuit.pipeline</code>. </p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia&gt; push_gate!(c, [hadamard(1),sigma_x(2)])
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+          
+
+
+julia&gt; push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:--X----X--
+
+julia&gt; pop_gate!(c)
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/quantum_circuit.jl#L72-L110">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.simulate" href="#Snowflake.simulate"><code>Snowflake.simulate</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">    simulate(circuit::QuantumCircuit)</code></pre><p>Simulates and returns the wavefunction of the quantum device after running <code>circuit</code>. </p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">jjulia&gt; push_gate!(c, hadamard(1))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:-----
+          
+
+
+julia&gt; push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:-------X--
+               
+
+
+julia&gt; simulate(c)
+4-element Ket:
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im
+0.7071067811865475 + 0.0im
+
+</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/quantum_circuit.jl#L171-L209">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.simulate_shots" href="#Snowflake.simulate_shots"><code>Snowflake.simulate_shots</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">    simulate_shots(c::QuantumCircuit, shots_count::Int = 100)</code></pre><p>Emulates the function of a quantum computer by running a circuit for given number of shots and return measurement results.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">jjulia&gt; push_gate!(c, hadamard(1))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:-----
+          
+
+
+julia&gt; push_gate!(c, control_x(1,2))
+Quantum Circuit Object:
+   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----*--
+            |  
+q[2]:-------X--
+               
+
+
+julia&gt; simulate_shots(c, 100)
+100-element Vector{String}:
+ &quot;00&quot;
+ &quot;00&quot;
+ &quot;11&quot;
+ &quot;00&quot;
+ &quot;11&quot;
+ ⋮
+ &quot;11&quot;
+ &quot;11&quot;
+ &quot;11&quot;
+ &quot;00&quot;
+ &quot;11&quot;</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/quantum_circuit.jl#L231-L274">source</a></section></article><h2 id="Quantum-Processing-Unit"><a class="docs-heading-anchor" href="#Quantum-Processing-Unit">Quantum Processing Unit</a><a id="Quantum-Processing-Unit-1"></a><a class="docs-heading-anchor-permalink" href="#Quantum-Processing-Unit" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Snowflake.QPU" href="#Snowflake.QPU"><code>Snowflake.QPU</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Represnts a Quantum Processing Unit (QPU). <strong>Fields</strong></p><ul><li><code>manufacturer:: String</code> – qpu manufacturer (e.g. &quot;anyon&quot;)</li><li><code>generation:: String</code> – qpu generation (e.g. &quot;yukon&quot;)</li><li><code>serial_number:: String</code> – qpu serial_number (e.g. &quot;ANYK202201&quot;)</li><li><code>host:: String</code> – the remote host url address to send the jobs to</li><li><code>qubit_count:: Int</code> – number of physical qubits on the machine</li><li><code>connectivity::SparseArrays.SparseMatrixCSC{Int}</code></li><li><code>native_gates:: Vector{String}</code> – the vector of native gates symbols supported by the qpu architecture</li></ul><p>```</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qpu.jl#L1-L12">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.create_virtual_qpu" href="#Snowflake.create_virtual_qpu"><code>Snowflake.create_virtual_qpu</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">create_virtual_qpu(qubit_count::UInt32, native_gates::Array{String}, host = &quot;localhost:5600&quot;)</code></pre><p>Creates a virtual quantum processor with <code>qubit_count</code> number of qubits and <code>native_gates</code>.  The return value is QPU stucture (see  <a href="library.html#Snowflake.QPU"><code>QPU</code></a>).</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; qpu = create_virtual_qpu(3,[&quot;x&quot; &quot;ha&quot;])
+Quantum Processing Unit:
+   manufacturer: none
+   generation: none 
+   serial_number: 00 
+   host: localhost:5600 
+   qubit_count: 3 
+   native_gates: [&quot;x&quot; &quot;ha&quot;] </code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qpu.jl#L34-L51">source</a></section></article><h2 id="Quantum-Toolkit"><a class="docs-heading-anchor" href="#Quantum-Toolkit">Quantum Toolkit</a><a id="Quantum-Toolkit-1"></a><a class="docs-heading-anchor-permalink" href="#Quantum-Toolkit" title="Permalink"></a></h2><h3 id="Basic-Quantum-Objects"><a class="docs-heading-anchor" href="#Basic-Quantum-Objects">Basic Quantum Objects</a><a id="Basic-Quantum-Objects-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Quantum-Objects" title="Permalink"></a></h3><p>There are three basic quantum objects defined in Snowflake to simulate a Quantum system. These objects are Ket, Bra, and Operator.</p><article class="docstring"><header><a class="docstring-binding" id="Snowflake.Ket" href="#Snowflake.Ket"><code>Snowflake.Ket</code></a> — <span class="docstring-category">Type</span></header><section><div><p>A Ket represnts a <em>quantum wavefunction</em> and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.   <strong>Fields</strong></p><ul><li><code>data</code> – the stored values.</li></ul><p><strong>Examples</strong></p><p>Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. </p><pre><code class="language-julia-repl hljs">julia&gt; using Snowflake
+
+julia&gt; ψ = Snowflake.Ket([1.0; 0.0; 0.0])
+3-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im</code></pre><p>A better way to initialize a Ket is to use a pre-built basis such as <code>fock</code> basis. See <code>fock</code> for further information on this function. </p><pre><code class="language-julia-repl hljs">julia&gt; ψ = Snowflake.fock(2, 3)
+3-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L1-L24">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.Bra" href="#Snowflake.Bra"><code>Snowflake.Bra</code></a> — <span class="docstring-category">Type</span></header><section><div><p>A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket. <strong>Fields</strong></p><ul><li><code>data</code> – the stored values.</li></ul><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; ψ = Snowflake.fock(2, 3)
+3-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im
+
+julia&gt; _ψ = Snowflake.Bra(ψ)
+Bra(Any[0.0 - 0.0im 1.0 - 0.0im 0.0 - 0.0im])
+
+
+julia&gt; _ψ * ψ    # A Bra times a Ket is a scalar
+1.0 + 0.0im
+
+julia&gt; ψ*_ψ     # A Ket times a Bra is an operator
+        (3, 3)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L36-L62">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.Operator" href="#Snowflake.Operator"><code>Snowflake.Operator</code></a> — <span class="docstring-category">Type</span></header><section><div><p>A structure representing a quantum operator (i.e. a complex matrix). <strong>Fields</strong></p><ul><li><code>data</code> – the complex matrix.</li></ul><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; z = Snowflake.Operator([1.0 0.0;0.0 -1.0])
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                1.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             -1.0 + 0.0im
+</code></pre><p>Alternatively:</p><pre><code class="language-julia-repl hljs">julia&gt; z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                1.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             -1.0 + 0.0im</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L70-L92">source</a></section></article><h3 id="Multibody-Systems"><a class="docs-heading-anchor" href="#Multibody-Systems">Multibody Systems</a><a id="Multibody-Systems-1"></a><a class="docs-heading-anchor-permalink" href="#Multibody-Systems" title="Permalink"></a></h3><article class="docstring"><header><a class="docstring-binding" id="Snowflake.MultiBodySystem" href="#Snowflake.MultiBodySystem"><code>Snowflake.MultiBodySystem</code></a> — <span class="docstring-category">Type</span></header><section><div><p>A structure representing a quantum multi-body system. <strong>Fields</strong></p><ul><li><code>hilbert_space_structure</code> – a vector of integers specifying the local hilbert space size for each &quot;body&quot; within the multi-body system. </li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L97-L101">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Snowflake.get_embed_operator" href="#Snowflake.get_embed_operator"><code>Snowflake.get_embed_operator</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)</code></pre><p>Uses a local operator (<code>op</code>) which is defined for a particular body (e.g. qubit) with index <code>target_body_index</code> to build the corresponding operator for the hilbert soace of the  multi-body system given by <code>system</code>. </p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; system = Snowflake.MultiBodySystem(3,2)
+Snowflake.Multibody system with 3 bodies
+   Hilbert space structure:
+   [2, 2, 2]
+
+julia&gt; x = Snowflake.sigma_x()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             1.0 + 0.0im
+                1.0 + 0.0im             0.0 + 0.0im
+
+julia&gt; X_1=Snowflake.get_embed_operator(x,1,system)
+        (8, 8)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im
+                1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L119-L148">source</a></section></article><h3 id="Fock-Space"><a class="docs-heading-anchor" href="#Fock-Space">Fock Space</a><a id="Fock-Space-1"></a><a class="docs-heading-anchor-permalink" href="#Fock-Space" title="Permalink"></a></h3><article class="docstring"><header><a class="docstring-binding" id="Snowflake.fock" href="#Snowflake.fock"><code>Snowflake.fock</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">Snowflake.fock(i, hspace_size)</code></pre><p>Returns the <code>i</code>th fock basis of a Hilbert space with size <code>hspace_size</code> as Snowflake.Ket</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; ψ = Snowflake.fock(1, 3)
+3-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im
+
+
+julia&gt; ψ = Snowflake.fock(2, 3)
+3-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/anyonlabs/Snowflake.jl/blob/26c2d26b7a9ea0fed8f79f75f8c2f39d08288351/src/core/qobj.jl#L228-L247">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="qc/basics.html">« Basics</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.16 on <span class="colophon-date" title="Wednesday 27 April 2022 09:04">Wednesday 27 April 2022</span>. Using Julia version 1.6.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
