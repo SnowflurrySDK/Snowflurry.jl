@@ -231,14 +231,14 @@ Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(1, 3)
+julia> ψ = Snowflake.fock(0, 3)
 3-element Ket:
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ = Snowflake.fock(2, 3)
+julia> ψ = Snowflake.fock(1, 3)
 3-element Ket:
 0.0 + 0.0im
 1.0 + 0.0im

@@ -1,9 +1,9 @@
 using Snowflake
 
-c = Circuit(qubit_count = 2, bit_count = 0)
-pushGate!(c, [hadamard(1)])
-pushGate!(c, [control_x(1, 2)])
+c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+push_gate!(c, [hadamard(1)])
+push_gate!(c, [control_x(1, 2)])
 
 ψ = simulate(c)
 
-histogram(c, 10001)
+plot_histogram(c, 1001)
