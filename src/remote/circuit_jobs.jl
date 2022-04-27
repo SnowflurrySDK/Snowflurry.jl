@@ -4,20 +4,44 @@ using UUIDs
 using .AnyonClients
 using gRPCClient
 
-export JobStatus, JobStatusMap, submitCircuit, getCircuitStatus
 
 @enum JobStatus UNKNOWN = 0 QUEUED = 1 RUNNING = 2 SUCCEEDED = 3 FAILED = 4 CANCELED = 5
-JobStatusMap = Dict(UNKNOWN=>"UNKNOWN", QUEUED=>"QUEUED", RUNNING=>"RUNNING", SUCCEEDED=>"SUCCEEDED", FAILED=>"FAILED", CANCELED=>"CANCELED")
-IntToJobStatusMap = Dict(0 =>UNKNOWN, 1=>QUEUED, 2=>RUNNING, 3=>SUCCEEDED, 4=>FAILED, 5=>CANCELED)
+JobStatusMap = Dict(
+    UNKNOWN => "UNKNOWN",
+    QUEUED => "QUEUED",
+    RUNNING => "RUNNING",
+    SUCCEEDED => "SUCCEEDED",
+    FAILED => "FAILED",
+    CANCELED => "CANCELED",
+)
+IntToJobStatusMap = Dict(
+    0 => UNKNOWN,
+    1 => QUEUED,
+    2 => RUNNING,
+    3 => SUCCEEDED,
+    4 => FAILED,
+    5 => CANCELED,
+)
 
 function Base.string(status::JobStatus)
     return JobStatusMap[status]
 end
 
-function submitCircuit(circuit::Circuit; owner::String, token::String, shots::Int, host::String, verbose::Bool=false)
-    client = AnyonClients.CircuitAPIClient(host, verbose=verbose, negotiation=:http2_prior_knowledge)
+function submit_circuit(
+    circuit::QuantumCircuit;
+    owner::String,
+    token::String,
+    shots::Int,
+    host::String,
+    verbose::Bool = false,
+)
+    client = AnyonClients.CircuitAPIClient(
+        host,
+        verbose = verbose,
+        negotiation = :http2_prior_knowledge,
+    )
     # client = AnyonClients.CircuitAPIBlockingClient(host)
-    request = createJobRequest(circuit, owner = owner, token = token, shots = shots)
+    request = create_job_request(circuit, owner = owner, token = token, shots = shots)
     try
         reply = submitJob(client, request)
         job_uuid = getproperty(reply[1], :job_uuid)
@@ -31,7 +55,12 @@ function submitCircuit(circuit::Circuit; owner::String, token::String, shots::In
     end
 end
 
-function createJobRequest(circuit::Circuit; owner::String, token::String, shots::Int)
+function create_job_request(
+    circuit::QuantumCircuit;
+    owner::String,
+    token::String,
+    shots::Int,
+)
     pipeline = []
     for step in circuit.pipeline
         should_add_identity = fill(true, circuit.qubit_count)
@@ -43,7 +72,13 @@ function createJobRequest(circuit::Circuit; owner::String, token::String, shots:
             end
 
             ##TODO: add classical bit targets and parameters
-            push!(pipeline, AnyonClients.Instruction(symbol = gate.instruction_symbol, qubits = gate.target))
+            push!(
+                pipeline,
+                AnyonClients.Instruction(
+                    symbol = gate.instruction_symbol,
+                    qubits = gate.target,
+                ),
+            )
         end
 
         for i_qubit in range(1, length = (circuit.qubit_count))
@@ -55,14 +90,25 @@ function createJobRequest(circuit::Circuit; owner::String, token::String, shots:
     end
 
     circuit_api = AnyonClients.anyon.thunderhead.qpu.Circuit(instructions = pipeline)
-    request = AnyonClients.SubmitJobRequest(owner = owner, token = token, shots_count = shots, circuit = circuit_api)
+    request = AnyonClients.SubmitJobRequest(
+        owner = owner,
+        token = token,
+        shots_count = shots,
+        circuit = circuit_api,
+    )
 
     return request
 end
 
-function getCircuitStatus(job_uuid::String; owner::String = "", token::String = "", host = "localhost:60051")
+function get_circuit_status(
+    job_uuid::String;
+    owner::String = "",
+    token::String = "",
+    host = "localhost:60051",
+)
     client = AnyonClients.CircuitAPIClient(host)
-    request = AnyonClients.JobStatusRequest(job_uuid = job_uuid, owner = owner, token = token)
+    request =
+        AnyonClients.JobStatusRequest(job_uuid = job_uuid, owner = owner, token = token)
     try
         reply = getJobStatus(client, request)
         job_uuid = getproperty(reply[1], :job_uuid)
