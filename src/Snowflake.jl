@@ -32,6 +32,8 @@ export
     anticommute, 
     get_embed_operator,
     fock,
+    spin_up,
+    spin_down,
     coherent,
     create,
     destroy,
@@ -44,6 +46,8 @@ export
     wigner, 
     viz_wigner, 
     sesolve,
+    mesolve,
+    tr,
     push_gate!,
     pop_gate!,
     simulate,
@@ -61,6 +65,8 @@ export
     sigma_x,
     sigma_y,
     sigma_z,
+    sigma_p,
+    sigma_m,
     hadamard,
     x_90,
     iswap,
@@ -77,7 +83,7 @@ export
     JobStatus
 
 include("core/qobj.jl")
-include("core/master_eq.jl")
+include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/qpu.jl")

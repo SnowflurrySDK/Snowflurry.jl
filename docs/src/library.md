@@ -24,17 +24,23 @@ There are three basic quantum objects defined in Snowflake to simulate a Quantum
 Ket
 Bra
 Operator
+commute
+anticommute
+normalize
+ket2dm
+fock_dm
 ```
 
-### Multibody Systems
 
 ```@docs
 MultiBodySystem
 get_embed_operator
 ```
 
-### Fock Space
-
 ```@docs
 fock
+create
+destroy
+number_op
+coherent
 ```

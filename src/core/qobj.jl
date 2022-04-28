@@ -193,6 +193,7 @@ end
 Base.length(x::Ket) = Base.length(x.data)
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
+Base.adjoint(A::Operator) = Operator(adjoint(A.data))
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
@@ -202,7 +203,6 @@ Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
 Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
 Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
-
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
@@ -210,8 +210,8 @@ Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+tr(A::Operator)=LinearAlgebra.tr(A.data)
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
 
@@ -251,6 +251,14 @@ function fock(i, hspace_size)
     return Ket(d)
 end
 
+spin_up() = fock(0,2)
+spin_down() = fock(1,2)
+
+"""
+    Snowflake.create(hspace_size)
+
+Returns the bosonic creation operator for a fock space of size `hspace_size`.
+"""
 function create(hspace_size)
     a_dag = zeros(Complex, hspace_size,hspace_size)
     for i in 2:hspace_size
@@ -259,6 +267,11 @@ function create(hspace_size)
     return Operator(a_dag)
 end
 
+"""
+    Snowflake.destroy(hspace_size)
+
+Returns the bosonic annhilation operator for a fock space of size `hspace_size`.
+"""
 function destroy(hspace_size)
     a= zeros(Complex, hspace_size,hspace_size)
     for i in 2:hspace_size
@@ -267,6 +280,11 @@ function destroy(hspace_size)
     return Operator(a)
 end
 
+"""
+    Snowflake.number_op(hspace_size)
+
+Returns the number operator for a fock space of size `hspace_size`.
+"""
 function number_op(hspace_size)
     n= zeros(Complex, hspace_size,hspace_size)
     for i in 2:hspace_size
@@ -275,6 +293,42 @@ function number_op(hspace_size)
     return Operator(n)
 end
 
+"""
+    Snowflake.coherent(alpha, hspace_size)
+
+Returns a coherent state for parameter `alpha` in fock space of size `hspace_size`. Note that |alpha|^2 is equal to 
+    photon number of the coherent state. 
+
+    # Examples
+```jldoctest
+julia> ψ = Snowflake.coherent(2.0,20)
+20-element Ket:
+0.13533528323661270231781372785917483270168304443359375 + 0.0im
+0.2706705664732254046356274557183496654033660888671875 + 0.0im
+0.3827859860416437253261507804308297496944779411605434060697044368322244814859633 + 0.0im
+0.4420031841663186705315006220668383887063770056788388080454298547413058719111879 + 0.0im
+0.4420031841663186705315006220668383887063770056788388080454298547413058719111879 + 0.0im
+0.3953396664268989033516298387998153143981494385130297054512994395645417722835952 + 0.0im
+0.3227934859426706749083446895240143309122789082442331409841890434072244670369041 + 0.0im
+0.2440089396102658373848913914105868080225858281751344102479261185426274154783478 + 0.0im
+0.1725403758685577344434702345068468523504659376126805082402433361167676595291802 + 0.0im
+0.1150269172457051562956468230045645682336439584084536721601622240778451063527861 + 0.0im
+0.07274941014482606043765122911007029674853133081310976424472247415659623989683902 + 0.0im
+0.04386954494001140575894979175461054210856445342112420740912216424244799751166167 + 0.0im
+0.02532809358034196997591593372015585816248494654573845414140041049288863525802268 + 0.0im
+0.01404949847902665677216550321294394000313011924224810466364209088409881639691112 + 0.0im
+0.007509772823502763531724947918871845905858490361570411398782773832262018118359266 + 0.0im
+0.003878030010563633897440227516084030465660984499951448370503442999620168228954113 + 0.0im
+0.001939015005281816948720113758042015232830492249975724185251721499810084114477056 + 0.0im
+0.0009405604325217079112661845386949416195293171394724978755464370121167236584289665 + 0.0im
+0.0004433844399679012093293182780011289711800019436937749734346315219336842860352511 + 0.0im
+0.0002034387333640481868882144439914691756776463670619686354629916554722074664961924 + 0.0im
+
+
+julia> Snowflake.expected_value(Snowflake.number_op(20),ψ)
+3.999999793648639261230596388008292158320219007459973469036845972185905095821291 + 0.0im
+```
+"""
 function coherent(alpha, hspace_size)
     ψ = fock(0,hspace_size)
     for i  in 1:hspace_size-1
@@ -284,16 +338,66 @@ function coherent(alpha, hspace_size)
     return ψ 
 end
 
+"""
+    Snowflake.normalize!(x::Ket)
+
+Normalizes Ket `x` to have a unit magnitude.
+"""
 function normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
     x = 1.0/a*x
     return x
 end
 
+"""
+    Snowflake.commute(A::Operator, B::Operator)
+
+Returns the commutation of `A` and `B`.
+```jldoctest
+julia> σ_x = Snowflake.sigma_x()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             1.0 + 0.0im
+                1.0 + 0.0im             0.0 + 0.0im
+
+
+julia> σ_y = Snowflake.sigma_y()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             0.0 - 1.0im
+                0.0 + 1.0im             0.0 + 0.0im
+
+
+julia> Snowflake.commute(σ_x,σ_y)
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 2.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 - 2.0im
+```
+"""
 function commute(A::Operator, B::Operator)
     return A*B-B*A
 end
 
+"""
+    Snowflake.commute(A::Operator, B::Operator)
+
+Returns the anticommutation of `A` and `B`.
+```jldoctest
+julia> σ_x = Snowflake.sigma_x()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             1.0 + 0.0im
+                1.0 + 0.0im             0.0 + 0.0im
+
+
+julia> Snowflake.anticommute(σ_x,σ_x)
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                2.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             2.0 + 0.0im
+```
+"""
 function anticommute(A::Operator, B::Operator)
     return A*B+B*A
 end

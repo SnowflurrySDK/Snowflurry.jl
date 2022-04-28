@@ -2,8 +2,8 @@ using Snowflake
 using Test
 
 @testset "simple_bra_ket" begin
-    Ψ_0 = fock(0, 2)
-    Ψ_1 = fock(1, 2)
+    Ψ_0 = spin_up()
+    Ψ_1 = spin_down()
     print(Ψ_0)
 
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
@@ -85,7 +85,8 @@ end
 end
 
 @testset "coherent state" begin
-    @test coherent(0.25im, 5) ≈ Ket([0.969233234, 0.0 + 0.2423083086190im, -0.042834462040, -0.006182622047433im,7.7282775592e-4]) atol=1.0e-4
+    ψ = Snowflake.coherent(2.0,20)
+    @test expected_value(number_op(20),ψ) ≈ 4.0 atol=1.0e-4
 end
 
 @testset "cat states" begin

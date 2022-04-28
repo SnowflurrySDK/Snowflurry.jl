@@ -23,8 +23,8 @@ end
 
 @testset "bellstate" begin
 
-    Ψ_up = fock(0, 2)
-    Ψ_down = fock(1, 2)
+    Ψ_up = spin_up()
+    Ψ_down = spin_down()
 
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_up + Ψ_down)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_up - Ψ_down)
@@ -43,8 +43,8 @@ end
 
 @testset "phase_kickback" begin
 
-    Ψ_up = fock(0, 2)  # ket{0}
-    Ψ_down = fock(1, 2) # ket{1}
+    Ψ_up = spin_up()
+    Ψ_down = spin_down()
 
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_up + Ψ_down)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_up - Ψ_down)
