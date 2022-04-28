@@ -43,4 +43,5 @@ create
 destroy
 number_op
 coherent
+sesolve
 ```

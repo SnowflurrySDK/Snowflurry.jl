@@ -1,3 +1,10 @@
+"""
+    Snowflake.sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+
+Solves the Shrodinger equation:
+
+``\\frac{d \\psi}{d t}=-i H\\psi``
+"""
 function sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
     Hamiltonian(t)=H
     sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops, kwargs=kwargs)
