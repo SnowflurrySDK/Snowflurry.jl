@@ -1,5 +1,7 @@
 # What is Quantum Computing?
-
+```@meta
+DocTestSetup = :(using Snowflake)
+```
 Quantum computing is a new paradigm in high performance computing that utilizes the fundamental principles of quantum mechanics to perform calculations. Quantum computation holds great promise to outperform classical computers in some tasks such as prime factorization, quantum simulation, search, optimization, and algebraic programs such as machine learning.
 
 The power of quantum computing stems from two fundemental properties of quantum mechanics, namely [superposition](https://en.wikipedia.org/wiki/Quantum_superposition) and [entanglement](https://en.wikipedia.org/wiki/Quantum_entanglement).
@@ -17,7 +19,7 @@ The qubits are designated on the left side of the figure with their inital state
 You can defined a quantum circuit with Snowflake through
 
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0)
 Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 

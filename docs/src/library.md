@@ -1,5 +1,10 @@
 # Library
 
+```@meta
+DocTestSetup = :(using Snowflake)
+```
+
+
 ## Quantum Circuit
 ```@docs
 QuantumCircuit
@@ -24,24 +29,18 @@ There are three basic quantum objects defined in Snowflake to simulate a Quantum
 Ket
 Bra
 Operator
+MultiBodySystem
 commute
 anticommute
 normalize
 ket2dm
 fock_dm
-```
-
-
-```@docs
-MultiBodySystem
 get_embed_operator
-```
-
-```@docs
 fock
 create
 destroy
 number_op
 coherent
 sesolve
+mesolve
 ```

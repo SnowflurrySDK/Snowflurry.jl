@@ -1,4 +1,7 @@
 # Snowflake.jl
+```@meta
+DocTestSetup = :(using Snowflake)
+```
 *A library for quantum computing using Julia*
 
 

@@ -1,14 +1,22 @@
 """
     Snowflake.sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    Snowflake.sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
 
 Solves the Shrodinger equation:
 
-``\\frac{d \\psi}{d t}=-i H\\psi``
+``\\frac{d \\Psi}{d t}=-i \\hat{H}\\Psi``
+
+**Fields**
+- `H` -- the Hamiltonian operator or a function that returns the Hamiltonian as a function of time.
+- `ψ_0` -- initital status of a quantum system
+- `t_range` -- time interval for which the system has to be simulated. 
+- `e_ops` -- List of operators for which the expected value will be returned as function of time. 
 """
 function sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
     Hamiltonian(t)=H
     sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops, kwargs=kwargs)
 end
+
 function sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
     dpsi_dt(t,ψ) = -im*H(t)*ψ
     y=rungekutta2(dpsi_dt, ψ_0, t_range)
@@ -23,6 +31,21 @@ function sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Op
     return (y, observable)
 end
 
+"""
+    Snowflake.mesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    Snowflake.mesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+
+Solves the Lindblad Master equation:
+
+``\\dot{\\rho}=-i [H, \\rho]+\\sum_i \\gamma_i\\left(L_i \\rho L^{\\dag}_i - \\frac{1}{2}\\left\\{L^{\\dag}_i L_i, \\rho\\right\\}\\right)``
+
+**Fields**
+- `H` -- the Hamiltonian operator or a function that returns the Hamiltonian as a function of time.
+- `ψ_0` -- initital status of a quantum system
+- `t_range` -- time interval for which the system has to be simulated. 
+- `e_ops` -- List of operators for which the expected value will be returned as function of time. 
+- `c_ops` -- List of collapse operators ``L_i``'s.
+"""
 function mesolve(H::Operator, ρ_0::Operator, t::StepRangeLen; c_ops::Vector{Operator}=[], e_ops::Vector{Operator}=(Operator)[], kwargs...)
     drho_dt(t,ρ) = -im*commute(H,ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
     n_t = length(t)

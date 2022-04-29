@@ -1,4 +1,7 @@
 # Simulating Quantum Systems
+```@meta
+DocTestSetup = :(using Snowflake)
+```
 
 Snowflake provides capability to directly simulate a quantum system on a classical computer. The following sections of this page provide you with documentation and examples of how to achieve that.
 

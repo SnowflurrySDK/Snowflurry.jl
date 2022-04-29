@@ -235,7 +235,7 @@ Emulates the function of a quantum computer by running a circuit for given numbe
 
 # Examples
 ```jldoctest
-jjulia> push_gate!(c, hadamard(1))
+julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 

@@ -354,14 +354,14 @@ end
 
 Returns the commutation of `A` and `B`.
 ```jldoctest
-julia> σ_x = Snowflake.sigma_x()
+julia> σ_x = sigma_x()
         (2, 2)-element Snowflake.Operator:
         Underlying data Matrix{Complex} : 
                 0.0 + 0.0im             1.0 + 0.0im
                 1.0 + 0.0im             0.0 + 0.0im
 
 
-julia> σ_y = Snowflake.sigma_y()
+julia> σ_y = sigma_y()
         (2, 2)-element Snowflake.Operator:
         Underlying data Matrix{Complex} : 
                 0.0 + 0.0im             0.0 - 1.0im

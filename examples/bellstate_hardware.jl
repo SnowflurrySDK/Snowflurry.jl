@@ -1,11 +1,11 @@
 using Snowflake
 
 #Build a two qubit circuit
-c = Circuit(qubit_count = 2, bit_count = 0)
+c = QuantumCircuit(qubit_count = 2, bit_count = 0)
 
 #testing iswap
-pushGate!(c, [x_90(2)]);
-pushGate!(c, [iswap(1, 2)]);
+push_gate!(c, [x_90(2)]);
+push_gate!(c, [iswap(1, 2)]);
 
 #User credentials issued by Anyon Systems from envirnoment variables. Change according to your setting.
 owner = ENV["SNOWFLAKE_ID"]
