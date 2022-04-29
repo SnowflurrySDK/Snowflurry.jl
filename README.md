@@ -39,7 +39,7 @@ using Snowflake
 Then lets define a two qubit circuit:
 
 ```julia
-c = Circuit(qubit_count=2, bit_count=0)
+c = QuantumCircuit(qubit_count=2, bit_count=0)
 ```
 
 If you are using Julia REPL you should see an output similar to:
@@ -59,8 +59,8 @@ Note the circuit object has been given a Universally Unique Identifier (UUID). T
 Now let's build the circuit using the following commands:
 
 ```julia
-pushGate!(c, [hadamard(1)])
-pushGate!(c, [control_x(1, 2)])
+push_gate!(c, [hadamard(1)])
+push_gate!(c, [control_x(1, 2)])
 ```
 
 The first line adds a Hadamrd gate which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with control qubit being qubit 1 and target qubit being qubit 2. The output in Julia REPL would look like:
@@ -116,4 +116,4 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 
 Snowflake is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
 
-Copyright (c) 2021 by Snowflake Developers and Anyon Systems, Inc.
+Copyright (c) 2022 by Snowflake Developers and Anyon Systems, Inc.
