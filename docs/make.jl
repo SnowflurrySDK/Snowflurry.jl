@@ -4,6 +4,7 @@ using Documenter
 using Snowflake
 
 DocMeta.setdocmeta!(Snowflake, :DocTestSetup, :(using Snowflake); recursive = true)
+uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 makedocs(
     sitename = "Snowflake",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
@@ -14,6 +15,7 @@ makedocs(
         #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
         "Library" => "library.md",
     ],
+    doctestfilters = [uuid_regex]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
