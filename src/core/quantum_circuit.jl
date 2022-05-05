@@ -2,11 +2,11 @@
 """
         QuantumCircuit(qubit_count = .., bit_count = ...)
 
-A data structure to represnts a *quantum circuit*.  
-**Fields**
+A data structure to represent a *quantum circuit*.  
+# Arguments
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
 - `bit_count::Int` -- number of classical bits (i.e. classical register size).
-- `id::UUID` -- a universally unique identifier for the circuit. This id is automatically generated one an instance is created. 
+- `id::UUID` -- a universally unique identifier for the circuit. A UUID is automatically generated once an instance is created. 
 - `pipeline::Array{Array{Gate}}` -- the pipeline of gates to operate on qubits.
 
 # Examples
@@ -231,7 +231,7 @@ end
 """
         simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates the function of a quantum computer by running a circuit for given number of shots and return measurement results.
+Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
 
 # Examples
 ```jldoctest
