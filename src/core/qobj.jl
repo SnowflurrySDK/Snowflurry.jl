@@ -1,6 +1,6 @@
 """
-A Ket represnts a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
-**Fields**
+A Ket represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
+# Fields
 - `data` -- the stored values.
 # Examples
 Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
@@ -13,7 +13,7 @@ julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 0.0 + 0.0im
 0.0 + 0.0im
 ```
-A better way to initialize a Ket is to use a pre-built basis such as `fock` basis. See `fock` for further information on this function. 
+A better way to initialize a Ket is to use a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
 ```jldoctest
 julia> ψ = Snowflake.fock(2, 3)
 3-element Ket:
@@ -35,7 +35,7 @@ end
 
 """
 A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
-**Fields**
+# Fields
 - `data` -- the stored values.
 # Examples
 ```jldoctest
@@ -69,7 +69,7 @@ end
 
 """
 A structure representing a quantum operator (i.e. a complex matrix).
-**Fields**
+# Fields
 - `data` -- the complex matrix.
 
 # Examples
@@ -83,7 +83,7 @@ julia> z = Snowflake.Operator([1.0 0.0;0.0 -1.0])
 ```
 Alternatively:
 ```jldoctest
-julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
+julia> z = Snowflake.sigma_z()  #sigma_z is a function defined in Snowflake
         (2, 2)-element Snowflake.Operator:
         Underlying data Matrix{Complex} : 
                 1.0 + 0.0im             0.0 + 0.0im
@@ -96,8 +96,8 @@ end
 
 """
 A structure representing a quantum multi-body system.
-**Fields**
-- `hilbert_space_structure` -- a vector of integers specifying the local hilbert space size for each "body" within the multi-body system. 
+# Fields
+- `hilbert_space_structure` -- a vector of integers specifying the local Hilbert space size for each "body" within the multi-body system. 
 """
 struct MultiBodySystem
     hilbert_space_structure::Vector{Int}
@@ -119,7 +119,7 @@ end
 """
     get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
 
-Uses a local operator (`op`) which is defined for a particular body (e.g. qubit) with index `target_body_index` to build the corresponding operator for the hilbert soace of the  multi-body system given by `system`. 
+Uses a local operator (`op`), which is defined for a particular body (e.g. qubit) with index `target_body_index`, to build the corresponding operator for the Hilbert space of the multi-body system given by `system`. 
 # Examples
 ```jldoctest
 julia> system = Snowflake.MultiBodySystem(3,2)
@@ -228,7 +228,7 @@ Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 """
     Snowflake.fock(i, hspace_size)
 
-Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket
+Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket.
 # Examples
 ```jldoctest
 julia> ψ = Snowflake.fock(0, 3)
@@ -257,7 +257,7 @@ spin_down() = fock(1,2)
 """
     Snowflake.create(hspace_size)
 
-Returns the bosonic creation operator for a fock space of size `hspace_size`.
+Returns the bosonic creation operator for a Fock space of size `hspace_size`.
 """
 function create(hspace_size)
     a_dag = zeros(Complex, hspace_size,hspace_size)
@@ -270,7 +270,7 @@ end
 """
     Snowflake.destroy(hspace_size)
 
-Returns the bosonic annhilation operator for a fock space of size `hspace_size`.
+Returns the bosonic annhilation operator for a Fock space of size `hspace_size`.
 """
 function destroy(hspace_size)
     a= zeros(Complex, hspace_size,hspace_size)
@@ -283,7 +283,7 @@ end
 """
     Snowflake.number_op(hspace_size)
 
-Returns the number operator for a fock space of size `hspace_size`.
+Returns the number operator for a Fock space of size `hspace_size`.
 """
 function number_op(hspace_size)
     n= zeros(Complex, hspace_size,hspace_size)
@@ -296,7 +296,7 @@ end
 """
     Snowflake.coherent(alpha, hspace_size)
 
-Returns a coherent state for parameter `alpha` in fock space of size `hspace_size`. Note that |alpha|^2 is equal to 
+Returns a coherent state for the parameter `alpha` in a Fock space of size `hspace_size`. Note that |alpha|^2 is equal to the 
     photon number of the coherent state. 
 
     # Examples
@@ -405,7 +405,7 @@ end
 """
     Snowflake.ket2dm(ψ)
 
-Returns the density matrix corresponding to the pure state ψ 
+Returns the density matrix corresponding to the pure state ψ.
 """
 
 function ket2dm(ψ::Ket)
@@ -415,7 +415,7 @@ end
 """
     Snowflake.fock_dm(i, hspace_size)
 
-Returns the density matrix corresponding to fock base `i` defined in a hilbert space size of `hspace_size`.
+Returns the density matrix corresponding to the Fock base `i` defined in a Hilbert space of size `hspace_size`.
 """
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
 
@@ -439,7 +439,7 @@ end
 """
     Snowflake.moyal(m, n)
 
-Returns the Moyal function `w_mn(eta)` for fock states `m` and `n`.
+Returns the Moyal function `w_mn(eta)` for Fock states `m` and `n`.
 """
 function moyal(eta, m,n)
     L = genlaguerre(4.0*abs2(eta),m-n, n)
@@ -450,7 +450,7 @@ end
 
 """
     Snowflake.laguerre(x::Real,n::UInt)
-    Returns the value of Laguerre polynomial of degree `n` for `x` using a recursive method. See https://en.wikipedia.org/wiki/Laguerre_polynomials
+    Returns the value of the Laguerre polynomial of degree `n` at `x` using a recursive method. See https://en.wikipedia.org/wiki/Laguerre_polynomials
 """
 function genlaguerre(x,alpha, n)
     result =0.0
