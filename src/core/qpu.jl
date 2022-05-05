@@ -1,13 +1,13 @@
 """
-Represnts a Quantum Processing Unit (QPU).
-**Fields**
-- `manufacturer:: String` -- qpu manufacturer (e.g. "anyon")
-- `generation:: String` -- qpu generation (e.g. "yukon")
-- `serial_number:: String` -- qpu serial_number (e.g. "ANYK202201")
-- `host:: String` -- the remote host url address to send the jobs to
-- `qubit_count:: Int` -- number of physical qubits on the machine
+Represents a Quantum Processing Unit (QPU).
+# Arguments
+- `manufacturer::String` -- QPU manufacturer (e.g. "anyon")
+- `generation::String` -- QPU generation (e.g. "yukon")
+- `serial_number::String` -- QPU serial_number (e.g. "ANYK202201")
+- `host::String` -- the remote host url address to send the jobs to
+- `qubit_count::Int` -- number of physical qubits on the machine
 - `connectivity::SparseArrays.SparseMatrixCSC{Int}`
-- `native_gates:: Vector{String}` -- the vector of native gates symbols supported by the qpu architecture
+- `native_gates::Vector{String}` -- the vector of native gate symbols supported by the QPU architecture
 ```
 """
 Base.@kwdef struct QPU
@@ -35,7 +35,7 @@ end
     create_virtual_qpu(qubit_count::UInt32, native_gates::Array{String}, host = "localhost:5600")
 
 Creates a virtual quantum processor with `qubit_count` number of qubits and `native_gates`. 
-The return value is QPU stucture (see  [`QPU`](@ref)).
+The return value is QPU stucture (see [`QPU`](@ref)).
 
 # Examples
 ```jldoctest
