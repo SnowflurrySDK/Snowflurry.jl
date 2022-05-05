@@ -3,7 +3,7 @@
         QuantumCircuit(qubit_count = .., bit_count = ...)
 
 A data structure to represent a *quantum circuit*.  
-# Arguments
+# Fields
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
 - `bit_count::Int` -- number of classical bits (i.e. classical register size).
 - `id::UUID` -- a universally unique identifier for the circuit. A UUID is automatically generated once an instance is created. 

@@ -1,6 +1,6 @@
 """
 Represents a Quantum Processing Unit (QPU).
-# Arguments
+# Fields
 - `manufacturer::String` -- QPU manufacturer (e.g. "anyon")
 - `generation::String` -- QPU generation (e.g. "yukon")
 - `serial_number::String` -- QPU serial_number (e.g. "ANYK202201")
