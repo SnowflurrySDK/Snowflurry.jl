@@ -73,3 +73,6 @@ Quantum circuits cannot typically be immidiately executed on a quantum processor
 
 Snowflake introduces `QPU` to represent physical or virtual quantum processors. For example the following command creates a virtual QPU assuming it can implement Pauli matrices and Control-Z:
 
+```@meta
+DocTestSetup = nothing
+```

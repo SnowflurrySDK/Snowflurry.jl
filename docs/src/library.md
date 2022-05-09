@@ -44,3 +44,7 @@ coherent
 sesolve
 mesolve
 ```
+
+```@meta
+DocTestSetup = nothing
+```
