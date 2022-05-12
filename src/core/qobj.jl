@@ -102,6 +102,41 @@ struct Operator
     data::Matrix{Complex}
 end
 
+Base.length(x::Ket) = Base.length(x.data)
+Base.adjoint(x::Ket) = Bra(x)
+Base.adjoint(x::Bra) = Ket(adjoint(x.data))
+Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
+Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:-(x::Ket) = -1.0 * x
+Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
+Base.:*(x::Bra, y::Ket) = x.data * y.data
+Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
+Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
+Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
+Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
+Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
+eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+tr(A::Operator)=LinearAlgebra.tr(A.data)
+expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
+
+Base.:size(M::Operator) = size(M.data)
+
+# iterator for Ket object
+Base.iterate(x::Ket, state = 1) =
+    state > length(x.data) ? nothing : (x.data[state], state + 1)
+
+
+Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
+Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
+
 """
 A structure representing a quantum multi-body system.
 # Fields
@@ -201,41 +236,6 @@ function Base.show(io::IO, x::Operator)
         println(io)
     end
 end
-
-Base.length(x::Ket) = Base.length(x.data)
-Base.adjoint(x::Ket) = Bra(x)
-Base.adjoint(x::Bra) = Ket(adjoint(x.data))
-Base.adjoint(A::Operator) = Operator(adjoint(A.data))
-Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
-Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:-(x::Ket) = -1.0 * x
-Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
-Base.:*(x::Bra, y::Ket) = x.data * y.data
-Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
-Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
-Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
-Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
-Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
-Base.:*(s::Any, A::Operator) = Operator(s*A.data)
-Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
-Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
-Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-eigen(A::Operator) = LinearAlgebra.eigen(A.data)
-tr(A::Operator)=LinearAlgebra.tr(A.data)
-expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
-
-
-Base.:size(M::Operator) = size(M.data)
-
-# iterator for Ket object
-Base.iterate(x::Ket, state = 1) =
-    state > length(x.data) ? nothing : (x.data[state], state + 1)
-
-
-Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
-Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 
 """
     Snowflake.fock(i, hspace_size)
