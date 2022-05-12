@@ -32,7 +32,7 @@ Operator
 MultiBodySystem
 commute
 anticommute
-normalize
+normalize!
 ket2dm
 fock_dm
 get_embed_operator

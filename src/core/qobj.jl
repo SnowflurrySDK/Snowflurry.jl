@@ -359,7 +359,7 @@ end
 """
     Snowflake.normalize!(x::Ket)
 
-Normalizes Ket `x` to have a unit magnitude.
+Normalizes Ket `x` such that its magnitude becomes unity.
 """
 function normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
