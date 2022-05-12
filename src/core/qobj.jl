@@ -425,7 +425,6 @@ end
 
 Returns the density matrix corresponding to the pure state ψ 
 """
-
 function ket2dm(ψ::Ket)
     return ψ*Bra(ψ)
 end
