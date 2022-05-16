@@ -134,6 +134,36 @@ Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 Return the element at row `m` and column `n` of Operator `A`.
 """
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
+
+"""
+    eigen(A::Operator)
+
+Compute the eigenvalue decomposition of Operator `A` and return an `Eigen`
+factorization object `F`. Eigenvalues are found in `F.values` while eigenvectors are
+found in the matrix `F.vectors`. Each column of this matrix correspond to an eigenvector.
+The `i`th eigenvector is extracted by calling `F.vectors[:, i]`.
+
+# Examples
+```jldoctest
+julia> X = sigma_x()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             1.0 + 0.0im
+                1.0 + 0.0im             0.0 + 0.0im
+
+julia> F = eigen(X);
+
+julia> eigenvalues = F.values
+2-element Vector{Float64}:
+ -1.0
+  1.0
+
+julia> eigenvector_1 = F.vectors[:, 1]
+2-element Vector{ComplexF64}:
+ -0.7071067811865475 + 0.0im
+  0.7071067811865475 + 0.0im
+```
+"""
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
 tr(A::Operator)=LinearAlgebra.tr(A.data)
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))

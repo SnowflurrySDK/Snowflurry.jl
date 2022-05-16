@@ -31,6 +31,7 @@ Bra
 Operator
 Base.adjoint
 Base.getindex(A::Operator, m::Int64, n::Int64)
+eigen
 MultiBodySystem
 commute
 anticommute
