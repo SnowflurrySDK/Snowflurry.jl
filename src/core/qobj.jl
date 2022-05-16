@@ -103,6 +103,12 @@ struct Operator
 end
 
 Base.length(x::Ket) = Base.length(x.data)
+
+"""
+    Base.adjoint(x)
+
+Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator.
+"""
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
@@ -121,6 +127,12 @@ Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
 Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+
+"""
+    Base.getindex(A::Operator, m::Int64, n::Int64)
+
+Return the element at row `m` and column `n` of Operator `A`.
+"""
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
 tr(A::Operator)=LinearAlgebra.tr(A.data)
