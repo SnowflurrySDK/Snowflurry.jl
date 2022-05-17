@@ -33,6 +33,7 @@ Base.adjoint
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr
+expected_value
 MultiBodySystem
 commute
 anticommute

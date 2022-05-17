@@ -185,6 +185,31 @@ julia> trace = tr(I)
 ```
 """
 tr(A::Operator)=LinearAlgebra.tr(A.data)
+
+"""
+    expected_value(A::Operator, psi::Ket)
+
+Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`ψ`⟩.
+
+# Examples
+```jldoctest
+julia> ψ = Ket([0.0; 1.0])
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> A = sigma_z()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                1.0 + 0.0im             0.0 + 0.0im
+                0.0 + 0.0im             -1.0 + 0.0im
+
+
+julia> expected_value(A, ψ)
+-1.0 + 0.0im
+```
+"""
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
 
