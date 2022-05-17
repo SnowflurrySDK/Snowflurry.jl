@@ -32,6 +32,7 @@ Operator
 Base.adjoint
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
+tr
 MultiBodySystem
 commute
 anticommute

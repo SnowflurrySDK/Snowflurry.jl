@@ -165,6 +165,25 @@ julia> eigenvector_1 = F.vectors[:, 1]
 ```
 """
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+
+"""
+    tr(A::Operator)
+
+Compute the trace of Operator `A`.
+
+# Examples
+```jldoctest
+julia> I = eye()
+        (2, 2)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                1.0 + 0.0im             0 + 0im
+                0 + 0im         1.0 + 0.0im
+
+
+julia> trace = tr(I)
+2.0 + 0.0im
+```
+"""
 tr(A::Operator)=LinearAlgebra.tr(A.data)
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
