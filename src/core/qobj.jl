@@ -222,7 +222,7 @@ Base.iterate(x::Ket, state = 1) =
     """
     kron(x, y)
 
-Compute the Kronecker product of two [`Ket`](@ref) or two [`Operator`](@ref) objects.
+Compute the Kronecker product of two [`Kets`](@ref Ket) or two [`Operators`](@ref Operator).
 More details about the Kronecker product can be found
 [here](https://en.wikipedia.org/wiki/Kronecker_product). 
 
