@@ -34,6 +34,7 @@ Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr
 expected_value
+kron
 MultiBodySystem
 commute
 anticommute

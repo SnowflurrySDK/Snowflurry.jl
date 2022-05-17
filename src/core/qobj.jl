@@ -219,7 +219,44 @@ Base.:size(M::Operator) = size(M.data)
 Base.iterate(x::Ket, state = 1) =
     state > length(x.data) ? nothing : (x.data[state], state + 1)
 
+    """
+    kron(x, y)
 
+Compute the Kronecker product of two [`Ket`](@ref) or two [`Operator`](@ref) objects.
+More details about the Kronecker product can be found
+[here](https://en.wikipedia.org/wiki/Kronecker_product). 
+
+# Examples
+```jldoctest
+julia> ψ_0 = Ket([0.0; 1.0])
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> ψ_1 = Ket([1.0; 0.0])
+2-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> kron(ψ_0, ψ_1)
+4-element Ket:
+0.0 + 0.0im
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> kron(sigma_x(), sigma_y())
+        (4, 4)-element Snowflake.Operator:
+        Underlying data Matrix{Complex} : 
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 - 1.0im
+                0.0 + 0.0im             0.0 + 0.0im             0.0 + 1.0im             0.0 + 0.0im
+                0.0 + 0.0im             0.0 - 1.0im             0.0 + 0.0im             0.0 + 0.0im
+                0.0 + 1.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+```
+"""
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
 Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 
