@@ -3,13 +3,14 @@ struct Gate
     instruction_symbol::String
     operator::Operator
     target::Array
+    parameters::Array
 
-    function Gate(display_symbol, instruction_symbol, operator, target::Array)
+    function Gate(display_symbol, instruction_symbol, operator, target::Array, parameters=[])
         ensure_target_qubits_are_different(target)
-        new(display_symbol, instruction_symbol, operator, target)
+        new(display_symbol, instruction_symbol, operator, target, parameters)
     end
-    Gate(display_symbol, instruction_symbol, operator, target::Int) =
-        new(display_symbol, instruction_symbol, operator, [target])
+    Gate(display_symbol, instruction_symbol, operator, target::Int, parameters=[]) =
+        new(display_symbol, instruction_symbol, operator, [target], parameters)
 
 end
 
@@ -29,11 +30,16 @@ end
 
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
-    println(io, "\tinstruction symbol:" * gate.instruction_symbol)
-    println(io, "\toperator:")
+    println(io, "    instruction symbol: " * gate.instruction_symbol)
+    if !isempty(gate.parameters)
+        print(io, "    parameters: " )
+        show(io, gate.parameters)
+        println()
+    end
+    println(io, "    operator:")
     show(io, "text/plain", gate.operator)
     println()
-    println(io, "\ttargets: $(gate.target)")
+    println(io, "    targets: $(gate.target)")
 end
 
 Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
@@ -58,6 +64,11 @@ x_90() = Operator(
         2,
         2,
     ),
+)
+
+rotation(theta, phi) = Operator(
+    [cos(theta/2) -im*exp(-im*phi)*sin(theta/2);
+     -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
 )
 
 control_x() = Operator(
@@ -96,6 +107,8 @@ hadamard(target) = Gate(["H"], "h", hadamard(), target)
 phase(target) = Gate(["S"], "s", phase(), target)
 pi_8(target) = Gate(["T"], "t", pi_8(), target)
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
+rotation(target, theta, phi) = Gate(["R(θ,ϕ)"], "r", rotation(theta, phi), target,
+    [theta, phi])
 
 
 

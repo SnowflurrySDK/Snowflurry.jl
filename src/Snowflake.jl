@@ -69,6 +69,7 @@ export
     sigma_m,
     hadamard,
     x_90,
+    rotation,
     iswap,
     pi_8,
     phase,
