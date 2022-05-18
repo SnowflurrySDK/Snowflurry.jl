@@ -71,6 +71,7 @@ export
     x_90,
     rotation,
     rotation_x,
+    rotation_y,
     iswap,
     pi_8,
     phase,
