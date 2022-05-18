@@ -62,6 +62,11 @@ using Test
     @test ry.instruction_symbol == "ry"
     @test ry*ψ_0 ≈ 1/2^.5*(ψ_0-ψ_1)
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
+
+    rz = rotation_z(1, pi/2)
+    @test rz.instruction_symbol == "rz"
+    @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
+    @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
 end
 
 @testset "gate_set_exceptions" begin

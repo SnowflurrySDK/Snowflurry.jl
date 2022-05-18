@@ -71,6 +71,11 @@ rotation(theta, phi) = Operator(
      -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
 )
 
+rotation_z(theta) = Operator(
+    [exp(-im*theta/2) 0;
+     0 exp(im*theta/2)]
+)
+
 control_x() = Operator(
     Complex.(
         [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0] [
@@ -111,6 +116,7 @@ rotation(target, theta, phi) = Gate(["R(θ,ϕ)"], "r", rotation(theta, phi), tar
     [theta, phi])
 rotation_x(target, theta) = Gate(["Rx(θ)"], "rx", rotation(theta, 0), target, [theta])
 rotation_y(target, theta) = Gate(["Ry(θ)"], "ry", rotation(theta, pi/2), target, [theta])
+rotation_z(target, theta) = Gate(["Rz(θ)"], "rz", rotation_z(theta), target, [theta])
 
 
 
