@@ -50,6 +50,11 @@ using Test
     @test r.instruction_symbol == "r"
     @test r*ψ_0 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test r*ψ_1 ≈ 1/2^.5*(-ψ_0+ψ_1)
+
+    rx = rotation_x(1, pi/2)
+    @test rx.instruction_symbol == "rx"
+    @test rx*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
+    @test rx*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 end
 
 @testset "gate_set_exceptions" begin

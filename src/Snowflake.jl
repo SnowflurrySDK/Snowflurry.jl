@@ -70,6 +70,7 @@ export
     hadamard,
     x_90,
     rotation,
+    rotation_x,
     iswap,
     pi_8,
     phase,

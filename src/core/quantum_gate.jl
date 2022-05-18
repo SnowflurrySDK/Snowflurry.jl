@@ -109,6 +109,7 @@ pi_8(target) = Gate(["T"], "t", pi_8(), target)
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 rotation(target, theta, phi) = Gate(["R(θ,ϕ)"], "r", rotation(theta, phi), target,
     [theta, phi])
+rotation_x(target, theta) = Gate(["Rx(θ)"], "rx", rotation(theta, 0), target, [theta])
 
 
 
