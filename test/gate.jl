@@ -74,9 +74,19 @@ using Test
     @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 end
 
+
 @testset "gate_set_exceptions" begin
     @test_throws DomainError control_x(1, 1)
+
+
+@testset "ladder_operators" begin
+    ψ_0 = fock(0,2)
+    ψ_1 = fock(1,2)
+
+    @test sigma_p()*ψ_1 ≈ ψ_0
+    @test sigma_m()*ψ_0 ≈ ψ_1
 end
+
 
 @testset "tensor_product_single_qubit_gate" begin
 
