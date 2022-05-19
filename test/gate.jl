@@ -67,6 +67,11 @@ using Test
     @test rz.instruction_symbol == "rz"
     @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
     @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
+
+    u = universal(1, pi/2, -pi/2, pi/2)
+    @test u.instruction_symbol == "u"
+    @test u*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
+    @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 end
 
 @testset "gate_set_exceptions" begin

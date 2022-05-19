@@ -75,6 +75,10 @@ rotation_z(theta) = Operator(
     [exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
+universal(theta, phi, lambda) = Operator(
+    [cos(theta/2) -exp(im*lambda)*sin(theta/2)
+     exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
+)
 
 control_x() = Operator(
     Complex.(
@@ -117,6 +121,8 @@ rotation(target, theta, phi) = Gate(["R(θ,ϕ)"], "r", rotation(theta, phi), tar
 rotation_x(target, theta) = Gate(["Rx(θ)"], "rx", rotation(theta, 0), target, [theta])
 rotation_y(target, theta) = Gate(["Ry(θ)"], "ry", rotation(theta, pi/2), target, [theta])
 rotation_z(target, theta) = Gate(["Rz(θ)"], "rz", rotation_z(theta), target, [theta])
+universal(target, theta, phi, lambda) = Gate(["U(θ,ϕ,λ)"], "u",
+    universal(theta, phi, lambda), target, [theta, phi, lambda])
 
 
 
