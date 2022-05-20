@@ -48,6 +48,10 @@ using Test
 
 end
 
+@testset "gate_set_exceptions" begin
+    @test_throws DomainError control_x(1, 1)
+end
+
 @testset "tensor_product_single_qubit_gate" begin
 
 

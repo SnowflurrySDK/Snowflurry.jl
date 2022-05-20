@@ -4,11 +4,27 @@ struct Gate
     operator::Operator
     target::Array
 
-    Gate(display_symbol, instruction_symbol, operator, target::Array) =
+    function Gate(display_symbol, instruction_symbol, operator, target::Array)
+        ensure_target_qubits_are_different(target)
         new(display_symbol, instruction_symbol, operator, target)
+    end
     Gate(display_symbol, instruction_symbol, operator, target::Int) =
         new(display_symbol, instruction_symbol, operator, [target])
 
+end
+
+function ensure_target_qubits_are_different(target::Array)
+    num_targets = length(target)
+    if num_targets > 1
+        previous_target = target[1]
+        for i = 2:num_targets
+            current_target = target[i]
+            if previous_target == current_target
+                throw(DomainError(current_target,
+                    "The gate uses qubit $current_target more than once!"))
+            end
+        end
+    end
 end
 
 function Base.show(io::IO, gate::Gate)
