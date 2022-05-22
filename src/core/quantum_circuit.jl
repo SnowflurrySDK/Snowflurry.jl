@@ -212,20 +212,58 @@ function simulate(circuit::QuantumCircuit)
     system = MultiBodySystem(circuit.qubit_count, 2)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for step in circuit.pipeline
-        # U is the matrix corresponding the operations happening this step
-        #        U = Operator(Matrix{Complex}(1.0I, hilbert_space_size, hilbert_space_size))  
-        for gate in step
-            # if single qubit gate, get the embedded operator
-            # TODO: make sure embedding works for multi qubit system
-            S =
-                (length(gate.target) == 1) ?
-                get_embed_operator(gate.operator, gate.target[1], system) : gate
+    for step in circuit.pipeline 
+        for gate in step 
+            S = get_embed_operator(gate, system)
             ψ = S * ψ
         end
 
     end
     return ψ
+end
+
+function get_embed_operator(gate::Gate, system::MultiBodySystem)
+    if length(gate.target) == 1
+        return get_embed_operator(gate.operator, gate.target[1], system)
+    else
+        gate_to_operator =
+            Dict("cz"=>get_embed_controlled_gate_operator(sigma_z(), gate, system),
+            "cx"=>get_embed_controlled_gate_operator(sigma_x(), gate, system))
+        return gate_to_operator[gate.instruction_symbol]
+    end
+end
+
+function get_embed_controlled_gate_operator(controlled_operator::Operator, gate::Gate,
+    system::MultiBodySystem)
+    control = gate.target[1]
+    target = gate.target[2]
+    lower_op_0, lower_op_1 = get_controlled_gate_operations_at_qubit(controlled_operator,
+        control, target, 1)
+    for i_qubit = 2:system.n_body
+        upper_op_0, upper_op_1 =
+            get_controlled_gate_operations_at_qubit(controlled_operator,
+            control, target, i_qubit)
+        lower_op_0 = kron(lower_op_0, upper_op_0)
+        lower_op_1 = kron(lower_op_1, upper_op_1)
+    end
+    embed_operator = lower_op_0+lower_op_1
+    return embed_operator
+end
+
+function get_controlled_gate_operations_at_qubit(controlled_operator, control, target,
+    qubit_index)
+
+    if control == qubit_index
+        operation_0 = projector_0()
+        operation_1 = projector_1()
+    elseif target == qubit_index
+        operation_0 = eye()
+        operation_1 = controlled_operator
+    else
+        operation_0 = eye()
+        operation_1 = eye()
+    end
+    return operation_0, operation_1
 end
 
 """

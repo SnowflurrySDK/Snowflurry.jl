@@ -46,6 +46,8 @@ sigma_y() = Operator(reshape(Complex.([0.0, im, -im, 0.0]), 2, 2))
 sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
 sigma_p() = 0.5*(sigma_x()+im*sigma_y())
 sigma_m() = 0.5*(sigma_x()-im*sigma_y())
+projector_0() = Operator([1 0; 0 0])
+projector_1() = Operator([0 0; 0 1])
 
 hadamard() = Operator(1.0 / sqrt(2.0) * reshape(Complex.([1.0, 1.0, 1.0, -1.0]), 2, 2))
 phase() = Operator(reshape(Complex.([1.0, 0.0, 0.0, im]), 2, 2))
