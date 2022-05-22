@@ -85,3 +85,8 @@ end
     expected_state = simulate(c)
     @test returned_state ≈ expected_state
 end
+
+@testset "throw_if_gate_outside_circuit" begin
+    c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    @test_throws DomainError push_gate!(c, control_x(1, 3))
+end

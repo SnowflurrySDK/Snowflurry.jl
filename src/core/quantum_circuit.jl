@@ -60,13 +60,24 @@ q[2]:--X----X--
 ```
 """
 function push_gate!(circuit::QuantumCircuit, gate::Gate)
-    push!(circuit.pipeline, [gate])
+    push_gate!(circuit, [gate])
     return circuit
 end
 
 function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    ensure_gates_are_in_circuit(circuit, gates)
     push!(circuit.pipeline, gates)
     return circuit
+end
+
+function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Array{Gate})
+    for gate in gates
+        for target in gate.target
+            if target > circuit.qubit_count
+                throw(DomainError(target, "the gate does no fit in the circuit"))
+            end
+        end
+    end
 end
 
 """
