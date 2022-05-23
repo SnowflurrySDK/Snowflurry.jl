@@ -86,6 +86,16 @@ end
     @test returned_state ≈ expected_state
 end
 
+@testset "simulate_iswap_gate" begin
+    c = QuantumCircuit(qubit_count = 3, bit_count = 0)
+
+    push_gate!(c, sigma_x(3))
+    push_gate!(c, [iswap(1, 3)])
+    returned_state = simulate(c)
+    expected_state = im*fock(4, 8)
+    @test returned_state ≈ expected_state
+end
+
 @testset "throw_if_gate_outside_circuit" begin
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     @test_throws DomainError push_gate!(c, control_x(1, 3))
