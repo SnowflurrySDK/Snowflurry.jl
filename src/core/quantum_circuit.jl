@@ -150,15 +150,19 @@ function Base.show(io::IO, circuit::QuantumCircuit)
                 end
             end
             
-            for i_target in 1:length(gate.target)
-                single_target = gate.target[i_target]
-                id_wire = 2*(single_target-1)+1
-                circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[i_target])--"
-            end
+            add_target_to_circuit_layout!(circuit_layout, gate, i_step)
         end
     end
 
     print_circuit_layout(io, circuit_layout)
+end
+
+function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
+    for i_target in 1:length(gate.target)
+        single_target = gate.target[i_target]
+        id_wire = 2*(single_target-1)+1
+        circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[i_target])--"
+    end
 end
 
 function print_circuit_layout(io, circuit_layout)
