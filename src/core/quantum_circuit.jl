@@ -130,7 +130,7 @@ function Base.show(io::IO, circuit::QuantumCircuit)
 
     i_step = 1
     for step in circuit.pipeline
-        i_step += 1 # the first elemet of the layout is the qubit tag
+        i_step += 1 # the first element of the layout is the qubit tag
         for i_qubit in range(1, length = circuit.qubit_count)
             id_wire = 2 * (i_qubit - 1) + 1
             # qubit wire
@@ -140,29 +140,27 @@ function Base.show(io::IO, circuit::QuantumCircuit)
         end
 
         for gate in step
-            for i_qubit in range(1, length = circuit.qubit_count)
-                if (i_qubit in gate.target)
-                    id_wire = 2 * (i_qubit - 1) + 1
-                    id = findfirst(isequal(i_qubit), gate.target)
-                    circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[id])--"
-                    if length(gate.target) > 1 && gate.target[1] == i_qubit
-                        circuit_layout[id_wire+1, i_step] = "  |  "
-                    end
+            min_wire = 2*(minimum(gate.target)-1)+1
+            max_wire = 2*(maximum(gate.target)-1)+1
+            for i_wire in min_wire+1:max_wire-1
+                if iseven(i_wire)
+                    circuit_layout[i_wire, i_step] = "  |  "
+                else
+                    circuit_layout[i_wire, i_step] = "--|--"
                 end
+            end
+            
+            for i_target in 1:length(gate.target)
+                single_target = gate.target[i_target]
+                id_wire = 2*(single_target-1)+1
+                circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[i_target])--"
             end
         end
     end
 
-
-    # circuit_layout[id_wire] = circuit_layout[id_wire] * ".\n"
-    # circuit_layout[id_wire + 1] = circuit_layout[id_wire + 1] * ".\n"
-
-    for i_wire in range(1, length = wire_count)
+    for i_wire in range(1, length = wire_count-1)
         for i_step in range(1, length = length(circuit.pipeline) + 1)
-            # print(io, circuit_layout[i_wire, i_step])
-            # println(io, "  i_wire=", i_wire, " i_step=", i_step)
             print(io, circuit_layout[i_wire, i_step])
-
         end
         println(io, "")
     end
