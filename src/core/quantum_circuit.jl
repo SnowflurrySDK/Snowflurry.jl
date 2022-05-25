@@ -131,13 +131,7 @@ function Base.show(io::IO, circuit::QuantumCircuit)
     i_step = 1
     for step in circuit.pipeline
         i_step += 1 # the first element of the layout is the qubit tag
-        for i_qubit in range(1, length = circuit.qubit_count)
-            id_wire = 2 * (i_qubit - 1) + 1
-            # qubit wire
-            circuit_layout[id_wire, i_step] = "-----"
-            # spacer line
-            circuit_layout[id_wire+1, i_step] = "     "
-        end
+        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count)
 
         for gate in step
             add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
@@ -146,6 +140,16 @@ function Base.show(io::IO, circuit::QuantumCircuit)
     end
 
     print_circuit_layout(io, circuit_layout)
+end
+
+function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits)
+    for i_qubit in range(1, length = num_qubits)
+        id_wire = 2 * (i_qubit - 1) + 1
+        # qubit wire
+        circuit_layout[id_wire, i_step] = "-----"
+        # spacer line
+        circuit_layout[id_wire+1, i_step] = "     "
+    end
 end
 
 function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
