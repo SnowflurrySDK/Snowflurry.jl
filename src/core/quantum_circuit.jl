@@ -158,8 +158,14 @@ function Base.show(io::IO, circuit::QuantumCircuit)
         end
     end
 
-    for i_wire in range(1, length = wire_count-1)
-        for i_step in range(1, length = length(circuit.pipeline) + 1)
+    print_circuit_layout(io, circuit_layout)
+end
+
+function print_circuit_layout(io, circuit_layout)
+    num_wires = size(circuit_layout, 1)
+    pipeline_length = size(circuit_layout, 2)
+    for i_wire in range(1, length = num_wires-1)
+        for i_step in range(1, length = pipeline_length)
             print(io, circuit_layout[i_wire, i_step])
         end
         println(io, "")
