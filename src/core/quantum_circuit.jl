@@ -118,7 +118,22 @@ function Base.show(io::IO, circuit::QuantumCircuit)
     println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
     println(io, "   bit_count: $(circuit.bit_count) ")
+    print_circuit_diagram(io, circuit)
+end
 
+function print_circuit_diagram(io, circuit)
+    circuit_layout = get_circuit_layout(circuit)
+    num_wires = size(circuit_layout, 1)
+    pipeline_length = size(circuit_layout, 2)
+    for i_wire in range(1, length = num_wires-1)
+        for i_step in range(1, length = pipeline_length)
+            print(io, circuit_layout[i_wire, i_step])
+        end
+        println(io, "")
+    end
+end
+
+function get_circuit_layout(circuit)
     wire_count = 2 * circuit.qubit_count
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
@@ -132,8 +147,7 @@ function Base.show(io::IO, circuit::QuantumCircuit)
             add_target_to_circuit_layout!(circuit_layout, gate, i_step)
         end
     end
-
-    print_circuit_layout(io, circuit_layout)
+    return circuit_layout
 end
 
 function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
@@ -142,14 +156,15 @@ function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
         circuit_layout[id_wire, 1] = "q[$i_qubit]:"
         circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
     end
+end
 
 function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits)
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         # qubit wire
-        circuit_layout[id_wire, i_step] = "-----"
+        circuit_layout[id_wire, i_step+1] = "-----"
         # spacer line
-        circuit_layout[id_wire+1, i_step] = "     "
+        circuit_layout[id_wire+1, i_step+1] = "     "
     end
 end
 
@@ -158,9 +173,9 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
     max_wire = 2*(maximum(gate.target)-1)+1
     for i_wire in min_wire+1:max_wire-1
         if iseven(i_wire)
-            circuit_layout[i_wire, i_step] = "  |  "
+            circuit_layout[i_wire, i_step+1] = "  |  "
         else
-            circuit_layout[i_wire, i_step] = "--|--"
+            circuit_layout[i_wire, i_step+1] = "--|--"
         end
     end
 end
@@ -169,18 +184,7 @@ function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
     for i_target in 1:length(gate.target)
         single_target = gate.target[i_target]
         id_wire = 2*(single_target-1)+1
-        circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[i_target])--"
-    end
-end
-
-function print_circuit_layout(io, circuit_layout)
-    num_wires = size(circuit_layout, 1)
-    pipeline_length = size(circuit_layout, 2)
-    for i_wire in range(1, length = num_wires-1)
-        for i_step in range(1, length = pipeline_length)
-            print(io, circuit_layout[i_wire, i_step])
-        end
-        println(io, "")
+        circuit_layout[id_wire, i_step+1] = "--$(gate.display_symbol[i_target])--"
     end
 end
 
