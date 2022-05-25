@@ -121,16 +121,10 @@ function Base.show(io::IO, circuit::QuantumCircuit)
 
     wire_count = 2 * circuit.qubit_count
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
-
-    for i_qubit in range(1, length = circuit.qubit_count)
-        id_wire = 2 * (i_qubit - 1) + 1
-        circuit_layout[id_wire, 1] = "q[$i_qubit]:"
-        circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
-    end
-
-    i_step = 1
-    for step in circuit.pipeline
-        i_step += 1 # the first element of the layout is the qubit tag
+    add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
+    
+    for i_step in 1:length(circuit.pipeline)
+        step = circuit.pipeline[i_step]
         add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count)
 
         for gate in step
@@ -141,6 +135,13 @@ function Base.show(io::IO, circuit::QuantumCircuit)
 
     print_circuit_layout(io, circuit_layout)
 end
+
+function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
+    for i_qubit in range(1, length = num_qubits)
+        id_wire = 2 * (i_qubit - 1) + 1
+        circuit_layout[id_wire, 1] = "q[$i_qubit]:"
+        circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
+    end
 
 function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits)
     for i_qubit in range(1, length = num_qubits)
