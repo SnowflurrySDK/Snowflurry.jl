@@ -140,21 +140,24 @@ function Base.show(io::IO, circuit::QuantumCircuit)
         end
 
         for gate in step
-            min_wire = 2*(minimum(gate.target)-1)+1
-            max_wire = 2*(maximum(gate.target)-1)+1
-            for i_wire in min_wire+1:max_wire-1
-                if iseven(i_wire)
-                    circuit_layout[i_wire, i_step] = "  |  "
-                else
-                    circuit_layout[i_wire, i_step] = "--|--"
-                end
-            end
-            
+            add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
             add_target_to_circuit_layout!(circuit_layout, gate, i_step)
         end
     end
 
     print_circuit_layout(io, circuit_layout)
+end
+
+function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
+    min_wire = 2*(minimum(gate.target)-1)+1
+    max_wire = 2*(maximum(gate.target)-1)+1
+    for i_wire in min_wire+1:max_wire-1
+        if iseven(i_wire)
+            circuit_layout[i_wire, i_step] = "  |  "
+        else
+            circuit_layout[i_wire, i_step] = "--|--"
+        end
+    end
 end
 
 function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
