@@ -9,23 +9,19 @@ Note that using a quantum computer does not involve using these objects. But, _s
 
 # Basic Quantum Objects
 
-There are three basic quantum objects defined in Snowflake to simulate a Quantum system. These objects are Ket, Bra, and Operator.
-
-```@docs
-Ket
-Bra
-Operator
-```
+There are three basic quantum objects defined in Snowflake to simulate a Quantum system.
+These objects are [`Ket`](@ref), [`Bra`](@ref), and [`Operator`](@ref).
 
 # Multibody Systems
-
-```@docs
-MultiBodySystem
-get_embed_operator
-```
+[`MultiBodySystem`](@ref) structures are used to represent quantum multi-body systems.
+After defining a multi-body system, it is possible to build an operator for this system
+given a local operator (e.g. one which acts on a qubit). An operator for a multi-body
+system can be obtained by calling [`get_embed_operator`](@ref).
 
 # Fock Space
+A [`Ket`](@ref) which represents a bosonic Fock space can be created by calling
+[`fock`](@ref).
 
-```@docs
-fock
+```@meta
+DocTestSetup = nothing
 ```

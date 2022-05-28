@@ -7,7 +7,9 @@ Although NOT the preferred way, one can directly build a Ket object by passing a
 ```jldoctest
 julia> using Snowflake
 
-julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
+julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0]);
+
+julia> print(ψ)
 3-element Ket:
 1.0 + 0.0im
 0.0 + 0.0im
@@ -15,11 +17,13 @@ julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 ```
 A better way to initialize a Ket is to use a pre-built basis such as `fock` basis. See `fock` for further information on this function. 
 ```jldoctest
-julia> ψ = Snowflake.fock(2, 3)
+julia> ψ = Snowflake.fock(2, 3);
+
+julia> print(ψ)
 3-element Ket:
 0.0 + 0.0im
-1.0 + 0.0im
 0.0 + 0.0im
+1.0 + 0.0im
 ```
 """
 struct Ket
@@ -39,13 +43,17 @@ A structure representing a Bra (i.e. a row vector of complex values). A Bra is c
 - `data` -- the stored values.
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(2, 3)
+julia> ψ = Snowflake.fock(1, 3);
+
+julia> print(ψ)
 3-element Ket:
 0.0 + 0.0im
 1.0 + 0.0im
 0.0 + 0.0im
 
-julia> _ψ = Snowflake.Bra(ψ)
+julia> _ψ = Snowflake.Bra(ψ);
+
+julia> print(_ψ)
 Bra(Any[0.0 - 0.0im 1.0 - 0.0im 0.0 - 0.0im])
 
 
@@ -53,11 +61,11 @@ julia> _ψ * ψ    # A Bra times a Ket is a scalar
 1.0 + 0.0im
 
 julia> ψ*_ψ     # A Ket times a Bra is an operator
-        (3, 3)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+(3, 3)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 ```
 """
 struct Bra
@@ -75,19 +83,19 @@ A structure representing a quantum operator (i.e. a complex matrix).
 # Examples
 ```jldoctest
 julia> z = Snowflake.Operator([1.0 0.0;0.0 -1.0])
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                1.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             -1.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
 
 ```
 Alternatively:
 ```jldoctest
 julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                1.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             -1.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
 ```
 """
 struct Operator
@@ -128,22 +136,22 @@ Snowflake.Multibody system with 3 bodies
    [2, 2, 2]
 
 julia> x = Snowflake.sigma_x()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             1.0 + 0.0im
-                1.0 + 0.0im             0.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
 
 julia> X_1=Snowflake.get_embed_operator(x,1,system)
-        (8, 8)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im
-                1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             1.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+(8, 8)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 ```
 """
 function get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
@@ -179,12 +187,16 @@ end
 
 
 function Base.show(io::IO, x::Operator)
-    println(io, "\t$(size(x.data))-element Snowflake.Operator:")
-    println(io, "\tUnderlying data $(typeof(x.data)) : ")
+    println(io, "$(size(x.data))-element Snowflake.Operator:")
+    println(io, "Underlying data $(typeof(x.data)):")
     (nrow, ncol) = size(x.data)
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
-            print(io, "\t\t$(x.data[i, j])")
+            if j == 1
+                print(io, "$(x.data[i, j])")
+            else
+                print(io, "    $(x.data[i, j])")
+            end
         end
         println(io)
     end
@@ -231,14 +243,18 @@ Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(0, 3)
+julia> ψ = Snowflake.fock(0, 3);
+
+julia> print(ψ)
 3-element Ket:
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ = Snowflake.fock(1, 3)
+julia> ψ = Snowflake.fock(1, 3);
+
+julia> print(ψ)
 3-element Ket:
 0.0 + 0.0im
 1.0 + 0.0im
@@ -301,7 +317,9 @@ Returns a coherent state for parameter `alpha` in fock space of size `hspace_siz
 
     # Examples
 ```jldoctest
-julia> ψ = Snowflake.coherent(2.0,20)
+julia> ψ = Snowflake.coherent(2.0,20);
+
+julia> print(ψ)
 20-element Ket:
 0.13533528323661270231781372785917483270168304443359375 + 0.0im
 0.2706705664732254046356274557183496654033660888671875 + 0.0im
@@ -341,7 +359,7 @@ end
 """
     Snowflake.normalize!(x::Ket)
 
-Normalizes Ket `x` to have a unit magnitude.
+Normalizes Ket `x` such that its magnitude becomes unity.
 """
 function normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
@@ -355,24 +373,24 @@ end
 Returns the commutation of `A` and `B`.
 ```jldoctest
 julia> σ_x = sigma_x()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             1.0 + 0.0im
-                1.0 + 0.0im             0.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
 
 
 julia> σ_y = sigma_y()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             0.0 - 1.0im
-                0.0 + 1.0im             0.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    0.0 - 1.0im
+0.0 + 1.0im    0.0 + 0.0im
 
 
 julia> Snowflake.commute(σ_x,σ_y)
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 2.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 - 2.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 2.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 - 2.0im
 ```
 """
 function commute(A::Operator, B::Operator)
@@ -380,22 +398,22 @@ function commute(A::Operator, B::Operator)
 end
 
 """
-    Snowflake.commute(A::Operator, B::Operator)
+    Snowflake.anticommute(A::Operator, B::Operator)
 
 Returns the anticommutation of `A` and `B`.
 ```jldoctest
 julia> σ_x = Snowflake.sigma_x()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             1.0 + 0.0im
-                1.0 + 0.0im             0.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
 
 
 julia> Snowflake.anticommute(σ_x,σ_x)
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                2.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             2.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}: 
+2.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    2.0 + 0.0im
 ```
 """
 function anticommute(A::Operator, B::Operator)
@@ -407,7 +425,6 @@ end
 
 Returns the density matrix corresponding to the pure state ψ 
 """
-
 function ket2dm(ψ::Ket)
     return ψ*Bra(ψ)
 end
@@ -449,8 +466,10 @@ end
 
 
 """
-    Snowflake.laguerre(x::Real,n::UInt)
-    Returns the value of Laguerre polynomial of degree `n` for `x` using a recursive method. See https://en.wikipedia.org/wiki/Laguerre_polynomials
+    Snowflake.genlaguerre(x, alpha, n)
+
+Returns the generalized Laguerre polynomial of degree `n` for `x` using a recursive
+method. See [https://en.wikipedia.org/wiki/Laguerre_polynomials](https://en.wikipedia.org/wiki/Laguerre_polynomials).
 """
 function genlaguerre(x,alpha, n)
     result =0.0

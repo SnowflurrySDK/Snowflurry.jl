@@ -121,7 +121,6 @@ push_gate!(c, [control_x(1, 2)])
 ψ = simulate(c)
 ```
 
-
-
-
-
+```@meta
+DocTestSetup = nothing
+```
