@@ -34,7 +34,6 @@ end
 """
     create_virtual_qpu(qubit_count::Int, connectivity::Matrix{Int},
         native_gates::Vector{String}, host = "localhost:5600")
-
 Creates a virtual quantum processor with `qubit_count` number of qubits,
 a `connectivity` matrix, and a vector of `native_gates`. 
 The return value is a QPU stucture (see  [`QPU`](@ref)).
