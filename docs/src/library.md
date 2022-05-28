@@ -32,9 +32,11 @@ Operator
 MultiBodySystem
 commute
 anticommute
-normalize
+normalize!
 ket2dm
 fock_dm
+Snowflake.moyal
+Snowflake.genlaguerre
 get_embed_operator
 fock
 create
@@ -43,4 +45,8 @@ number_op
 coherent
 sesolve
 mesolve
+```
+
+```@meta
+DocTestSetup = nothing
 ```

@@ -175,7 +175,9 @@ Simulates and returns the wavefunction of the quantum device after running `circ
 
 # Examples
 ```jldoctest
-jjulia> push_gate!(c, hadamard(1))
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
@@ -197,7 +199,9 @@ q[2]:-------X--
                
 
 
-julia> simulate(c)
+julia> ket = simulate(c);
+
+julia> print(ket)
 4-element Ket:
 0.7071067811865475 + 0.0im
 0.0 + 0.0im
@@ -234,7 +238,9 @@ end
 Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
 
 # Examples
-```jldoctest
+```jldoctest simulate_shots; filter = r"00|11"
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
 julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
@@ -257,19 +263,28 @@ q[2]:-------X--
                
 
 
-julia> simulate_shots(c, 100)
-100-element Vector{String}:
- "00"
+julia> simulate_shots(c, 99)
+99-element Vector{String}:
+ "11"
  "00"
  "11"
+ "11"
+ "11"
+ "11"
+ "11"
+ "00"
  "00"
  "11"
  ⋮
- "11"
- "11"
- "11"
+ "00"
  "00"
  "11"
+ "00"
+ "00"
+ "00"
+ "00"
+ "00"
+ "00"
 ```
 """
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)

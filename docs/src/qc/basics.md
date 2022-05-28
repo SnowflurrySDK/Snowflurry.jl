@@ -18,7 +18,7 @@ The initial state of each qubit is given on the left side of the figure. The lin
 
 You can define a quantum circuit with Snowflake as follows:
 
-```jldoctest
+```jldoctest basics_quantum_circuit
 julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0)
 Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
@@ -43,7 +43,7 @@ Unlike their classic counterparts, quantum gates are reversible. Quantum gates a
 
 Now, let's add a few gates to our circuit using the push_gate command:
 
-```jldoctest
+```jldoctest basics_quantum_circuit
 julia> push_gate!(c, [hadamard(1)])
 Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
@@ -53,10 +53,9 @@ q[1]:--H--
           
 q[2]:-----
 ```          
-
 The first command added a Hadamard gate to the quantum circuit object `c`. The gate will operate on qubit 1.
 
-```jldoctest
+```jldoctest basics_quantum_circuit
 julia> push_gate!(c, [control_x(1, 2)])
 Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
@@ -75,13 +74,6 @@ Usually, quantum circuits cannot be immediately executed on a quantum processor.
 
 Snowflake introduces `QPU` to represent physical or virtual quantum processors. For example, the following command creates a virtual QPU which can implement Pauli matrices and Control-Z gates:
 
-```jldoctest
-julia> push_gate!(c, [control_x(1, 2)])
-Quantum Circuit Object:
-   id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
-   qubit_count: 2 
-   bit_count: 0 
-q[1]:--H----*--
-            |  
-q[2]:-------X--
+```@meta
+DocTestSetup = nothing
 ```
