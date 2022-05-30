@@ -60,32 +60,6 @@ end
     @test ψ ≈ kron(Ψ_m, Ψ_m)
 end
 
-@testset "simulate_cz_gate" begin
-    c = QuantumCircuit(qubit_count = 3, bit_count = 0)
-
-    push_gate!(c, [sigma_x(1), sigma_x(3)])
-    push_gate!(c, [control_z(3, 1)])
-    returned_state = simulate(c)
-    
-    pop_gate!(c)
-    push_gate!(c, sigma_z(1))
-    expected_state = simulate(c)
-    @test returned_state ≈ expected_state
-end
-
-@testset "simulate_cx_gate" begin
-    c = QuantumCircuit(qubit_count = 3, bit_count = 0)
-
-    push_gate!(c, sigma_x(3))
-    push_gate!(c, [control_x(3, 1)])
-    returned_state = simulate(c)
-    
-    pop_gate!(c)
-    push_gate!(c, sigma_x(1))
-    expected_state = simulate(c)
-    @test returned_state ≈ expected_state
-end
-
 @testset "throw_if_gate_outside_circuit" begin
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     @test_throws DomainError push_gate!(c, control_x(1, 3))

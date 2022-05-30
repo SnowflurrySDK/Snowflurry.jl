@@ -100,10 +100,9 @@ A structure representing a quantum multi-body system.
 - `hilbert_space_structure` -- a vector of integers specifying the local hilbert space size for each "body" within the multi-body system. 
 """
 struct MultiBodySystem
-    n_body
     hilbert_space_structure::Vector{Int}
     MultiBodySystem(n_body, hilbert_size_per_body) =
-        new(n_body, fill(hilbert_size_per_body, n_body))
+        new(fill(hilbert_size_per_body, n_body))
 end
 
 function Base.show(io::IO, system::MultiBodySystem)
