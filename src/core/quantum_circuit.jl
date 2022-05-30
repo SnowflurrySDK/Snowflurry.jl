@@ -249,16 +249,16 @@ function get_embed_controlled_gate_operator(controlled_operator::Operator, gate:
     system::MultiBodySystem)
     control = gate.target[1]
     target = gate.target[2]
-    lower_op_1, lower_op_2 = get_controlled_gate_operations_at_qubit(controlled_operator,
+    lower_op_0, lower_op_1 = get_controlled_gate_operations_at_qubit(controlled_operator,
         control, target, 1)
     for i_qubit = 2:system.n_body
-        upper_op_1, upper_op_2 =
+        upper_op_0, upper_op_1 =
             get_controlled_gate_operations_at_qubit(controlled_operator,
             control, target, i_qubit)
+        lower_op_0 = kron(lower_op_0, upper_op_0)
         lower_op_1 = kron(lower_op_1, upper_op_1)
-        lower_op_2 = kron(lower_op_2, upper_op_2)
     end
-    embed_operator = lower_op_1+lower_op_2
+    embed_operator = lower_op_0+lower_op_1
     return embed_operator
 end
 
@@ -266,16 +266,16 @@ function get_controlled_gate_operations_at_qubit(controlled_operator, control, t
     qubit_index)
 
     if control == qubit_index
-        operation_1 = projector_0()
-        operation_2 = projector_1()
+        operation_0 = projector_0()
+        operation_1 = projector_1()
     elseif target == qubit_index
-        operation_1 = eye()
-        operation_2 = controlled_operator
+        operation_0 = eye()
+        operation_1 = controlled_operator
     else
+        operation_0 = eye()
         operation_1 = eye()
-        operation_2 = eye()
     end
-    return operation_1, operation_2
+    return operation_0, operation_1
 end
 
 function get_swap(gate::Gate, system::MultiBodySystem)
