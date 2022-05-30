@@ -239,8 +239,7 @@ function get_embed_operator(gate::Gate, system::MultiBodySystem)
     else
         gate_to_operator =
             Dict("cz"=>get_embed_controlled_gate_operator(sigma_z(), gate, system),
-            "cx"=>get_embed_controlled_gate_operator(sigma_x(), gate, system),
-            "iswap"=>get_swap(gate, system))
+            "cx"=>get_embed_controlled_gate_operator(sigma_x(), gate, system))
         return gate_to_operator[gate.instruction_symbol]
     end
 end
@@ -276,44 +275,6 @@ function get_controlled_gate_operations_at_qubit(controlled_operator, control, t
         operation_1 = eye()
     end
     return operation_0, operation_1
-end
-
-function get_swap(gate::Gate, system::MultiBodySystem)
-    target_1 = gate.target[1]
-    target_2 = gate.target[2]
-    lower_operators =
-        get_swap_at_qubit(target_1, target_2, 1)
-    for i_qubit = 2:system.n_body
-        upper_operators =
-            get_swap_at_qubit(target_1, target_2, i_qubit)
-        for i_operator in 1:length(lower_operators)
-                lower_operators[i_operator] =
-                    kron(lower_operators[i_operator], upper_operators[i_operator])
-        end
-    end
-    embed_operator = sum(lower_operators)
-    return embed_operator
-end
-    
-function get_swap_at_qubit(target_1, target_2, qubit_index)
-
-    if target_1 == qubit_index
-        operation_1 = projector_0()
-        operation_2 = im*sigma_p()
-        operation_3 = im*sigma_m()
-        operation_4 = projector_1()
-    elseif target_2 == qubit_index
-        operation_1 = projector_0()
-        operation_2 = sigma_m()
-        operation_3 = sigma_p()
-        operation_4 = projector_1()
-    else
-        operation_1 = eye()
-        operation_2 = eye()
-        operation_3 = eye()
-        operation_4 = eye()
-    end
-    return [operation_1, operation_2, operation_3, operation_4]
 end
 
 """
