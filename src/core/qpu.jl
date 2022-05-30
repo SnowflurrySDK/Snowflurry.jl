@@ -6,7 +6,7 @@ Represnts a Quantum Processing Unit (QPU).
 - `serial_number:: String` -- qpu serial_number (e.g. "ANYK202201")
 - `host:: String` -- the remote host url address to send the jobs to
 - `qubit_count:: Int` -- number of physical qubits on the machine
-- `connectivity::SparseArrays.SparseMatrixCSC{Int}`
+- `connectivity::SparseArrays.SparseMatrixCSC{Int}` -- a matrix describing the connectivity between qubits
 - `native_gates:: Vector{String}` -- the vector of native gates symbols supported by the qpu architecture
 ```
 """
@@ -32,21 +32,45 @@ function Base.show(io::IO, qpu::QPU)
 end
 
 """
-    create_virtual_qpu(qubit_count::UInt32, native_gates::Array{String}, host = "localhost:5600")
-
-Creates a virtual quantum processor with `qubit_count` number of qubits and `native_gates`. 
-The return value is QPU stucture (see  [`QPU`](@ref)).
+    create_virtual_qpu(qubit_count::Int, connectivity::Matrix{Int},
+        native_gates::Vector{String}, host = "localhost:5600")
+Creates a virtual quantum processor with `qubit_count` number of qubits,
+a `connectivity` matrix, and a vector of `native_gates`. 
+The return value is a QPU stucture (see  [`QPU`](@ref)).
 
 # Examples
-```jldoctest
-julia> qpu = create_virtual_qpu(3,["x" "ha"])
+To generate a QPU structure, the connectivity must be specified. Let's assume that we have a
+3-qubit device where there is connectivity between qubits 2 and 1 as well as between
+qubits 2 and 3. If qubit 2 can only be a control qubit, the connectivity matrix corresponds
+to:
+
+```jldoctest create_virtual_qpu
+julia> connectivity = [1 0 0
+                       1 1 1
+                       0 0 1]
+3×3 Matrix{Int64}:
+ 1  0  0
+ 1  1  1
+ 0  0  1
+```
+
+Here, the ones in the diagonal indicate that all qubits can perform single-qubit gates.
+If there is a one in an off-diagonal entry with row i and column j, it indicates that
+a two-qubit gate with control qubit i and target qubit j can be applied.
+
+If the native gates are the Pauli-X gate, the Hadamard gate, and the control-X gate,
+the QPU can be created as follows: 
+
+```jldoctest create_virtual_qpu
+julia> qpu = create_virtual_qpu(3, connectivity, ["x", "h", "cx"])
 Quantum Processing Unit:
    manufacturer: none
    generation: none 
    serial_number: 00 
    host: localhost:5600 
    qubit_count: 3 
-   native_gates: ["x" "ha"] 
+   native_gates: ["x", "h", "cx"] 
+   connectivity = sparse([1, 2, 2, 2, 3], [1, 1, 2, 3, 3], [1, 1, 1, 1, 1], 3, 3)
 ```
 """
 function create_virtual_qpu(qubit_count::Int, connectivity::Matrix{Int}, native_gates::Vector{String}, host = "localhost:5600")

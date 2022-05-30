@@ -5,21 +5,21 @@ DocTestSetup = :(using Snowflake)
 *A library for quantum computing using Julia*
 
 
-Snowflake is a pure Julia quantum computing stack that allows you to easily design quantum circuits, algorithms, experiments and applications and run them on real quantum computers and/or classical simulators. 
+Snowflake is a pure Julia quantum computing stack that allows you to easily design quantum circuits, algorithms, experiments and applications. Julia can then run them on real quantum computers and/or classical simulators. 
 
 !!! warning
     The documentation of Snowflake is still a work in progress. That being said, a lot can be learnt from the unit tests in the test folder.
 
 # Installation
 
-Make sure your system has Julia (v.1.6 or a more recent version)   installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
+Make sure your system has Julia (v.1.6 or a more recent version) installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-Launch Julia REPL and type
+Launch Julia REPL and type:
 ```julia
 import Pkg
 Pkg.add("Snowflake")
 ```
-If you intend to use a particular development branch from github repo, you can use the following commands
+If you intend to use a particular development branch from github repo, you can use the following commands:
 ```julia
 import Pkg
 Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="BRANCH_NAME")
@@ -41,7 +41,7 @@ A typical workflow to use a quantum computer consists of the following four step
 
 - Postprocess: Compute summary statistics and visualize the results of the experiments.
 
-Now let's try Snowflake by making a two qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit achiving a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see https://en.wikipedia.org/wiki/Quantum_logic_gate for an introduction to quantum logic gates). This circuit is show below:
+Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see https://en.wikipedia.org/wiki/Quantum_logic_gate for an introduction to quantum logic gates). This circuit is shown below:
 
 ![Bell State generator circuit](https://upload.wikimedia.org/wikipedia/commons/f/fc/The_Hadamard-CNOT_transform_on_the_zero-state.png)
 
@@ -51,13 +51,13 @@ First import Snowflake:
 using Snowflake
 ```
 
-Then lets define a two qubit circuit:
+Then, let's define a two-qubit circuit:
 
 ```julia
 c = QuantumCircuit(qubit_count=2, bit_count=0)
 ```
 
-If you are using Julia REPL you should see an output similar to:
+If you are using Julia REPL, you should see an output similar to:
 
 ```
 Quantum Circuit Object:
@@ -69,16 +69,16 @@ q[1]:
 q[2]:
 ```
 
-Note the circuit object has been given a Universally Unique Identifier (UUID). This UUID can be used later to retrieve the circuit results from a remote server such as a quantum computer on the cloud.
+Note that the circuit object has been given a Universally Unique Identifier (UUID). This UUID can be used later to retrieve the circuit results from a remote server such as a quantum computer on the cloud.
 
-Now let's build the circuit using the following commands:
+Now, let's build the circuit using the following commands:
 
 ```julia
 push_gate!(c, [hadamard(1)])
 push_gate!(c, [control_x(1, 2)])
 ```
 
-The first line adds a Hadamrd gate to circuit object `c` which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with control qubit being qubit 1 and target qubit being qubit 2. The output in Julia REPL would look like:
+The first line adds a Hadamard gate to circuit object `c` which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with qubit 1 as the control qubit and qubit 2 as the target qubit. The output in Julia REPL would look like:
 
 ```julia
 Quantum Circuit Object:
@@ -92,7 +92,7 @@ q[2]:-------X--
 
 **Note:** Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
-Finally you can simulate this circuit and obtain the final quantum state of this two-qubit register:
+Finally, you can simulate this circuit and obtain the final quantum state of this two-qubit register:
 
 ```julia
 ψ = simulate(c)
@@ -121,7 +121,6 @@ push_gate!(c, [control_x(1, 2)])
 ψ = simulate(c)
 ```
 
-
-
-
-
+```@meta
+DocTestSetup = nothing
+```

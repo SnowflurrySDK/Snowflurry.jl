@@ -10,7 +10,7 @@ Solves the Shrodinger equation:
 - `H` -- the Hamiltonian operator or a function that returns the Hamiltonian as a function of time.
 - `ψ_0` -- initital status of a quantum system
 - `t_range` -- time interval for which the system has to be simulated. 
-- `e_ops` -- List of operators for which the expected value will be returned as function of time. 
+- `e_ops` -- list of operators for which the expected value will be returned as a function of time. 
 """
 function sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
     Hamiltonian(t)=H
@@ -43,8 +43,8 @@ Solves the Lindblad Master equation:
 - `H` -- the Hamiltonian operator or a function that returns the Hamiltonian as a function of time.
 - `ψ_0` -- initital status of a quantum system
 - `t_range` -- time interval for which the system has to be simulated. 
-- `e_ops` -- List of operators for which the expected value will be returned as function of time. 
-- `c_ops` -- List of collapse operators ``L_i``'s.
+- `e_ops` -- list of operators for which the expected value will be returned as function of time. 
+- `c_ops` -- list of collapse operators ``L_i``'s.
 """
 function mesolve(H::Operator, ρ_0::Operator, t::StepRangeLen; c_ops::Vector{Operator}=[], e_ops::Vector{Operator}=(Operator)[], kwargs...)
     drho_dt(t,ρ) = -im*commute(H,ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])

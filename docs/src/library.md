@@ -23,7 +23,7 @@ create_virtual_qpu
 
 ### Basic Quantum Objects
 
-There are three basic quantum objects defined in Snowflake to simulate a Quantum system. These objects are Ket, Bra, and Operator.
+There are three basic quantum objects in Snowflake to simulate a quantum system. These objects are Ket, Bra, and Operator.
 
 ```@docs
 Ket
@@ -32,9 +32,11 @@ Operator
 MultiBodySystem
 commute
 anticommute
-normalize
+normalize!
 ket2dm
 fock_dm
+Snowflake.moyal
+Snowflake.genlaguerre
 get_embed_operator
 fock
 create
@@ -43,4 +45,8 @@ number_op
 coherent
 sesolve
 mesolve
+```
+
+```@meta
+DocTestSetup = nothing
 ```
