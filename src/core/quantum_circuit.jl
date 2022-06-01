@@ -60,13 +60,24 @@ q[2]:--X----X--
 ```
 """
 function push_gate!(circuit::QuantumCircuit, gate::Gate)
-    push!(circuit.pipeline, [gate])
+    push_gate!(circuit, [gate])
     return circuit
 end
 
 function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    ensure_gates_are_in_circuit(circuit, gates)
     push!(circuit.pipeline, gates)
     return circuit
+end
+
+function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Array{Gate})
+    for gate in gates
+        for target in gate.target
+            if target > circuit.qubit_count
+                throw(DomainError(target, "the gate does no fit in the circuit"))
+            end
+        end
+    end
 end
 
 """
@@ -173,6 +184,9 @@ end
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`. 
 
+Employs the approach described in Listing 5 of
+[Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
+
 # Examples
 ```jldoctest
 julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
@@ -213,23 +227,110 @@ julia> print(ket)
 """
 function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
-    system = MultiBodySystem(circuit.qubit_count, 2)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for step in circuit.pipeline
-        # U is the matrix corresponding the operations happening this step
-        #        U = Operator(Matrix{Complex}(1.0I, hilbert_space_size, hilbert_space_size))  
+    for step in circuit.pipeline 
         for gate in step
-            # if single qubit gate, get the embedded operator
-            # TODO: make sure embedding works for multi qubit system
-            S =
-                (length(gate.target) == 1) ?
-                get_embed_operator(gate.operator, gate.target[1], system) : gate
-            ψ = S * ψ
+            apply_gate!(ψ, gate, circuit.qubit_count)
         end
-
     end
     return ψ
+end
+
+function apply_gate!(state::Ket, gate::Gate, qubit_count)
+    b0 = get_b0_bases_list(gate, qubit_count)
+    b1 = get_b1_bases_list(gate, qubit_count)
+    temp_state = zeros(Complex, length(b1))
+    for x0 in b0
+        for (index, x1) in enumerate(b1)
+            temp_state[index] = state.data[x0+x1+1]
+        end
+        temp_state = gate.operator.data*temp_state
+        for (index, x1) in enumerate(b1)
+            state.data[x0+x1+1] = temp_state[index]
+        end
+    end
+end
+
+function get_b0_bases_list(gate::Gate, qubit_count)
+    num_targets = length(gate.target)
+    num_b0_bases = 2^(qubit_count-num_targets)
+    pattern = get_b0_pattern(gate, qubit_count)
+    b0_bitstrings = fill(pattern, num_b0_bases)
+    fill_bit_string_list!(b0_bitstrings, pattern)
+    b0 = get_int_list(b0_bitstrings)
+    return b0
+end
+
+function get_b0_pattern(gate::Gate, qubit_count)
+    pattern = ""
+    for i_qubit in 1:qubit_count
+        if i_qubit in gate.target
+            pattern = pattern * '0'
+        else
+            pattern = pattern * 'x'
+        end
+    end
+    return pattern
+end
+
+function fill_bit_string_list!(list, pattern)
+    fill_bit_string_list_and_return_counter!(list, pattern)
+end
+
+function fill_bit_string_list_and_return_counter!(list, pattern, counter=1)
+    if !('x' in pattern)
+        list[counter] = pattern
+        counter += 1
+        return counter
+    else
+        pattern_with_0 = replace(pattern, 'x'=>'0', count=1)
+        counter = fill_bit_string_list_and_return_counter!(list, pattern_with_0, counter)
+
+        pattern_with_1 = replace(pattern, 'x'=>'1', count=1)
+        counter = fill_bit_string_list_and_return_counter!(list, pattern_with_1, counter)
+        return counter
+    end
+end
+
+function get_int_list(bitstring_list)
+    int_list = Vector{Int}(undef, length(bitstring_list))
+    for (i_string, bitstring) in enumerate(bitstring_list)
+        int_list[i_string] = parse(Int, bitstring, base=2)
+    end
+    return int_list
+end
+
+function get_b1_bases_list(gate::Gate, qubit_count)
+    num_targets = length(gate.target)
+    target_space_bitstrings = get_bitstring_vector_for_target_space(num_targets)
+    b1_bitstrings = get_b1_bitstrings(gate, target_space_bitstrings, qubit_count)
+    b1 = get_int_list(b1_bitstrings)
+    return b1
+end
+
+function get_bitstring_vector_for_target_space(num_targets)
+    num_bases = 2^num_targets
+    bitstrings = fill('0'^num_targets, num_bases)
+    for i_basis = 0:num_bases-1
+        raw_bitsring = bitstring(i_basis)
+        formatted_bitstring = raw_bitsring[end-num_targets+1:end]
+        bitstrings[i_basis+1] = formatted_bitstring
+    end
+    return bitstrings
+end
+
+function get_b1_bitstrings(gate::Gate, target_space_bitstrings, qubit_count)
+    num_bases = length(target_space_bitstrings)
+    bitstring_list = fill('0'^qubit_count, num_bases)
+    for (i_basis, bitstring) in enumerate(bitstring_list)
+        bitstring_as_chars = collect(bitstring)
+        for (i_target, target) in enumerate(gate.target)
+            bitstring_as_chars[target] = target_space_bitstrings[i_basis][i_target]
+        end
+        bitstring_list[i_basis] = join(bitstring_as_chars)
+    end
+    return bitstring_list
 end
 
 """
