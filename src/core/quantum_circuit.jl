@@ -129,53 +129,73 @@ function Base.show(io::IO, circuit::QuantumCircuit)
     println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
     println(io, "   bit_count: $(circuit.bit_count) ")
+    print_circuit_diagram(io, circuit)
+end
 
+function print_circuit_diagram(io, circuit)
+    circuit_layout = get_circuit_layout(circuit)
+    num_wires = size(circuit_layout, 1)
+    pipeline_length = size(circuit_layout, 2)
+    for i_wire in range(1, length = num_wires-1)
+        for i_step in range(1, length = pipeline_length)
+            print(io, circuit_layout[i_wire, i_step])
+        end
+        println(io, "")
+    end
+end
+
+function get_circuit_layout(circuit)
     wire_count = 2 * circuit.qubit_count
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
+    add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
+    
+    for i_step in 1:length(circuit.pipeline)
+        step = circuit.pipeline[i_step]
+        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count)
 
-    for i_qubit in range(1, length = circuit.qubit_count)
+        for gate in step
+            add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
+            add_target_to_circuit_layout!(circuit_layout, gate, i_step)
+        end
+    end
+    return circuit_layout
+end
+
+function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
+    for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         circuit_layout[id_wire, 1] = "q[$i_qubit]:"
         circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
     end
+end
 
-    i_step = 1
-    for step in circuit.pipeline
-        i_step += 1 # the first elemet of the layout is the qubit tag
-        for i_qubit in range(1, length = circuit.qubit_count)
-            id_wire = 2 * (i_qubit - 1) + 1
-            # qubit wire
-            circuit_layout[id_wire, i_step] = "-----"
-            # spacer line
-            circuit_layout[id_wire+1, i_step] = "     "
-        end
+function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits)
+    for i_qubit in range(1, length = num_qubits)
+        id_wire = 2 * (i_qubit - 1) + 1
+        # qubit wire
+        circuit_layout[id_wire, i_step+1] = "-----"
+        # spacer line
+        circuit_layout[id_wire+1, i_step+1] = "     "
+    end
+end
 
-        for gate in step
-            for i_qubit in range(1, length = circuit.qubit_count)
-                if (i_qubit in gate.target)
-                    id_wire = 2 * (i_qubit - 1) + 1
-                    id = findfirst(isequal(i_qubit), gate.target)
-                    circuit_layout[id_wire, i_step] = "--$(gate.display_symbol[id])--"
-                    if length(gate.target) > 1 && gate.target[1] == i_qubit
-                        circuit_layout[id_wire+1, i_step] = "  |  "
-                    end
-                end
-            end
+function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
+    min_wire = 2*(minimum(gate.target)-1)+1
+    max_wire = 2*(maximum(gate.target)-1)+1
+    for i_wire in min_wire+1:max_wire-1
+        if iseven(i_wire)
+            circuit_layout[i_wire, i_step+1] = "  |  "
+        else
+            circuit_layout[i_wire, i_step+1] = "--|--"
         end
     end
+end
 
-
-    # circuit_layout[id_wire] = circuit_layout[id_wire] * ".\n"
-    # circuit_layout[id_wire + 1] = circuit_layout[id_wire + 1] * ".\n"
-
-    for i_wire in range(1, length = wire_count)
-        for i_step in range(1, length = length(circuit.pipeline) + 1)
-            # print(io, circuit_layout[i_wire, i_step])
-            # println(io, "  i_wire=", i_wire, " i_step=", i_step)
-            print(io, circuit_layout[i_wire, i_step])
-
-        end
-        println(io, "")
+function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
+    for i_target in 1:length(gate.target)
+        single_target = gate.target[i_target]
+        id_wire = 2*(single_target-1)+1
+        circuit_layout[id_wire, i_step+1] = "--$(gate.display_symbol[i_target])--"
     end
 end
 
