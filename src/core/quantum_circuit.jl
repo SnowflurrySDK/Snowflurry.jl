@@ -149,16 +149,32 @@ function get_circuit_layout(circuit)
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
     
-    for i_step in 1:length(circuit.pipeline)
-        step = circuit.pipeline[i_step]
-        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count)
+    for (i_step, step) in enumerate(circuit.pipeline)
+        longest_symbol_length = get_longest_symbol_length(step)
+        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count,
+            longest_symbol_length)
 
         for gate in step
-            add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
-            add_target_to_circuit_layout!(circuit_layout, gate, i_step)
+            add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
+                longest_symbol_length)
+            add_target_to_circuit_layout!(circuit_layout, gate, i_step,
+                longest_symbol_length)
         end
     end
     return circuit_layout
+end
+
+function get_longest_symbol_length(step)
+    largest_length = 0
+    for gate in step
+        for symbol in gate.display_symbol
+            symbol_length = length(symbol)
+            if symbol_length > largest_length
+                largest_length = symbol_length
+            end
+        end
+    end
+    return largest_length
 end
 
 function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
@@ -169,33 +185,48 @@ function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
     end
 end
 
-function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits)
+function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits,
+    longest_symbol_length)
+
+    num_chars = 4+longest_symbol_length
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         # qubit wire
-        circuit_layout[id_wire, i_step+1] = "-----"
+        circuit_layout[id_wire, i_step+1] = "-"^num_chars
         # spacer line
-        circuit_layout[id_wire+1, i_step+1] = "     "
+        circuit_layout[id_wire+1, i_step+1] = " "^num_chars
     end
 end
 
-function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step)
+function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
+    longest_symbol_length)
+    
+    length_difference = longest_symbol_length-1
+    num_left_chars = 2 + floor(Int, length_difference/2)
+    num_right_chars = 2 + ceil(Int, length_difference/2)
     min_wire = 2*(minimum(gate.target)-1)+1
     max_wire = 2*(maximum(gate.target)-1)+1
     for i_wire in min_wire+1:max_wire-1
         if iseven(i_wire)
-            circuit_layout[i_wire, i_step+1] = "  |  "
+            circuit_layout[i_wire, i_step+1] = ' '^num_left_chars * "|" *
+                ' '^num_right_chars
         else
-            circuit_layout[i_wire, i_step+1] = "--|--"
+            circuit_layout[i_wire, i_step+1] = '-'^num_left_chars * "|" *
+                '-'^num_right_chars
         end
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
-    for i_target in 1:length(gate.target)
-        single_target = gate.target[i_target]
-        id_wire = 2*(single_target-1)+1
-        circuit_layout[id_wire, i_step+1] = "--$(gate.display_symbol[i_target])--"
+function add_target_to_circuit_layout!(circuit_layout, gate, i_step, longest_symbol_length)
+    
+    for (i_target, target) in enumerate(gate.target)
+        symbol_length = length(gate.display_symbol[i_target])
+        length_difference = longest_symbol_length-symbol_length
+        num_left_dashes = 2 + floor(Int, length_difference/2)
+        num_right_dashes = 2 + ceil(Int, length_difference/2)
+        id_wire = 2*(target-1)+1
+        circuit_layout[id_wire, i_step+1] = '-'^num_left_dashes *
+            "$(gate.display_symbol[i_target])" * '-'^num_right_dashes
     end
 end
 
