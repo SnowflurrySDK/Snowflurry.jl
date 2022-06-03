@@ -140,16 +140,16 @@ Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
 
 Compute the eigenvalue decomposition of Operator `A` and return an `Eigen`
 factorization object `F`. Eigenvalues are found in `F.values` while eigenvectors are
-found in the matrix `F.vectors`. Each column of this matrix correspond to an eigenvector.
+found in the matrix `F.vectors`. Each column of this matrix corresponds to an eigenvector.
 The `i`th eigenvector is extracted by calling `F.vectors[:, i]`.
 
 # Examples
 ```jldoctest
 julia> X = sigma_x()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             1.0 + 0.0im
-                1.0 + 0.0im             0.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
 
 julia> F = eigen(X);
 
@@ -174,10 +174,10 @@ Compute the trace of Operator `A`.
 # Examples
 ```jldoctest
 julia> I = eye()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                1.0 + 0.0im             0 + 0im
-                0 + 0im         1.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0 + 0im
+0 + 0im    1.0 + 0.0im
 
 
 julia> trace = tr(I)
@@ -193,17 +193,19 @@ Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`�
 
 # Examples
 ```jldoctest
-julia> ψ = Ket([0.0; 1.0])
+julia> ψ = Ket([0.0; 1.0]);
+
+julia> print(ψ)
 2-element Ket:
 0.0 + 0.0im
 1.0 + 0.0im
 
 
 julia> A = sigma_z()
-        (2, 2)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                1.0 + 0.0im             0.0 + 0.0im
-                0.0 + 0.0im             -1.0 + 0.0im
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
 
 
 julia> expected_value(A, ψ)
@@ -228,19 +230,25 @@ More details about the Kronecker product can be found
 
 # Examples
 ```jldoctest
-julia> ψ_0 = Ket([0.0; 1.0])
+julia> ψ_0 = Ket([0.0; 1.0]);
+
+julia> print(ψ_0)
 2-element Ket:
 0.0 + 0.0im
 1.0 + 0.0im
 
 
-julia> ψ_1 = Ket([1.0; 0.0])
+julia> ψ_1 = Ket([1.0; 0.0]);
+
+julia> print(ψ_1)
 2-element Ket:
 1.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> kron(ψ_0, ψ_1)
+julia> ψ_0_1 = kron(ψ_0, ψ_1);
+
+julia> print(ψ_0_1)
 4-element Ket:
 0.0 + 0.0im
 0.0 + 0.0im
@@ -249,12 +257,12 @@ julia> kron(ψ_0, ψ_1)
 
 
 julia> kron(sigma_x(), sigma_y())
-        (4, 4)-element Snowflake.Operator:
-        Underlying data Matrix{Complex} : 
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 - 1.0im
-                0.0 + 0.0im             0.0 + 0.0im             0.0 + 1.0im             0.0 + 0.0im
-                0.0 + 0.0im             0.0 - 1.0im             0.0 + 0.0im             0.0 + 0.0im
-                0.0 + 1.0im             0.0 + 0.0im             0.0 + 0.0im             0.0 + 0.0im
+(4, 4)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 - 1.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 ```
 """
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
