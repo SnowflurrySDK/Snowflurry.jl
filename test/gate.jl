@@ -77,6 +77,7 @@ end
 
 @testset "gate_set_exceptions" begin
     @test_throws DomainError control_x(1, 1)
+end
 
 
 @testset "ladder_operators" begin
