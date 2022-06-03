@@ -30,16 +30,15 @@ end
 
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
-    println(io, "    instruction symbol: " * gate.instruction_symbol)
+    println(io, "instruction symbol: " * gate.instruction_symbol)
     if !isempty(gate.parameters)
-        print(io, "    parameters: " )
+        print(io, "parameters: " )
         show(io, gate.parameters)
         println()
     end
-    println(io, "    operator:")
+    println(io, "targets: $(gate.target)")
+    println(io, "operator:")
     show(io, "text/plain", gate.operator)
-    println()
-    println(io, "    targets: $(gate.target)")
 end
 
 Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
