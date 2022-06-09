@@ -41,6 +41,17 @@ Base.kron(x::Gate, y::Operator) = kron(x.operator, y)
 Base.kron(x::Operator, y::Gate) = kron(x, y.operator)
 
 # Single Qubit Gates
+"""
+    sigma_x()
+
+Returns the Pauli-X `Operator`, which is defined as:
+```math
+\\sigma_x = \\begin{bmatrix}
+    0 & 1 \\\\
+    1 & 0
+    \\end{bmatrix}
+```
+"""
 sigma_x() = Operator(reshape(Complex.([0.0, 1.0, 1.0, 0.0]), 2, 2))
 sigma_y() = Operator(reshape(Complex.([0.0, im, -im, 0.0]), 2, 2))
 sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
