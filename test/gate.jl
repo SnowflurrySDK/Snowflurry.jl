@@ -14,6 +14,10 @@ using Test
 
     non_qubit_ket = Ket([1.0, 0.0, 0.0])
     @test_throws DomainError apply_gate!(non_qubit_ket, hadamard(1))
+
+    transformed_ψ_1 = get_transformed_state(ψ_1, hadamard(1))
+    @test ψ_1 ≈ fock(1,2)
+    @test transformed_ψ_1 ≈ 1/2^.5*(ψ_0-ψ_1)
 end
 
 

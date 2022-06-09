@@ -36,6 +36,12 @@ function Base.show(io::IO, gate::Gate)
     println(io, "\ttargets: $(gate.target)")
 end
 
+function get_transformed_state(state::Ket, gate::Gate)
+    transformed_state = deepcopy(state)
+    apply_gate!(transformed_state, gate)
+    return transformed_state
+end
+
 function apply_gate!(state::Ket, gate::Gate)
     qubit_count = log2(length(state))
     if mod(qubit_count, 1) != 0
