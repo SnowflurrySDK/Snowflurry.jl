@@ -36,12 +36,6 @@ function Base.show(io::IO, gate::Gate)
     println(io, "\ttargets: $(gate.target)")
 end
 
-function get_transformed_state(state::Ket, gate::Gate)
-    transformed_state = deepcopy(state)
-    apply_gate!(transformed_state, gate)
-    return transformed_state
-end
-
 function apply_gate!(state::Ket, gate::Gate)
     qubit_count = log2(length(state))
     if mod(qubit_count, 1) != 0
@@ -55,10 +49,6 @@ function apply_gate!(state::Ket, gate::Gate)
     Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
 end
 
-
-Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
-Base.kron(x::Gate, y::Operator) = kron(x.operator, y)
-Base.kron(x::Operator, y::Gate) = kron(x, y.operator)
 
 # Single Qubit Gates
 sigma_x() = Operator(reshape(Complex.([0.0, 1.0, 1.0, 0.0]), 2, 2))
@@ -127,7 +117,13 @@ control_x(control_qubit, target_qubit) =
     Gate(["*" "X"], "cx", control_x(), [control_qubit, target_qubit])
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
-Base.:*(M::Gate, x::Ket) = M.operator * x
+Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M)
+
+function get_transformed_state(state::Ket, gate::Gate)
+    transformed_state = deepcopy(state)
+    apply_gate!(transformed_state, gate)
+    return transformed_state
+end
 
 STD_GATES = Dict(
     "x" => sigma_x,

@@ -61,7 +61,6 @@ export
     does_circuit_satisfy_qpu_connectivity,
     transpile,
 
-    get_transformed_state,
     apply_gate!,
 
     # Gates
