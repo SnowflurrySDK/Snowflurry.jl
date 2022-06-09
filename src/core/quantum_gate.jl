@@ -49,11 +49,35 @@ Returns the Pauli-X `Operator`, which is defined as:
 \\sigma_x = \\begin{bmatrix}
     0 & 1 \\\\
     1 & 0
-    \\end{bmatrix}
+    \\end{bmatrix}.
 ```
 """
 sigma_x() = Operator(reshape(Complex.([0.0, 1.0, 1.0, 0.0]), 2, 2))
+
+"""
+    sigma_y()
+
+Returns the Pauli-Y `Operator`, which is defined as:
+```math
+\\sigma_y = \\begin{bmatrix}
+    0 & -i \\\\
+    i & 0
+    \\end{bmatrix}.
+```
+"""
 sigma_y() = Operator(reshape(Complex.([0.0, im, -im, 0.0]), 2, 2))
+
+"""
+    sigma_z()
+
+Returns the Pauli-Z `Operator`, which is defined as:
+```math
+\\sigma_z = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & -1
+    \\end{bmatrix}.
+```
+"""
 sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
 sigma_p() = 0.5*(sigma_x()+im*sigma_y())
 sigma_m() = 0.5*(sigma_x()-im*sigma_y())

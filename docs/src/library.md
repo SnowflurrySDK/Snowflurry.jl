@@ -17,6 +17,8 @@ simulate_shots
 ## Quantum Gate
 ```@docs
 sigma_x()
+sigma_y()
+sigma_z()
 ```
 
 ## Quantum Processing Unit
