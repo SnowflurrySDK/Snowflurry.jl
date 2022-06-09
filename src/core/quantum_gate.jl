@@ -79,7 +79,31 @@ Returns the Pauli-Z `Operator`, which is defined as:
 ```
 """
 sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
+
+"""
+    sigma_p()
+
+Returns the spin-\$\\frac{1}{2}\$ raising `Operator`, which is defined as:
+```math
+\\sigma_+ = \\begin{bmatrix}
+    0 & 1 \\\\
+    0 & 0
+    \\end{bmatrix}.
+```
+"""
 sigma_p() = 0.5*(sigma_x()+im*sigma_y())
+
+"""
+    sigma_m()
+
+Returns the spin-\$\\frac{1}{2}\$ lowering `Operator`, which is defined as:
+```math
+\\sigma_- = \\begin{bmatrix}
+    0 & 0 \\\\
+    1 & 0
+    \\end{bmatrix}.
+```
+"""
 sigma_m() = 0.5*(sigma_x()-im*sigma_y())
 
 hadamard() = Operator(1.0 / sqrt(2.0) * reshape(Complex.([1.0, 1.0, 1.0, -1.0]), 2, 2))

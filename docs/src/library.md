@@ -19,6 +19,8 @@ simulate_shots
 sigma_x()
 sigma_y()
 sigma_z()
+sigma_p()
+sigma_m()
 ```
 
 ## Quantum Processing Unit
