@@ -251,13 +251,13 @@ function simulate(circuit::QuantumCircuit)
     ψ = fock(0, hilbert_space_size)
     for step in circuit.pipeline 
         for gate in step
-            apply_gate!(ψ, gate, circuit.qubit_count)
+            apply_gate_without_ket_size_check!(ψ, gate, circuit.qubit_count)
         end
     end
     return ψ
 end
 
-function apply_gate!(state::Ket, gate::Gate, qubit_count)
+function apply_gate_without_ket_size_check!(state::Ket, gate::Gate, qubit_count)
     b0 = get_b0_bases_list(gate, qubit_count)
     b1 = get_b1_bases_list(gate, qubit_count)
     temp_state = zeros(Complex, length(b1))

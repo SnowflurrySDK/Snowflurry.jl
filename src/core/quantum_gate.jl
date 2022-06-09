@@ -36,6 +36,20 @@ function Base.show(io::IO, gate::Gate)
     println(io, "\ttargets: $(gate.target)")
 end
 
+function apply_gate!(state::Ket, gate::Gate)
+    qubit_count = log2(length(state))
+    if mod(qubit_count, 1) != 0
+        throw(DomainError(qubit_count,
+            "Ket does not correspond to an integer number of qubits"))
+    end
+    if any(i_target->(i_target>qubit_count), gate.target)
+        throw(DomainError(gate.target,
+            "not enough qubits in the Ket for the Gate"))
+    end
+    Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
+end
+
+
 Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
 Base.kron(x::Gate, y::Operator) = kron(x.operator, y)
 Base.kron(x::Operator, y::Gate) = kron(x, y.operator)
