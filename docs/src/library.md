@@ -39,6 +39,7 @@ x_90(target)
 control_z(control_qubit, target_qubit)
 control_x(control_qubit, target_qubit)
 iswap(qubit_1, qubit_2)
+Base.:*(M::Gate, x::Ket)
 ```
 
 ## Quantum Processing Unit

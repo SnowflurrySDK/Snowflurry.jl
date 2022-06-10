@@ -400,6 +400,29 @@ iSWAP = \\begin{bmatrix}
 """
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
+"""
+    Base.:*(M::Gate, x::Ket)
+
+Returns a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
+
+# Examples
+```jldoctest
+julia> ψ_0 = fock(0, 2);
+
+julia> print(ψ_0)
+2-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+
+julia> ψ_1 = sigma_x(1)*ψ_0;
+
+julia> print(ψ_1)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+```
+"""
 Base.:*(M::Gate, x::Ket) = M.operator * x
 
 STD_GATES = Dict(
