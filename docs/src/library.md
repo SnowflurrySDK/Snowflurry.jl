@@ -26,6 +26,9 @@ phase()
 pi_8()
 eye()
 x_90()
+control_x()
+control_z()
+iswap()
 ```
 
 ## Quantum Processing Unit

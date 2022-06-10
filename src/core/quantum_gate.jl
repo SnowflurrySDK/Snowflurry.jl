@@ -178,6 +178,19 @@ x_90() = Operator(
     ),
 )
 
+"""
+    control_x()
+
+Returns the controlled-X (or controlled NOT) `Operator`, which is defined as:
+```math
+CX = CNOT = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\
+    0 & 0 & 0 & 1 \\\\
+    0 & 0 & 1 & 0
+    \\end{bmatrix}.
+```
+"""
 control_x() = Operator(
     Complex.(
         [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0] [
@@ -189,6 +202,19 @@ control_x() = Operator(
     ),
 )
 
+"""
+    control_z()
+
+Returns the controlled-Z `Operator`, which is defined as:
+```math
+CZ = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\
+    0 & 0 & 1 & 0 \\\\
+    0 & 0 & 0 & -1
+    \\end{bmatrix}.
+```
+"""
 control_z() = Operator(
     Complex.(
         [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [
@@ -200,6 +226,19 @@ control_z() = Operator(
     ),
 )
 
+"""
+    iswap()
+
+Returns the imaginary swap `Operator`, which is defined as:
+```math
+iSWAP = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 0 & i & 0 \\\\
+    0 & i & 0 & 0 \\\\
+    0 & 0 & 0 & 1
+    \\end{bmatrix}.
+```
+"""
 iswap() = Operator(
     Complex.(
         [[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, im, 0.0] [0.0, im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]],
