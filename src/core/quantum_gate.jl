@@ -347,10 +347,57 @@ x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 
 
 # two qubit gates
+"""
+    control_z(control_qubit, target_qubit)
+
+Returns the controlled-Z `Gate`, which may apply the Pauli-Z `Operator` to the target qubit
+depending on the state of the control qubit.
+The `Gate` is associated with the following `Operator`:
+```math
+CZ = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\
+    0 & 0 & 1 & 0 \\\\
+    0 & 0 & 0 & -1
+    \\end{bmatrix}.
+```
+"""
 control_z(control_qubit, target_qubit) =
     Gate(["*" "Z"], "cz", control_z(), [control_qubit, target_qubit])
+
+"""
+    control_x(control_qubit, target_qubit)
+
+Returns the controlled-X `Gate`, which may apply the Pauli-X `Operator` to the target qubit
+depending on the state of the control qubit.
+The `Gate` is associated with the following `Operator`:
+```math
+CX = CNOT = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\
+    0 & 0 & 0 & 1 \\\\
+    0 & 0 & 1 & 0
+    \\end{bmatrix}.
+```
+"""
 control_x(control_qubit, target_qubit) =
     Gate(["*" "X"], "cx", control_x(), [control_qubit, target_qubit])
+
+"""
+    iswap(qubit_1, qubit_2)
+
+Returns the imaginary swap `Gate`, which applies the imaginary swap `Operator` to `qubit_1`
+and `qubit_2.`
+The `Gate` is associated with the following `Operator`:
+```math
+iSWAP = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 0 & i & 0 \\\\
+    0 & i & 0 & 0 \\\\
+    0 & 0 & 0 & 1
+    \\end{bmatrix}.
+```
+"""
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
 Base.:*(M::Gate, x::Ket) = M.operator * x
