@@ -245,13 +245,102 @@ iswap() = Operator(
     ),
 )
 
+"""
+    sigma_x(target)
 
+Returns the Pauli-X `Gate`, which applies the Pauli-X `Operator` to the target qubit.
+The `Operator` is defined as:
+```math
+\\sigma_x = \\begin{bmatrix}
+    0 & 1 \\\\
+    1 & 0
+    \\end{bmatrix}.
+```
+"""
 sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
+
+"""
+    sigma_y(target)
+
+Returns the Pauli-Y `Gate`, which applies the Pauli-Y `Operator` to the target qubit.
+The `Operator` is defined as:
+```math
+\\sigma_y = \\begin{bmatrix}
+    0 & -i \\\\
+    i & 0
+    \\end{bmatrix}.
+```
+"""
 sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
+
+"""
+    sigma_z(target)
+
+Returns the Pauli-Z `Gate`, which applies the Pauli-Z `Operator` to the target qubit.
+The `Operator` is defined as:
+```math
+\\sigma_z = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & -1
+    \\end{bmatrix}.
+```
+"""
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
+
+"""
+    hadamard(target)
+
+Returns the Hadamard `Gate`, which applies the Hadamard `Operator` to the target qubit.
+The `Operator` is defined as:
+```math
+H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & 1 \\\\
+    1 & -1
+    \\end{bmatrix}.
+```
+"""
 hadamard(target) = Gate(["H"], "h", hadamard(), target)
+
+"""
+    phase(target)
+
+Returns a phase `Gate` which is applied to the target qubit.
+The `Gate` is associated with the following `Operator`:
+```math
+S = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & i
+    \\end{bmatrix}.
+```
+"""
 phase(target) = Gate(["S"], "s", phase(), target)
+
+"""
+    pi_8(target)
+
+Returns a π/8 `Gate` which is applied to the target qubit.
+The `Gate` is associated with the following `Operator`:
+```math
+T = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & \\mathrm{exp}\\left(i\\frac{\\pi}{4}\\right)
+    \\end{bmatrix}.
+```
+"""
 pi_8(target) = Gate(["T"], "t", pi_8(), target)
+
+"""
+    x_90(target)
+
+Returns a `Gate` which applies a π/2 rotation about the X axis.
+The `Gate` is associated with the following `Operator`:
+```math
+R_x\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
+    0 & -i \\\\
+    -i & 0
+    \\end{bmatrix}.
+```
+"""
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 
 

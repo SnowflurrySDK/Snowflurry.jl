@@ -29,6 +29,13 @@ x_90()
 control_x()
 control_z()
 iswap()
+sigma_x(target)
+sigma_y(target)
+sigma_z(target)
+hadamard(target)
+phase(target)
+pi_8(target)
+x_90(target)
 ```
 
 ## Quantum Processing Unit
