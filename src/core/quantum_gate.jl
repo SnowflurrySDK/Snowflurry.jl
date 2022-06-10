@@ -106,11 +106,70 @@ Returns the spin-\$\\frac{1}{2}\$ lowering `Operator`, which is defined as:
 """
 sigma_m() = 0.5*(sigma_x()-im*sigma_y())
 
+"""
+    hadamard()
+
+Returns the Hadamard `Operator`, which is defined as:
+```math
+H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & 1 \\\\
+    1 & -1
+    \\end{bmatrix}.
+```
+"""
 hadamard() = Operator(1.0 / sqrt(2.0) * reshape(Complex.([1.0, 1.0, 1.0, -1.0]), 2, 2))
+
+"""
+    phase()
+
+Returns the phase gate `Operator`, which is defined as:
+```math
+S = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & i
+    \\end{bmatrix}.
+```
+"""
 phase() = Operator(reshape(Complex.([1.0, 0.0, 0.0, im]), 2, 2))
+
+"""
+    pi_8()
+
+Returns the π/8 gate `Operator`, which is defined as:
+```math
+T = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & \\mathrm{exp}\\left(i\\frac{\\pi}{4}\\right)
+    \\end{bmatrix}.
+```
+"""
 pi_8() = Operator(reshape(Complex.([1.0, 0.0, 0.0, exp(im*pi/4.0)]), 2, 2))
 
+"""
+    eye()
+
+Returns the identity `Operator`, which is defined as:
+```math
+I = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & 1
+    \\end{bmatrix}.
+```
+"""
 eye() = Operator(Matrix{Complex}(1.0I, 2, 2))
+
+"""
+    x_90()
+
+Returns the `Operator` which applies a π/2 rotation about the X axis. The `Operator`
+is defined as:
+```math
+R_x\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
+    0 & -i \\\\
+    -i & 0
+    \\end{bmatrix}.
+```
+"""
 x_90() = Operator(
     reshape(
         Complex.([cos(pi / 2.0), -im * sin(pi / 2.0), -im * sin(pi / 2.0), cos(pi / 2.0)]),

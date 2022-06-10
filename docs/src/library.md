@@ -21,6 +21,11 @@ sigma_y()
 sigma_z()
 sigma_p()
 sigma_m()
+hadamard()
+phase()
+pi_8()
+eye()
+x_90()
 ```
 
 ## Quantum Processing Unit
