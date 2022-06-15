@@ -33,16 +33,30 @@ end
     wire_blending_alpha = 0.2
     num_vertical_wires = 4
     num_horizontal_wires = 5
+    wires_width = 1.0
+    axes_color = "black"
+    axes_blending_alpha = 0.8
+    axes_line_width = 2.0
 end
 
 function plot_bloch_sphere(bloch_sphere = BlochSphere())
     plotlyjs()
     plot_unit_sphere(bloch_sphere)
-    Base.invokelatest(gui)
 end
 
 function plot_unit_sphere(bloch_sphere)
-    (x, y, z) = get_unit_sphere_coordinates(bloch_sphere.num_points_per_line)
+    plot_unit_sphere_surface(bloch_sphere)
+    plot_vertical_circular_wires(bloch_sphere)
+    plot_horizontal_circular_wires(bloch_sphere)
+    plot_axes_lines(bloch_sphere)
+end
+
+function plot_unit_sphere_surface(bloch_sphere)
+    inclination = range(0, stop=π, length=bloch_sphere.num_points_per_line)
+    azimuth = range(0, stop=2*π, length=bloch_sphere.num_points_per_line)
+    x = sin.(inclination) * cos.(azimuth)'
+    y = sin.(inclination) * sin.(azimuth)'
+    z = cos.(inclination) * ones(bloch_sphere.num_points_per_line)'
     surface(x, y, z,
         color=bloch_sphere.sphere_color,
         alpha=bloch_sphere.sphere_blending_alpha,
@@ -50,16 +64,6 @@ function plot_unit_sphere(bloch_sphere)
         size=(bloch_sphere.window_width, bloch_sphere.window_height),
         colorbar=false,
         framestyle=:none)
-    plot_vertical_circular_wires(bloch_sphere)
-    plot_horizontal_circular_wires(bloch_sphere)
-end
-
-function get_unit_sphere_coordinates(num_points_per_line)
-    inclination = range(0, stop=π, length=num_points_per_line)
-    azimuth = range(0, stop=2*π, length=num_points_per_line)
-    x = sin.(inclination) * cos.(azimuth)'
-    y = sin.(inclination) * sin.(azimuth)'
-    z = cos.(inclination) * ones(num_points_per_line)'
     return (x, y, z)
 end
 
@@ -74,6 +78,7 @@ function plot_vertical_circular_wires(bloch_sphere)
         path3d!(x, y, z,
             color=bloch_sphere.wire_color,
             alpha=bloch_sphere.wire_blending_alpha,
+            linewidth=bloch_sphere.wires_width,
             legend=false)
     end
 end
@@ -89,6 +94,27 @@ function plot_horizontal_circular_wires(bloch_sphere)
         path3d!(x, y, z,
             color=bloch_sphere.wire_color,
             alpha=bloch_sphere.wire_blending_alpha,
+            linewidth=bloch_sphere.wires_width,
             legend=false)
     end
+end
+
+function plot_axes_lines(bloch_sphere)
+    axes_points = range(-1, 1, length=bloch_sphere.num_points_per_line)
+    zeros_points = zeros(bloch_sphere.num_points_per_line)
+    path3d!(axes_points, zeros_points, zeros_points,
+        color=bloch_sphere.axes_color,
+        alpha=bloch_sphere.axes_blending_alpha,
+        linewidth=bloch_sphere.axes_line_width,
+        legend=false)
+    path3d!(zeros_points, axes_points, zeros_points,
+        color=bloch_sphere.axes_color,
+        alpha=bloch_sphere.axes_blending_alpha,
+        linewidth=bloch_sphere.axes_line_width,
+        legend=false)
+    path3d!(zeros_points, zeros_points, axes_points,
+        color=bloch_sphere.axes_color,
+        alpha=bloch_sphere.axes_blending_alpha,
+        linewidth=bloch_sphere.axes_line_width,
+        legend=false)
 end
