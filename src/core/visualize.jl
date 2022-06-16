@@ -19,7 +19,7 @@ function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
 end
 
 function viz_wigner(ρ, x, y)
-    return contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
+    return Plots.contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
 end
 
 @with_kw struct BlochSphere
