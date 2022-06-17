@@ -38,6 +38,8 @@ end
     axes_color = "black"
     axes_blending_alpha = 0.8
     axes_line_width = 2.0
+    annotations_size = 35
+    title = "Qubit"
 end
 
 function plot_bloch_sphere(bloch_sphere = BlochSphere())
@@ -87,7 +89,27 @@ function plot_unit_sphere_surface(bloch_sphere)
                 showline=false,
                 showspikes=false,
                 showticklabels=false,
-                title=attr(text=""))))
+                title=attr(text="")),
+        annotations=[attr(x=1.1, y=0, z=0,
+                text="x",
+                showarrow=false,
+                font=attr(size=bloch_sphere.annotations_size)),
+            attr(x=0, y=1.1, z=0,
+                text="y",
+                showarrow=false,
+                font=attr(size=bloch_sphere.annotations_size)),
+            attr(x=0, y=0, z=1.1,
+                text="|0⟩",
+                showarrow=false,
+                font=attr(size=bloch_sphere.annotations_size)),
+            attr(x=0, y=0, z=-1.1,
+                text="|1⟩",
+                showarrow=false,
+                font=attr(size=bloch_sphere.annotations_size)),
+            attr(x=0, y=0, z=1.4,
+                text=bloch_sphere.title,
+                showarrow=false,
+                font=attr(size=bloch_sphere.annotations_size))]))
         return PlotlyJS.Plot(sphere_surface, layout)
 end
 
