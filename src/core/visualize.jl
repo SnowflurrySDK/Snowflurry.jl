@@ -1,4 +1,3 @@
-using Parameters
 using PlotlyJS
 
 function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
@@ -45,8 +44,26 @@ end
     show_hover_info = false
 end
 
-function plot_bloch_sphere(bloch_sphere = BlochSphere())
-    plot_unit_sphere(bloch_sphere, [cos(3*π/4)*sin(π/4), sin(3*π/4)*sin(π/4), cos(π/4)], 0)
+function plot_bloch_sphere(density_matrix::Operator,
+        qubit_list::Union{Vector, Nothing} = nothing,
+        bloch_sphere::BlochSphere = BlochSphere())
+
+    num_qubits = get_num_qubits(density_matrix)
+    system = MultiBodySystem(num_qubits, 2)
+    i_qubit = 1
+    vector = get_bloch_sphere_vector(density_matrix, system, i_qubit)
+    plot_unit_sphere(bloch_sphere, vector, i_qubit)
+end
+
+function get_bloch_sphere_vector(density_matrix::Operator, system::MultiBodySystem,
+        qubit_id)
+    pauli_x = get_embed_operator(sigma_x(), qubit_id, system)
+    x = Float64(tr(density_matrix*pauli_x))
+    pauli_y = get_embed_operator(sigma_y(), qubit_id, system)
+    y = Float64(tr(density_matrix*pauli_y))
+    pauli_z = get_embed_operator(sigma_z(), qubit_id, system)
+    z = Float64(tr(density_matrix*pauli_z))
+    return [x, y, z]
 end
 
 function plot_unit_sphere(bloch_sphere, coordinates, qubit_id)
