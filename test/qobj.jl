@@ -16,6 +16,7 @@ using Test
     # Test amplitude is unity
     @test (_Ψ * Ψ_p) ≈ Complex(1.0)
 
+    @test get_num_qubits(_Ψ) == 1
 
     M_0 = Ψ_0 * Bra(Ψ_0)
     @test size(M_0) == (2, 2)
@@ -40,7 +41,6 @@ using Test
     @test Z * Ψ_0 ≈ Ψ_0
     @test Z * Ψ_1 ≈ -Ψ_1
 
-
 end
 
 @testset "pauli_operators" begin
@@ -60,7 +60,21 @@ end
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ 1.0 
     
+    xy = kron(x, y)
+    @test get_num_qubits(xy) == 2
+end
 
+@testset "operator_exceptions" begin
+    not_square = Operator(zeros(1, 2))
+    @test_throws ErrorException get_num_qubits(not_square)
+
+    non_integer_qubits = Operator(zeros(3, 3))
+    @test_throws DomainError get_num_qubits(non_integer_qubits)
+end
+
+@testset "ket_exceptions" begin
+    non_integer_qubits = Ket(zeros(3))
+    @test_throws DomainError get_num_qubits(non_integer_qubits)
 end
 
 

@@ -38,6 +38,8 @@ fock_dm
 Snowflake.moyal
 Snowflake.genlaguerre
 get_embed_operator
+get_num_qubits(x::Operator)
+get_num_qubits(x::Union{Ket, Bra})
 fock
 create
 destroy

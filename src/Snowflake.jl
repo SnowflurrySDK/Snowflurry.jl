@@ -10,6 +10,7 @@ using Plots: size
 using LinearAlgebra
 using StatsBase
 using UUIDs
+using Parameters
 using Printf
 using Plots
 import SparseArrays
@@ -42,6 +43,7 @@ export
     ket2dm,
     fock_dm,
     expected_value,
+    get_num_qubits,
     normalize!,
     wigner, 
     viz_wigner, 
