@@ -39,21 +39,26 @@ end
     axes_blending_alpha = 0.8
     axes_line_width = 2.0
     annotations_size = 35
-    title = "Qubit"
+    vector_color = "purple"
+    vector_width = 15.0
+    relative_arrow_size = 0.2
+    show_hover_info = false
 end
 
 function plot_bloch_sphere(bloch_sphere = BlochSphere())
-    plot_unit_sphere(bloch_sphere)
+    plot_unit_sphere(bloch_sphere, [cos(3*π/4)*sin(π/4), sin(3*π/4)*sin(π/4), cos(π/4)], 0)
 end
 
-function plot_unit_sphere(bloch_sphere)
-    plot = plot_unit_sphere_surface(bloch_sphere)
-    plot = plot_vertical_circular_wires(bloch_sphere, plot)
-    plot = plot_horizontal_circular_wires(bloch_sphere, plot)
-    plot = plot_axes_lines(bloch_sphere, plot)
+function plot_unit_sphere(bloch_sphere, coordinates, qubit_id)
+    plot = plot_unit_sphere_surface(bloch_sphere, qubit_id)
+    plot_vertical_circular_wires!(plot, bloch_sphere)
+    plot_horizontal_circular_wires!(plot, bloch_sphere)
+    plot_axes_lines!(plot, bloch_sphere)
+    plot_vector!(plot, bloch_sphere, coordinates)
+    return plot
 end
 
-function plot_unit_sphere_surface(bloch_sphere)
+function plot_unit_sphere_surface(bloch_sphere, qubit_id)
     inclination = range(0, stop=π, length=bloch_sphere.num_points_per_line)
     azimuth = range(0, stop=2*π, length=bloch_sphere.num_points_per_line)
     x = sin.(inclination) * cos.(azimuth)'
@@ -68,10 +73,14 @@ function plot_unit_sphere_surface(bloch_sphere)
         cmin=0,
         cmax=1,
         opacity=bloch_sphere.sphere_blending_alpha,
-        showscale=false)
+        showscale=false,
+        contours=attr(x=attr(highlight=false),
+        y=attr(highlight=false),
+        z=attr(highlight=false)))
     layout = Layout(width=bloch_sphere.window_width,
         height=bloch_sphere.window_height,
         autosize=false,
+        hovermode=bloch_sphere.show_hover_info,
         scene=attr(xaxis=attr(showbackground=false,
                 showaxeslabels=false,
                 showline=false,
@@ -107,13 +116,13 @@ function plot_unit_sphere_surface(bloch_sphere)
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size)),
             attr(x=0, y=0, z=1.4,
-                text=bloch_sphere.title,
+                text="Qubit $qubit_id",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size))]))
         return PlotlyJS.Plot(sphere_surface, layout)
 end
 
-function plot_vertical_circular_wires(bloch_sphere, plot)
+function plot_vertical_circular_wires!(plot, bloch_sphere)
     inclination = range(0, stop=π, length=bloch_sphere.num_points_per_line)
     num_semi_circles = 2*bloch_sphere.num_vertical_wires
     for i in 1:num_semi_circles
@@ -129,10 +138,9 @@ function plot_vertical_circular_wires(bloch_sphere, plot)
             showlegend=false)
         push!(plot.data, trace)
     end
-    return plot
 end
 
-function plot_horizontal_circular_wires(bloch_sphere, plot)
+function plot_horizontal_circular_wires!(plot, bloch_sphere)
     azimuth = range(0, stop=2*π, length=bloch_sphere.num_points_per_line)
     num_circles = bloch_sphere.num_horizontal_wires
     for i in 1:num_circles
@@ -148,10 +156,9 @@ function plot_horizontal_circular_wires(bloch_sphere, plot)
             showlegend=false)
         push!(plot.data, trace)
     end
-    return plot
 end
 
-function plot_axes_lines(bloch_sphere, plot)
+function plot_axes_lines!(plot, bloch_sphere)
     axes_points = range(-1, 1, length=bloch_sphere.num_points_per_line)
     zeros_points = zeros(bloch_sphere.num_points_per_line)
     x_trace = PlotlyJS.scatter3d(x=axes_points, y=zeros_points, z=zeros_points,
@@ -173,5 +180,26 @@ function plot_axes_lines(bloch_sphere, plot)
         width=bloch_sphere.axes_line_width),
         showlegend=false)
     push!(plot.data, x_trace, y_trace, z_trace)
-    return plot
+end
+
+function plot_vector!(plot, bloch_sphere, coordinates)
+    line_end_coordinates = (1-bloch_sphere.relative_arrow_size)*coordinates
+    line_trace = PlotlyJS.scatter3d(x=[0, line_end_coordinates[1]],
+        y=[0, line_end_coordinates[2]],
+        z=[0, line_end_coordinates[3]],
+        mode="lines",
+        line=attr(color=bloch_sphere.vector_color,
+            width=bloch_sphere.vector_width),
+            showlegend=false)
+    cone_trace = PlotlyJS.cone(x=[coordinates[1]],
+        y=[coordinates[2]],
+        z=[coordinates[3]],
+        u=[coordinates[1]],
+        v=[coordinates[2]],
+        w=[coordinates[3]],
+        sizeref=bloch_sphere.relative_arrow_size,
+        anchor="tip",
+        colorscale = [[0, bloch_sphere.vector_color], [1, bloch_sphere.vector_color]],
+        showscale = false)
+    push!(plot.data, line_trace, cone_trace)
 end
