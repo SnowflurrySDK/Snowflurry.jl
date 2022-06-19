@@ -42,17 +42,19 @@ end
     vector_width = 15.0
     relative_arrow_size = 0.2
     show_hover_info = false
+    show_qubit_id = true
 end
 
-function plot_bloch_sphere(density_matrix::Operator,
-        qubit_list::Union{Vector, Nothing} = nothing,
+function plot_bloch_sphere(density_matrix::Operator;
+        qubit_id::Int = 1,
         bloch_sphere::BlochSphere = BlochSphere())
 
     num_qubits = get_num_qubits(density_matrix)
     system = MultiBodySystem(num_qubits, 2)
-    i_qubit = 1
-    vector = get_bloch_sphere_vector(density_matrix, system, i_qubit)
-    plot_unit_sphere(bloch_sphere, vector, i_qubit)
+    plot = plot_unit_sphere(bloch_sphere, qubit_id)
+    vector = get_bloch_sphere_vector(density_matrix, system, qubit_id)
+    plot_bloch_sphere_vector!(plot, bloch_sphere, vector)
+    return plot
 end
 
 function get_bloch_sphere_vector(density_matrix::Operator, system::MultiBodySystem,
@@ -66,12 +68,11 @@ function get_bloch_sphere_vector(density_matrix::Operator, system::MultiBodySyst
     return [x, y, z]
 end
 
-function plot_unit_sphere(bloch_sphere, coordinates, qubit_id)
+function plot_unit_sphere(bloch_sphere, qubit_id)
     plot = plot_unit_sphere_surface(bloch_sphere, qubit_id)
     plot_vertical_circular_wires!(plot, bloch_sphere)
     plot_horizontal_circular_wires!(plot, bloch_sphere)
     plot_axes_lines!(plot, bloch_sphere)
-    plot_vector!(plot, bloch_sphere, coordinates)
     return plot
 end
 
@@ -133,7 +134,7 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size)),
             attr(x=0, y=0, z=1.4,
-                text="Qubit $qubit_id",
+                text=bloch_sphere.show_qubit_id ? "Qubit $qubit_id" : "",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size))]))
         return PlotlyJS.Plot(sphere_surface, layout)
@@ -153,7 +154,7 @@ function plot_vertical_circular_wires!(plot, bloch_sphere)
             line=attr(color=bloch_sphere.wire_color,
                 width=bloch_sphere.wires_width),
             showlegend=false)
-        push!(plot.data, trace)
+        add_trace!(plot, trace)
     end
 end
 
@@ -171,7 +172,7 @@ function plot_horizontal_circular_wires!(plot, bloch_sphere)
             line=attr(color=bloch_sphere.wire_color,
                 width=bloch_sphere.wires_width),
             showlegend=false)
-        push!(plot.data, trace)
+        add_trace!(plot, trace)
     end
 end
 
@@ -196,10 +197,12 @@ function plot_axes_lines!(plot, bloch_sphere)
         line=attr(color=bloch_sphere.axes_color,
         width=bloch_sphere.axes_line_width),
         showlegend=false)
-    push!(plot.data, x_trace, y_trace, z_trace)
+    add_trace!(plot, x_trace)
+    add_trace!(plot, y_trace)
+    add_trace!(plot, z_trace)
 end
 
-function plot_vector!(plot, bloch_sphere, coordinates)
+function plot_bloch_sphere_vector!(plot, bloch_sphere, coordinates)
     line_end_coordinates = (1-bloch_sphere.relative_arrow_size)*coordinates
     line_trace = PlotlyJS.scatter3d(x=[0, line_end_coordinates[1]],
         y=[0, line_end_coordinates[2]],
@@ -218,5 +221,6 @@ function plot_vector!(plot, bloch_sphere, coordinates)
         anchor="tip",
         colorscale = [[0, bloch_sphere.vector_color], [1, bloch_sphere.vector_color]],
         showscale = false)
-    push!(plot.data, line_trace, cone_trace)
+    add_trace!(plot, line_trace)
+    add_trace!(plot, cone_trace)
 end
