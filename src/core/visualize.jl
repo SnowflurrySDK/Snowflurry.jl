@@ -27,7 +27,7 @@ end
     sphere_blending_alpha = 0.4
     frame_color = "black"
     frame_blending_alpha = 0.4
-    window_height = 1200
+    window_height = 800
     window_width = 800
     wire_color = "black"
     wire_blending_alpha = 0.2
@@ -40,11 +40,58 @@ end
     annotations_size = 35
     vector_color = "purple"
     vector_width = 15.0
-    relative_arrow_size = 0.2
+    relative_arrow_size = 0.25
     show_hover_info = false
     show_qubit_id = true
 end
 
+"""
+    plot_bloch_sphere(circuit::QuantumCircuit;
+        qubit_id::Int = 1,
+        bloch_sphere::BlochSphere = BlochSphere())
+
+Plots the Bloch sphere of qubit `qubit_id` for the `circuit`.
+    
+If the `circuit` contains multiple qubits, the Bloch sphere is constructed from the 1-qubit
+reduced density matrix of qubit `qubit_id`. The appearance of the Bloch sphere can be
+modified by passing a `BlochSphere` struct.
+    
+# Examples
+```jldoctest
+julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0)
+Quantum Circuit Object:
+   id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:
+     
+q[2]:
+
+
+julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+
+
+```
+```
+julia> plot = plot_bloch_sphere(circuit, qubit_id=2)
+
+```
+![Bloch sphere for circuit](assets/visualize/plot_bloch_sphere_for_circuit.png)
+
+The Bloch sphere can be saved to a file by calling:
+```
+julia> PlotlyJS.savefig(plot, "bloch_sphere.png", width=size(plot)[1],
+                        height=size(plot)[2])
+
+```
+"""
 function plot_bloch_sphere(circuit::QuantumCircuit;
     qubit_id::Int = 1,
     bloch_sphere::BlochSphere = BlochSphere())
@@ -53,6 +100,40 @@ function plot_bloch_sphere(circuit::QuantumCircuit;
     return plot_bloch_sphere(ket2dm(ket), qubit_id=qubit_id, bloch_sphere=bloch_sphere)
 end
 
+"""
+    plot_bloch_sphere(ket::Ket;
+        qubit_id::Int = 1,
+        bloch_sphere::BlochSphere = BlochSphere())
+
+Plots the Bloch sphere of qubit `qubit_id` for the state represented by `ket`.
+    
+If `ket` is associated with multiple qubits, the Bloch sphere is constructed from the
+1-qubit reduced density matrix of qubit `qubit_id`. The appearance of the Bloch sphere can
+be modified by passing a `BlochSphere` struct.
+    
+# Examples
+```jldoctest
+julia> ket = Ket(1/sqrt(2)*[1, 1]);
+
+julia> print(ket)
+2-element Ket:
+0.7071067811865475 + 0.0im
+0.7071067811865475 + 0.0im
+
+```
+```
+julia> plot = plot_bloch_sphere(ket)
+
+```
+![Bloch sphere for ket](assets/visualize/plot_bloch_sphere_for_ket.png)
+
+The Bloch sphere can be saved to a file by calling:
+```
+julia> PlotlyJS.savefig(plot, "bloch_sphere.png", width=size(plot)[1],
+                        height=size(plot)[2])
+
+```
+"""
 function plot_bloch_sphere(ket::Ket;
     qubit_id::Int = 1,
     bloch_sphere::BlochSphere = BlochSphere())
@@ -60,6 +141,40 @@ function plot_bloch_sphere(ket::Ket;
     return plot_bloch_sphere(ket2dm(ket), qubit_id=qubit_id, bloch_sphere=bloch_sphere)
 end
 
+"""
+    plot_bloch_sphere(density_matrix::Operator;
+        qubit_id::Int = 1,
+        bloch_sphere::BlochSphere = BlochSphere())
+
+Plots the Bloch sphere of qubit `qubit_id` given the `density_matrix`.
+    
+If the `density_matrix` is associated with multiple qubits, the Bloch sphere is constructed
+from the 1-qubit reduced density matrix of qubit `qubit_id`. The appearance of the Bloch
+sphere can be modified by passing a `BlochSphere` struct.
+    
+# Examples
+```jldoctest
+julia> ρ = Operator([1.0 0.0;
+                     0.0 0.0])
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im
+
+```
+```
+julia> plot = plot_bloch_sphere(ρ)
+
+```
+![Bloch sphere for operator](assets/visualize/plot_bloch_sphere_for_operator.png)
+
+The Bloch sphere can be saved to a file by calling:
+```
+julia> PlotlyJS.savefig(plot, "bloch_sphere.png", width=size(plot)[1],
+                        height=size(plot)[2])
+
+```
+"""
 function plot_bloch_sphere(density_matrix::Operator;
         qubit_id::Int = 1,
         bloch_sphere::BlochSphere = BlochSphere())
@@ -112,6 +227,7 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
         z=attr(highlight=false)))
     layout = Layout(width=bloch_sphere.window_width,
         height=bloch_sphere.window_height,
+        margin=attr(l=0,r=0,t=0,b=0),
         autosize=false,
         hovermode=bloch_sphere.show_hover_info,
         scene=attr(xaxis=attr(showbackground=false,
@@ -140,19 +256,19 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
                 text="y",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size)),
-            attr(x=0, y=0, z=1.1,
+            attr(x=0, y=0, z=1.2,
                 text="|0⟩",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size)),
-            attr(x=0, y=0, z=-1.1,
+            attr(x=0, y=0, z=-1.2,
                 text="|1⟩",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size)),
-            attr(x=0, y=0, z=1.4,
+            attr(x=0, y=0, z=1.5,
                 text=bloch_sphere.show_qubit_id ? "Qubit $qubit_id" : "",
                 showarrow=false,
                 font=attr(size=bloch_sphere.annotations_size))]))
-        return PlotlyJS.Plot(sphere_surface, layout)
+        return PlotlyJS.plot(sphere_surface, layout)
 end
 
 function plot_vertical_circular_wires!(plot, bloch_sphere)

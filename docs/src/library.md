@@ -51,6 +51,19 @@ sesolve
 mesolve
 ```
 
+### Visualization
+
+Snowflake provides multiple tools for visualizing quantum computer calculations.
+
+```@docs
+plot_bloch_sphere(circuit::QuantumCircuit; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+plot_bloch_sphere(ket::Ket; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+plot_bloch_sphere(density_matrix::Operator; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+```
+
 ```@meta
 DocTestSetup = nothing
 ```
