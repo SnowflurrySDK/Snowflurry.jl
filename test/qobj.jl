@@ -17,6 +17,7 @@ using Test
     @test (_Ψ * Ψ_p) ≈ Complex(1.0)
 
     @test get_num_qubits(_Ψ) == 1
+    @test get_num_bodies(Ket([1.0, 0.0, 0.0]), 3) == 1
 
     M_0 = Ψ_0 * Bra(Ψ_0)
     @test size(M_0) == (2, 2)
@@ -67,14 +68,21 @@ end
 @testset "operator_exceptions" begin
     not_square = Operator(zeros(1, 2))
     @test_throws ErrorException get_num_qubits(not_square)
+    @test_throws ErrorException get_num_bodies(not_square)
 
     non_integer_qubits = Operator(zeros(3, 3))
     @test_throws DomainError get_num_qubits(non_integer_qubits)
+
+    non_integer_qutrit = Operator(zeros(2, 2))
+    @test_throws DomainError get_num_bodies(non_integer_qutrit, 3)
 end
 
 @testset "ket_exceptions" begin
     non_integer_qubits = Ket(zeros(3))
     @test_throws DomainError get_num_qubits(non_integer_qubits)
+
+    non_integer_qutrit = Bra(Ket(zeros(2)))
+    @test_throws DomainError get_num_bodies(non_integer_qutrit, 3)
 end
 
 
@@ -113,4 +121,13 @@ end
     @test wigner(ket2dm(ψ_0),0.0,0.0) ≈ -0.636619772367581382432888403855 atol=1.0e-4
     p=q=-3.0:0.1:3
     viz_wigner(ket2dm(ψ_0),p,q)
+end
+
+@testset "qutrit_operators" begin
+    hilbert_space_size_per_qutrit = 3
+    qutrit_operator = Operator([1 0 0;
+                                0 1 0
+                                0 0 1])
+    @test get_num_bodies(kron(qutrit_operator, qutrit_operator),
+        hilbert_space_size_per_qutrit) == 2
 end

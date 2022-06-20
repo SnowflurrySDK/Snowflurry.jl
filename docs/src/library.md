@@ -40,6 +40,8 @@ Snowflake.genlaguerre
 get_embed_operator
 get_num_qubits(x::Operator)
 get_num_qubits(x::Union{Ket, Bra})
+get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
 fock
 create
 destroy

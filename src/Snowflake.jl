@@ -44,6 +44,7 @@ export
     fock_dm,
     expected_value,
     get_num_qubits,
+    get_num_bodies,
     normalize!,
     wigner, 
     viz_wigner, 

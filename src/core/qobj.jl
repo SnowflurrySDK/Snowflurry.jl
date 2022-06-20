@@ -298,6 +298,75 @@ function get_num_qubits(x::Union{Ket, Bra})
 end
 
 """
+    get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+
+Returns the number of bodies associated with an `Operator` given the
+`hilbert_space_size_per_body`.
+# Examples
+```jldoctest
+julia> ρ = Operator([1 0 0
+                     0 0 0
+                     0 0 0])
+(3, 3)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1 + 0im    0 + 0im    0 + 0im
+0 + 0im    0 + 0im    0 + 0im
+0 + 0im    0 + 0im    0 + 0im
+
+julia> get_num_bodies(ρ, 3)
+1
+
+```
+"""
+function get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+    (num_rows, num_columns) = size(x)
+    if num_rows != num_columns
+        throw(ErrorException("Operator is not square"))
+    end
+    num_bodies = log(hilbert_space_size_per_body, num_rows)
+    if mod(num_bodies, 1) != 0
+        throw(DomainError(num_bodies,
+            "Operator does not correspond to an integer number of bodies"))
+    end
+    return Int(num_bodies)
+end
+
+"""
+    get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
+
+Returns the number of bodies associated with a `Ket` or a `Bra` given the
+`hilbert_space_size_per_body`.
+# Examples
+```jldoctest
+julia> ψ = Ket([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+julia> print(ψ)
+9-element Ket:
+1 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+
+julia> get_num_bodies(ψ, 3)
+2
+
+```
+"""
+function get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
+    num_bodies = log(hilbert_space_size_per_body, length(x))
+    if mod(num_bodies, 1) != 0
+        throw(DomainError(num_bodies,
+            "Ket or Bra does not correspond to an integer number of bodies"))
+    end
+    return Int(num_bodies)
+end
+
+"""
     Snowflake.fock(i, hspace_size)
 
 Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket.
