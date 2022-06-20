@@ -45,6 +45,13 @@ end
     show_qubit_id = true
 end
 
+function plot_bloch_sphere(ket::Ket;
+    qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+    
+    return plot_bloch_sphere(ket2dm(ket), qubit_id=qubit_id, bloch_sphere=bloch_sphere)
+end
+
 function plot_bloch_sphere(density_matrix::Operator;
         qubit_id::Int = 1,
         bloch_sphere::BlochSphere = BlochSphere())

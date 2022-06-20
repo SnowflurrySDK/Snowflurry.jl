@@ -105,6 +105,7 @@ end
     @test ket2dm(Ψ_0) ≈ (Ψ_0*Bra(Ψ_0))
     @test fock_dm(1,2) ≈ (Ψ_0*Bra(Ψ_0))
 
+    plot_bloch_sphere(Ψ_0)
     plot_bloch_sphere(ket2dm(Ψ_0))
 end
 
