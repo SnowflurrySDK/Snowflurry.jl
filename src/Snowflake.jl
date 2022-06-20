@@ -56,6 +56,7 @@ export
     simulate,
     simulate_shots,
     plot_histogram,
+    plot_bloch_sphere,
     submit_circuit,
     get_circuit_status,
    

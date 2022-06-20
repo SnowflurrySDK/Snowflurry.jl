@@ -104,6 +104,8 @@ end
     Ψ_0 = fock(1, 2)
     @test ket2dm(Ψ_0) ≈ (Ψ_0*Bra(Ψ_0))
     @test fock_dm(1,2) ≈ (Ψ_0*Bra(Ψ_0))
+
+    plot_bloch_sphere(ket2dm(Ψ_0))
 end
 
 @testset "coherent state" begin
