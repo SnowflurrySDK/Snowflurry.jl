@@ -27,6 +27,7 @@ export
     QuantumCircuit,
     Gate,
     QPU,
+    BlochSphere,
 
     # Functions
     commute, 
