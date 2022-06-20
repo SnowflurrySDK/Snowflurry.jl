@@ -21,6 +21,29 @@ function viz_wigner(ρ, x, y)
     return Plots.contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
 end
 
+"""
+    BlochSphere
+
+Contains fields which affect how a Bloch sphere is generated.
+    
+# Examples
+```jldoctest
+julia> ket = Ket(1/sqrt(2)*[1, 1]);
+
+julia> print(ket)
+2-element Ket:
+0.7071067811865475 + 0.0im
+0.7071067811865475 + 0.0im
+
+julia> bloch_sphere = BlochSphere(vector_color="green");
+
+```
+```
+julia> plot = plot_bloch_sphere(ket, bloch_sphere=bloch_sphere)
+
+```
+![Bloch sphere for ket](assets/visualize/plot_green_bloch_sphere.png)
+"""
 @with_kw struct BlochSphere
     num_points_per_line = 50
     sphere_color = "#FFEEDD"
@@ -54,7 +77,7 @@ Plots the Bloch sphere of qubit `qubit_id` for the `circuit`.
     
 If the `circuit` contains multiple qubits, the Bloch sphere is constructed from the 1-qubit
 reduced density matrix of qubit `qubit_id`. The appearance of the Bloch sphere can be
-modified by passing a `BlochSphere` struct.
+modified by passing a [`BlochSphere`](@ref) struct.
     
 # Examples
 ```jldoctest
@@ -109,7 +132,7 @@ Plots the Bloch sphere of qubit `qubit_id` for the state represented by `ket`.
     
 If `ket` is associated with multiple qubits, the Bloch sphere is constructed from the
 1-qubit reduced density matrix of qubit `qubit_id`. The appearance of the Bloch sphere can
-be modified by passing a `BlochSphere` struct.
+be modified by passing a [`BlochSphere`](@ref) struct.
     
 # Examples
 ```jldoctest
@@ -150,7 +173,7 @@ Plots the Bloch sphere of qubit `qubit_id` given the `density_matrix`.
     
 If the `density_matrix` is associated with multiple qubits, the Bloch sphere is constructed
 from the 1-qubit reduced density matrix of qubit `qubit_id`. The appearance of the Bloch
-sphere can be modified by passing a `BlochSphere` struct.
+sphere can be modified by passing a [`BlochSphere`](@ref) struct.
     
 # Examples
 ```jldoctest
