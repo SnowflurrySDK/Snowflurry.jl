@@ -66,6 +66,7 @@ julia> plot = plot_bloch_sphere(ket, bloch_sphere=bloch_sphere)
     relative_arrow_size = 0.25
     show_hover_info = false
     show_qubit_id = true
+    camera_position = [1.25, 1.25, 0.4]
 end
 
 """
@@ -253,19 +254,22 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
         margin=attr(l=0,r=0,t=0,b=0),
         autosize=false,
         hovermode=bloch_sphere.show_hover_info,
-        scene=attr(xaxis=attr(showbackground=false,
+        scene=attr(xaxis=attr(range=[-1.0, 1.1],
+                showbackground=false,
                 showaxeslabels=false,
                 showline=false,
                 showspikes=false,
                 showticklabels=false,
                 title=attr(text="")),
-            yaxis=attr(showbackground=false,
+            yaxis=attr(range=[-1.0, 1.1],
+                showbackground=false,
                 showaxeslabels=false,
                 showline=false,
                 showspikes=false,
                 showticklabels=false,
                 title=attr(text="")),
-            zaxis=attr(showbackground=false,
+            zaxis=attr(range=[-1.2, 1.5],
+                showbackground=false,
                 showaxeslabels=false,
                 showline=false,
                 showspikes=false,
@@ -290,7 +294,10 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
             attr(x=0, y=0, z=1.5,
                 text=bloch_sphere.show_qubit_id ? "Qubit $qubit_id" : "",
                 showarrow=false,
-                font=attr(size=bloch_sphere.annotations_size))]))
+                font=attr(size=bloch_sphere.annotations_size))],
+        camera=attr(eye=attr(x=bloch_sphere.camera_position[1],
+                y=bloch_sphere.camera_position[2],
+                z=bloch_sphere.camera_position[3]))))
         return PlotlyJS.plot(sphere_surface, layout)
 end
 
@@ -357,6 +364,12 @@ function plot_axes_lines!(plot, bloch_sphere)
 end
 
 function plot_bloch_sphere_vector!(plot, bloch_sphere, coordinates)
+    (line_trace, cone_trace) = get_bloch_sphere_vector_traces(bloch_sphere, coordinates)
+    add_trace!(plot, line_trace)
+    add_trace!(plot, cone_trace)
+end
+
+function get_bloch_sphere_vector_traces(bloch_sphere, coordinates)
     line_end_coordinates = (1-bloch_sphere.relative_arrow_size)*coordinates
     line_trace = PlotlyJS.scatter3d(x=[0, line_end_coordinates[1]],
         y=[0, line_end_coordinates[2]],
@@ -375,6 +388,84 @@ function plot_bloch_sphere_vector!(plot, bloch_sphere, coordinates)
         anchor="tip",
         colorscale = [[0, bloch_sphere.vector_color], [1, bloch_sphere.vector_color]],
         showscale = false)
-    add_trace!(plot, line_trace)
-    add_trace!(plot, cone_trace)
+    return(line_trace, cone_trace)
+end
+
+@with_kw struct AnimatedBlochSphere
+    bloch_sphere = BlochSphere()
+    frame_duration = 400
+end
+
+function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+    
+    plot = plot_bloch_sphere(density_matrix_list[1], qubit_id=qubit_id,
+        bloch_sphere=animated_bloch_sphere.bloch_sphere)
+    traces = deepcopy(plot.plot.data)
+    layout = deepcopy(plot.plot.layout)
+    frames = get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
+        animated_bloch_sphere.bloch_sphere)
+    add_animation_controls!(layout, density_matrix_list, animated_bloch_sphere)
+    animated_plot = PlotlyJS.Plot(traces, layout, frames)
+    return animated_plot
+end
+
+function get_bloch_sphere_frames(traces, density_matrix_list, qubit_id, bloch_sphere)
+    num_qubits = get_num_qubits(density_matrix_list[1])
+    system = MultiBodySystem(num_qubits, 2)
+    num_traces = length(traces)
+    frames = Vector{PlotlyFrame}(undef, length(density_matrix_list))
+    for (i_matrix, matrix) in enumerate(density_matrix_list)
+        vector = get_bloch_sphere_vector(matrix, system, qubit_id)
+        (line_trace, cone_trace) = get_bloch_sphere_vector_traces(bloch_sphere, vector)
+        single_frame = PlotlyJS.frame(data=[line_trace, cone_trace], name="frame_$i_matrix",
+            traces=[num_traces-2, num_traces-1])
+        frames[i_matrix] = single_frame
+    end
+    return frames
+end
+
+function add_animation_controls!(layout, density_matrix_list, animated_bloch_sphere)
+    steps = []
+    for i_matrix in 1:length(density_matrix_list)
+        single_step = attr(method="animate",
+            args=[["frame_$i_matrix"],
+                attr(mode="immediate",
+                    frame=attr(duration=animated_bloch_sphere.frame_duration,
+                        redraw=true),
+                    transition=attr(duration=0))],
+                    label="")
+        push!(steps, single_step)
+    end
+    sliders = [attr(steps=steps,
+        transition=attr(duration=0),
+        x=0,
+        y=0,
+        pad=attr(l=130, t=55),
+        tickcolor="transparent")]
+    buttons = [attr(x=0,
+            y=0,
+            yanchor="top",
+            xanchor="left",
+            showactive=false,
+            direction="left",
+            type="buttons",
+            pad=attr(t=55, r=10),
+            buttons=[attr(method="animate",
+                args=[nothing,
+                    attr(mode="immediate",
+                        fromcurrent=true,
+                        transition=attr(duration=0),
+                        frame=attr(duration=animated_bloch_sphere.frame_duration,
+                            redraw=true))],
+                label="Play"),
+            attr(method="animate",
+                args=[[nothing],
+                    attr(mode="immediate",
+                        transition=attr(duration=0),
+                        frame=attr(duration=0,
+                            redraw=true))],
+                    label="Pause")])]
+    relayout!(layout, sliders=sliders, updatemenus=buttons)
 end
