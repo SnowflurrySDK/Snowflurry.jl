@@ -516,9 +516,9 @@ function get_spherical_coordinates_list(density_matrix_list, qubit_id)
 
     for i in 1:length(azimuth)-1
         if (azimuth[i+1]-azimuth[i]) < -π
-            azimuth[i+1] += π
+            azimuth[i+1] += 2*π
         elseif (azimuth[i+1]-azimuth[i]) > π
-            azimuth[i+1] -= π
+            azimuth[i+1] -= 2*π
         end
     end
 

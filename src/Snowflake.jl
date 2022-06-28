@@ -28,6 +28,7 @@ export
     Gate,
     QPU,
     BlochSphere,
+    AnimatedBlochSphere,
 
     # Functions
     commute, 
@@ -58,6 +59,7 @@ export
     simulate_shots,
     plot_histogram,
     plot_bloch_sphere,
+    plot_bloch_sphere_animation,
     submit_circuit,
     get_circuit_status,
    
