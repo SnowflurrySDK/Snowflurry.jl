@@ -394,8 +394,11 @@ end
 
 @with_kw struct AnimatedBlochSphere
     bloch_sphere = BlochSphere()
-    frame_duration = 0.1
+    frame_duration = 30
     num_interpolated_points = 20
+    history_line_color = "purple"
+    history_line_width = 8.0
+    history_line_opacity = 0.3
 end
 
 function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
@@ -404,6 +407,9 @@ function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
     
     plot = plot_bloch_sphere(density_matrix_list[1], qubit_id=qubit_id,
         bloch_sphere=animated_bloch_sphere.bloch_sphere)
+    empty_history_line = get_bloch_sphere_history_line(([nothing], [nothing], [nothing]), 1,
+        animated_bloch_sphere)
+    add_trace!(plot, empty_history_line)
     traces = deepcopy(plot.plot.data)
     layout = deepcopy(plot.plot.layout)
     frames = get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
@@ -424,11 +430,26 @@ function get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
         vector = [x[i], y[i], z[i]]
         (line_trace, cone_trace) =
             get_bloch_sphere_vector_traces(animated_bloch_sphere.bloch_sphere, vector)
-        single_frame = PlotlyJS.frame(data=[line_trace, cone_trace], name="frame_$i",
-            traces=[num_traces-2, num_traces-1])
+        history_trace = get_bloch_sphere_history_line((x, y, z), i, animated_bloch_sphere)
+        single_frame = PlotlyJS.frame(data=[line_trace, cone_trace, history_trace],
+            name="frame_$i",
+            traces=[num_traces-3, num_traces-2, num_traces-1])
         frames[i] = single_frame
     end
     return frames
+end
+
+function get_bloch_sphere_history_line(coordinates, frame_id, animated_bloch_sphere)
+    x = coordinates[1][1:frame_id]
+    y = coordinates[2][1:frame_id]
+    z = coordinates[3][1:frame_id]
+    line_trace = PlotlyJS.scatter3d(x=x, y=y, z=z,
+        mode="lines",
+        line=attr(color=animated_bloch_sphere.history_line_color,
+            width=animated_bloch_sphere.history_line_width),
+            opacity=animated_bloch_sphere.history_line_opacity,
+            showlegend=false)
+    return line_trace
 end
 
 function get_interpolated_bloch_sphere_coordinates(density_matrix_list, qubit_id,
