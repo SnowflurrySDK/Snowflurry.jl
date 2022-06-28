@@ -108,9 +108,10 @@ end
     plot_bloch_sphere(Ψ_0)
     plot_bloch_sphere(ket2dm(Ψ_0))
 
-    ψ_1 = Ket([1/sqrt(2), -0.5+0.5im])
-    ψ_2 = Ket([1/sqrt(2), -0.5-0.5im])
-    plot_bloch_sphere_animation([ket2dm(ψ_1), ket2dm(ψ_2), ket2dm(ψ_1)])
+    Ψ_1 = Ket([1/sqrt(2), -0.5+0.5im])
+    Ψ_2 = Ket([1/sqrt(2), -0.5-0.5im])
+    plot_bloch_sphere_animation([Ψ_1, Ψ_2, Ψ_1])
+    plot_bloch_sphere_animation([ket2dm(Ψ_1), ket2dm(Ψ_0)])
 end
 
 @testset "coherent state" begin

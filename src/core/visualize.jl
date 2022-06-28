@@ -401,6 +401,14 @@ end
     history_line_opacity = 0.3
 end
 
+function plot_bloch_sphere_animation(ket_list::Vector{Ket};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+
+    return plot_bloch_sphere_animation(ket2dm.(ket_list), qubit_id=qubit_id,
+        animated_bloch_sphere=animated_bloch_sphere)
+end
+
 function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
