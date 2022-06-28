@@ -1,3 +1,4 @@
+using Interpolations
 using PlotlyJS
 
 function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
@@ -393,7 +394,8 @@ end
 
 @with_kw struct AnimatedBlochSphere
     bloch_sphere = BlochSphere()
-    frame_duration = 400
+    frame_duration = 0.1
+    num_interpolated_points = 20
 end
 
 function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
@@ -405,32 +407,108 @@ function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
     traces = deepcopy(plot.plot.data)
     layout = deepcopy(plot.plot.layout)
     frames = get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
-        animated_bloch_sphere.bloch_sphere)
-    add_animation_controls!(layout, density_matrix_list, animated_bloch_sphere)
+        animated_bloch_sphere)
+    add_animation_controls!(layout, frames, animated_bloch_sphere)
     animated_plot = PlotlyJS.Plot(traces, layout, frames)
     return animated_plot
 end
 
-function get_bloch_sphere_frames(traces, density_matrix_list, qubit_id, bloch_sphere)
-    num_qubits = get_num_qubits(density_matrix_list[1])
-    system = MultiBodySystem(num_qubits, 2)
+function get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
+        animated_bloch_sphere)
+    (x, y, z) = get_interpolated_bloch_sphere_coordinates(
+        density_matrix_list, qubit_id, animated_bloch_sphere)
+    num_frames = length(x)
     num_traces = length(traces)
-    frames = Vector{PlotlyFrame}(undef, length(density_matrix_list))
-    for (i_matrix, matrix) in enumerate(density_matrix_list)
-        vector = get_bloch_sphere_vector(matrix, system, qubit_id)
-        (line_trace, cone_trace) = get_bloch_sphere_vector_traces(bloch_sphere, vector)
-        single_frame = PlotlyJS.frame(data=[line_trace, cone_trace], name="frame_$i_matrix",
+    frames = Vector{PlotlyFrame}(undef, num_frames)
+    for i in 1:num_frames
+        vector = [x[i], y[i], z[i]]
+        (line_trace, cone_trace) =
+            get_bloch_sphere_vector_traces(animated_bloch_sphere.bloch_sphere, vector)
+        single_frame = PlotlyJS.frame(data=[line_trace, cone_trace], name="frame_$i",
             traces=[num_traces-2, num_traces-1])
-        frames[i_matrix] = single_frame
+        frames[i] = single_frame
     end
     return frames
 end
 
-function add_animation_controls!(layout, density_matrix_list, animated_bloch_sphere)
+function get_interpolated_bloch_sphere_coordinates(density_matrix_list, qubit_id,
+    animated_bloch_sphere)
+
+    (r, inclination, azimuth) =
+        get_spherical_coordinates_list(density_matrix_list, qubit_id)
+
+    input_parameters = 0:1
+    num_interpolation_parameters = animated_bloch_sphere.num_interpolated_points+2
+    interpolation_parameters = range(0, 1, length=num_interpolation_parameters)
+    scaled_r = []
+    scaled_inclination = []
+    scaled_azimuth = []
+    for i in 1:length(r)-1
+        parameterized_r = r[i] .+ input_parameters.*(r[i+1]-r[i])
+        parameterized_inclination =
+            inclination[i] .+ input_parameters.*(inclination[i+1]-inclination[i])
+        parameterized_azimuth = azimuth[i] .+ input_parameters.*(azimuth[i+1]-azimuth[i])
+        parameterized_coordinates = hcat(parameterized_r, parameterized_inclination,
+            parameterized_azimuth)
+
+        grid_type = OnGrid()
+        boundary_condition = Natural(grid_type)
+        degree = Cubic(boundary_condition)
+        mode = BSpline(degree)
+        interpolation = interpolate(parameterized_coordinates, (mode, NoInterp()))
+        scaling = Interpolations.scale(interpolation, input_parameters, 1:3)
+        
+        new_scaled_r = [scaling(parameter,1) for parameter in interpolation_parameters]
+        new_scaled_inclination =
+            [scaling(parameter,2) for parameter in interpolation_parameters]
+        new_scaled_azimuth =
+            [scaling(parameter,3) for parameter in interpolation_parameters]
+
+        append!(scaled_r, deleteat!(new_scaled_r, num_interpolation_parameters))
+        append!(scaled_inclination,
+            deleteat!(new_scaled_inclination, num_interpolation_parameters))
+        append!(scaled_azimuth, deleteat!(new_scaled_azimuth, num_interpolation_parameters))
+    end
+    push!(scaled_r, last(r))
+    push!(scaled_inclination, last(inclination))
+    push!(scaled_azimuth, last(azimuth))
+
+    interpolated_x = scaled_r.*sin.(scaled_inclination).*cos.(scaled_azimuth)
+    interpolated_y = scaled_r.*sin.(scaled_inclination).*sin.(scaled_azimuth)
+    interpolated_z = scaled_r.*cos.(scaled_inclination)
+    
+    return (interpolated_x, interpolated_y, interpolated_z)
+end
+
+function get_spherical_coordinates_list(density_matrix_list, qubit_id)
+    x = Vector(undef, length(density_matrix_list))
+    y = Vector(undef, length(density_matrix_list))
+    z = Vector(undef, length(density_matrix_list))
+    num_qubits = get_num_qubits(density_matrix_list[1])
+    system = MultiBodySystem(num_qubits, 2)
+    for (i, density_matrix) in enumerate(density_matrix_list)
+        (x[i], y[i], z[i]) = get_bloch_sphere_vector(density_matrix, system, qubit_id)
+    end
+    r = sqrt.(x.^2+y.^2+z.^2)
+    inclination = acos.(z./r)
+    azimuth = atan.(y, x)
+
+    for i in 1:length(azimuth)-1
+        if (azimuth[i+1]-azimuth[i]) < -π
+            azimuth[i+1] += π
+        elseif (azimuth[i+1]-azimuth[i]) > π
+            azimuth[i+1] -= π
+        end
+    end
+
+    return (r, inclination, azimuth)
+end
+
+function add_animation_controls!(layout, frames, animated_bloch_sphere)
     steps = []
-    for i_matrix in 1:length(density_matrix_list)
+    for i in 1:length(frames)
         single_step = attr(method="animate",
-            args=[["frame_$i_matrix"],
+            args=[["frame_$i"],
                 attr(mode="immediate",
                     frame=attr(duration=animated_bloch_sphere.frame_duration,
                         redraw=true),
