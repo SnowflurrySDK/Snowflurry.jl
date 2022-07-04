@@ -392,6 +392,26 @@ function get_bloch_sphere_vector_traces(bloch_sphere, coordinates)
     return(line_trace, cone_trace)
 end
 
+"""
+    AnimatedBlochSphere
+
+Contains fields which affect how a Bloch sphere animation is generated.
+    
+# Examples
+By default, additional Bloch sphere vectors are generated between each state using
+interpolation. The number of additional vectors can be changed by passing a value for the
+keyword `num_interpolated_points`.
+```
+julia> ket_list = [Ket([1, 0]), Ket(1/sqrt(2)*[1, 1])];
+
+julia> animated_sphere = AnimatedBlochSphere(num_interpolated_points=0,
+        history_line_color="transparent", frame_duration=1000);
+
+julia> plot = plot_bloch_sphere_animation(ket_list, animated_bloch_sphere=animated_sphere)
+
+```
+
+"""
 @with_kw struct AnimatedBlochSphere
     bloch_sphere = BlochSphere()
     frame_duration = 30
@@ -401,6 +421,32 @@ end
     history_line_opacity = 0.3
 end
 
+"""
+    plot_bloch_sphere_animation(ket_list::Vector{Ket};
+        qubit_id::Int = 1,
+        animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+
+Plots a Bloch sphere animation of qubit `qubit_id` for the states listed in `ket_list`.
+    
+If `ket_list` is associated with multiple qubits, the Bloch sphere animation is constructed
+from the 1-qubit reduced density matrices of qubit `qubit_id`. Animation settings and the
+appearance of the Bloch sphere can be modified by passing an [`AnimatedBlochSphere`](@ref)
+struct.
+    
+# Examples
+```
+julia> ket_list = [Ket([1, 0]), Ket(1/sqrt(2)*[1, 1])];
+
+julia> plot = plot_bloch_sphere_animation(ket_list)
+
+```
+
+The Bloch sphere animation can be saved to an html file by calling:
+```
+julia> PlotlyJS.savefig(plot, "bloch_sphere_animation.html")
+
+```
+"""
 function plot_bloch_sphere_animation(ket_list::Vector{Ket};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
@@ -409,6 +455,35 @@ function plot_bloch_sphere_animation(ket_list::Vector{Ket};
         animated_bloch_sphere=animated_bloch_sphere)
 end
 
+"""
+    plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+        qubit_id::Int = 1,
+        animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+
+Plots a Bloch sphere animation of qubit `qubit_id` for the states listed in
+`density_matrix_list`.
+    
+If `density_matrix_list` is associated with multiple qubits, the Bloch sphere animation is
+constructed from the 1-qubit reduced density matrices of qubit `qubit_id`. Animation
+settings and the appearance of the Bloch sphere can be modified by passing an
+[`AnimatedBlochSphere`](@ref) struct.
+    
+# Examples
+```
+julia> ψ_0 = Operator([0.5 0.5; 0.5 0.5]);
+
+julia> ψ_1 = Operator([0.5 -0.5im; 0.5im 0.5]);
+
+julia> plot = plot_bloch_sphere_animation([ψ_0, ψ_1])
+
+```
+
+The Bloch sphere animation can be saved to an html file by calling:
+```
+julia> PlotlyJS.savefig(plot, "bloch_sphere_animation.html")
+
+```
+"""
 function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())

@@ -63,6 +63,32 @@ plot_bloch_sphere(ket::Ket; qubit_id::Int = 1,
 plot_bloch_sphere(density_matrix::Operator; qubit_id::Int = 1,
     bloch_sphere::BlochSphere = BlochSphere())
 BlochSphere
+plot_bloch_sphere_animation(ket_list::Vector{Ket};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_for_ket.html"
+style="height:825px;width:100%;">
+</iframe>
+```
+```@docs
+plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_for_operator.html"
+style="height:825px;width:100%;">
+</iframe>
+```
+```@docs
+AnimatedBlochSphere
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_without_interpolation.html"
+style="height:825px;width:100%;">
+</iframe>
 ```
 
 ```@meta
