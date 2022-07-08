@@ -115,12 +115,14 @@ hadamard(target) = Gate(["H"], "h", hadamard(), target)
 phase(target) = Gate(["S"], "s", phase(), target)
 pi_8(target) = Gate(["T"], "t", pi_8(), target)
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
-rotation(target, theta, phi) = Gate(["R(θ,ϕ)"], "r", rotation(theta, phi), target,
-    [theta, phi])
-rotation_x(target, theta) = Gate(["Rx(θ)"], "rx", rotation(theta, 0), target, [theta])
-rotation_y(target, theta) = Gate(["Ry(θ)"], "ry", rotation(theta, pi/2), target, [theta])
-rotation_z(target, theta) = Gate(["Rz(θ)"], "rz", rotation_z(theta), target, [theta])
-universal(target, theta, phi, lambda) = Gate(["U(θ,ϕ,λ)"], "u",
+rotation(target, theta, phi) = Gate(["R(θ=$(theta),ϕ=$(phi))"], "r", rotation(theta, phi),
+    target, [theta, phi])
+rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation(theta, 0), target,
+    [theta])
+rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation(theta, pi/2), target,
+    [theta])
+rotation_z(target, theta) = Gate(["Rz($(theta))"], "rz", rotation_z(theta), target, [theta])
+universal(target, theta, phi, lambda) = Gate(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"], "u",
     universal(theta, phi, lambda), target, [theta, phi, lambda])
 
 
