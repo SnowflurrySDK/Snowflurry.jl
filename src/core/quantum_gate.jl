@@ -74,6 +74,12 @@ rotation_z(theta) = Operator(
     [exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
+
+phase_shift(phi) = Operator(
+    [1 0;
+    0 exp(im*phi)]
+)
+
 universal(theta, phi, lambda) = Operator(
     [cos(theta/2) -exp(im*lambda)*sin(theta/2)
      exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
@@ -122,6 +128,7 @@ rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation(theta, 0), tar
 rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation(theta, pi/2), target,
     [theta])
 rotation_z(target, theta) = Gate(["Rz($(theta))"], "rz", rotation_z(theta), target, [theta])
+phase_shift(target, phi) = Gate(["P($(phi))"], "p", phase_shift(phi), target, [phi])
 universal(target, theta, phi, lambda) = Gate(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"], "u",
     universal(theta, phi, lambda), target, [theta, phi, lambda])
 

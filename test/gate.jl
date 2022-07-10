@@ -68,6 +68,10 @@ using Test
     @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
     @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
 
+    p = phase_shift(1, pi/4)
+    @test p.instruction_symbol == "p"
+    @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
+
     u = universal(1, pi/2, -pi/2, pi/2)
     @test u.instruction_symbol == "u"
     @test u*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
