@@ -326,10 +326,59 @@ universal(target, theta, phi, lambda) = Gate(["U(θ=$(theta),ϕ=$(phi),λ=$(lamb
 
 
 # two qubit gates
+
+"""
+    control_z(control_qubit, target_qubit)
+
+Apply a controlled-Z gate given a `control_qubit` and a `target_qubit`.
+
+The controlled-Z operator is
+```math
+CZ = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\     
+    0 & 0 & 1 & 0 \\\\
+    0 & 0 & 0 & -1 \\\\  
+\\end{bmatrix}.
+```
+""" 
 control_z(control_qubit, target_qubit) =
     Gate(["*" "Z"], "cz", control_z(), [control_qubit, target_qubit])
+
+"""
+    control_x(control_qubit, target_qubit)
+
+Apply a controlled-X gate (also known as a controlled NOT gate) given a `control_qubit`
+and a `target_qubit`.
+
+The controlled-X operator is
+```math
+CX = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\     
+    0 & 0 & 0 & 1 \\\\
+    0 & 0 & 1 & 0 \\\\  
+\\end{bmatrix}.
+```
+""" 
 control_x(control_qubit, target_qubit) =
     Gate(["*" "X"], "cx", control_x(), [control_qubit, target_qubit])
+
+"""
+    iswap(qubit_1, qubit_2)
+
+Apply an imaginary swap gate to `qubit_1` and `qubit_2`.
+
+The imaginary swap operator is
+```math
+i\\mathrm{SWAP} = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 0 & i & 0 \\\\     
+    0 & i & 0 & 0 \\\\
+    0 & 0 & 0 & 1 \\\\  
+\\end{bmatrix}.
+```
+""" 
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
 Base.:*(M::Gate, x::Ket) = M.operator * x

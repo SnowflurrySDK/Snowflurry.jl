@@ -29,6 +29,9 @@ rotation_y
 rotation_z
 phase_shift
 universal
+control_z
+control_x
+iswap
 ```
 
 ## Quantum Processing Unit
