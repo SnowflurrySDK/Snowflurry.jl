@@ -13,6 +13,12 @@ pop_gate!
 simulate
 simulate_shots
 ```
+
+## Quantum Gates
+```@docs
+sigma_x
+```
+
 ## Quantum Processing Unit
 ```@docs
 QPU

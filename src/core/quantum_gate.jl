@@ -113,7 +113,19 @@ iswap() = Operator(
     ),
 )
 
+"""
+    sigma_x(target)
 
+Apply the Pauli X gate to the `target` qubit.
+
+The Pauli X operator is
+```math
+\\sigma_x = \\begin{bmatrix}
+    0 & 1 \\\\      
+    1 & 0
+\\end{bmatrix}.
+```
+"""
 sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
 sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
