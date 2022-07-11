@@ -19,6 +19,10 @@ simulate_shots
 sigma_x
 sigma_y
 sigma_z
+hadamard
+phase
+pi_8
+x_90
 ```
 
 ## Quantum Processing Unit

@@ -157,9 +157,65 @@ The Pauli Z operator is
 ```
 """
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
+
+"""
+    hadamard(target)
+
+Apply the Hadamard gate to the `target` qubit.
+
+The Hadamard operator is
+```math
+H = \\frac{1}{\\sqrt{2}} \\begin{bmatrix}
+    1 & 1 \\\\      
+    1 & -1
+\\end{bmatrix}.
+```
+"""
 hadamard(target) = Gate(["H"], "h", hadamard(), target)
+
+"""
+    phase(target)
+
+Apply the phase gate (also known as the S gate) to the `target` qubit.
+
+The phase operator is
+```math
+S = \\begin{bmatrix}
+    1 & 0 \\\\      
+    0 & i
+\\end{bmatrix}.
+```
+"""
 phase(target) = Gate(["S"], "s", phase(), target)
+
+"""
+    pi_8(target)
+
+Apply the π/8 gate (also known as the T gate) to the `target` qubit.
+
+The π/8 operator is
+```math
+T = \\begin{bmatrix}
+    1 & 0 \\\\      
+    0 & e^{i\\frac{\\pi}{4}}
+\\end{bmatrix}.
+```
+"""
 pi_8(target) = Gate(["T"], "t", pi_8(), target)
+
+"""
+    x_90(target)
+
+Apply a 90° rotation about the X axis to the `target` qubit.
+
+The corresponding operator is
+```math
+R_x(\\pi) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right) & -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) \\\\[0.5em]      
+    -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) & \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right)
+\\end{bmatrix}.
+```
+"""
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 rotation(target, theta, phi) = Gate(["R(θ=$(theta),ϕ=$(phi))"], "r", rotation(theta, phi),
     target, [theta, phi])
