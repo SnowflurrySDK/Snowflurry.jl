@@ -211,20 +211,114 @@ Apply a 90° rotation about the X axis to the `target` qubit.
 The corresponding operator is
 ```math
 R_x(\\pi) = \\begin{bmatrix}
-    \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right) & -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) \\\\[0.5em]      
-    -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) & \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right)
+    \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right) &
+        -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) \\\\[0.5em]      
+    -i\\mathrm{sin}\\left(\\frac{\\pi}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\pi}{2}\\right)
 \\end{bmatrix}.
 ```
 """
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
+
+"""
+rotation(target, theta, phi)
+
+Apply a rotation `theta` to the `target` qubit about the cos(`phi`)X+sin(`phi`)Y axis.
+
+The corresponding operator is
+```math
+R(\\theta, \\phi) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -i e^{-i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i e^{i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""
 rotation(target, theta, phi) = Gate(["R(θ=$(theta),ϕ=$(phi))"], "r", rotation(theta, phi),
     target, [theta, phi])
+
+    """
+    rotation_x(target, theta)
+
+Apply a rotation of `theta` about the X axis to the `target` qubit.
+
+The corresponding operator is
+```math
+R_x(\\theta) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""    
 rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation(theta, 0), target,
     [theta])
+
+    """
+    rotation_y(target, theta)
+
+Apply a rotation of `theta` about the Y axis to the `target` qubit.
+
+The corresponding operator is
+```math
+R_y(\\theta) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
 rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation(theta, pi/2), target,
     [theta])
+
+    """
+    rotation_z(target, theta)
+
+Apply a rotation of `theta` about the Z axis to the `target` qubit.
+
+The corresponding operator is
+```math
+R_z(\\theta) = \\begin{bmatrix}
+    \\mathrm{exp}\\left(-i\\frac{\\theta}{2}\\right) & 0 \\\\[0.5em]      
+    0 & \\mathrm{exp}\\left(i\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
 rotation_z(target, theta) = Gate(["Rz($(theta))"], "rz", rotation_z(theta), target, [theta])
+
+"""
+    phase_shift(target, phi)
+
+Apply a phase shift gate with phase shift `phi` to the `target` qubit.
+
+The corresponding operator is
+```math
+P(\\phi) = \\begin{bmatrix}
+    i & 0 \\\\[0.5em]      
+    0 & e^{i\\phi}
+\\end{bmatrix}.
+```
+""" 
 phase_shift(target, phi) = Gate(["P($(phi))"], "p", phase_shift(phi), target, [phi])
+
+"""
+    universal(target, theta, phi, lambda)
+
+Apply a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
+
+The corresponding operator is
+```math
+U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -e^{i\\lambda}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    e^{i\\phi}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        e^{i\\left(\\phi+\\lambda\\right)}\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
 universal(target, theta, phi, lambda) = Gate(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"], "u",
     universal(theta, phi, lambda), target, [theta, phi, lambda])
 
