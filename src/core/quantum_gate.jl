@@ -127,7 +127,35 @@ The Pauli X operator is
 ```
 """
 sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
+
+"""
+    sigma_y(target)
+
+Apply the Pauli Y gate to the `target` qubit.
+
+The Pauli Y operator is
+```math
+\\sigma_y = \\begin{bmatrix}
+    0 & -i \\\\      
+    i & 0
+\\end{bmatrix}.
+```
+"""
 sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
+
+"""
+    sigma_z(target)
+
+Apply the Pauli Z gate to the `target` qubit.
+
+The Pauli Z operator is
+```math
+\\sigma_z = \\begin{bmatrix}
+    1 & 0 \\\\      
+    0 & -1
+\\end{bmatrix}.
+```
+"""
 sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
 hadamard(target) = Gate(["H"], "h", hadamard(), target)
 phase(target) = Gate(["S"], "s", phase(), target)
