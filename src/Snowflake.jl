@@ -8,6 +8,7 @@ module Snowflake
 using Base: String
 using Plots: size
 using LinearAlgebra
+using Parameters
 using StatsBase
 using UUIDs
 using Printf
@@ -77,11 +78,15 @@ export
     control_x,
     STD_GATES,
     PAULI_GATES,
+
+    # Benchmarking
+    RandomizedBenchmarkingProperties,
     
 
     #  Enums
     JobStatus
 
+include("benchmarking/randomized_benchmarking.jl")
 include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
