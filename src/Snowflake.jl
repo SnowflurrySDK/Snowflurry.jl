@@ -27,6 +27,7 @@ export
     QuantumCircuit,
     Gate,
     QPU,
+    CliffordOperator,
 
     # Functions
     commute, 
@@ -87,6 +88,7 @@ export
     JobStatus
 
 include("benchmarking/randomized_benchmarking.jl")
+include("core/clifford.jl")
 include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
