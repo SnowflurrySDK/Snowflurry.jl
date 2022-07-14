@@ -15,7 +15,8 @@ using Printf
 using Plots
 import SparseArrays
 
-
+using GaloisFields
+const GF2 = @GaloisField 2
 
 export
 
@@ -28,6 +29,7 @@ export
     Gate,
     QPU,
     CliffordOperator,
+    GF2,
 
     # Functions
     commute, 
@@ -62,6 +64,8 @@ export
     is_circuit_native_on_qpu,
     does_circuit_satisfy_qpu_connectivity,
     transpile,
+
+    get_clifford_operator,
 
     # Gates
     sigma_x,

@@ -45,6 +45,8 @@ number_op
 coherent
 sesolve
 mesolve
+CliffordOperator
+get_clifford_operator(c::Matrix{GF2}, h::Vector{GF2})
 ```
 
 ```@meta
