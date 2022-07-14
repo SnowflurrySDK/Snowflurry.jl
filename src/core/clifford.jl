@@ -34,13 +34,13 @@ end
 
 function get_c_bar(c::Matrix{GF2})
     n = Int(size(c, 1)/2)
-    u = zeros(GF, 2*n, 2*n)
+    u = zeros(GF2, 2*n, 2*n)
     for i = 1:n
         u[i, i+n] = 1
     end
 
     d = diag(transpose(c)*u*c)
-    c_bar = zeros(GF, 2*n+1, 2*n+1)
+    c_bar = zeros(GF2, 2*n+1, 2*n+1)
     c_bar[1:2*n+1, 1:2*n] = vcat(c, transpose(d))
     c_bar[2*n+1, 2*n+1] = 1
     return c_bar
