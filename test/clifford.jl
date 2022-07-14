@@ -59,4 +59,16 @@ end
     expected_h_bar_21 = zeros(GF2, 3)
     expected_h_bar_21[1] = 1
     @test q21.h_bar == expected_h_bar_21
+
+    q3 = get_clifford_operator(c2, h1)
+    inv_q3 = inv(q3)
+    expected_inv_c_bar = zeros(GF2, 3, 3)
+    expected_inv_c_bar[1, 2] = 1
+    expected_inv_c_bar[2, 1] = 1
+    expected_inv_c_bar[3, 3] = 1
+    @test inv_q3.c_bar == expected_inv_c_bar
+
+    expected_inv_h_bar = zeros(GF2, 3)
+    expected_inv_h_bar[2] = 1
+    @test inv_q3.h_bar == expected_inv_h_bar
 end

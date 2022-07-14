@@ -81,3 +81,19 @@ function get_strictly_lower_triangular(m::Matrix)
     end
     return lower_triangular
 end
+
+function Base.:inv(q::CliffordOperator)
+    c_bar = inv(q.c_bar)
+    h_bar = get_h_bar_for_inverse(q)
+    return CliffordOperator(c_bar, h_bar)
+end
+
+function get_h_bar_for_inverse(q::CliffordOperator)
+    term_1 = transpose(inv(q.c_bar))*q.h_bar
+    u_bar = get_u_bar(q)
+    mult = transpose(q.c_bar)*u_bar*q.c_bar
+    triangular = get_strictly_lower_triangular(mult)
+    term_2 = diag(transpose(inv(q.c_bar))*triangular*inv(q.c_bar))
+    h_bar = term_1+term_2
+    return h_bar
+end
