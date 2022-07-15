@@ -29,6 +29,7 @@ export
     Gate,
     QPU,
     CliffordOperator,
+    PauliGroupElement,
     GF2,
 
     # Functions
@@ -66,6 +67,7 @@ export
     transpile,
 
     get_clifford_operator,
+    get_pauli_group_element,
 
     # Gates
     sigma_x,
@@ -91,9 +93,8 @@ export
     #  Enums
     JobStatus
 
-include("benchmarking/randomized_benchmarking.jl")
-include("core/clifford.jl")
 include("core/qobj.jl")
+include("core/clifford.jl")
 include("core/dynamic_system.jl")
 include("core/math.jl")
 include("core/quantum_gate.jl")
@@ -101,6 +102,7 @@ include("core/quantum_circuit.jl")
 include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
+include("benchmarking/randomized_benchmarking.jl")
 include("remote/circuit_jobs.jl")
 
 

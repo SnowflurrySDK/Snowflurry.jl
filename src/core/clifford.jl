@@ -97,3 +97,87 @@ function get_h_bar_for_inverse(q::CliffordOperator)
     h_bar = term_1+term_2
     return h_bar
 end
+
+"""
+    PauliGroupElement(u::Vector{GF2}, delta::GF2, epsilon::GF2)
+
+A Pauli group element which is represented using the approach of 
+[Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
+"""
+struct PauliGroupElement
+    u::Vector{GF2}
+    delta::GF2
+    epsilon::GF2
+end
+
+
+"""
+    get_pauli_group_element(operator::Operator)
+
+Return the `PauliGroupElement` which is associated with the `operator`.
+"""
+function get_pauli_group_element(operator::Operator)
+    num_qubits = Int(log2(size(operator.data, 1)))
+    u_list = get_all_binary_vectors(2*num_qubits)
+    
+    for u in u_list
+        pauli_tensor = get_pauli_tensor(u)
+        for delta in 0:1
+            for epsilon in 0:1
+                if operator ≈ im^delta*(-1)^epsilon*pauli_tensor
+                    return PauliGroupElement(u, delta, epsilon)
+                end
+            end
+        end
+    end
+    throw(ErrorException("the operator is not a Pauli group element"))
+end
+
+function get_all_binary_vectors(vector_length)
+    temp_vector = Vector{GF2}(undef, vector_length)
+    vector_list = []
+    index = 1
+    generate_all_binary_vectors!(temp_vector, vector_list, index)
+    return vector_list
+end
+
+function generate_all_binary_vectors!(vector, vector_list, index)
+    if index == length(vector)+1
+        push!(vector_list, copy(vector))
+        return
+    end
+
+    vector[index] = 0
+    generate_all_binary_vectors!(vector, vector_list, index+1)
+
+    vector[index] = 1
+    generate_all_binary_vectors!(vector, vector_list, index+1)
+end
+
+function get_pauli_tensor(a::Vector{GF2})
+    num_qubits = Int(length(a)/2)
+    operator = get_pauli_operator(a[1], a[1+num_qubits])
+    for i = 2:num_qubits
+        index_v = a[i]
+        index_w = a[i+num_qubits]
+        new_operator = get_pauli_operator(index_v, index_w)
+        operator = kron(operator, new_operator)
+    end
+    return operator
+end
+
+function get_pauli_operator(index_v, index_w)
+    if index_v == 0
+        if index_w == 0
+            return eye()
+        else
+            return sigma_x()
+        end
+    else
+        if index_w == 0
+            return sigma_z()
+        else
+            return im*sigma_y()
+        end
+    end
+end

@@ -72,3 +72,20 @@ end
     expected_inv_h_bar[2] = 1
     @test inv_q3.h_bar == expected_inv_h_bar
 end
+
+@testset "pauli_group_element" begin
+    operator = -im*kron(eye(), kron(sigma_x(), kron(sigma_z(), im*sigma_y())))
+    pauli = get_pauli_group_element(operator)
+    expected_u = zeros(GF2, 8)
+    expected_u[3] = 1
+    expected_u[4] = 1
+    expected_u[6] = 1
+    expected_u[8] = 1
+    expected_delta = GF2(1)
+    expected_epsilon = GF2(1)
+    @test pauli.u == expected_u
+    @test pauli.delta == expected_delta
+    @test pauli.epsilon == expected_epsilon
+
+    @test_throws ErrorException get_pauli_group_element(hadamard())
+end
