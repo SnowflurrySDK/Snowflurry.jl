@@ -15,9 +15,6 @@ using Printf
 using Plots
 import SparseArrays
 
-using GaloisFields
-const GF2 = @GaloisField 2
-
 export
 
     # Types
@@ -30,7 +27,6 @@ export
     QPU,
     CliffordOperator,
     PauliGroupElement,
-    GF2,
 
     # Functions
     commute, 
@@ -96,7 +92,6 @@ export
 include("core/qobj.jl")
 include("core/clifford.jl")
 include("core/dynamic_system.jl")
-include("core/math.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/qpu.jl")

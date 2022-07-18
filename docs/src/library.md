@@ -46,9 +46,9 @@ coherent
 sesolve
 mesolve
 CliffordOperator
-get_clifford_operator(c::Matrix{GF2}, h::Vector{GF2})
+get_clifford_operator
 PauliGroupElement
-get_pauli_group_element(operator::Operator)
+get_pauli_group_element
 ```
 
 ```@meta
