@@ -76,6 +76,29 @@ function get_diagonal(m::MatElem)
     return diagonal
 end
 
+function get_clifford_operator(operator::Operator)
+    # REPLACE FOLLOWING LINE BY get_num_qubits BEFORE MERGING WITH MAIN
+    num_qubits = Int(log2(size(operator.data, 1)))
+
+    system = MultiBodySystem(2, num_qubits)
+    c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    h = zero_matrix(GF(2), 2*num_qubits, 1)
+    for i = 1:num_qubits
+        embedded_z = get_embed_operator(sigma_z(), i, system)
+        z_operator = operator*embedded_z*adjoint(operator)
+        z_pauli_element = get_pauli_group_element(z_operator)
+        c[1:2*num_qubits, i] = z_pauli_element.u
+        h[i, 1] = z_pauli_element.epsilon
+
+        embedded_x = get_embed_operator(sigma_x(), i, system)
+        x_operator = operator*embedded_x*adjoint(operator)
+        x_pauli_element = get_pauli_group_element(x_operator)
+        c[1:2*num_qubits, i+num_qubits] = x_pauli_element.u
+        h[i+num_qubits, 1] = x_pauli_element.epsilon
+    end
+    return get_clifford_operator(c, h)
+end
+
 function Base.:*(q2::CliffordOperator, q1::CliffordOperator)
     c_bar = q2.c_bar*q1.c_bar
     h_bar = get_h_bar_for_product(q2, q1)

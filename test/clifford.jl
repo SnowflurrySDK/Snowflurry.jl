@@ -40,6 +40,13 @@ using Test
     c_bar_with_invalid_d = deepcopy(expected_c_bar)
     c_bar_with_invalid_d[5, 1] = 1
     @test_throws ErrorException CliffordOperator(c_bar_with_invalid_d, expected_h_bar)
+
+    clifford_control_x = get_clifford_operator(control_x())
+    expected_control_x_c = identity_matrix(GF(2), 4)
+    expected_control_x_c[1, 2] = 1
+    expected_control_x_c[4, 3] = 1
+    @test clifford_control_x.c_bar[1:4, 1:4] == expected_control_x_c
+    @test clifford_control_x.h_bar[1:4, 1] == zero_matrix(GF(2), 4, 1)
 end
 
 @testset "clifford_operator_manipulations" begin
