@@ -1,4 +1,5 @@
-using Nemo: gfp_mat, MatElem, gfp_elem, GF, zero_matrix, nrows, ncols
+using Nemo: gfp_mat, MatElem, gfp_elem, GF, zero_matrix, nrows, ncols, nullspace, rank,
+    identity_matrix
 
 """
     CliffordOperator(c_bar::Nemo.gfp_mat, h_bar::Nemo.gfp_mat)
@@ -20,7 +21,24 @@ struct CliffordOperator
         @assert mod(nrows(c_bar), 2) == 1
         @assert c_bar.base_ring == GF(2)
         @assert h_bar.base_ring == GF(2)
+        assert_clifford_operator_is_symplectic(c_bar)
         new(c_bar, h_bar)
+    end
+end
+
+function assert_clifford_operator_is_symplectic(c_bar)
+    num_qubits = Int((nrows(c_bar)-1)/2)
+    u = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    u[1:num_qubits, num_qubits+1:2*num_qubits] = identity_matrix(GF(2), num_qubits)
+    p = u+transpose(u)
+    c = c_bar[1:2*num_qubits, 1:2*num_qubits]
+    if transpose(c)*p*c != p
+        throw(ErrorException("the Clifford operator is not symplectic"))
+    end
+    diag = get_diagonal(transpose(c)*u*c)
+    d = transpose(c_bar[2*num_qubits+1,1:2*num_qubits])
+    if diag != d
+        throw(ErrorException("the d vector is invalid for a Clifford operator"))
     end
 end
 
@@ -40,9 +58,7 @@ end
 function get_c_bar(c::gfp_mat)
     n = Int(size(c, 1)/2)
     u = zero_matrix(GF(2), 2*n, 2*n)
-    for i = 1:n
-        u[i, i+n] = 1
-    end
+    u[1:n, n+1:2*n] = identity_matrix(GF(2), n)
 
     d = get_diagonal(transpose(c)*u*c)
     c_bar = zero_matrix(GF(2), 2*n+1, 2*n+1)
@@ -198,3 +214,64 @@ function get_pauli_operator(index_v, index_w)
         end
     end
 end
+
+# function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
+#     num_qubits = Int((clifford.c_bar-1)/2)
+#     if circuit.qubit_count != num_qubits
+#         throw(ErrorException("the Clifford operation must have the same number "*
+#             "of qubits as the circuit"))
+#     end
+
+#     g_prime = clifford.c_bar[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits]
+#     nullity, null_basis = nullspace(g_prime)
+#     num_qubits = nrows(g_prime)
+#     r2 = get_r2_matrix(nullity, null_basis, num_qubits)
+#     r1 = get_r1_matrix(r2, g_prime, nullity)
+#     rcr = get_rcr_matrix(r1, r2, clifford)
+#     println("rcr: $(rcr)")
+# end
+
+# function get_r2_matrix(nullity, null_basis, num_qubits)
+#     num_additional_columns = num_qubits-nullity
+#     additional_columns = zero_matrix(GF(2), num_qubits, num_additional_columns)
+#     r2 = hcat(null_basis, additional_columns)
+#     r2_rank = rank(r2)
+#     while r2_rank != num_qubits
+#         for j = nullity+1:num_qubits
+#             for i = 1:num_qubits
+#                 r2[i, j] = rand(GF(2))
+#             end
+#         end
+#         r2_rank = rank(r2)
+#     end
+#     return r2
+# end
+
+# function get_r1_matrix(r2_matrix, g_prime, nullity)
+#     num_qubits = nrows(r2_matrix)
+#     prod = g_prime*r2_matrix
+#     additional_columns = zero_matrix(GF(2), num_qubits, nullity)
+#     r1 = hcat(additional_columns, prod[1:num_qubits, nullity+1:num_qubits])
+#     r1_rank = rank(r1)
+#     while r1_rank != num_qubits
+#         for j = 1:nullity
+#             for i = 1:num_qubits
+#                 r1[i, j] = rand(GF(2))
+#             end
+#         end
+#         r1_rank = rank(r1)
+#     end
+#     return r1
+# end
+
+# function get_rcr_matrix(r1, r2, clifford)
+#     num_qubits = nrows(r1)
+#     r_left = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+#     r_left[1:num_qubits, 1:num_qubits] = transpose(r1)
+#     r_left[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = inv(r1)
+#     r_right = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+#     r_right[1:num_qubits, 1:num_qubits] = r2
+#     r_right[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = transpose(inv(r2))
+#     rcr = r_left*clifford.c_bar[1:2*num_qubits, 1:2*num_qubits]*r_right
+#     return rcr
+# end

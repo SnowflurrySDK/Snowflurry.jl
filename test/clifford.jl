@@ -33,6 +33,13 @@ using Test
     expected_h_bar[4, 1] = 1
 
     @test clifford.h_bar == expected_h_bar
+
+    non_symplectic_c_bar = zero_matrix(GF(2), 5, 5)
+    @test_throws ErrorException CliffordOperator(non_symplectic_c_bar, expected_h_bar)
+
+    c_bar_with_invalid_d = deepcopy(expected_c_bar)
+    c_bar_with_invalid_d[5, 1] = 1
+    @test_throws ErrorException CliffordOperator(c_bar_with_invalid_d, expected_h_bar)
 end
 
 @testset "clifford_operator_manipulations" begin
@@ -89,3 +96,7 @@ end
 
     @test_throws ErrorException get_pauli_group_element(hadamard())
 end
+
+# @testset "build_circuit_from_clifford" begin
+#     circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+# end
