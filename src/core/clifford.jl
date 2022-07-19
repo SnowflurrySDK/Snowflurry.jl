@@ -80,7 +80,7 @@ function get_clifford_operator(operator::Operator)
     # REPLACE FOLLOWING LINE BY get_num_qubits BEFORE MERGING WITH MAIN
     num_qubits = Int(log2(size(operator.data, 1)))
 
-    system = MultiBodySystem(2, num_qubits)
+    system = MultiBodySystem(num_qubits, 2)
     c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     h = zero_matrix(GF(2), 2*num_qubits, 1)
     for i = 1:num_qubits
@@ -238,63 +238,131 @@ function get_pauli_operator(index_v, index_w)
     end
 end
 
-# function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
-#     num_qubits = Int((clifford.c_bar-1)/2)
-#     if circuit.qubit_count != num_qubits
-#         throw(ErrorException("the Clifford operation must have the same number "*
-#             "of qubits as the circuit"))
-#     end
+function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
+    num_qubits = Int((nrows(clifford.c_bar)-1)/2)
+    if circuit.qubit_count != num_qubits
+        throw(ErrorException("the Clifford operation must have the same number "*
+            "of qubits as the circuit"))
+    end
 
-#     g_prime = clifford.c_bar[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits]
-#     nullity, null_basis = nullspace(g_prime)
-#     num_qubits = nrows(g_prime)
-#     r2 = get_r2_matrix(nullity, null_basis, num_qubits)
-#     r1 = get_r1_matrix(r2, g_prime, nullity)
-#     rcr = get_rcr_matrix(r1, r2, clifford)
-#     println("rcr: $(rcr)")
-# end
+    decomposed_c_list = get_c_matrix_decomposition_list(clifford)
+    
+end
 
-# function get_r2_matrix(nullity, null_basis, num_qubits)
-#     num_additional_columns = num_qubits-nullity
-#     additional_columns = zero_matrix(GF(2), num_qubits, num_additional_columns)
-#     r2 = hcat(null_basis, additional_columns)
-#     r2_rank = rank(r2)
-#     while r2_rank != num_qubits
-#         for j = nullity+1:num_qubits
-#             for i = 1:num_qubits
-#                 r2[i, j] = rand(GF(2))
-#             end
-#         end
-#         r2_rank = rank(r2)
-#     end
-#     return r2
-# end
+function get_c_matrix_decomposition_list(clifford)
+    g_prime = clifford.c_bar[num_qubits+1:2*num_qubits, 1:num_qubits]
+    nullity, null_basis = nullspace(g_prime)
+    num_qubits = nrows(g_prime)
+    r2 = get_r2_matrix(nullity, null_basis, num_qubits)
+    r1 = get_r1_matrix(r2, g_prime, nullity)
+    rcr = get_rcr_matrix(r1, r2, clifford)
 
-# function get_r1_matrix(r2_matrix, g_prime, nullity)
-#     num_qubits = nrows(r2_matrix)
-#     prod = g_prime*r2_matrix
-#     additional_columns = zero_matrix(GF(2), num_qubits, nullity)
-#     r1 = hcat(additional_columns, prod[1:num_qubits, nullity+1:num_qubits])
-#     r1_rank = rank(r1)
-#     while r1_rank != num_qubits
-#         for j = 1:nullity
-#             for i = 1:num_qubits
-#                 r1[i, j] = rand(GF(2))
-#             end
-#         end
-#         r1_rank = rank(r1)
-#     end
-#     return r1
-# end
+    e11 = rcr[1:nullity, 1:nullity]
+    r2_updater = zero_matrix(GF(2), num_qubits, num_qubits)
+    r2_updater[1:nullity, 1:nullity] = inv(e11)
+    r2_updater[nullity+1:num_qubits, nullity+1:num_qubits] =
+        identity_matrix(GF(2), num_qubits-nullity)
+    r2 = r2*r2_updater
+    rcr = get_rcr_matrix(r1, r2, clifford)
 
-# function get_rcr_matrix(r1, r2, clifford)
-#     num_qubits = nrows(r1)
-#     r_left = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
-#     r_left[1:num_qubits, 1:num_qubits] = transpose(r1)
-#     r_left[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = inv(r1)
-#     r_right = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
-#     r_right[1:num_qubits, 1:num_qubits] = r2
-#     r_right[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = transpose(inv(r2))
-#     rcr = r_left*clifford.c_bar[1:2*num_qubits, 1:2*num_qubits]*r_right
-#     return rcr
-# end
+    t1 = r1
+    t2 = transpose(r2)
+    
+    v1 = rcr[1:nullity, nullity+1:num_qubits]
+    v2 = transpose(rcr[num_qubits+nullity+1:2*num_qubits,num_qubits+1:num_qubits+nullity])
+
+    z1 = rcr[nullity+1:num_qubits, nullity+1:num_qubits]
+    z2 = rcr[num_qubits+nullity+1:2*num_qubits, num_qubits+nullity+1:2*num_qubits]
+    f11 = rcr[1:nullity, num_qubits+1:num_qubits+nullity]
+    z3 = f11+v2*transpose(v1)
+
+    c1 = get_c1_or_c5_matrix(t1, num_qubits)
+    c2 = get_c2_matrix(v1, z1, z3, nullity, num_qubits)
+    c3 = get_c3_matrix(nullity, num_qubits)
+    c4 = get_c4_matrix(v2, z2, nullity, num_qubits)
+    c5 = get_c1_or_c5_matrix(t2, num_qubits)
+
+    return [c1, c2, c3, c4, c5]
+end
+
+function get_r2_matrix(nullity, null_basis, num_qubits)
+    num_additional_columns = num_qubits-nullity
+    additional_columns = zero_matrix(GF(2), num_qubits, num_additional_columns)
+    r2 = hcat(null_basis, additional_columns)
+    r2_rank = rank(r2)
+    while r2_rank != num_qubits
+        for j = nullity+1:num_qubits
+            for i = 1:num_qubits
+                r2[i, j] = rand(GF(2))
+            end
+        end
+        r2_rank = rank(r2)
+    end
+    return r2
+end
+
+function get_r1_matrix(r2_matrix, g_prime, nullity)
+    num_qubits = nrows(r2_matrix)
+    prod = g_prime*r2_matrix
+    additional_columns = zero_matrix(GF(2), num_qubits, nullity)
+    r1 = hcat(additional_columns, prod[1:num_qubits, nullity+1:num_qubits])
+    r1_rank = rank(r1)
+    while r1_rank != num_qubits
+        for j = 1:nullity
+            for i = 1:num_qubits
+                r1[i, j] = rand(GF(2))
+            end
+        end
+        r1_rank = rank(r1)
+    end
+    return r1
+end
+
+function get_rcr_matrix(r1, r2, clifford)
+    num_qubits = nrows(r1)
+    r_left = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    r_left[1:num_qubits, 1:num_qubits] = transpose(r1)
+    r_left[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = inv(r1)
+    r_right = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    r_right[1:num_qubits, 1:num_qubits] = r2
+    r_right[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = transpose(inv(r2))
+    rcr = r_left*clifford.c_bar[1:2*num_qubits, 1:2*num_qubits]*r_right
+    return rcr
+end
+
+function get_c1_or_c5_matrix(t1_or_t2, num_qubits)
+    c1_or_c5 = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    c1_or_c5[1:num_qubits, 1:num_qubits] = transpose(inv(t1_or_t2))
+    c1_or_c5[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = t1_or_t2
+    return c1_or_c5
+end
+
+function get_c2_matrix(v1, z1, z3, nullity, num_qubits)
+    c2 = identity_matrix(GF(2), 2*num_qubits)
+    c2[1:nullity, num_qubits+1: num_qubits+nullity] = z3
+    c2[1:nullity, num_qubits+nullity+1:2*num_qubits] = v1
+    c2[nullity+1:num_qubits, num_qubits+1:num_qubits+nullity] = transpose(v1)
+    c2[nullity+1:num_qubits, num_qubits+nullity+1:2*num_qubits] = z1
+    return c2
+end
+
+function get_c3_matrix(nullity, num_qubits)
+    rank = num_qubits-nullity
+    c3 = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    c3[1:nullity, 1:nullity] = identity_matrix(GF(2), nullity)
+    c3[nullity+1:num_qubits, num_qubits+nullity+1:2*num_qubits] =
+        identity_matrix(GF(2), rank)
+    c3[num_qubits+1:num_qubits+nullity, num_qubits+1:num_qubits+nullity] =
+        identity_matrix(GF(2), nullity)
+    c3[num_qubits+nullity+1:2*num_qubits, nullity+1:num_qubits] =
+        identity_matrix(GF(2), rank)
+    return c3
+end
+
+function get_c4_matrix(v2, z2, nullity, num_qubits)
+    c4 = identity_matrix(GF(2), 2*num_qubits)
+    c4[1:nullity, num_qubits+nullity+1:2*num_qubits] = v2
+    c4[nullity+1:num_qubits, num_qubits+1:num_qubits+nullity] = transpose(v2)
+    c4[nullity+1:num_qubits, num_qubits+nullity+1:2*num_qubits] = z2
+    return c4
+end

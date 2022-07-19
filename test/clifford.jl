@@ -104,6 +104,14 @@ end
     @test_throws ErrorException get_pauli_group_element(hadamard())
 end
 
-# @testset "build_circuit_from_clifford" begin
-#     circuit = QuantumCircuit(qubit_count=4, bit_count=0)
-# end
+@testset "build_circuit_from_clifford" begin
+    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    gate_1 = kron(hadamard(), kron(eye(), kron(eye(), eye())))
+    gate_2 = kron(control_x(), kron(eye(), eye()))
+    gate_3 = kron(eye(), kron(control_x(), eye()))
+    gate_4 = kron(eye(), kron(eye(), control_x()))
+    gate_5 = kron(eye(), kron(eye(), kron(eye(), phase())))
+    operator = gate_5*gate_4*gate_3*gate_2*gate_1
+    clifford = get_clifford_operator(operator)
+    push_clifford!(circuit, clifford)
+end

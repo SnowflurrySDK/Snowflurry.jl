@@ -64,6 +64,7 @@ export
 
     get_clifford_operator,
     get_pauli_group_element,
+    push_clifford!,
 
     # Gates
     sigma_x,
@@ -90,10 +91,10 @@ export
     JobStatus
 
 include("core/qobj.jl")
-include("core/clifford.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
+include("core/clifford.jl")
 include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
