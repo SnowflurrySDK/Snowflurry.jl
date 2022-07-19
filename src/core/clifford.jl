@@ -245,11 +245,11 @@ function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
             "of qubits as the circuit"))
     end
 
-    decomposed_c_list = get_c_matrix_decomposition_list(clifford)
-    
+    decomposed_c_list = get_c_matrix_decomposition_list(clifford, num_qubits)
+
 end
 
-function get_c_matrix_decomposition_list(clifford)
+function get_c_matrix_decomposition_list(clifford, num_qubits)
     g_prime = clifford.c_bar[num_qubits+1:2*num_qubits, 1:num_qubits]
     nullity, null_basis = nullspace(g_prime)
     num_qubits = nrows(g_prime)
