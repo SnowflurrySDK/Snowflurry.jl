@@ -1,5 +1,5 @@
 using Nemo: gfp_mat, MatElem, gfp_elem, GF, zero_matrix, nrows, ncols, nullspace, rank,
-    identity_matrix
+    identity_matrix, swap_rows!, add_row!
 
 """
     CliffordOperator(c_bar::Nemo.gfp_mat, h_bar::Nemo.gfp_mat)
@@ -245,8 +245,7 @@ function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
             "of qubits as the circuit"))
     end
 
-    decomposed_c_list = get_c_matrix_decomposition_list(clifford, num_qubits)
-
+    get_c_matrix_decomposition_list(clifford, num_qubits)
 end
 
 function get_c_matrix_decomposition_list(clifford, num_qubits)
@@ -274,14 +273,133 @@ function get_c_matrix_decomposition_list(clifford, num_qubits)
     z1 = rcr[nullity+1:num_qubits, nullity+1:num_qubits]
     z2 = rcr[num_qubits+nullity+1:2*num_qubits, num_qubits+nullity+1:2*num_qubits]
     f11 = rcr[1:nullity, num_qubits+1:num_qubits+nullity]
-    z3 = f11+v2*transpose(v1)
+    z3 = f11+v1*transpose(v2)
 
     c1 = get_c1_or_c5_matrix(t1, num_qubits)
     c2 = get_c2_matrix(v1, z1, z3, nullity, num_qubits)
+    top_right_c2 = get_top_right_c2_matrix(v1, z1, z3, nullity, num_qubits)
     c3 = get_c3_matrix(nullity, num_qubits)
     c4 = get_c4_matrix(v2, z2, nullity, num_qubits)
+    top_right_c4 = get_top_right_c4_matrix(v2, z2, nullity, num_qubits)
     c5 = get_c1_or_c5_matrix(t2, num_qubits)
 
+    println("c1")
+    display(c1)
+    println("c2")
+    display(c2)
+    u = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    u[1:num_qubits, num_qubits+1:2*num_qubits] =
+        identity_matrix(GF(2), num_qubits)
+    println("d2")
+    display(get_diagonal(transpose(c2)*u*c2))
+    println("top_right_c2")
+    display(top_right_c2)
+    println("c3")
+    display(c3)
+    println("c4")
+    display(c4)
+    println("top_right_c4")
+    display(top_right_c4)
+    println("c5")
+    display(c5)
+    println("c1*c2:")
+    display(c1*c2)
+    println("c:")
+    display(clifford.c_bar[1:2*num_qubits, 1:2*num_qubits])
+
+    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    push_gate!(circuit, [hadamard(2), hadamard(3), hadamard(4)])
+    push_gate!(circuit, [phase(4)])
+    push_gate!(circuit, sigma_z(1))
+    c_for_current_clifford = identity_matrix(GF(2), 2*num_qubits)
+    h_for_current_clifford = zero_matrix(GF(2), 2*num_qubits, 1)
+    current_clifford = get_clifford_operator(c_for_current_clifford, h_for_current_clifford)
+    current_clifford =
+        push_linear_transformation_and_return_clifford!(circuit, current_clifford, r1)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c2)
+    current_clifford = push_hadamard_for_c3_and_return_clifford!(circuit, current_clifford,
+        num_qubits-nullity)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c4)
+    current_clifford = push_linear_transformation_and_return_clifford!(circuit,
+        current_clifford, transpose(r2))
+    psi = simulate(circuit)
+    expect_1 = adjoint(psi)*get_embed_operator(sigma_x(), 4, MultiBodySystem(num_qubits, 2))*psi
+    println("current_clifford.c_bar:")
+    display(current_clifford.c_bar)
+    println("current_clifford.h_bar:")
+    display(current_clifford.h_bar)
+    println("expect1: $expect_1")
+
+    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    push_gate!(circuit, [hadamard(2), hadamard(3), hadamard(4)])
+    push_gate!(circuit, [phase(4)])
+    push_gate!(circuit, sigma_z(2))
+    c_for_current_clifford = identity_matrix(GF(2), 2*num_qubits)
+    h_for_current_clifford = zero_matrix(GF(2), 2*num_qubits, 1)
+    current_clifford = get_clifford_operator(c_for_current_clifford, h_for_current_clifford)
+    current_clifford =
+        push_linear_transformation_and_return_clifford!(circuit, current_clifford, r1)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c2)
+    current_clifford = push_hadamard_for_c3_and_return_clifford!(circuit, current_clifford,
+        num_qubits-nullity)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c4)
+    current_clifford = push_linear_transformation_and_return_clifford!(circuit,
+        current_clifford, transpose(r2))
+    psi = simulate(circuit)
+    expect_2 = adjoint(psi)*get_embed_operator(sigma_x(), 4, MultiBodySystem(num_qubits, 2))*psi
+    println("expect2: $expect_2")
+
+    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    push_gate!(circuit, [hadamard(2), hadamard(3), hadamard(4)])
+    push_gate!(circuit, [phase(4)])
+    push_gate!(circuit, sigma_z(3))
+    c_for_current_clifford = identity_matrix(GF(2), 2*num_qubits)
+    h_for_current_clifford = zero_matrix(GF(2), 2*num_qubits, 1)
+    current_clifford = get_clifford_operator(c_for_current_clifford, h_for_current_clifford)
+    current_clifford =
+        push_linear_transformation_and_return_clifford!(circuit, current_clifford, r1)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c2)
+    current_clifford = push_hadamard_for_c3_and_return_clifford!(circuit, current_clifford,
+        num_qubits-nullity)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c4)
+    current_clifford = push_linear_transformation_and_return_clifford!(circuit,
+        current_clifford, transpose(r2))
+    psi = simulate(circuit)
+    expect_3 = adjoint(psi)*get_embed_operator(sigma_x(), 4, MultiBodySystem(num_qubits, 2))*psi
+    println("expect3: $expect_3")
+
+    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    push_gate!(circuit, [hadamard(2), hadamard(3), hadamard(4)])
+    push_gate!(circuit, [phase(4)])
+    push_gate!(circuit, sigma_z(4))
+    c_for_current_clifford = identity_matrix(GF(2), 2*num_qubits)
+    h_for_current_clifford = zero_matrix(GF(2), 2*num_qubits, 1)
+    current_clifford = get_clifford_operator(c_for_current_clifford, h_for_current_clifford)
+    current_clifford =
+        push_linear_transformation_and_return_clifford!(circuit, current_clifford, r1)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c2)
+    current_clifford = push_hadamard_for_c3_and_return_clifford!(circuit, current_clifford,
+        num_qubits-nullity)
+    current_clifford =
+        push_phase_gates_and_return_clifford!(circuit, current_clifford, top_right_c4)
+    current_clifford = push_linear_transformation_and_return_clifford!(circuit,
+        current_clifford, transpose(r2))
+    psi = simulate(circuit)
+    expect_4 = adjoint(psi)*get_embed_operator(sigma_x(), 4, MultiBodySystem(num_qubits, 2))*psi
+    println("expect4: $expect_4")
+
+    println("rank: $(num_qubits-nullity)")
+    display(circuit)
+
+    multiplication_works = clifford.c_bar[1:2*num_qubits,1:2*num_qubits]==c1*c2*c3*c4*c5
+    println("c == c1*c2*c3*c4*c5: $(multiplication_works)")
     return [c1, c2, c3, c4, c5]
 end
 
@@ -346,6 +464,15 @@ function get_c2_matrix(v1, z1, z3, nullity, num_qubits)
     return c2
 end
 
+function get_top_right_c2_matrix(v1, z1, z3, nullity, num_qubits)
+    top_right_c2 = zero_matrix(GF(2), num_qubits, num_qubits)
+    top_right_c2[1:nullity, 1:nullity] = z3
+    top_right_c2[1:nullity, nullity+1:num_qubits] = v1
+    top_right_c2[nullity+1:num_qubits, 1:nullity] = transpose(v1)
+    top_right_c2[nullity+1:num_qubits, nullity+1:num_qubits] = z1
+    return top_right_c2
+end
+
 function get_c3_matrix(nullity, num_qubits)
     rank = num_qubits-nullity
     c3 = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
@@ -365,4 +492,119 @@ function get_c4_matrix(v2, z2, nullity, num_qubits)
     c4[nullity+1:num_qubits, num_qubits+1:num_qubits+nullity] = transpose(v2)
     c4[nullity+1:num_qubits, num_qubits+nullity+1:2*num_qubits] = z2
     return c4
+end
+
+function get_top_right_c4_matrix(v2, z2, nullity, num_qubits)
+    top_right_c4 = zero_matrix(GF(2), num_qubits, num_qubits)
+    top_right_c4[1:nullity, nullity+1:num_qubits] = v2
+    top_right_c4[nullity+1:num_qubits, 1:nullity] = transpose(v2)
+    top_right_c4[nullity+1:num_qubits, nullity+1:num_qubits] = z2
+    return top_right_c4
+end
+
+function push_linear_transformation_and_return_clifford!(circuit::QuantumCircuit,
+        current_clifford::CliffordOperator, r)
+    num_qubits = nrows(r)
+    r_copy = deepcopy(r)
+    for j_column = 1:num_qubits
+        if r_copy[j_column, j_column] != 1
+            add_swap_gate_for_linear_transformation!(circuit, r_copy, j_column)
+        end
+        add_control_x_gates_for_linear_transformation!(circuit, r_copy, j_column)
+    end
+    return get_clifford_for_linear_transformation(current_clifford, num_qubits, r)
+end
+
+function add_swap_gate_for_linear_transformation!(circuit, r, j_column)
+    i_row = j_column+1
+    found_non_zero_entry = false
+    while !found_non_zero_entry
+        if r[i_row, j_column] == 0
+            i_row += 1
+        else
+            swap_rows!(r, i_row, j_column)
+            push_gate!(circuit, control_x(i_row, j_column))
+            push_gate!(circuit, control_x(j_column, i_row))
+            push_gate!(circuit, control_x(i_row, j_column))
+            found_non_zero_entry = true
+        end
+    end
+end
+
+function add_control_x_gates_for_linear_transformation!(circuit, r, j_column)
+    iter = Iterators.filter(i_row -> i_row != j_column, 1:nrows(r))
+    for i_row = iter
+        if r[i_row, j_column] == 1
+            add_row!(r, 1, j_column, i_row)
+            push_gate!(circuit, control_x(j_column, i_row))
+        end
+    end
+end
+
+function get_clifford_for_linear_transformation(current_clifford, num_qubits, r)
+    new_c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    new_c[1:num_qubits, 1:num_qubits] = inv(transpose(r))
+    new_c[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = r
+    new_h = zero_matrix(GF(2), 2*num_qubits, 1)
+    new_clifford = get_clifford_operator(new_c, new_h)
+    current_clifford = current_clifford*new_clifford
+    return current_clifford
+end
+
+function push_hadamard_for_c3_and_return_clifford!(circuit::QuantumCircuit,
+        current_clifford, g_prime_rank)
+    num_qubits = circuit.qubit_count
+    for i in num_qubits-g_prime_rank+1:num_qubits
+        push_gate!(circuit, hadamard(i))
+    end
+    c_new = get_c3_matrix(num_qubits-g_prime_rank, num_qubits)
+    h_new = zero_matrix(GF(2), 2*num_qubits, 1)
+    new_clifford = get_clifford_operator(c_new, h_new)
+    current_clifford = current_clifford*new_clifford
+    return current_clifford
+end
+
+function push_phase_gates_and_return_clifford!(circuit::QuantumCircuit, current_clifford,
+        upper_right_matrix)
+    gate_list = []
+    num_qubits = nrows(upper_right_matrix)
+    u = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    u[1:num_qubits, num_qubits+1:2*num_qubits] =
+        identity_matrix(GF(2), num_qubits)
+    p = u+transpose(u)
+    c = identity_matrix(GF(2), 2*num_qubits)
+    h = zero_matrix(GF(2), 2*num_qubits, 1)
+    clifford = get_clifford_operator(c, h)
+    for j = 2:num_qubits
+        for i = 1:j-1
+            if upper_right_matrix[i, j] == 1
+                push!(gate_list, control_x(i, j))
+                push!(gate_list, phase(j))
+                push!(gate_list, control_x(i, j))
+                a = zero_matrix(GF(2), 2*num_qubits, 1)
+                a[i, 1] = 1
+                a[j, 1] = 1
+                c_new = identity_matrix(GF(2), 2*num_qubits)+a*transpose(a)*p
+                h_new = zero_matrix(GF(2), 2*num_qubits, 1)
+                clifford_new = get_clifford_operator(c_new, h_new)
+                clifford = clifford_new*clifford
+            end
+        end
+    end
+    for i = 1:num_qubits
+        if upper_right_matrix[i, i] != clifford.c_bar[i, num_qubits+i]
+            push!(gate_list, phase(i))
+            a = zero_matrix(GF(2), 2*num_qubits, 1)
+            a[i, 1] = 1
+            c_new = identity_matrix(GF(2), 2*num_qubits)+a*transpose(a)*p
+            h_new = zero_matrix(GF(2), 2*num_qubits, 1)
+            clifford_new = get_clifford_operator(c_new, h_new)
+            clifford = clifford_new*clifford
+        end
+    end
+    iter = Iterators.reverse(gate_list)
+    for gate = iter
+        push_gate!(circuit, gate)
+    end
+    return current_clifford*clifford
 end
