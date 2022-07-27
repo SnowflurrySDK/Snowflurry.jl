@@ -131,4 +131,24 @@ end
 
     wrong_circuit = QuantumCircuit(qubit_count=3, bit_count=0)
     @test_throws ErrorException push_clifford!(wrong_circuit, clifford)
+
+    one_qubit_operator = hadamard()*phase()*sigma_y()
+    one_qubit_clifford = get_clifford_operator(one_qubit_operator)
+
+    one_qubit_x_circuit = QuantumCircuit(qubit_count=1, bit_count=0)
+    push_gate!(one_qubit_x_circuit, hadamard(1))
+    one_qubit_x_ket = simulate(one_qubit_x_circuit)
+    push_clifford!(one_qubit_x_circuit, one_qubit_clifford)
+    expected_from_x_ket = adjoint(one_qubit_operator)*one_qubit_x_ket
+    returned_from_x_ket = simulate(one_qubit_x_circuit)
+    @test expected_from_x_ket ≈ im*returned_from_x_ket
+
+    one_qubit_y_circuit = QuantumCircuit(qubit_count=1, bit_count=0)
+    push_gate!(one_qubit_y_circuit, hadamard(1))
+    push_gate!(one_qubit_y_circuit, phase(1))
+    one_qubit_y_ket = simulate(one_qubit_y_circuit)
+    push_clifford!(one_qubit_y_circuit, one_qubit_clifford)
+    expected_from_y_ket = adjoint(one_qubit_operator)*one_qubit_y_ket
+    returned_from_y_ket = simulate(one_qubit_y_circuit)
+    @test expected_from_y_ket ≈ im*returned_from_y_ket
 end

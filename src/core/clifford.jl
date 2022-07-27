@@ -490,12 +490,16 @@ end
 function push_gates_for_pauli!(circuit, a, num_qubits)
     for (i_qubit, apply_z) in enumerate(a[1:num_qubits, 1])
         if apply_z == 1
-            push_gate!(circuit, sigma_z(i_qubit))
+            push_gate!(circuit, phase(i_qubit))
+            push_gate!(circuit, phase(i_qubit))
         end
     end
     for (i_qubit, apply_x) in enumerate(a[num_qubits+1:2*num_qubits, 1])
         if apply_x == 1
-            push_gate!(circuit, sigma_x(i_qubit))
+            push_gate!(circuit, hadamard(i_qubit))
+            push_gate!(circuit, phase(i_qubit))
+            push_gate!(circuit, phase(i_qubit))
+            push_gate!(circuit, hadamard(i_qubit))
         end
     end
 end
