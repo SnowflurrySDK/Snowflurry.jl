@@ -105,7 +105,6 @@ end
 end
 
 @testset "build_circuit_from_clifford" begin
-    circuit = QuantumCircuit(qubit_count=4, bit_count=0)
     gate_1 = kron(hadamard(), kron(eye(), kron(eye(), eye())))
     gate_2 = kron(control_x(), kron(eye(), eye()))
     gate_3 = kron(eye(), kron(control_x(), eye()))
@@ -113,5 +112,23 @@ end
     gate_5 = kron(eye(), kron(eye(), kron(eye(), phase())))
     operator = gate_5*gate_4*gate_3*gate_2*gate_1
     clifford = get_clifford_operator(operator)
-    push_clifford!(circuit, clifford)
+
+    ground_circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    ground_ket = simulate(ground_circuit)
+    push_clifford!(ground_circuit, clifford)
+    expected_from_ground_ket = adjoint(operator)*ground_ket
+    returned_from_ground_ket = simulate(ground_circuit)
+    @test expected_from_ground_ket ≈ returned_from_ground_ket
+
+    excited_circuit = QuantumCircuit(qubit_count=4, bit_count=0)
+    push_gate!(excited_circuit, [hadamard(1), hadamard(2), hadamard(3), hadamard(4)])
+    push_gate!(excited_circuit, [phase(4)])
+    excited_ket = simulate(excited_circuit)
+    push_clifford!(excited_circuit, clifford)
+    expected_from_excited_ket = adjoint(operator)*excited_ket
+    returned_from_excited_ket = simulate(excited_circuit)
+    @test expected_from_excited_ket ≈ returned_from_excited_ket
+
+    wrong_circuit = QuantumCircuit(qubit_count=3, bit_count=0)
+    @test_throws ErrorException push_clifford!(wrong_circuit, clifford)
 end
