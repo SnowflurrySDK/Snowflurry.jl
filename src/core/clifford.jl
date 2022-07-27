@@ -76,6 +76,11 @@ function get_diagonal(m::MatElem)
     return diagonal
 end
 
+"""
+    get_clifford_operator(operator::Operator)
+
+If possible, return the [`CliffordOperator`](@ref) for the provided `operator`.
+"""
 function get_clifford_operator(operator::Operator)
     # REPLACE FOLLOWING LINE BY get_num_qubits BEFORE MERGING WITH MAIN
     num_qubits = Int(log2(size(operator.data, 1)))
@@ -238,6 +243,18 @@ function get_pauli_operator(index_v, index_w)
     end
 end
 
+"""
+    push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
+
+Given the Clifford operator, `clifford` or ``Q``, which performs the mapping
+``X \\rightarrow QXQ^\\dagger``, where ``X`` is a Hermitian matrix, this function adds the
+operator ``U=Q^\\dagger`` to the `circuit`. This ensures that
+``\\langle\\Psi|QXQ^\\dagger|\\Psi\\rangle = \\langle\\Psi|U^\\dagger XU|\\Psi\\rangle``,
+where ``|\\Psi\\rangle`` is a quantum state.
+
+The Hadamard, phase, and controlled NOT gates for the `circuit` are generated using the
+approach of [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
+"""
 function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
     num_qubits = Int((nrows(clifford.c_bar)-1)/2)
     if circuit.qubit_count != num_qubits

@@ -49,6 +49,7 @@ CliffordOperator
 get_clifford_operator
 PauliGroupElement
 get_pauli_group_element
+push_clifford!
 ```
 
 ```@meta
