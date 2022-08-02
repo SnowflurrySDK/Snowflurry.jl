@@ -20,6 +20,18 @@ using Test
     print(c)
 end
 
+@testset "manipulate_circuit" begin
+    c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(c, [hadamard(1)])
+    push_gate!(c, [control_x(1, 2)])
+    qubit_map = Dict(1=>2, 2=>1)
+    reorder_qubits!(c, qubit_map)
+    @test c.pipeline[1][1] ≈ hadamard(2)
+    @test c.pipeline[2][1] ≈ control_x(2, 1)
+
+    @test_throws ErrorException reorder_qubits!(c, Dict(1=>2, 2=>2))
+end
+
 
 @testset "bellstate" begin
 

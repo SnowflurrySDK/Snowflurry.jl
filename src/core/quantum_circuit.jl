@@ -124,6 +124,37 @@ function pop_gate!(circuit::QuantumCircuit)
     return circuit
 end
 
+function append_circuit!(old_circuit::QuantumCircuit, circuit_to_append::QuantumCircuit,
+    target_qubits::Array{Int} = [])
+
+end
+
+function reorder_qubits!(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
+    assert_qubit_mapping_is_bijective(qubit_map)
+    for (i_moment, moment) in enumerate(circuit.pipeline)
+        new_moment = Gate[]
+        for gate in moment
+            new_target = Int[]
+            for single_target in gate.target
+                push!(new_target, qubit_map[single_target])
+            end
+            new_gate = copy(gate, new_target)
+            push!(new_moment, new_gate)
+        end
+        circuit.pipeline[i_moment] = new_moment
+    end
+end
+
+function assert_qubit_mapping_is_bijective(qubit_map)
+    previous_new_qubit = 0
+    for (orginal_qubit, new_qubit) in qubit_map
+        if previous_new_qubit == new_qubit
+            throw(ErrorException("multiple qubits are mapped to the same qubit"))
+        end
+        previous_new_qubit = new_qubit
+    end
+end
+
 function Base.show(io::IO, circuit::QuantumCircuit)
     println(io, "Quantum Circuit Object:")
     println(io, "   id: $(circuit.id) ")

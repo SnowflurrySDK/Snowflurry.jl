@@ -51,6 +51,7 @@ export
     tr,
     push_gate!,
     pop_gate!,
+    reorder_qubits!,
     simulate,
     simulate_shots,
     plot_histogram,
