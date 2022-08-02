@@ -72,6 +72,22 @@ end
 
 end
 
+@testset "isapprox" begin
+    @test control_x(1,2) ≈ control_x(1,2)
+    @test !(iswap(1,2) ≈ control_x(1,2))
+    @test !(control_x(1,2) ≈ control_x(2,1))
+end
+
+@testset "copy" begin
+    cnot_1_2 = control_x(1,2)
+    cnot_1_2_copy = copy(cnot_1_2)
+    @test cnot_1_2 ≈ cnot_1_2_copy
+
+    target_qubits = [2,1]
+    cnot_2_1_copy = copy(cnot_1_2, target_qubits)
+    @test cnot_2_1_copy ≈ control_x(2, 1)
+end
+
 @testset "std_gates" begin
     std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap"]
     for gate in std_gates
