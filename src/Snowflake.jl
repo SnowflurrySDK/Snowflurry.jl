@@ -63,6 +63,7 @@ export
     transpile,
 
     get_clifford_operator,
+    get_random_clifford,
     get_pauli_group_element,
     push_clifford!,
 

@@ -1,5 +1,5 @@
 using Nemo: gfp_mat, MatElem, gfp_elem, GF, zero_matrix, nrows, ncols, nullspace, rank,
-    identity_matrix, swap_rows!, add_row!
+    identity_matrix, swap_rows!, add_row!, matrix, solve_rational
 
 """
     CliffordOperator(c_bar::Nemo.gfp_mat, h_bar::Nemo.gfp_mat)
@@ -74,6 +74,51 @@ function get_diagonal(m::MatElem)
         diagonal[i, 1] = m[i, i]
     end
     return diagonal
+end
+
+function get_random_clifford(num_qubits)
+    h_vector = rand(GF(2), 2*num_qubits)
+    h = matrix(GF(2), 2*num_qubits, 1, h_vector)
+    c = get_random_c_matrix(num_qubits)
+    return get_clifford_operator(c, h)
+end
+
+function get_random_c_matrix(num_qubits)
+    c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+    c[:,1] = get_first_random_c_column(num_qubits)
+    p = get_p_matrix(num_qubits)
+
+    i = 2
+    while i <= 2*num_qubits
+        a_for_solver = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
+        a = transpose(c[:,1:i-1])*p
+        a_for_solver[1:i-1,:] = a
+        b = zero_matrix(GF(2), 2*num_qubits, 1)
+        if i-num_qubits > 0
+            b[i-num_qubits,1] = 1
+        end
+        possible_x = solve_rational(a_for_solver, b)
+        (nullity, null_basis) = nullspace(a)
+        random_vector = rand(GF(2), nullity)
+        random_x_part = matrix(GF(2), nullity, 1, random_vector)
+        c[:,i] = possible_x+null_basis*random_x_part
+        if rank(c[:,1:i]) == i
+            i = i+1
+        end
+    end
+    return c
+end
+
+function get_first_random_c_column(num_qubits)
+    found_non_zero_vector = false
+    c_0 = nothing
+    while !found_non_zero_vector
+        c_0 = rand(GF(2), 2*num_qubits)
+        if 1 in c_0
+            found_non_zero_vector = true
+        end
+    end
+    return c_0
 end
 
 """

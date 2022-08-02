@@ -47,6 +47,9 @@ using Test
     expected_control_x_c[4, 3] = 1
     @test clifford_control_x.c_bar[1:4, 1:4] == expected_control_x_c
     @test clifford_control_x.h_bar[1:4, 1] == zero_matrix(GF(2), 4, 1)
+
+    random_clifford = get_random_clifford(2)
+    @test isa(random_clifford, CliffordOperator)
 end
 
 @testset "clifford_operator_manipulations" begin
