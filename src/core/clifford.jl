@@ -76,6 +76,12 @@ function get_diagonal(m::MatElem)
     return diagonal
 end
 
+
+"""
+    get_random_clifford(num_qubits)
+
+Construct a random `CliffordOperator` given the number of qubits.
+"""
 function get_random_clifford(num_qubits)
     h_vector = rand(GF(2), 2*num_qubits)
     h = matrix(GF(2), 2*num_qubits, 1, h_vector)

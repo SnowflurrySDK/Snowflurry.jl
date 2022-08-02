@@ -47,6 +47,7 @@ sesolve
 mesolve
 CliffordOperator
 get_clifford_operator
+get_random_clifford
 PauliGroupElement
 get_pauli_group_element
 push_clifford!
