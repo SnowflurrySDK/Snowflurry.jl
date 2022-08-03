@@ -24,12 +24,21 @@ end
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     push_gate!(c, [hadamard(1)])
     push_gate!(c, [control_x(1, 2)])
-    qubit_map = Dict(1=>2, 2=>1)
-    reorder_qubits!(c, qubit_map)
-    @test c.pipeline[1][1] ≈ hadamard(2)
-    @test c.pipeline[2][1] ≈ control_x(2, 1)
+    qubit_map = Dict(1=>3, 2=>1, 3=>2)
+    larger_c = get_reordered_circuit(c, qubit_map)
+    @test larger_c.pipeline[1][1] ≈ hadamard(3)
+    @test larger_c.pipeline[2][1] ≈ control_x(3, 1)
+    @test larger_c.qubit_count == 3
 
-    @test_throws ErrorException reorder_qubits!(c, Dict(1=>2, 2=>2))
+    empty_line_c = QuantumCircuit(qubit_count = 4, bit_count = 0)
+    push_gate!(empty_line_c, [hadamard(2), hadamard(3)])
+    new_empty_line_c = get_reordered_circuit(empty_line_c, Dict(2=>1, 1=>2))
+    @test new_empty_line_c.pipeline[1][1] ≈ hadamard(1)
+    @test new_empty_line_c.pipeline[1][2] ≈ hadamard(3)
+    @test new_empty_line_c.qubit_count == 4
+
+    @test_throws ErrorException get_reordered_circuit(c, Dict(1=>2, 2=>2))
+    @test_throws ErrorException get_reordered_circuit(c, Dict(2=>1))
 end
 
 

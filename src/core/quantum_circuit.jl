@@ -125,33 +125,44 @@ function pop_gate!(circuit::QuantumCircuit)
 end
 
 function append_circuit!(old_circuit::QuantumCircuit, circuit_to_append::QuantumCircuit,
-    target_qubits::Array{Int} = [])
+    target_qubits::Array{Int} = Int[])
 
 end
 
-function reorder_qubits!(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
+function get_reordered_circuit(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
     assert_qubit_mapping_is_bijective(qubit_map)
-    for (i_moment, moment) in enumerate(circuit.pipeline)
+    pipeline = Array{Gate}[]
+    for moment in circuit.pipeline
         new_moment = Gate[]
         for gate in moment
             new_target = Int[]
             for single_target in gate.target
-                push!(new_target, qubit_map[single_target])
+                if haskey(qubit_map, single_target)
+                    push!(new_target, qubit_map[single_target])
+                else
+                    push!(new_target, single_target)
+                end
             end
             new_gate = copy(gate, new_target)
             push!(new_moment, new_gate)
         end
-        circuit.pipeline[i_moment] = new_moment
+        push!(pipeline, new_moment)
     end
+    largest_new_qubit_id = maximum(values(qubit_map))
+    qubit_count = max(circuit.qubit_count, largest_new_qubit_id)
+    new_circuit = QuantumCircuit(qubit_count=qubit_count,
+        bit_count=circuit.bit_count, pipeline=pipeline)
+    return new_circuit
 end
 
 function assert_qubit_mapping_is_bijective(qubit_map)
-    previous_new_qubit = 0
-    for (orginal_qubit, new_qubit) in qubit_map
-        if previous_new_qubit == new_qubit
-            throw(ErrorException("multiple qubits are mapped to the same qubit"))
-        end
-        previous_new_qubit = new_qubit
+    unique_values = unique(values(qubit_map))
+    if length(unique_values) != length(qubit_map)
+        throw(ErrorException("the qubit map is not bijective"))
+    end
+
+    if sort(collect(keys(qubit_map))) != sort(collect(values(qubit_map)))
+        throw(ErrorException("the qubit map is not bijective"))
     end
 end
 
