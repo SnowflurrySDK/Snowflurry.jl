@@ -10,6 +10,7 @@ DocTestSetup = :(using Snowflake)
 QuantumCircuit
 push_gate!
 pop_gate!
+get_reordered_circuit
 simulate
 simulate_shots
 ```

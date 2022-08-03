@@ -129,8 +129,43 @@ function append_circuit!(old_circuit::QuantumCircuit, circuit_to_append::Quantum
 
 end
 
+"""
+    get_reordered_circuit(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
+
+Returns a circuit containing the gates of the input `circuit`. The gates are reordered
+according to the `qubit_map`. Qubits which are not reordered do not need to
+be included in the `qubit_map`. Qubits are added to the new circuit if necessary.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: 5930787e-133c-11ed-3e7c-3701268d56db 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+
+
+julia> new_c = get_reordered_circuit(c, Dict(1=>3))
+Quantum Circuit Object:
+   id: 7ff7f0da-1344-11ed-1ab8-03b49d30363b 
+   qubit_count: 3 
+   bit_count: 0 
+q[1]:-----
+          
+q[2]:--X--
+          
+q[3]:--H--
+
+
+```
+"""
 function get_reordered_circuit(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
-    assert_qubit_mapping_is_bijective(qubit_map)
+    assert_qubit_mapping_is_valid(qubit_map, circuit.qubit_count)
     pipeline = Array{Gate}[]
     for moment in circuit.pipeline
         new_moment = Gate[]
@@ -155,14 +190,17 @@ function get_reordered_circuit(circuit::QuantumCircuit, qubit_map::Dict{Int, Int
     return new_circuit
 end
 
-function assert_qubit_mapping_is_bijective(qubit_map)
+function assert_qubit_mapping_is_valid(qubit_map, qubit_count)
     unique_values = unique(values(qubit_map))
     if length(unique_values) != length(qubit_map)
-        throw(ErrorException("the qubit map is not bijective"))
+        throw(ErrorException("the qubit map is not injective"))
     end
 
-    if sort(collect(keys(qubit_map))) != sort(collect(values(qubit_map)))
-        throw(ErrorException("the qubit map is not bijective"))
+    for qubit_pair in qubit_map
+        target_qubit = qubit_pair.second
+        if target_qubit <= qubit_count && !haskey(qubit_map, target_qubit)
+            throw(ErrorException("the qubit map is not valid"))
+        end
     end
 end
 

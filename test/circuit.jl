@@ -24,7 +24,7 @@ end
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     push_gate!(c, [hadamard(1)])
     push_gate!(c, [control_x(1, 2)])
-    qubit_map = Dict(1=>3, 2=>1, 3=>2)
+    qubit_map = Dict(1=>3, 2=>1)
     larger_c = get_reordered_circuit(c, qubit_map)
     @test larger_c.pipeline[1][1] ≈ hadamard(3)
     @test larger_c.pipeline[2][1] ≈ control_x(3, 1)
