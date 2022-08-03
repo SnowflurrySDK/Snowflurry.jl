@@ -20,7 +20,7 @@ using Test
     print(c)
 end
 
-@testset "manipulate_circuit" begin
+@testset "reorder_circuit" begin
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     push_gate!(c, [hadamard(1)])
     push_gate!(c, [control_x(1, 2)])
@@ -39,6 +39,20 @@ end
 
     @test_throws ErrorException get_reordered_circuit(c, Dict(1=>2, 2=>2))
     @test_throws ErrorException get_reordered_circuit(c, Dict(2=>1))
+end
+
+@testset "append_circuit" begin
+    base_circuit = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(base_circuit, [hadamard(1)])
+    circuit_to_append = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(circuit_to_append, [control_x(1, 2)])
+    append!(base_circuit, circuit_to_append, circuit_to_append)
+    @test base_circuit.pipeline[1][1] ≈ hadamard(1)
+    @test base_circuit.pipeline[2][1] ≈ control_x(1, 2)
+    @test base_circuit.pipeline[3][1] ≈ control_x(1, 2)
+    
+    too_large_circuit = QuantumCircuit(qubit_count = 3, bit_count = 0)
+    @test_throws ErrorException append!(base_circuit, too_large_circuit)
 end
 
 

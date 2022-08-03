@@ -124,9 +124,70 @@ function pop_gate!(circuit::QuantumCircuit)
     return circuit
 end
 
-function append_circuit!(old_circuit::QuantumCircuit, circuit_to_append::QuantumCircuit,
-    target_qubits::Array{Int} = Int[])
+"""
+    append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
 
+Appends circuits to the `base_circuit`. The `circuits_to_append` cannot have more qubits
+than the `base_circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: d64381ca-1360-11ed-2fc3-7b86db8b7417 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+
+
+julia> c1 = QuantumCircuit(qubit_count=1, bit_count=0);
+
+julia> push_gate!(c1, [sigma_x(1)])
+Quantum Circuit Object:
+   id: ed46d94e-1360-11ed-3c11-33df7e129e0b 
+   qubit_count: 1 
+   bit_count: 0 
+q[1]:--X--
+
+
+julia> c2 = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c2, [control_z(1,2)])
+Quantum Circuit Object:
+   id: fd6df078-1360-11ed-19e5-cf1aa91338b3 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--*--
+       |  
+q[2]:--Z--
+
+
+julia> append!(c, c1, c2);
+
+julia> print(c)
+Quantum Circuit Object:
+   id: d64381ca-1360-11ed-2fc3-7b86db8b7417 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H----X----*--
+                 |  
+q[2]:--X---------Z--
+
+
+```
+"""
+function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
+    for circuit in circuits_to_append
+        if base_circuit.qubit_count < circuit.qubit_count
+            throw(ErrorException(
+                "the circuit to append cannot be wider than the base circuit"))
+        end
+        append!(base_circuit.pipeline, circuit.pipeline)
+    end
 end
 
 """
