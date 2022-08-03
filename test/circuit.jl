@@ -50,9 +50,20 @@ end
     @test base_circuit.pipeline[1][1] ≈ hadamard(1)
     @test base_circuit.pipeline[2][1] ≈ control_x(1, 2)
     @test base_circuit.pipeline[3][1] ≈ control_x(1, 2)
-    
+
     too_large_circuit = QuantumCircuit(qubit_count = 3, bit_count = 0)
     @test_throws ErrorException append!(base_circuit, too_large_circuit)
+end
+
+@testset "get_wider_circuit" begin
+    narrow_circuit = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(narrow_circuit, [hadamard(1)])
+    num_qubits = 3
+    wider_circuit = get_wider_circuit(narrow_circuit, num_qubits)
+    @test wider_circuit.qubit_count == 3
+    @test wider_circuit.pipeline[1][1] ≈ hadamard(1)
+    
+    @test_throws ErrorException get_wider_circuit(narrow_circuit, 1)
 end
 
 

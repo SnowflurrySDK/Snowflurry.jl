@@ -51,6 +51,7 @@ export
     tr,
     push_gate!,
     pop_gate!,
+    get_wider_circuit,
     get_reordered_circuit,
     simulate,
     simulate_shots,

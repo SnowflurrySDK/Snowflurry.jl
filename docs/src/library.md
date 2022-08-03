@@ -11,6 +11,7 @@ QuantumCircuit
 push_gate!
 pop_gate!
 append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
+get_wider_circuit
 get_reordered_circuit
 simulate
 simulate_shots

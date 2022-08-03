@@ -191,6 +191,49 @@ function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumC
 end
 
 """
+    get_wider_circuit(circuit::QuantumCircuit, num_qubits::Int)
+
+Return a copy of `circuit` but with a width of `num_qubits`. `num_qubits` cannot be less
+than the width of `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: c6bc82e2-1365-11ed-1a9f-757e431ca715 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+
+
+julia> wider_circuit = get_wider_circuit(c, 3)
+Quantum Circuit Object:
+   id: e28ec322-1365-11ed-06e3-ddae6aeb2c36 
+   qubit_count: 3 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:--X--
+          
+q[3]:-----
+
+
+```
+"""
+function get_wider_circuit(circuit::QuantumCircuit, num_qubits::Int)
+    if circuit.qubit_count > num_qubits
+        throw(ErrorException("num_qubits cannot be less than the circuit width"))
+    end
+    new_circuit = QuantumCircuit(qubit_count=num_qubits,
+        bit_count=circuit.bit_count, pipeline=circuit.pipeline)
+    return new_circuit
+end
+
+"""
     get_reordered_circuit(circuit::QuantumCircuit, qubit_map::Dict{Int, Int})
 
 Returns a circuit containing the gates of the input `circuit`. The gates are reordered
