@@ -595,7 +595,7 @@ julia> simulate_shots(c, 99)
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     # return simulateShots(c, shots_count)
     ψ = simulate(c)
-    amplitudes = real.(ψ .* ψ)
+    amplitudes = adjoint.(ψ) .* ψ
     weights = Float32[]
 
     for a in amplitudes
