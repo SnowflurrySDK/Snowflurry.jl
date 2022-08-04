@@ -4,5 +4,6 @@ dynamic_system
 gate
 multi_body_system
 qobj
+randomized_benchmarking
 submit_circuit
 transpile
