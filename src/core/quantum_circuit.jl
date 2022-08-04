@@ -1,6 +1,6 @@
 
 """
-        QuantumCircuit(qubit_count = .., bit_count = ...)
+    QuantumCircuit(qubit_count = .., bit_count = ...)
 
 A data structure to represent a *quantum circuit*.  
 # Fields
@@ -29,8 +29,8 @@ Base.@kwdef struct QuantumCircuit
 end
 
 """
-        push_gate!(circuit::QuantumCircuit, gate::Gate)
-        push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    push_gate!(circuit::QuantumCircuit, gate::Gate)
+    push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
 
 Pushes a single gate or an array of gates to the `circuit` pipeline. This function is mutable. 
 
@@ -81,7 +81,7 @@ function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Array{Gate}
 end
 
 """
-        pop_gate!(circuit::QuantumCircuit)
+    pop_gate!(circuit::QuantumCircuit)
 
 Removes the last gate from `circuit.pipeline`. 
 
@@ -384,7 +384,7 @@ function add_target_to_circuit_layout!(circuit_layout, gate, i_step)
 end
 
 """
-        simulate(circuit::QuantumCircuit)
+    simulate(circuit::QuantumCircuit)
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`. 
 
@@ -538,7 +538,7 @@ function get_b1_bitstrings(gate::Gate, target_space_bitstrings, qubit_count)
 end
 
 """
-        simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
+    simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
 Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
 
@@ -613,4 +613,82 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
+end
+
+"""
+    simulate_shots(circuit_list::Array{QuantumCircuit}, shots_count::Int = 100)
+
+Emulates a quantum computer by running multiple circuits for a given number of shots.
+Returns a list of measurement results for each circuit.
+
+# Examples
+```jldoctest; filter = r"00|10|01"
+julia> c1 = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia> push_gate!(c1, hadamard(1))
+Quantum Circuit Object:
+   id: 1c7b03c6-1441-11ed-0848-515f7dcd57b4 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:--H--
+          
+q[2]:-----
+
+
+julia> c2 = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+
+julia> push_gate!(c2, hadamard(2))
+Quantum Circuit Object:
+   id: 269e8632-1441-11ed-345c-f3fc87e6a02b 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:-----
+          
+q[2]:--H--
+
+
+julia> circuit_list = [c1, c2];
+
+julia> shots_list = simulate_shots(circuit_list, 6);
+
+julia> c1_shots = shots_list[1]
+6-element Vector{String}:
+ "00"
+ "10"
+ "00"
+ "10"
+ "10"
+ "10"
+
+julia> c2_shots = shots_list[2]
+6-element Vector{String}:
+ "01"
+ "01"
+ "01"
+ "01"
+ "00"
+ "00"
+
+```
+"""
+function simulate_shots(circuit_list::Array{QuantumCircuit}, shots_count::Int = 100)
+    num_circuits = length(circuit_list)
+    shots_count_list = fill(shots_count, num_circuits)
+    return simulate_shots(circuit_list, shots_count_list)
+end
+
+"""
+    simulate_shots(circuit_list::Array{QuantumCircuit}, shots_count_list::Array{Int})
+
+Emulates a quantum computer by running multiple circuits and returning a list of measurement
+results for each circuit. `shots_count_list` is used to specify the number of shots for
+each circuit.
+"""
+function simulate_shots(circuit_list::Array{QuantumCircuit}, shots_count_list::Array{Int})
+    shots_per_circuit_list = []
+    for (i, circuit) in enumerate(circuit_list)
+        shots = simulate_shots(circuit, shots_count_list[i])
+        push!(shots_per_circuit_list, shots)
+    end
+    return shots_per_circuit_list
 end

@@ -121,3 +121,22 @@ end
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     @test_throws DomainError push_gate!(c, control_x(1, 3))
 end
+
+@testset "simulate_shots_for_multiple_circuits" begin
+    c1 = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(c1, sigma_x(1))
+
+    c2 = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(c2, sigma_x(2))
+
+    circuit_list = [c1, c2]
+    shots_list = simulate_shots(circuit_list, 5)
+
+    @test fill("10", 5) == shots_list[1]
+    @test fill("01", 5) == shots_list[2]
+
+    shots_list = simulate_shots(circuit_list, [3, 2])
+
+    @test fill("10", 3) == shots_list[1]
+    @test fill("01", 2) == shots_list[2]
+end
