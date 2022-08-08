@@ -56,6 +56,19 @@ get_pauli_group_element
 push_clifford!
 ```
 
+## Benchmarking
+### Randomized Benchmarking
+Snowflake has tools for conducting randomized benchmarking following the approach of
+[Magesan, Gambetta, and Emerson (2012)](http://dx.doi.org/10.1103/PhysRevA.85.042311).
+
+```@docs
+run_randomized_benchmarking
+RandomizedBenchmarkingProperties
+RandomizedBenchmarkingFitProperties
+RandomizedBenchmarkingResults
+RandomizedBenchmarkingFitResults
+```
+
 ```@meta
 DocTestSetup = nothing
 ```
