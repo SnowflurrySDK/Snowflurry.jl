@@ -47,7 +47,6 @@ end
     num_qubits_on_device::Int; @assert num_qubits_on_device > 0
     num_bits_on_device::Int = 0; @assert num_bits_on_device >= 0
     target_qubits::Array{Int} = 1:num_qubits_on_device
-    num_shots_per_circuit::Int = 100; @assert num_shots_per_circuit > 0
     fit_properties::RandomizedBenchmarkingFitProperties =
         RandomizedBenchmarkingFitProperties(0)
 
@@ -101,7 +100,7 @@ function get_sequence_fidelities(simulate_shots, transpile!,
         append!(circuit_list, circuit_list_for_length)
     end
     
-    shots_list = simulate_shots(circuit_list, properties.num_shots_per_circuit)
+    shots_list = simulate_shots(circuit_list)
     sequence_fidelity_list = []
     circuit_id = 1
     for i_length in 1:length(properties.sequence_length_list)
