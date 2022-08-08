@@ -1,19 +1,94 @@
+using LsqFit
+
+struct RandomizedBenchmarkingFitProperties
+    model_order::Union{Int, Nothing}
+    initial_parameters::Union{Dict, Nothing}
+
+    function RandomizedBenchmarkingFitProperties(model_order, initial_parameters)
+        if model_order == 0
+            if length(initial_parameters) != 3
+                throw(ErrorException("there must be 3 initial parameters for the
+                    zeroth-order fit"))
+            end
+        elseif model_order == 1
+            if length(initial_parameters) != 5
+                throw(ErrorException("there must be 5 initial parameters for the
+                    first-order fit"))
+            end
+        elseif !(model_order === nothing)
+            throw(ErrorException("the model order must be 0, 1, or nothing"))
+        end
+        new(model_order, initial_parameters)
+    end
+
+    function RandomizedBenchmarkingFitProperties(model_order)
+        initial_parameters = nothing
+        if model_order == 0
+            initial_parameters = Dict("p"=>0.99, "A0"=>0.99, "B0"=>0.0)
+        elseif model_order == 1
+            initial_parameters = Dict("p"=>0.99, "q"=>0.99, "A1"=>0.99, "B1"=>0.0,
+                "C1"=>0.0)
+        elseif !(model_order === nothing)
+            throw(ErrorException("the model order must be 0, 1, or nothing"))
+        end
+        new(model_order, initial_parameters)
+    end
+end
+
+@with_kw struct RandomizedBenchmarkingFitResults
+    model_order::Union{Int, Nothing} = nothing
+    parameters::Union{Dict, Nothing} = nothing
+    residuals = nothing
+    jacobian = nothing
+    converged::Bool = false
+end
+
 @with_kw struct RandomizedBenchmarkingProperties
     num_qubits_on_device::Int; @assert num_qubits_on_device > 0
     num_bits_on_device::Int = 0; @assert num_bits_on_device >= 0
     target_qubits::Array{Int} = 1:num_qubits_on_device
     num_shots_per_circuit::Int = 100; @assert num_shots_per_circuit > 0
+    fit_properties::RandomizedBenchmarkingFitProperties =
+        RandomizedBenchmarkingFitProperties(0)
+
     sequence_length_list::Array{Int}; @assert all(x->(x>0), sequence_length_list)
+    
     num_circuits_per_length::Array{Int} = 100*ones(Int, length(sequence_length_list));
         @assert all(x->(x>0), num_circuits_per_length)
         @assert length(sequence_length_list) == length(num_circuits_per_length)
 end
 
+struct RandomizedBenchmarkingResults
+    sequence_fidelities
+    fit_results::RandomizedBenchmarkingFitResults
+    average_clifford_fidelity
+end
+
 function run_randomized_benchmarking(simulate_shots, transpile!,
     properties::RandomizedBenchmarkingProperties)
     
+    fit_properties = get_fitting_model_properties(properties)
     sequence_fidelities = get_sequence_fidelities(simulate_shots, transpile!,
         properties)
+    fit_results = get_fitting_model_results(sequence_fidelities, properties, fit_properties)
+    average_fidelity = get_average_fidelity(fit_results, length(properties.target_qubits))
+    return RandomizedBenchmarkingResults(sequence_fidelities, fit_results, average_fidelity)
+end
+
+function get_fitting_model_properties(properties::RandomizedBenchmarkingProperties)
+    num_lengths = length(properties.sequence_length_list)
+    order = properties.fit_properties.model_order
+    if num_lengths < 3 && !(order === nothing)
+        @warn "At least 3 sequence lengths are needed to generate a fit! "*
+            "No fit will be determined."
+        return RandomizedBenchmarkingFitProperties(nothing)
+    elseif num_lengths < 5 && order == 1
+        @warn "At least 5 sequence lengths are needed to generate a first-order fit! "*
+            "A zeroth-order fit will be used instead"
+        return RandomizedBenchmarkingFitProperties(0)
+    end
+    initial_parameters = properties.fit_properties.initial_parameters
+    return RandomizedBenchmarkingFitProperties(order, initial_parameters)
 end
 
 function get_sequence_fidelities(simulate_shots, transpile!,
@@ -93,4 +168,61 @@ function get_transpiled_circuit(clifford, properties, qubit_map, transpile!)
     reordered_circuit = get_reordered_circuit(clifford_circuit, qubit_map)
     circuit = get_wider_circuit(reordered_circuit, properties.num_qubits_on_device)
     transpile!(circuit)
+end
+
+function get_fitting_model_results(sequence_fidelities,
+    properties::RandomizedBenchmarkingProperties,
+    fit_properties::RandomizedBenchmarkingFitProperties)
+
+    order = fit_properties.model_order
+    results = RandomizedBenchmarkingFitResults()
+    if order == 0
+        initial_parameters = [fit_properties.initial_parameters["p"],
+            fit_properties.initial_parameters["A0"],
+            fit_properties.initial_parameters["B0"]]
+        fit = curve_fit(get_zeroth_model, properties.sequence_length_list,
+            sequence_fidelities, initial_parameters)
+        optimal_parameters = Dict("p"=>fit.param[1], "A0"=>fit.param[2], "B0"=>fit.param[3])
+        results = RandomizedBenchmarkingFitResults(model_order=order,
+            parameters=optimal_parameters,
+            residuals=fit.resid, jacobian=fit.jacobian,
+            converged=fit.converged)
+    elseif order == 1
+        initial_parameters = [fit_properties.initial_parameters["p"],
+            fit_properties.initial_parameters["q"],
+            fit_properties.initial_parameters["A1"],
+            fit_properties.initial_parameters["B1"],
+            fit_properties.initial_parameters["C1"]]
+        fit = curve_fit(get_first_model, properties.sequence_length_list,
+            sequence_fidelities, initial_parameters)
+        LsqFit.LsqFitResult
+        optimal_parameters = Dict("p"=>fit.param[1], "q"=>fit.param[2], "A1"=>fit.param[3],
+            "B1"=>fit.param[4], "C1"=>fit.param[5])
+        results = RandomizedBenchmarkingFitResults(model_order=order,
+            parameters=optimal_parameters,
+            residuals=fit.resid, jacobian=fit.jacobian,
+            converged=fit.converged)
+    end
+    return results
+end
+
+function get_zeroth_model(m, p)
+    p1 = fill(p[1], length(m))
+    return p[2]*p1.^m.+p[3]
+end
+
+function get_first_model(m, p)
+    p1 = fill(p[1], length(m))
+    return p[3]*p1.^m.+p[4]+p[5]*(m.-1)*(p[2]-p[1]^2).*p1.^(m.-2)
+end
+
+function get_average_fidelity(fit_results::RandomizedBenchmarkingFitResults,
+    num_target_qubits::Int)
+    average_fidelity = nothing
+    if !(fit_results.model_order === nothing)
+        d = 2^num_target_qubits
+        p = fit_results.parameters["p"]
+        average_fidelity = p+(1-p)/d
+    end
+    return average_fidelity
 end

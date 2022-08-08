@@ -88,6 +88,10 @@ export
 
     # Benchmarking
     RandomizedBenchmarkingProperties,
+    RandomizedBenchmarkingFitProperties,
+    RandomizedBenchmarkingFitResults,
+    RandomizedBenchmarkingResults,
+    run_randomized_benchmarking,
     
 
     #  Enums
