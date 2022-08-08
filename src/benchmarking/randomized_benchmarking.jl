@@ -64,8 +64,19 @@ struct RandomizedBenchmarkingResults
     average_clifford_fidelity
 end
 
-function run_randomized_benchmarking(simulate_shots, transpile!,
+"""
+    run_randomized_benchmarking(simulate_shots, transpile!,
     properties::RandomizedBenchmarkingProperties)
+
+Conducts randomized benchmarking and returns [`RandomizedBenchmarkingFitResults`](@ref).
+
+# Arguments
+- `simulate_shots`: a function which takes in an array of `QuantumCircuit` and an array of
+measurement strings.
+- `dim::Integer=1`: the dimensions along which to perform the computation.
+"""
+function run_randomized_benchmarking(simulate_shots,
+    properties::RandomizedBenchmarkingProperties, transpile! = (f(x)=x))
     
     fit_properties = get_fitting_model_properties(properties)
     sequence_fidelities = get_sequence_fidelities(simulate_shots, transpile!,

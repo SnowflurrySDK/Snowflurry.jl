@@ -7,16 +7,15 @@ using Test
         num_circuits_per_length=[2, 2, 2, 2, 2])
     num_shots = 5
     simulator(x) = simulate_shots(x, num_shots)
-    transpile!(x) = x
 
-    results = run_randomized_benchmarking(simulator, transpile!, properties)
+    results = run_randomized_benchmarking(simulator, properties)
     @test results.average_clifford_fidelity ≈ 1.0
 
     properties = RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4, 5, 6, 7],
         num_circuits_per_length=[2, 2, 2, 2, 2, 2, 2],
         fit_properties=RandomizedBenchmarkingFitProperties(1))
-    results = run_randomized_benchmarking(simulator, transpile!, properties)
+    results = run_randomized_benchmarking(simulator, properties)
     @test isapprox(results.average_clifford_fidelity, 1.0, rtol=1e-3)
 
     @test_throws ErrorException RandomizedBenchmarkingProperties(num_qubits_on_device=2,
@@ -45,8 +44,7 @@ using Test
         target_qubits=[1], sequence_length_list=[1, 2],
         num_circuits_per_length=[2, 2])
     @test_logs (:warn, "At least 3 sequence lengths are needed to generate a fit! "*
-        "No fit will be determined.") run_randomized_benchmarking(simulator,
-        transpile!, properties)
+        "No fit will be determined.") run_randomized_benchmarking(simulator, properties)
 
     properties = RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4],
@@ -55,7 +53,7 @@ using Test
     @test_logs (:warn,
     "At least 5 sequence lengths are needed to generate a first-order fit! "*
     "A zeroth-order fit will be used instead") run_randomized_benchmarking(simulator,
-        transpile!, properties)
+        properties)
 end
 
 @testset "plot_randomized_benchmarking" begin
