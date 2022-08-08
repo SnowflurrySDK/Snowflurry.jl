@@ -3,12 +3,12 @@ using LsqFit
 """
     RandomizedBenchmarkingFitProperties(model_order[, initial_parameters])
 
-Properties specifying how to generate a fit of the averaged sequence fidelity for a \
+Properties specifying how to generate a fit of the averaged sequence fidelity for a
 randomized benchmarking calculation.
 
-The models for the fit are described in [`RandomizedBenchmarkingFitResults`](@ref). The \
-fit can have `model_order` 0, 1, or `nothing`. If `nothing` is specified, no fit will be \
-generated. Optionally, a dictionary of initial fitting parameters can be passed to the \
+The models for the fit are described in [`RandomizedBenchmarkingFitResults`](@ref). The
+fit can have `model_order` 0, 1, or `nothing`. If `nothing` is specified, no fit will be
+generated. Optionally, a dictionary of initial fitting parameters can be passed to the
 constructor. The dictionary keys are symbols for the fitting parameters (e.g. "p").
 """
 struct RandomizedBenchmarkingFitProperties
@@ -49,25 +49,24 @@ end
 """
     RandomizedBenchmarkingFitResults
 
-A fit of the averaged sequence fidelity of a randomized benchmarking calculation. The fit \
-can have order 0 or 1. Both models are described in greater details by \
+A fit of the averaged sequence fidelity of a randomized benchmarking calculation. The fit
+can have order 0 or 1. Both models are described in greater details by
 [Magesan, Gambetta, and Emerson (2012)](http://dx.doi.org/10.1103/PhysRevA.85.042311).
 
 The zeroth-order model is defined as\n
 ``F_g^{(0)}(m) = A_0 p^m + B_0``,\n
-where ``m`` is the sequence length and ``p`` is related to the average fidelity per \
-Clifford operation. The state-preparation and measurement errors are taken into account by \
+where ``m`` is the sequence length and ``p`` is related to the average fidelity per
+Clifford operation. The state-preparation and measurement errors are taken into account by
 ``A_0`` and ``B_0``.
 
 The first-order model is defined as\n
 ``F_g^{(1)}(m) = A_1 p^m + B_1 + C_1(m-1)(q-p^2)p^{m-2}``,\n
-where ``q-p^2`` quantifies the severity of gate dependence in the errors. The \
-state-preparation and measurement errors are taken into account by ``A_1``, ``B_1``, \
+where ``q-p^2`` quantifies the severity of gate dependence in the errors. The
+state-preparation and measurement errors are taken into account by ``A_1``, ``B_1``,
 and ``C_1``.
 
 # Fields
-- `model_order`: the order of the model used to generate the fit. If no fit was \
-generated, `model_order` will be `nothing`.
+- `model_order`: the order of the model used to generate the fit. If no fit was generated, `model_order` will be `nothing`.
 - `parameters`: the optimal parameters for the fit, provided as a dictionary.
 - `residuals`: the residuals from the method of least squares.
 - `jacobian`: the estimated Jacobian at the solution.
@@ -84,22 +83,16 @@ end
 """
     RandomizedBenchmarkingProperties
 
-The properties specifying the behaviour of a randomized benchmarking calculation. Each \
+The properties specifying the behaviour of a randomized benchmarking calculation. Each
 field can be specified as a keyword argument in the constructor.
 
 # Fields
-- `num_qubits_on_device::Int`: the total number of qubits on the device. It can be more \
-than the number of target qubits.
+- `num_qubits_on_device::Int`: the total number of qubits on the device. It can be more than the number of target qubits.
 - `num_bits_on_device::Int = 0`: the total number of classical bits on the device.
-- `target_qubits::Array{Int}`: a list of the qubits on which benchmarking is performed. \
-By default, all qubits on the device are benchmarked.
-- `fit_properties`: the [`RandomizedBenchmarkingFitProperties`](@ref) which define the \
-model for fitting the averaged sequence fidelity.
-- `sequence_length_list::Array{Int}`: a list indicating the number of Clifford operations \
-in each circuit. For instance, specifying [1, 2] will lead to the generation of multiple \
-circuits with 1 Clifford operation and multiple circuits with 2 Clifford operations.
-- `num_circuits_per_length::Array{Int}`: a list defining how many circuits to generate for \
-each sequence length. By default, 100 circuits are generated for each sequence length.
+- `target_qubits::Array{Int}`: a list of the qubits on which benchmarking is performed. By default, all qubits on the device are benchmarked.
+- `fit_properties`: the [`RandomizedBenchmarkingFitProperties`](@ref) which define the model for fitting the averaged sequence fidelity.
+- `sequence_length_list::Array{Int}`: a list indicating the number of Clifford operations in each circuit. For instance, specifying [1, 2] will lead to the generation of multiple circuits with 1 Clifford operation and multiple circuits with 2 Clifford operations.
+- `num_circuits_per_length::Array{Int}`: a list defining how many circuits to generate for each sequence length. By default, 100 circuits are generated for each sequence length.
 """
 @with_kw struct RandomizedBenchmarkingProperties
     num_qubits_on_device::Int; @assert num_qubits_on_device > 0
@@ -121,11 +114,9 @@ end
 The results of a randomized benchmarking calculation.
 
 # Fields
-- `sequence_length_list`: a list of the sequence lengths for which randomized circuits \
-will be generated.
+- `sequence_length_list`: a list of the sequence lengths for which randomized circuits will be generated.
 - `sequence_fidelities`: a list giving the average fidelity for each sequence length.
-- `fit_results`: a fit of the averaged sequence fidelity, stored as \
-[`RandomizedBenchmarkingFitResults`](@ref).
+- `fit_results`: a fit of the averaged sequence fidelity, stored as [`RandomizedBenchmarkingFitResults`](@ref).
 - `average_clifford_fidelity`: the average fidelity of each Clifford operation.
 """
 struct RandomizedBenchmarkingResults
@@ -136,20 +127,14 @@ struct RandomizedBenchmarkingResults
 end
 
 """
-    run_randomized_benchmarking(simulate_shots, \
-    properties::RandomizedBenchmarkingProperties, transpile! = (f(x)=x))
+    run_randomized_benchmarking(simulate_shots, properties::RandomizedBenchmarkingProperties, transpile! = (f(x)=x))
 
 Conducts randomized benchmarking and returns [`RandomizedBenchmarkingResults`](@ref).
 
 # Arguments
-- `simulate_shots`: a function which takes in an array of `QuantumCircuit` and returns an \
-array of bit strings. The function should not transpile the circuits since it could \
-transpile all the gates into a single identity operation. Use the transpile! argument \
-instead.
-- `properties`: the [`RandomizedBenchmarkingProperties`](@ref) influencing \
-benchmarking such as the list of target qubits and the list of sequence lengths.
-- `transpile!`: a function which transpiles a single circuit. It transpiles every Clifford \
-operation individually.
+- `simulate_shots`: a function which takes in an array of `QuantumCircuit` and returns an array of bit strings. The function should not transpile the circuits since it could transpile all the gates into a single identity operation. Use the transpile! argument instead.
+- `properties`: the [`RandomizedBenchmarkingProperties`](@ref) influencing benchmarking such as the list of target qubits and the list of sequence lengths.
+- `transpile!`: a function which transpiles a single circuit. It transpiles every Clifford operation individually.
 """
 function run_randomized_benchmarking(simulate_shots,
     properties::RandomizedBenchmarkingProperties, transpile! = (f(x)=x))
@@ -318,8 +303,8 @@ end
 """
     plot_benchmarking(results::RandomizedBenchmarkingResults)
 
-Plots the averaged sequence fidelities and the associated fit, which are generated in a \
-randomized benchmarking calculation and passed as \
+Plots the averaged sequence fidelities and the associated fit, which are generated in a
+randomized benchmarking calculation and passed as
 [`RandomizedBenchmarkingResults`](@ref).
 """
 function plot_benchmarking(results::RandomizedBenchmarkingResults)

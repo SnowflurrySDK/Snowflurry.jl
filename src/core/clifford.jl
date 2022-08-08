@@ -4,11 +4,10 @@ using Nemo: gfp_mat, MatElem, gfp_elem, GF, zero_matrix, nrows, ncols, nullspace
 """
     CliffordOperator(c_bar::Nemo.gfp_mat, h_bar::Nemo.gfp_mat)
 
-A Clifford operator which is represented using the approach of \
+A Clifford operator which is represented using the approach of
 [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
 
-The operator can be constructed using the ``\\bar{C}`` matrix and the ``\\bar{h}`` \
-vector.
+The operator can be constructed using the ``\\bar{C}`` matrix and the ``\\bar{h}`` vector.
 """
 struct CliffordOperator
     c_bar::gfp_mat
@@ -45,7 +44,7 @@ end
 """
     get_clifford_operator(c::gfp_mat, h::gfp_mat)
 
-Construct a Clifford operator using the matrix C and the vector h in the representation of \
+Construct a Clifford operator using the matrix C and the vector h in the representation of
 [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
 """
 function get_clifford_operator(c::gfp_mat, h::gfp_mat)
@@ -210,7 +209,7 @@ end
 """
     PauliGroupElement(u::gfp_mat, delta::Int, epsilon::Int)
 
-A Pauli group element which is represented using the approach of \
+A Pauli group element which is represented using the approach of
 [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
 """
 struct PauliGroupElement
@@ -297,13 +296,13 @@ end
 """
     push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
 
-Given the Clifford operator, `clifford` or ``Q``, which performs the mapping \
-``X \\rightarrow QXQ^\\dagger``, where ``X`` is a Hermitian matrix, this function adds the \
-operator ``U=Q^\\dagger`` to the `circuit`. This ensures that \
-``\\langle\\Psi|QXQ^\\dagger|\\Psi\\rangle = \\langle\\Psi|U^\\dagger XU|\\Psi\\rangle``, \
+Given the Clifford operator, `clifford` or ``Q``, which performs the mapping
+``X \\rightarrow QXQ^\\dagger``, where ``X`` is a Hermitian matrix, this function adds the
+operator ``U=Q^\\dagger`` to the `circuit`. This ensures that
+``\\langle\\Psi|QXQ^\\dagger|\\Psi\\rangle = \\langle\\Psi|U^\\dagger XU|\\Psi\\rangle``,
 where ``|\\Psi\\rangle`` is a quantum state.
 
-The Hadamard, phase, and controlled NOT gates for the `circuit` are generated using the \
+The Hadamard, phase, and controlled NOT gates for the `circuit` are generated using the
 approach of [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
 """
 function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
