@@ -92,6 +92,7 @@ export
     RandomizedBenchmarkingFitResults,
     RandomizedBenchmarkingResults,
     run_randomized_benchmarking,
+    plot_benchmarking,
     
 
     #  Enums

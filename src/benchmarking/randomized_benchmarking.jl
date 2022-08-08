@@ -58,6 +58,7 @@ end
 end
 
 struct RandomizedBenchmarkingResults
+    sequence_length_list
     sequence_fidelities
     fit_results::RandomizedBenchmarkingFitResults
     average_clifford_fidelity
@@ -71,7 +72,8 @@ function run_randomized_benchmarking(simulate_shots, transpile!,
         properties)
     fit_results = get_fitting_model_results(sequence_fidelities, properties, fit_properties)
     average_fidelity = get_average_fidelity(fit_results, length(properties.target_qubits))
-    return RandomizedBenchmarkingResults(sequence_fidelities, fit_results, average_fidelity)
+    return RandomizedBenchmarkingResults(properties.sequence_length_list,
+        sequence_fidelities, fit_results, average_fidelity)
 end
 
 function get_fitting_model_properties(properties::RandomizedBenchmarkingProperties)
@@ -224,4 +226,38 @@ function get_average_fidelity(fit_results::RandomizedBenchmarkingFitResults,
         average_fidelity = p+(1-p)/d
     end
     return average_fidelity
+end
+
+function plot_benchmarking(results::RandomizedBenchmarkingResults)
+    p = plot(results.sequence_length_list, results.sequence_fidelities,
+        seriestype = :scatter, label="Computed Sequence Fidelities",
+        legend = :bottomleft)
+    plot!(p, xaxis = ("Number of Clifford Operations"))
+    plot!(p, yaxis = ("Sequence Fidelity", (0,1)))
+    order = results.fit_results.model_order
+    if order == 0
+        optimal_parameters = results.fit_results.parameters
+        parameters_vector = [optimal_parameters["p"],
+            optimal_parameters["A0"],
+            optimal_parameters["B0"]]
+        plot_fidelity_model!(p, get_zeroth_model, parameters_vector,
+            results.sequence_length_list)
+    elseif order == 1
+        optimal_parameters = results.fit_results.parameters
+        parameters_vector = [optimal_parameters["p"],
+            optimal_parameters["q"],
+            optimal_parameters["A1"],
+            optimal_parameters["B1"],
+            optimal_parameters["C1"]]
+        plot_fidelity_model!(p, get_first_model, parameters_vector,
+            results.sequence_length_list)
+    end
+    return p
+end
+
+function plot_fidelity_model!(p, get_model, parameters_vector, sequence_length_list)
+    sequence_lengths_for_plot = 1:last(sequence_length_list)
+    fidelity_fit = get_model(sequence_lengths_for_plot, parameters_vector)
+    plot!(p, sequence_lengths_for_plot, fidelity_fit,
+        label="Sequence Fidelity Model")
 end
