@@ -315,6 +315,13 @@ function get_average_fidelity(fit_results::RandomizedBenchmarkingFitResults,
     return average_fidelity
 end
 
+"""
+    plot_benchmarking(results::RandomizedBenchmarkingResults)
+
+Plots the averaged sequence fidelities and the associated fit, which are generated in a \
+randomized benchmarking calculation and passed as \
+[`RandomizedBenchmarkingResults`](@ref).
+"""
 function plot_benchmarking(results::RandomizedBenchmarkingResults)
     p = plot(results.sequence_length_list, results.sequence_fidelities,
         seriestype = :scatter, label="Computed Sequence Fidelities",

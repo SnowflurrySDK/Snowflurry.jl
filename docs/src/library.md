@@ -67,6 +67,7 @@ RandomizedBenchmarkingProperties
 RandomizedBenchmarkingFitProperties
 RandomizedBenchmarkingResults
 RandomizedBenchmarkingFitResults
+plot_benchmarking
 ```
 
 ```@meta
