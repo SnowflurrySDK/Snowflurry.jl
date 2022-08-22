@@ -102,6 +102,172 @@ struct Operator
     data::Matrix{Complex}
 end
 
+Base.length(x::Ket) = Base.length(x.data)
+
+"""
+    Base.adjoint(x)
+
+Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator.
+"""
+Base.adjoint(x::Ket) = Bra(x)
+Base.adjoint(x::Bra) = Ket(adjoint(x.data))
+Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
+Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:-(x::Ket) = -1.0 * x
+Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
+Base.:*(x::Bra, y::Ket) = x.data * y.data
+Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
+Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
+Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
+Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
+Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+
+"""
+    Base.getindex(A::Operator, m::Int64, n::Int64)
+
+Return the element at row `m` and column `n` of Operator `A`.
+"""
+Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
+
+"""
+    eigen(A::Operator)
+
+Compute the eigenvalue decomposition of Operator `A` and return an `Eigen`
+factorization object `F`. Eigenvalues are found in `F.values` while eigenvectors are
+found in the matrix `F.vectors`. Each column of this matrix corresponds to an eigenvector.
+The `i`th eigenvector is extracted by calling `F.vectors[:, i]`.
+
+# Examples
+```jldoctest
+julia> X = sigma_x()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+
+julia> F = eigen(X);
+
+julia> eigenvalues = F.values
+2-element Vector{Float64}:
+ -1.0
+  1.0
+
+julia> eigenvector_1 = F.vectors[:, 1]
+2-element Vector{ComplexF64}:
+ -0.7071067811865475 + 0.0im
+  0.7071067811865475 + 0.0im
+```
+"""
+eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+
+"""
+    tr(A::Operator)
+
+Compute the trace of Operator `A`.
+
+# Examples
+```jldoctest
+julia> I = eye()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0 + 0im
+0 + 0im    1.0 + 0.0im
+
+
+julia> trace = tr(I)
+2.0 + 0.0im
+```
+"""
+tr(A::Operator)=LinearAlgebra.tr(A.data)
+
+"""
+    expected_value(A::Operator, psi::Ket)
+
+Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`ψ`⟩.
+
+# Examples
+```jldoctest
+julia> ψ = Ket([0.0; 1.0]);
+
+julia> print(ψ)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> A = sigma_z()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
+
+
+julia> expected_value(A, ψ)
+-1.0 + 0.0im
+```
+"""
+expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
+
+Base.:size(M::Operator) = size(M.data)
+
+# iterator for Ket object
+Base.iterate(x::Ket, state = 1) =
+    state > length(x.data) ? nothing : (x.data[state], state + 1)
+
+    """
+    kron(x, y)
+
+Compute the Kronecker product of two [`Kets`](@ref Ket) or two [`Operators`](@ref Operator).
+More details about the Kronecker product can be found
+[here](https://en.wikipedia.org/wiki/Kronecker_product). 
+
+# Examples
+```jldoctest
+julia> ψ_0 = Ket([0.0; 1.0]);
+
+julia> print(ψ_0)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> ψ_1 = Ket([1.0; 0.0]);
+
+julia> print(ψ_1)
+2-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> ψ_0_1 = kron(ψ_0, ψ_1);
+
+julia> print(ψ_0_1)
+4-element Ket:
+0.0 + 0.0im
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> kron(sigma_x(), sigma_y())
+(4, 4)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 - 1.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+```
+"""
+Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
+Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
+
 """
 A structure representing a quantum multi-body system.
 # Fields
@@ -201,41 +367,6 @@ function Base.show(io::IO, x::Operator)
         println(io)
     end
 end
-
-Base.length(x::Ket) = Base.length(x.data)
-Base.adjoint(x::Ket) = Bra(x)
-Base.adjoint(x::Bra) = Ket(adjoint(x.data))
-Base.adjoint(A::Operator) = Operator(adjoint(A.data))
-Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
-Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:-(x::Ket) = -1.0 * x
-Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
-Base.:*(x::Bra, y::Ket) = x.data * y.data
-Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
-Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
-Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
-Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
-Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
-Base.:*(s::Any, A::Operator) = Operator(s*A.data)
-Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
-Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
-Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-eigen(A::Operator) = LinearAlgebra.eigen(A.data)
-tr(A::Operator)=LinearAlgebra.tr(A.data)
-expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
-
-
-Base.:size(M::Operator) = size(M.data)
-
-# iterator for Ket object
-Base.iterate(x::Ket, state = 1) =
-    state > length(x.data) ? nothing : (x.data[state], state + 1)
-
-
-Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
-Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 
 """
     Snowflake.fock(i, hspace_size)

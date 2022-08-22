@@ -29,6 +29,12 @@ There are three basic quantum objects in Snowflake to simulate a quantum system.
 Ket
 Bra
 Operator
+Base.adjoint
+Base.getindex(A::Operator, m::Int64, n::Int64)
+eigen
+tr
+expected_value
+kron
 MultiBodySystem
 commute
 anticommute
