@@ -13,6 +13,27 @@ pop_gate!
 simulate
 simulate_shots
 ```
+
+## Quantum Gates
+```@docs
+sigma_x
+sigma_y
+sigma_z
+hadamard
+phase
+pi_8
+x_90
+rotation
+rotation_x
+rotation_y
+rotation_z
+phase_shift
+universal
+control_z
+control_x
+iswap
+```
+
 ## Quantum Processing Unit
 ```@docs
 QPU
