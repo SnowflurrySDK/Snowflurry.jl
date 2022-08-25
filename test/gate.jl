@@ -2,6 +2,25 @@ using Snowflake
 using Test
 
 
+@testset "apply_gate" begin
+    ψ_0 = fock(0,2)
+    ψ_0_to_update = fock(0,2)
+    ψ_1 = fock(1,2)
+
+    apply_gate!(ψ_0_to_update, hadamard(1))
+    @test ψ_0_to_update ≈ 1/2^.5*(ψ_0+ψ_1)
+
+    @test_throws DomainError apply_gate!(ψ_0_to_update, hadamard(2))
+
+    non_qubit_ket = Ket([1.0, 0.0, 0.0])
+    @test_throws DomainError apply_gate!(non_qubit_ket, hadamard(1))
+
+    transformed_ψ_1 = hadamard(1)*ψ_1
+    @test ψ_1 ≈ fock(1,2)
+    @test transformed_ψ_1 ≈ 1/2^.5*(ψ_0-ψ_1)
+end
+
+
 @testset "gate_set" begin
     H = hadamard(1)
 
