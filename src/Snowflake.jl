@@ -64,10 +64,13 @@ export
     does_circuit_satisfy_qpu_connectivity,
     transpile,
 
+
     get_clifford_operator,
     get_random_clifford,
     get_pauli_group_element,
     push_clifford!,
+
+    apply_gate!,
 
     # Gates
     sigma_x,
@@ -77,6 +80,12 @@ export
     sigma_m,
     hadamard,
     x_90,
+    rotation,
+    rotation_x,
+    rotation_y,
+    rotation_z,
+    phase_shift,
+    universal,
     iswap,
     pi_8,
     phase,

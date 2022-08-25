@@ -16,6 +16,27 @@ get_reordered_circuit
 simulate
 simulate_shots
 ```
+
+## Quantum Gates
+```@docs
+sigma_x
+sigma_y
+sigma_z
+hadamard
+phase
+pi_8
+x_90
+rotation
+rotation_x
+rotation_y
+rotation_z
+phase_shift
+universal
+control_z
+control_x
+iswap
+```
+
 ## Quantum Processing Unit
 ```@docs
 QPU
@@ -32,6 +53,12 @@ There are three basic quantum objects in Snowflake to simulate a quantum system.
 Ket
 Bra
 Operator
+Base.adjoint
+Base.getindex(A::Operator, m::Int64, n::Int64)
+eigen
+tr
+expected_value
+kron
 MultiBodySystem
 commute
 anticommute
