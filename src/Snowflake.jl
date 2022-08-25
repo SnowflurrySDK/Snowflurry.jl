@@ -68,6 +68,8 @@ export
     does_circuit_satisfy_qpu_connectivity,
     transpile,
 
+    apply_gate!,
+
     # Gates
     sigma_x,
     sigma_y,
@@ -76,6 +78,12 @@ export
     sigma_m,
     hadamard,
     x_90,
+    rotation,
+    rotation_x,
+    rotation_y,
+    rotation_z,
+    phase_shift,
+    universal,
     iswap,
     pi_8,
     phase,
