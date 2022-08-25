@@ -16,6 +16,7 @@ using Test
     @test length(c.pipeline) == 2
 
     plot_histogram(c,100)
+    plot_bloch_sphere(c)
 
     print(c)
 end

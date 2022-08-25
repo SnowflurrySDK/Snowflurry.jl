@@ -68,6 +68,10 @@ fock_dm
 Snowflake.moyal
 Snowflake.genlaguerre
 get_embed_operator
+get_num_qubits(x::Operator)
+get_num_qubits(x::Union{Ket, Bra})
+get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
 fock
 create
 destroy
@@ -95,6 +99,46 @@ RandomizedBenchmarkingFitProperties
 RandomizedBenchmarkingResults
 RandomizedBenchmarkingFitResults
 plot_benchmarking
+```
+
+### Visualization
+
+Snowflake provides multiple tools for visualizing quantum computer calculations.
+
+```@docs
+plot_bloch_sphere(circuit::QuantumCircuit; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+plot_bloch_sphere(ket::Ket; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+plot_bloch_sphere(density_matrix::Operator; qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere())
+BlochSphere
+plot_bloch_sphere_animation(ket_list::Vector{Ket};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_for_ket.html"
+style="height:825px;width:100%;">
+</iframe>
+```
+```@docs
+plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+    qubit_id::Int = 1,
+    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_for_operator.html"
+style="height:825px;width:100%;">
+</iframe>
+```
+```@docs
+AnimatedBlochSphere
+```
+```@raw html
+<iframe src="assets/visualize/plot_bloch_sphere_animation_without_interpolation.html"
+style="height:825px;width:100%;">
+</iframe>
 ```
 
 ```@meta

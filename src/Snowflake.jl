@@ -11,6 +11,7 @@ using LinearAlgebra
 using Parameters
 using StatsBase
 using UUIDs
+using Parameters
 using Printf
 using Plots
 import SparseArrays
@@ -27,6 +28,8 @@ export
     QPU,
     CliffordOperator,
     PauliGroupElement,
+    BlochSphere,
+    AnimatedBlochSphere,
 
     # Functions
     commute, 
@@ -43,6 +46,8 @@ export
     ket2dm,
     fock_dm,
     expected_value,
+    get_num_qubits,
+    get_num_bodies,
     normalize!,
     wigner, 
     viz_wigner, 
@@ -56,6 +61,8 @@ export
     simulate,
     simulate_shots,
     plot_histogram,
+    plot_bloch_sphere,
+    plot_bloch_sphere_animation,
     submit_circuit,
     get_circuit_status,
    
