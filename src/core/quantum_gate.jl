@@ -29,20 +29,20 @@ function ensure_target_qubits_are_different(target::Array)
 end
 
 function Base.copy(gate::Gate, new_target::Array{Int}=Int[])
-    # Include parameters in copy before merging
     if isempty(new_target)
         new_target = gate.target
     end
     new_gate = Gate(gate.display_symbol, gate.instruction_symbol, gate.operator,
-        new_target)
+        new_target, gate.parameters)
     return new_gate
 end
 
 function Base.isapprox(x::Gate, y::Gate; atol::Real=0, rtol::Real=atol>0 ? 0 : √eps())
-    # Include parameters before merging
     if x.instruction_symbol != y.instruction_symbol
         return false
     elseif x.target != y.target
+        return false
+    elseif !all(isapprox.(x.parameters, y.parameters, atol=atol, rtol=rtol))
         return false
     else
         return true

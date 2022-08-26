@@ -136,16 +136,20 @@ end
     @test control_x(1,2) ≈ control_x(1,2)
     @test !(iswap(1,2) ≈ control_x(1,2))
     @test !(control_x(1,2) ≈ control_x(2,1))
+    @test !(rotation(1, pi, pi/2) ≈ rotation(1, 0, pi/2))
 end
 
 @testset "copy" begin
-    cnot_1_2 = control_x(1,2)
-    cnot_1_2_copy = copy(cnot_1_2)
-    @test cnot_1_2 ≈ cnot_1_2_copy
-
+    cnot_1_2 = control_x(1, 2)
     target_qubits = [2,1]
     cnot_2_1_copy = copy(cnot_1_2, target_qubits)
     @test cnot_2_1_copy ≈ control_x(2, 1)
+
+    theta = pi
+    phi = pi/2
+    rotation_1 = rotation(1, theta, phi)
+    rotation_1_copy = copy(rotation_1)
+    @test rotation_1 ≈ rotation_1_copy
 end
 
 @testset "std_gates" begin
