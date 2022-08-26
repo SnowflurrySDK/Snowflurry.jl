@@ -25,7 +25,7 @@ struct CliffordOperator
     end
 end
 
-function assert_clifford_operator_is_symplectic(c_bar)
+function assert_clifford_operator_is_symplectic(c_bar::gfp_mat)
     num_qubits = Int((nrows(c_bar)-1)/2)
     u = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     u[1:num_qubits, num_qubits+1:2*num_qubits] = identity_matrix(GF(2), num_qubits)
@@ -81,14 +81,14 @@ end
 
 Construct a random `CliffordOperator` given the number of qubits.
 """
-function get_random_clifford(num_qubits)
+function get_random_clifford(num_qubits::Integer)
     h_vector = rand(GF(2), 2*num_qubits)
     h = matrix(GF(2), 2*num_qubits, 1, h_vector)
     c = get_random_c_matrix(num_qubits)
     return get_clifford_operator(c, h)
 end
 
-function get_random_c_matrix(num_qubits)
+function get_random_c_matrix(num_qubits::Integer)
     c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     c[:,1] = get_first_random_c_column(num_qubits)
     p = get_p_matrix(num_qubits)
@@ -114,7 +114,7 @@ function get_random_c_matrix(num_qubits)
     return c
 end
 
-function get_first_random_c_column(num_qubits)
+function get_first_random_c_column(num_qubits::Integer)
     found_non_zero_vector = false
     c_0 = nothing
     while !found_non_zero_vector
@@ -244,15 +244,16 @@ function get_pauli_group_element(operator::Operator)
     throw(ErrorException("the operator is not a Pauli group element"))
 end
 
-function get_all_binary_vectors(vector_length)
+function get_all_binary_vectors(vector_length::Integer)
     temp_vector = zero_matrix(GF(2), vector_length, 1)
-    vector_list = []
+    vector_list = gfp_mat[]
     index = 1
     generate_all_binary_vectors!(temp_vector, vector_list, index)
     return vector_list
 end
 
-function generate_all_binary_vectors!(vector, vector_list, index)
+function generate_all_binary_vectors!(vector::gfp_mat, vector_list::AbstractVector{gfp_mat},
+    index::Integer)
     if index == length(vector)+1
         push!(vector_list, deepcopy(vector))
         return
@@ -277,7 +278,7 @@ function get_pauli_tensor(a::gfp_mat)
     return operator
 end
 
-function get_pauli_operator(index_v, index_w)
+function get_pauli_operator(index_v::gfp_elem, index_w::gfp_elem)
     if index_v == 0
         if index_w == 0
             return eye()
@@ -316,7 +317,9 @@ function push_clifford!(circuit::QuantumCircuit, clifford::CliffordOperator)
     push_h_matrix!(circuit, current_clifford, clifford)
 end
 
-function push_c_matrix_and_return_clifford!(circuit, clifford, num_qubits)
+function push_c_matrix_and_return_clifford!(circuit::QuantumCircuit,
+    clifford::CliffordOperator, num_qubits::Integer)
+    
     g_prime = clifford.c_bar[num_qubits+1:2*num_qubits, 1:num_qubits]
     nullity, null_basis = nullspace(g_prime)
     num_qubits = nrows(g_prime)
@@ -359,7 +362,7 @@ function push_c_matrix_and_return_clifford!(circuit, clifford, num_qubits)
     return current_clifford
 end
 
-function get_r2_matrix(nullity, null_basis, num_qubits)
+function get_r2_matrix(nullity::Integer, null_basis::gfp_mat, num_qubits::Integer)
     num_additional_columns = num_qubits-nullity
     additional_columns = zero_matrix(GF(2), num_qubits, num_additional_columns)
     r2 = hcat(null_basis, additional_columns)
@@ -375,7 +378,7 @@ function get_r2_matrix(nullity, null_basis, num_qubits)
     return r2
 end
 
-function get_r1_matrix(r2_matrix, g_prime, nullity)
+function get_r1_matrix(r2_matrix::gfp_mat, g_prime::gfp_mat, nullity::Integer)
     num_qubits = nrows(r2_matrix)
     prod = g_prime*r2_matrix
     additional_columns = zero_matrix(GF(2), num_qubits, nullity)
@@ -392,7 +395,7 @@ function get_r1_matrix(r2_matrix, g_prime, nullity)
     return r1
 end
 
-function get_rcr_matrix(r1, r2, clifford)
+function get_rcr_matrix(r1::gfp_mat, r2::gfp_mat, clifford::CliffordOperator)
     num_qubits = nrows(r1)
     r_left = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     r_left[1:num_qubits, 1:num_qubits] = transpose(r1)
@@ -404,7 +407,9 @@ function get_rcr_matrix(r1, r2, clifford)
     return rcr
 end
 
-function get_top_right_c2_matrix(v1, z1, z3, nullity, num_qubits)
+function get_top_right_c2_matrix(v1::gfp_mat, z1::gfp_mat, z3::gfp_mat, nullity::Integer,
+    num_qubits::Integer)
+    
     top_right_c2 = zero_matrix(GF(2), num_qubits, num_qubits)
     top_right_c2[1:nullity, 1:nullity] = z3
     top_right_c2[1:nullity, nullity+1:num_qubits] = v1
@@ -413,7 +418,7 @@ function get_top_right_c2_matrix(v1, z1, z3, nullity, num_qubits)
     return top_right_c2
 end
 
-function get_c3_matrix(nullity, num_qubits)
+function get_c3_matrix(nullity::Integer, num_qubits::Integer)
     rank = num_qubits-nullity
     c3 = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     c3[1:nullity, 1:nullity] = identity_matrix(GF(2), nullity)
@@ -426,7 +431,9 @@ function get_c3_matrix(nullity, num_qubits)
     return c3
 end
 
-function get_top_right_c4_matrix(v2, z2, nullity, num_qubits)
+function get_top_right_c4_matrix(v2::gfp_mat, z2::gfp_mat, nullity::Integer,
+    num_qubits::Integer)
+    
     top_right_c4 = zero_matrix(GF(2), num_qubits, num_qubits)
     top_right_c4[1:nullity, nullity+1:num_qubits] = v2
     top_right_c4[nullity+1:num_qubits, 1:nullity] = transpose(v2)
@@ -435,7 +442,7 @@ function get_top_right_c4_matrix(v2, z2, nullity, num_qubits)
 end
 
 function push_linear_transformation_and_return_clifford!(circuit::QuantumCircuit,
-        current_clifford::CliffordOperator, r)
+        current_clifford::CliffordOperator, r::gfp_mat)
     num_qubits = nrows(r)
     r_copy = deepcopy(r)
     for j_column = 1:num_qubits
@@ -447,7 +454,9 @@ function push_linear_transformation_and_return_clifford!(circuit::QuantumCircuit
     return get_clifford_for_linear_transformation(current_clifford, num_qubits, r)
 end
 
-function add_swap_gate_for_linear_transformation!(circuit, r, j_column)
+function add_swap_gate_for_linear_transformation!(circuit::QuantumCircuit, r::gfp_mat,
+    j_column::Integer)
+    
     i_row = j_column+1
     found_non_zero_entry = false
     while !found_non_zero_entry
@@ -463,7 +472,9 @@ function add_swap_gate_for_linear_transformation!(circuit, r, j_column)
     end
 end
 
-function add_control_x_gates_for_linear_transformation!(circuit, r, j_column)
+function add_control_x_gates_for_linear_transformation!(circuit::QuantumCircuit, r::gfp_mat,
+    j_column::Integer)
+    
     iter = Iterators.filter(i_row -> i_row != j_column, 1:nrows(r))
     for i_row = iter
         if r[i_row, j_column] == 1
@@ -473,7 +484,9 @@ function add_control_x_gates_for_linear_transformation!(circuit, r, j_column)
     end
 end
 
-function get_clifford_for_linear_transformation(current_clifford, num_qubits, r)
+function get_clifford_for_linear_transformation(current_clifford::CliffordOperator,
+    num_qubits::Integer, r::gfp_mat)
+
     new_c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     new_c[1:num_qubits, 1:num_qubits] = inv(transpose(r))
     new_c[num_qubits+1:2*num_qubits, num_qubits+1:2*num_qubits] = r
@@ -484,7 +497,7 @@ function get_clifford_for_linear_transformation(current_clifford, num_qubits, r)
 end
 
 function push_hadamard_for_c3_and_return_clifford!(circuit::QuantumCircuit,
-        current_clifford, g_prime_rank)
+        current_clifford::CliffordOperator, g_prime_rank::Integer)
     num_qubits = circuit.qubit_count
     for i in num_qubits-g_prime_rank+1:num_qubits
         push_gate!(circuit, hadamard(i))
@@ -496,8 +509,9 @@ function push_hadamard_for_c3_and_return_clifford!(circuit::QuantumCircuit,
     return current_clifford
 end
 
-function push_phase_gates_and_return_clifford!(circuit::QuantumCircuit, current_clifford,
-        upper_right_matrix)
+function push_phase_gates_and_return_clifford!(circuit::QuantumCircuit,
+    current_clifford::CliffordOperator, upper_right_matrix::gfp_mat)
+    
     gate_list = []
     num_qubits = nrows(upper_right_matrix)
     p = get_p_matrix(num_qubits)
@@ -538,14 +552,16 @@ function push_phase_gates_and_return_clifford!(circuit::QuantumCircuit, current_
     return current_clifford*clifford
 end
 
-function get_p_matrix(num_qubits)
+function get_p_matrix(num_qubits::Integer)
     u = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     u[1:num_qubits, num_qubits+1:2*num_qubits] = identity_matrix(GF(2), num_qubits)
     p = u+transpose(u)
     return p
 end
 
-function push_h_matrix!(circuit, current_clifford, target_clifford)
+function push_h_matrix!(circuit::QuantumCircuit, current_clifford::CliffordOperator,
+    target_clifford::CliffordOperator)
+    
     num_qubits = circuit.qubit_count
     p = get_p_matrix(num_qubits)
     current_h = current_clifford.h_bar[1:2*num_qubits, 1]
@@ -554,7 +570,7 @@ function push_h_matrix!(circuit, current_clifford, target_clifford)
     push_gates_for_pauli!(circuit, a, num_qubits)
 end
 
-function push_gates_for_pauli!(circuit, a, num_qubits)
+function push_gates_for_pauli!(circuit::QuantumCircuit, a::gfp_mat, num_qubits::Integer)
     for (i_qubit, apply_z) in enumerate(a[1:num_qubits, 1])
         if apply_z == 1
             push_gate!(circuit, phase(i_qubit))
