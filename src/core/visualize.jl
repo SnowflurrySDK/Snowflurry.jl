@@ -1,5 +1,6 @@
 using Interpolations
-using PlotlyJS
+import PlotlyJS
+using PlotlyJS: attr
 
 function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
     data = simulate_shots(circuit, shots_count)
@@ -250,7 +251,7 @@ function plot_unit_sphere_surface(bloch_sphere, qubit_id)
         contours=attr(x=attr(highlight=false),
         y=attr(highlight=false),
         z=attr(highlight=false)))
-    layout = Layout(width=bloch_sphere.window_width,
+    layout = PlotlyJS.Layout(width=bloch_sphere.window_width,
         height=bloch_sphere.window_height,
         margin=attr(l=0,r=0,t=0,b=0),
         autosize=false,
@@ -316,7 +317,7 @@ function plot_vertical_circular_wires!(plot, bloch_sphere)
             line=attr(color=bloch_sphere.wire_color,
                 width=bloch_sphere.wires_width),
             showlegend=false)
-        add_trace!(plot, trace)
+        PlotlyJS.add_trace!(plot, trace)
     end
 end
 
@@ -334,7 +335,7 @@ function plot_horizontal_circular_wires!(plot, bloch_sphere)
             line=attr(color=bloch_sphere.wire_color,
                 width=bloch_sphere.wires_width),
             showlegend=false)
-        add_trace!(plot, trace)
+        PlotlyJS.add_trace!(plot, trace)
     end
 end
 
@@ -359,15 +360,15 @@ function plot_axes_lines!(plot, bloch_sphere)
         line=attr(color=bloch_sphere.axes_color,
         width=bloch_sphere.axes_line_width),
         showlegend=false)
-    add_trace!(plot, x_trace)
-    add_trace!(plot, y_trace)
-    add_trace!(plot, z_trace)
+    PlotlyJS.add_trace!(plot, x_trace)
+    PlotlyJS.add_trace!(plot, y_trace)
+    PlotlyJS.add_trace!(plot, z_trace)
 end
 
 function plot_bloch_sphere_vector!(plot, bloch_sphere, coordinates)
     (line_trace, cone_trace) = get_bloch_sphere_vector_traces(bloch_sphere, coordinates)
-    add_trace!(plot, line_trace)
-    add_trace!(plot, cone_trace)
+    PlotlyJS.add_trace!(plot, line_trace)
+    PlotlyJS.add_trace!(plot, cone_trace)
 end
 
 function get_bloch_sphere_vector_traces(bloch_sphere, coordinates)
@@ -492,7 +493,7 @@ function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
         bloch_sphere=animated_bloch_sphere.bloch_sphere)
     empty_history_line = get_bloch_sphere_history_line(([nothing], [nothing], [nothing]), 1,
         animated_bloch_sphere)
-    add_trace!(plot, empty_history_line)
+    PlotlyJS.add_trace!(plot, empty_history_line)
     traces = deepcopy(plot.plot.data)
     layout = deepcopy(plot.plot.layout)
     frames = get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
@@ -508,7 +509,7 @@ function get_bloch_sphere_frames(traces, density_matrix_list, qubit_id,
         density_matrix_list, qubit_id, animated_bloch_sphere)
     num_frames = length(x)
     num_traces = length(traces)
-    frames = Vector{PlotlyFrame}(undef, num_frames)
+    frames = Vector{PlotlyJS.PlotlyFrame}(undef, num_frames)
     for i in 1:num_frames
         vector = [x[i], y[i], z[i]]
         (line_trace, cone_trace) =
@@ -649,5 +650,5 @@ function add_animation_controls!(layout, frames, animated_bloch_sphere)
                         frame=attr(duration=0,
                             redraw=true))],
                     label="Pause")])]
-    relayout!(layout, sliders=sliders, updatemenus=buttons)
+    PlotlyJS.relayout!(layout, sliders=sliders, updatemenus=buttons)
 end
