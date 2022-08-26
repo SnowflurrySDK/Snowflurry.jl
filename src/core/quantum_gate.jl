@@ -3,13 +3,14 @@ struct Gate
     instruction_symbol::String
     operator::Operator
     target::Array
+    parameters::Array
 
-    function Gate(display_symbol, instruction_symbol, operator, target::Array)
+    function Gate(display_symbol, instruction_symbol, operator, target::Array, parameters=[])
         ensure_target_qubits_are_different(target)
-        new(display_symbol, instruction_symbol, operator, target)
+        new(display_symbol, instruction_symbol, operator, target, parameters)
     end
-    Gate(display_symbol, instruction_symbol, operator, target::Int) =
-        new(display_symbol, instruction_symbol, operator, [target])
+    Gate(display_symbol, instruction_symbol, operator, target::Int, parameters=[]) =
+        new(display_symbol, instruction_symbol, operator, [target], parameters)
 
 end
 
@@ -29,22 +30,36 @@ end
 
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
-    println(io, "\tinstruction symbol:" * gate.instruction_symbol)
-    println(io, "\toperator:")
+    println(io, "instruction symbol: " * gate.instruction_symbol)
+    if !isempty(gate.parameters)
+        print(io, "parameters: " )
+        show(io, gate.parameters)
+        println()
+    end
+    println(io, "targets: $(gate.target)")
+    println(io, "operator:")
     show(io, "text/plain", gate.operator)
-    println()
-    println(io, "\ttargets: $(gate.target)")
 end
 
-Base.kron(x::Gate, y::Gate) = kron(x.operator, y.operator)
-Base.kron(x::Gate, y::Operator) = kron(x.operator, y)
-Base.kron(x::Operator, y::Gate) = kron(x, y.operator)
+function apply_gate!(state::Ket, gate::Gate)
+    qubit_count = log2(length(state))
+    if mod(qubit_count, 1) != 0
+        throw(DomainError(qubit_count,
+            "Ket does not correspond to an integer number of qubits"))
+    end
+    if any(i_target->(i_target>qubit_count), gate.target)
+        throw(DomainError(gate.target,
+            "not enough qubits in the Ket for the Gate"))
+    end
+    Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
+end
+
 
 # Single Qubit Gates
 """
     sigma_x()
 
-Returns the Pauli-X `Operator`, which is defined as:
+Return the Pauli-X `Operator`, which is defined as:
 ```math
 \\sigma_x = \\begin{bmatrix}
     0 & 1 \\\\
@@ -57,7 +72,7 @@ sigma_x() = Operator(reshape(Complex.([0.0, 1.0, 1.0, 0.0]), 2, 2))
 """
     sigma_y()
 
-Returns the Pauli-Y `Operator`, which is defined as:
+Return the Pauli-Y `Operator`, which is defined as:
 ```math
 \\sigma_y = \\begin{bmatrix}
     0 & -i \\\\
@@ -70,7 +85,7 @@ sigma_y() = Operator(reshape(Complex.([0.0, im, -im, 0.0]), 2, 2))
 """
     sigma_z()
 
-Returns the Pauli-Z `Operator`, which is defined as:
+Return the Pauli-Z `Operator`, which is defined as:
 ```math
 \\sigma_z = \\begin{bmatrix}
     1 & 0 \\\\
@@ -83,7 +98,7 @@ sigma_z() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -1.0]), 2, 2))
 """
     sigma_p()
 
-Returns the spin-\$\\frac{1}{2}\$ raising `Operator`, which is defined as:
+Return the spin-\$\\frac{1}{2}\$ raising `Operator`, which is defined as:
 ```math
 \\sigma_+ = \\begin{bmatrix}
     0 & 1 \\\\
@@ -96,7 +111,7 @@ sigma_p() = 0.5*(sigma_x()+im*sigma_y())
 """
     sigma_m()
 
-Returns the spin-\$\\frac{1}{2}\$ lowering `Operator`, which is defined as:
+Return the spin-\$\\frac{1}{2}\$ lowering `Operator`, which is defined as:
 ```math
 \\sigma_- = \\begin{bmatrix}
     0 & 0 \\\\
@@ -109,7 +124,7 @@ sigma_m() = 0.5*(sigma_x()-im*sigma_y())
 """
     hadamard()
 
-Returns the Hadamard `Operator`, which is defined as:
+Return the Hadamard `Operator`, which is defined as:
 ```math
 H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
     1 & 1 \\\\
@@ -122,7 +137,7 @@ hadamard() = Operator(1.0 / sqrt(2.0) * reshape(Complex.([1.0, 1.0, 1.0, -1.0]),
 """
     phase()
 
-Returns the phase gate `Operator`, which is defined as:
+Return the phase gate `Operator`, which is defined as:
 ```math
 S = \\begin{bmatrix}
     1 & 0 \\\\
@@ -135,11 +150,11 @@ phase() = Operator(reshape(Complex.([1.0, 0.0, 0.0, im]), 2, 2))
 """
     pi_8()
 
-Returns the π/8 gate `Operator`, which is defined as:
+Return the `Operator` for the π/8 gate, which is defined as:
 ```math
 T = \\begin{bmatrix}
     1 & 0 \\\\
-    0 & \\mathrm{exp}\\left(i\\frac{\\pi}{4}\\right)
+    0 & e^{i\\frac{\\pi}{4}}
     \\end{bmatrix}.
 ```
 """
@@ -148,7 +163,7 @@ pi_8() = Operator(reshape(Complex.([1.0, 0.0, 0.0, exp(im*pi/4.0)]), 2, 2))
 """
     eye()
 
-Returns the identity `Operator`, which is defined as:
+Return the identity `Operator`, which is defined as:
 ```math
 I = \\begin{bmatrix}
     1 & 0 \\\\
@@ -161,27 +176,40 @@ eye() = Operator(Matrix{Complex}(1.0I, 2, 2))
 """
     x_90()
 
-Returns the `Operator` which applies a π/2 rotation about the X axis. The `Operator`
-is defined as:
+Return the `Operator` which applies a π/2 rotation about the X axis. The `Operator` is defined as:
 ```math
-R_x\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    0 & -i \\\\
-    -i & 0
+R_x\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & -i \\\\
+    -i & 1
     \\end{bmatrix}.
 ```
 """
-x_90() = Operator(
-    reshape(
-        Complex.([cos(pi / 2.0), -im * sin(pi / 2.0), -im * sin(pi / 2.0), cos(pi / 2.0)]),
-        2,
-        2,
-    ),
+x_90() = rotation(pi/2, 0)
+
+rotation(theta, phi) = Operator(
+    [cos(theta/2) -im*exp(-im*phi)*sin(theta/2);
+     -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
+)
+
+rotation_z(theta) = Operator(
+    [exp(-im*theta/2) 0;
+     0 exp(im*theta/2)]
+)
+
+phase_shift(phi) = Operator(
+    [1 0;
+    0 exp(im*phi)]
+)
+
+universal(theta, phi, lambda) = Operator(
+    [cos(theta/2) -exp(im*lambda)*sin(theta/2)
+     exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
 )
 
 """
     control_x()
 
-Returns the controlled-X (or controlled NOT) `Operator`, which is defined as:
+Return the controlled-X (or controlled NOT) `Operator`, which is defined as:
 ```math
 CX = CNOT = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
@@ -205,7 +233,7 @@ control_x() = Operator(
 """
     control_z()
 
-Returns the controlled-Z `Operator`, which is defined as:
+Return the controlled-Z `Operator`, which is defined as:
 ```math
 CZ = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
@@ -229,7 +257,7 @@ control_z() = Operator(
 """
     iswap()
 
-Returns the imaginary swap `Operator`, which is defined as:
+Return the imaginary swap `Operator`, which is defined as:
 ```math
 iSWAP = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
@@ -248,8 +276,8 @@ iswap() = Operator(
 """
     sigma_x(target)
 
-Returns the Pauli-X `Gate`, which applies the Pauli-X `Operator` to the target qubit.
-The `Operator` is defined as:
+Return the Pauli-X `Gate`, which applies the Pauli-X `Operator` to the target qubit.
+The associated `Operator` is defined as:
 ```math
 \\sigma_x = \\begin{bmatrix}
     0 & 1 \\\\
@@ -262,8 +290,9 @@ sigma_x(target) = Gate(["X"], "x", sigma_x(), target)
 """
     sigma_y(target)
 
-Returns the Pauli-Y `Gate`, which applies the Pauli-Y `Operator` to the target qubit.
-The `Operator` is defined as:
+Return the Pauli-Y `Gate`, which applies the Pauli-Y `Operator` to the target qubit.
+
+The associated `Operator` is defined as:
 ```math
 \\sigma_y = \\begin{bmatrix}
     0 & -i \\\\
@@ -276,8 +305,9 @@ sigma_y(target) = Gate(["Y"], "y", sigma_y(), target)
 """
     sigma_z(target)
 
-Returns the Pauli-Z `Gate`, which applies the Pauli-Z `Operator` to the target qubit.
-The `Operator` is defined as:
+Return the Pauli-Z `Gate`, which applies the Pauli-Z `Operator` to the target qubit.
+
+The associated `Operator` is defined as:
 ```math
 \\sigma_z = \\begin{bmatrix}
     1 & 0 \\\\
@@ -290,7 +320,8 @@ sigma_z(target) = Gate(["Z"], "z", sigma_z(), target)
 """
     hadamard(target)
 
-Returns the Hadamard `Gate`, which applies the Hadamard `Operator` to the target qubit.
+Return the Hadamard `Gate`, which applies the Hadamard `Operator` to the `target` qubit.
+
 The `Operator` is defined as:
 ```math
 H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
@@ -304,7 +335,8 @@ hadamard(target) = Gate(["H"], "h", hadamard(), target)
 """
     phase(target)
 
-Returns a phase `Gate` which is applied to the target qubit.
+Return a phase `Gate` (also known as an S `Gate`), which is applied to the target qubit.
+
 The `Gate` is associated with the following `Operator`:
 ```math
 S = \\begin{bmatrix}
@@ -318,12 +350,13 @@ phase(target) = Gate(["S"], "s", phase(), target)
 """
     pi_8(target)
 
-Returns a π/8 `Gate` which is applied to the target qubit.
+Return a π/8 `Gate` (also known as a T `Gate`), which is applied to the `target` qubit.
+
 The `Gate` is associated with the following `Operator`:
 ```math
 T = \\begin{bmatrix}
     1 & 0 \\\\
-    0 & \\mathrm{exp}\\left(i\\frac{\\pi}{4}\\right)
+    0 & e^{i\\frac{\\pi}{4}}
     \\end{bmatrix}.
 ```
 """
@@ -332,78 +365,183 @@ pi_8(target) = Gate(["T"], "t", pi_8(), target)
 """
     x_90(target)
 
-Returns a `Gate` which applies a π/2 rotation about the X axis.
+Return a `Gate` that applies a 90° rotation about the X axis.
+
 The `Gate` is associated with the following `Operator`:
 ```math
-R_x\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    0 & -i \\\\
-    -i & 0
+R_x\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & -i \\\\
+    -i & 1
     \\end{bmatrix}.
 ```
 """
 x_90(target) = Gate(["X_90"], "x_90", x_90(), target)
 
+"""
+    rotation(target, theta, phi)
+
+Return a gate that applies a rotation `theta` to the `target` qubit about the cos(`phi`)X+sin(`phi`)Y axis.
+
+The corresponding operator is
+```math
+R(\\theta, \\phi) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -i e^{-i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i e^{i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""
+rotation(target, theta, phi) = Gate(["R(θ=$(theta),ϕ=$(phi))"], "r", rotation(theta, phi),
+    target, [theta, phi])
+
+    """
+    rotation_x(target, theta)
+
+Return a `Gate` that applies a rotation `theta` about the X axis of the `target` qubit.
+
+The corresponding operator is
+```math
+R_x(\\theta) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""    
+rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation(theta, 0), target,
+    [theta])
+
+    """
+    rotation_y(target, theta)
+
+Return a `Gate` that applies a rotation `theta` about the Y axis of the `target` qubit.
+
+The corresponding operator is
+```math
+R_y(\\theta) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
+rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation(theta, pi/2), target,
+    [theta])
+
+    """
+    rotation_z(target, theta)
+
+Return a `Gate` that applies a rotation `theta` about the Z axis of the `target` qubit.
+
+The corresponding operator is
+```math
+R_z(\\theta) = \\begin{bmatrix}
+    \\mathrm{exp}\\left(-i\\frac{\\theta}{2}\\right) & 0 \\\\[0.5em]      
+    0 & \\mathrm{exp}\\left(i\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
+rotation_z(target, theta) = Gate(["Rz($(theta))"], "rz", rotation_z(theta), target, [theta])
+
+"""
+    phase_shift(target, phi)
+
+Return a `Gate` that applies a phase shift `phi` to the `target` qubit.
+
+The corresponding operator is
+```math
+P(\\phi) = \\begin{bmatrix}
+    i & 0 \\\\[0.5em]      
+    0 & e^{i\\phi}
+\\end{bmatrix}.
+```
+""" 
+phase_shift(target, phi) = Gate(["P($(phi))"], "p", phase_shift(phi), target, [phi])
+
+"""
+    universal(target, theta, phi, lambda)
+
+Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
+
+The corresponding operator is
+```math
+U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -e^{i\\lambda}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    e^{i\\phi}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        e^{i\\left(\\phi+\\lambda\\right)}\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
+universal(target, theta, phi, lambda) = Gate(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"], "u",
+    universal(theta, phi, lambda), target, [theta, phi, lambda])
+
 
 
 
 # two qubit gates
+
 """
     control_z(control_qubit, target_qubit)
 
-Returns the controlled-Z `Gate`, which may apply the Pauli-Z `Operator` to the target qubit
-depending on the state of the control qubit.
-The `Gate` is associated with the following `Operator`:
+Return a controlled-Z gate given a `control_qubit` and a `target_qubit`.
+
+The controlled-Z operator is
 ```math
 CZ = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
-    0 & 1 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\     
     0 & 0 & 1 & 0 \\\\
-    0 & 0 & 0 & -1
-    \\end{bmatrix}.
+    0 & 0 & 0 & -1 \\\\  
+\\end{bmatrix}.
 ```
-"""
+""" 
 control_z(control_qubit, target_qubit) =
     Gate(["*" "Z"], "cz", control_z(), [control_qubit, target_qubit])
 
 """
     control_x(control_qubit, target_qubit)
 
-Returns the controlled-X `Gate`, which may apply the Pauli-X `Operator` to the target qubit
-depending on the state of the control qubit.
-The `Gate` is associated with the following `Operator`:
+Return a controlled-X gate (also known as a controlled NOT gate) given a `control_qubit`
+and a `target_qubit`.
+
+The controlled-X operator is
 ```math
-CX = CNOT = \\begin{bmatrix}
+CX = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
-    0 & 1 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\     
     0 & 0 & 0 & 1 \\\\
-    0 & 0 & 1 & 0
-    \\end{bmatrix}.
+    0 & 0 & 1 & 0 \\\\  
+\\end{bmatrix}.
 ```
-"""
+""" 
 control_x(control_qubit, target_qubit) =
     Gate(["*" "X"], "cx", control_x(), [control_qubit, target_qubit])
 
 """
     iswap(qubit_1, qubit_2)
 
-Returns the imaginary swap `Gate`, which applies the imaginary swap `Operator` to `qubit_1`
-and `qubit_2.`
-The `Gate` is associated with the following `Operator`:
+Return the imaginary swap `Gate` which applies the imaginary swap `Operator` to `qubit_1` and `qubit_2.`
+
+The imaginary swap operator is
 ```math
-iSWAP = \\begin{bmatrix}
+i\\mathrm{SWAP} = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
-    0 & 0 & i & 0 \\\\
+    0 & 0 & i & 0 \\\\     
     0 & i & 0 & 0 \\\\
-    0 & 0 & 0 & 1
-    \\end{bmatrix}.
+    0 & 0 & 0 & 1 \\\\  
+\\end{bmatrix}.
 ```
-"""
+""" 
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
 """
     Base.:*(M::Gate, x::Ket)
 
-Returns a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
+Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 
 # Examples
 ```jldoctest
@@ -423,7 +561,13 @@ julia> print(ψ_1)
 
 ```
 """
-Base.:*(M::Gate, x::Ket) = M.operator * x
+Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M)
+
+function get_transformed_state(state::Ket, gate::Gate)
+    transformed_state = deepcopy(state)
+    apply_gate!(transformed_state, gate)
+    return transformed_state
+end
 
 STD_GATES = Dict(
     "x" => sigma_x,
