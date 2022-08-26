@@ -4,7 +4,7 @@ DocTestSetup = :(using Snowflake)
 ```
 Quantum computing is a new paradigm in high performance computing that utilizes the fundamental principles of quantum mechanics to perform calculations. Quantum computation holds great promise to outperform classical computers in some tasks such as prime factorization, quantum simulation, search, optimization, and algebraic programs such as machine learning.
 
-The power of quantum computing stems from two fundemental properties of quantum mechanics, namely [superposition](https://en.wikipedia.org/wiki/Quantum_superposition) and [entanglement](https://en.wikipedia.org/wiki/Quantum_entanglement).
+The power of quantum computing stems from two fundamental properties of quantum mechanics, namely [superposition](https://en.wikipedia.org/wiki/Quantum_superposition) and [entanglement](https://en.wikipedia.org/wiki/Quantum_entanglement).
 
 Snowflake is a Julia-based SDK for performing quantum computations. Quantum computation is conducted by building and executing _quantum circuits_. These circuits are comprised of quantum gates, instructions, and classical control logic. Complex algorithms and applications can be expressed in terms of quantum circuits that can be executed on a quantum computer.
 

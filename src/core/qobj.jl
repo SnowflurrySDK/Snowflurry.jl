@@ -102,6 +102,173 @@ struct Operator
     data::Matrix{Complex}
 end
 
+Base.length(x::Ket) = Base.length(x.data)
+
+"""
+    Base.adjoint(x)
+
+Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator.
+"""
+Base.adjoint(x::Ket) = Bra(x)
+Base.adjoint(x::Bra) = Ket(adjoint(x.data))
+Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
+Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:-(x::Ket) = -1.0 * x
+Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
+Base.:*(x::Bra, y::Ket) = x.data * y.data
+Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
+Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
+Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
+Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
+Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
+Base.length(x::Union{Ket, Bra}) = Base.length(x.data)
+
+"""
+    Base.getindex(A::Operator, m::Int64, n::Int64)
+
+Return the element at row `m` and column `n` of Operator `A`.
+"""
+Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
+
+"""
+    eigen(A::Operator)
+
+Compute the eigenvalue decomposition of Operator `A` and return an `Eigen`
+factorization object `F`. Eigenvalues are found in `F.values` while eigenvectors are
+found in the matrix `F.vectors`. Each column of this matrix corresponds to an eigenvector.
+The `i`th eigenvector is extracted by calling `F.vectors[:, i]`.
+
+# Examples
+```jldoctest
+julia> X = sigma_x()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+
+julia> F = eigen(X);
+
+julia> eigenvalues = F.values
+2-element Vector{Float64}:
+ -1.0
+  1.0
+
+julia> eigenvector_1 = F.vectors[:, 1]
+2-element Vector{ComplexF64}:
+ -0.7071067811865475 + 0.0im
+  0.7071067811865475 + 0.0im
+```
+"""
+eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+
+"""
+    tr(A::Operator)
+
+Compute the trace of Operator `A`.
+
+# Examples
+```jldoctest
+julia> I = eye()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0 + 0im
+0 + 0im    1.0 + 0.0im
+
+
+julia> trace = tr(I)
+2.0 + 0.0im
+```
+"""
+tr(A::Operator)=LinearAlgebra.tr(A.data)
+
+"""
+    expected_value(A::Operator, psi::Ket)
+
+Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`ψ`⟩.
+
+# Examples
+```jldoctest
+julia> ψ = Ket([0.0; 1.0]);
+
+julia> print(ψ)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> A = sigma_z()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
+
+
+julia> expected_value(A, ψ)
+-1.0 + 0.0im
+```
+"""
+expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
+
+Base.:size(M::Operator) = size(M.data)
+
+# iterator for Ket object
+Base.iterate(x::Ket, state = 1) =
+    state > length(x.data) ? nothing : (x.data[state], state + 1)
+
+    """
+    kron(x, y)
+
+Compute the Kronecker product of two [`Kets`](@ref Ket) or two [`Operators`](@ref Operator).
+More details about the Kronecker product can be found
+[here](https://en.wikipedia.org/wiki/Kronecker_product). 
+
+# Examples
+```jldoctest
+julia> ψ_0 = Ket([0.0; 1.0]);
+
+julia> print(ψ_0)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+julia> ψ_1 = Ket([1.0; 0.0]);
+
+julia> print(ψ_1)
+2-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> ψ_0_1 = kron(ψ_0, ψ_1);
+
+julia> print(ψ_0_1)
+4-element Ket:
+0.0 + 0.0im
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+julia> kron(sigma_x(), sigma_y())
+(4, 4)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 - 1.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+```
+"""
+Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
+Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
+
 """
 A structure representing a quantum multi-body system.
 # Fields
@@ -202,40 +369,135 @@ function Base.show(io::IO, x::Operator)
     end
 end
 
-Base.length(x::Ket) = Base.length(x.data)
-Base.adjoint(x::Ket) = Bra(x)
-Base.adjoint(x::Bra) = Ket(adjoint(x.data))
-Base.adjoint(A::Operator) = Operator(adjoint(A.data))
-Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
-Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:-(x::Ket) = -1.0 * x
-Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
-Base.:*(x::Bra, y::Ket) = x.data * y.data
-Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
-Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
-Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
-Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
-Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
-Base.:*(s::Any, A::Operator) = Operator(s*A.data)
-Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
-Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
-Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-eigen(A::Operator) = LinearAlgebra.eigen(A.data)
-tr(A::Operator)=LinearAlgebra.tr(A.data)
-expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
 
+"""
+    get_num_qubits(x::Operator)
 
-Base.:size(M::Operator) = size(M.data)
+Returns the number of qubits associated with an `Operator`.
+# Examples
+```jldoctest
+julia> ρ = Operator([1 0
+                     0 0])
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1 + 0im    0 + 0im
+0 + 0im    0 + 0im
 
-# iterator for Ket object
-Base.iterate(x::Ket, state = 1) =
-    state > length(x.data) ? nothing : (x.data[state], state + 1)
+julia> get_num_qubits(ρ)
+1
 
+```
+"""
+function get_num_qubits(x::Operator)
+    (num_rows, num_columns) = size(x)
+    if num_rows != num_columns
+        throw(ErrorException("Operator is not square"))
+    end
+    qubit_count = log2(num_rows)
+    if mod(qubit_count, 1) != 0
+        throw(DomainError(qubit_count,
+            "Operator does not correspond to an integer number of qubits"))
+    end
+    return Int(qubit_count)
+end
 
-Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
-Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
+"""
+    get_num_qubits(x::Union{Ket, Bra})
+
+Returns the number of qubits associated with a `Ket` or a `Bra`.
+# Examples
+```jldoctest
+julia> ψ = Ket([1, 0, 0, 0]);
+
+julia> print(ψ)
+4-element Ket:
+1 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+
+julia> get_num_qubits(ψ)
+2
+
+```
+"""
+function get_num_qubits(x::Union{Ket, Bra})
+    qubit_count = log2(length(x))
+    if mod(qubit_count, 1) != 0
+        throw(DomainError(qubit_count,
+            "Ket or Bra does not correspond to an integer number of qubits"))
+    end
+    return Int(qubit_count)
+end
+
+"""
+    get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+
+Returns the number of bodies associated with an `Operator` given the
+`hilbert_space_size_per_body`.
+# Examples
+```jldoctest
+julia> ρ = Operator([1 0 0
+                     0 0 0
+                     0 0 0])
+(3, 3)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+1 + 0im    0 + 0im    0 + 0im
+0 + 0im    0 + 0im    0 + 0im
+0 + 0im    0 + 0im    0 + 0im
+
+julia> get_num_bodies(ρ, 3)
+1
+
+```
+"""
+function get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+    (num_rows, num_columns) = size(x)
+    if num_rows != num_columns
+        throw(ErrorException("Operator is not square"))
+    end
+    num_bodies = log(hilbert_space_size_per_body, num_rows)
+    if mod(num_bodies, 1) != 0
+        throw(DomainError(num_bodies,
+            "Operator does not correspond to an integer number of bodies"))
+    end
+    return Int(num_bodies)
+end
+
+"""
+    get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
+
+Returns the number of bodies associated with a `Ket` or a `Bra` given the
+`hilbert_space_size_per_body`.
+# Examples
+```jldoctest
+julia> ψ = Ket([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+julia> print(ψ)
+9-element Ket:
+1 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+0 + 0im
+
+julia> get_num_bodies(ψ, 3)
+2
+
+```
+"""
+function get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
+    num_bodies = log(hilbert_space_size_per_body, length(x))
+    if mod(num_bodies, 1) != 0
+        throw(DomainError(num_bodies,
+            "Ket or Bra does not correspond to an integer number of bodies"))
+    end
+    return Int(num_bodies)
+end
 
 """
     Snowflake.fock(i, hspace_size)
