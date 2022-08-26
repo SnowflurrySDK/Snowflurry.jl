@@ -62,15 +62,26 @@ If the native gates are the Pauli-X gate, the Hadamard gate, and the control-X g
 the QPU can be created as follows: 
 
 ```jldoctest create_virtual_qpu
-julia> qpu = create_virtual_qpu(3, connectivity, ["x", "h", "cx"])
-Quantum Processing Unit:
-   manufacturer: none
-   generation: none 
-   serial_number: 00 
-   host: localhost:5600 
-   qubit_count: 3 
-   native_gates: ["x", "h", "cx"] 
-   connectivity = sparse([1, 2, 2, 2, 3], [1, 1, 2, 3, 3], [1, 1, 1, 1, 1], 3, 3)
+julia> qpu = create_virtual_qpu(3, connectivity, ["x", "h", "cx"]);
+
+julia> qpu.qubit_count
+3
+
+julia> qpu.native_gates
+3-element Vector{String}:
+ "x"
+ "h"
+ "cx"
+
+julia> qpu.connectivity
+3×3 SparseArrays.SparseMatrixCSC{Int64, Int64} with 5 stored entries:
+ 1  ⋅  ⋅
+ 1  1  1
+ ⋅  ⋅  1
+
+julia> qpu.host
+"localhost:5600"
+
 ```
 """
 function create_virtual_qpu(qubit_count::Int, connectivity::Matrix{Int}, native_gates::Vector{String}, host = "localhost:5600")
