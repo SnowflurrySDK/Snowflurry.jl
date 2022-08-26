@@ -21,17 +21,17 @@ using Test
     @test_throws ErrorException RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4],
         num_circuits_per_length=[2, 2, 2, 2],
-        fit_properties=RandomizedBenchmarkingFitProperties(0, [1.0, 3.2]))
+        fit_properties=RandomizedBenchmarkingFitProperties(0, Dict("p"=>0.99, "q"=>1.0)))
 
     @test_throws ErrorException RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4, 5, 6, 7],
         num_circuits_per_length=[2, 2, 2, 2, 2, 2, 2],
-        fit_properties=RandomizedBenchmarkingFitProperties(1, [3.3, 4.1]))
+        fit_properties=RandomizedBenchmarkingFitProperties(1, Dict("p"=>0.99, "q"=>1.0)))
 
     @test_throws ErrorException RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4, 5, 6, 7],
         num_circuits_per_length=[2, 2, 2, 2, 2, 2, 2],
-        fit_properties=RandomizedBenchmarkingFitProperties(2, [3.3, 4.1]))
+        fit_properties=RandomizedBenchmarkingFitProperties(2, Dict("p"=>0.99, "q"=>1.0)))
 
     @test_throws ErrorException RandomizedBenchmarkingProperties(num_qubits_on_device=2,
         target_qubits=[1], sequence_length_list=[1, 2, 3, 4, 5, 6, 7],

@@ -12,10 +12,11 @@ generated. Optionally, a dictionary of initial fitting parameters can be passed 
 constructor. The dictionary keys are symbols for the fitting parameters (e.g. "p").
 """
 struct RandomizedBenchmarkingFitProperties
-    model_order::Union{Int, Nothing}
-    initial_parameters::Union{Dict, Nothing}
+    model_order::Union{Integer, Nothing}
+    initial_parameters::Union{Dict{String, <:Real}, Nothing}
 
-    function RandomizedBenchmarkingFitProperties(model_order, initial_parameters)
+    function RandomizedBenchmarkingFitProperties(model_order::Union{<:Integer, Nothing},
+        initial_parameters::Union{Dict{String, <:Real}, Nothing})
         if model_order == 0
             if length(initial_parameters) != 3
                 throw(ErrorException("there must be 3 initial parameters for the
@@ -32,7 +33,7 @@ struct RandomizedBenchmarkingFitProperties
         new(model_order, initial_parameters)
     end
 
-    function RandomizedBenchmarkingFitProperties(model_order)
+    function RandomizedBenchmarkingFitProperties(model_order::Union{<:Integer, Nothing})
         initial_parameters = nothing
         if model_order == 0
             initial_parameters = Dict("p"=>0.99, "A0"=>0.99, "B0"=>0.0)
@@ -117,13 +118,13 @@ The results of a randomized benchmarking calculation.
 - `sequence_length_list`: a list of the sequence lengths for which randomized circuits will be generated.
 - `sequence_fidelities`: a list giving the average fidelity for each sequence length.
 - `fit_results`: a fit of the averaged sequence fidelity, stored as [`RandomizedBenchmarkingFitResults`](@ref).
-- `average_clifford_fidelity`: the average fidelity of each Clifford operation.
+- `average_clifford_fidelity`: the average fidelity of a Clifford operation.
 """
 struct RandomizedBenchmarkingResults
-    sequence_length_list
-    sequence_fidelities
+    sequence_length_list::AbstractVector{<:Integer}
+    sequence_fidelities::AbstractVector{<:Real}
     fit_results::RandomizedBenchmarkingFitResults
-    average_clifford_fidelity
+    average_clifford_fidelity::Union{<:Real, Nothing}
 end
 
 """
@@ -136,8 +137,8 @@ Conducts randomized benchmarking and returns [`RandomizedBenchmarkingResults`](@
 - `properties`: the [`RandomizedBenchmarkingProperties`](@ref) influencing benchmarking such as the list of target qubits and the list of sequence lengths.
 - `transpile!`: a function which transpiles a single circuit. It transpiles every Clifford operation individually.
 """
-function run_randomized_benchmarking(simulate_shots,
-    properties::RandomizedBenchmarkingProperties, transpile! = (f(x)=x))
+function run_randomized_benchmarking(simulate_shots::Function,
+    properties::RandomizedBenchmarkingProperties, transpile!::Function = (f(x)=x))
     
     fit_properties = get_fitting_model_properties(properties)
     sequence_fidelities = get_sequence_fidelities(simulate_shots, transpile!,
@@ -164,7 +165,7 @@ function get_fitting_model_properties(properties::RandomizedBenchmarkingProperti
     return RandomizedBenchmarkingFitProperties(order, initial_parameters)
 end
 
-function get_sequence_fidelities(simulate_shots, transpile!,
+function get_sequence_fidelities(simulate_shots::Function, transpile!::Function,
     properties::RandomizedBenchmarkingProperties)
 
     circuit_list = QuantumCircuit[]
@@ -175,7 +176,7 @@ function get_sequence_fidelities(simulate_shots, transpile!,
     end
     
     shots_list = simulate_shots(circuit_list)
-    sequence_fidelity_list = []
+    sequence_fidelity_list = Real[]
     circuit_id = 1
     for i_length in 1:length(properties.sequence_length_list)
         survival_probability_sum = 0
@@ -191,7 +192,9 @@ function get_sequence_fidelities(simulate_shots, transpile!,
     return sequence_fidelity_list
 end
 
-function get_survival_probability(shots, target_qubits)
+function get_survival_probability(shots::AbstractVector{String},
+    target_qubits::AbstractVector{<:Integer})
+
     num_successes = 0
     num_target_qubits = length(target_qubits)
     for measurement in shots
@@ -204,7 +207,7 @@ function get_survival_probability(shots, target_qubits)
     return survival_probability
 end
 
-function get_random_clifford_circuits(sequence_length_id, transpile!,
+function get_random_clifford_circuits(sequence_length_id::Integer, transpile!::Function,
     properties::RandomizedBenchmarkingProperties)
 
     circuit_list = []
@@ -233,7 +236,10 @@ function get_random_clifford_circuits(sequence_length_id, transpile!,
     return circuit_list
 end
 
-function get_transpiled_circuit(clifford, properties, qubit_map, transpile!)
+function get_transpiled_circuit(clifford::CliffordOperator,
+    properties::RandomizedBenchmarkingProperties, qubit_map::Dict{<:Integer, <:Integer},
+    transpile!::Function)
+
     num_target_qubits = length(qubit_map)
     clifford_circuit = QuantumCircuit(qubit_count=num_target_qubits,
             bit_count=properties.num_bits_on_device)
@@ -243,7 +249,7 @@ function get_transpiled_circuit(clifford, properties, qubit_map, transpile!)
     transpile!(circuit)
 end
 
-function get_fitting_model_results(sequence_fidelities,
+function get_fitting_model_results(sequence_fidelities::AbstractVector{<:Real},
     properties::RandomizedBenchmarkingProperties,
     fit_properties::RandomizedBenchmarkingFitProperties)
 
@@ -279,12 +285,12 @@ function get_fitting_model_results(sequence_fidelities,
     return results
 end
 
-function get_zeroth_model(m, p)
+function get_zeroth_model(m::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     p1 = fill(p[1], length(m))
     return p[2]*p1.^m.+p[3]
 end
 
-function get_first_model(m, p)
+function get_first_model(m::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     p1 = fill(p[1], length(m))
     return p[3]*p1.^m.+p[4]+p[5]*(m.-1)*(p[2]-p[1]^2).*p1.^(m.-2)
 end
@@ -334,9 +340,12 @@ function plot_benchmarking(results::RandomizedBenchmarkingResults)
     return p
 end
 
-function plot_fidelity_model!(p, get_model, parameters_vector, sequence_length_list)
+function plot_fidelity_model!(plot, get_model::Function,
+    parameters_vector::AbstractVector{<:Real},
+    sequence_length_list::AbstractVector{<:Integer})
+
     sequence_lengths_for_plot = 1:last(sequence_length_list)
     fidelity_fit = get_model(sequence_lengths_for_plot, parameters_vector)
-    plot!(p, sequence_lengths_for_plot, fidelity_fit,
+    plot!(plot, sequence_lengths_for_plot, fidelity_fit,
         label="Sequence Fidelity Model")
 end
