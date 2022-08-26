@@ -132,9 +132,7 @@ end
 If possible, return the [`CliffordOperator`](@ref) for the provided `operator`.
 """
 function get_clifford_operator(operator::Operator)
-    # REPLACE FOLLOWING LINE BY get_num_qubits BEFORE MERGING WITH MAIN
-    num_qubits = Int(log2(size(operator.data, 1)))
-
+    num_qubits = get_num_qubits(operator)
     system = MultiBodySystem(num_qubits, 2)
     c = zero_matrix(GF(2), 2*num_qubits, 2*num_qubits)
     h = zero_matrix(GF(2), 2*num_qubits, 1)
