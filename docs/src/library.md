@@ -16,6 +16,7 @@ simulate_shots
 
 ## Quantum Gates
 ```@docs
+Gate
 eye
 sigma_p
 sigma_m
@@ -36,6 +37,7 @@ control_z
 control_x
 iswap
 Base.:*(M::Gate, x::Ket)
+apply_gate!
 ```
 
 ## Quantum Processing Unit

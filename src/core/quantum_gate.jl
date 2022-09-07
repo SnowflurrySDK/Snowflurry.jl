@@ -1,3 +1,29 @@
+"""
+    Gate(display_symbol, instruction_symbol, operator, target::Array, parameters=[])
+    Gate(display_symbol, instruction_symbol, operator, target::Int, parameters=[])
+
+Constructs a `Gate` that can be added to a `QuantumCircuit` in order to apply an `operator` to one or more `target` qubits.
+
+Each `Gate` has a `display_symbol` which determines how the `Gate` is displayed in a `QuantumCircuit`.
+The `instruction_symbol` is used by the quantum compiler to identify the `Gate`.
+Optionally, a `Gate` can contain parameters.
+
+# Examples
+```jldoctest
+julia> pi_x_rotation_on_qubit_1 = Gate(["Rx(π)"], "rx", Operator([0.0 -im; -im 0.0]), 1, [π])
+Gate Object:
+instruction symbol: rx
+parameters: [π]
+targets: [1]
+operator:
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 - 1.0im
+0.0 - 1.0im    0.0 + 0.0im
+
+
+```
+"""
 struct Gate
     display_symbol::Array{String}
     instruction_symbol::String
@@ -34,13 +60,36 @@ function Base.show(io::IO, gate::Gate)
     if !isempty(gate.parameters)
         print(io, "parameters: " )
         show(io, gate.parameters)
-        println()
+        println(io)
     end
     println(io, "targets: $(gate.target)")
     println(io, "operator:")
     show(io, "text/plain", gate.operator)
 end
 
+"""
+    apply_gate!(state::Ket, gate::Gate)
+
+Update the `state` by applying a `gate` to it.
+
+# Examples
+```jldoctest
+julia> ψ_0 = fock(0, 2);
+
+julia> print(ψ_0)
+2-element Ket:
+1.0 + 0.0im
+0.0 + 0.0im
+
+julia> apply_gate!(ψ_0, sigma_x(1));
+
+julia> print(ψ_0)
+2-element Ket:
+0.0 + 0.0im
+1.0 + 0.0im
+
+```
+"""
 function apply_gate!(state::Ket, gate::Gate)
     qubit_count = log2(length(state))
     if mod(qubit_count, 1) != 0
@@ -176,7 +225,9 @@ eye() = Operator(Matrix{Complex}(1.0I, 2, 2))
 """
     x_90()
 
-Return the `Operator` which applies a π/2 rotation about the X axis. The `Operator` is defined as:
+Return the `Operator` which applies a π/2 rotation about the X axis.
+
+The `Operator` is defined as:
 ```math
 R_x\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
     1 & -i \\\\
@@ -186,21 +237,111 @@ R_x\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
 """
 x_90() = rotation(pi/2, 0)
 
+"""
+    rotation(theta, phi)
+
+Return the `Operator` which applies a rotation `theta` about the cos(`phi`)X+sin(`phi`)Y axis.
+
+The `Operator` is defined as:
+```math
+R(\\theta, \\phi) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -i e^{-i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i e^{i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""
 rotation(theta, phi) = Operator(
     [cos(theta/2) -im*exp(-im*phi)*sin(theta/2);
      -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
 )
 
+"""
+    rotation_x(theta)
+
+Return the `Operator` which applies a rotation `theta` about the X axis.
+
+The `Operator` is defined as:
+```math
+R_x(\\theta) = \\begin{bmatrix}
+\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+    -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+-i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+"""   
+rotation_x(theta) = rotation(theta, 0)
+
+"""
+    rotation_y(theta)
+
+Return the `Operator` that applies a rotation `theta` about the Y axis of the `target` qubit.
+
+The `Operator` is defined as:
+```math
+R_y(\\theta) = \\begin{bmatrix}
+\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+    -\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
+rotation_y(theta) = rotation(theta, pi/2)
+
+"""
+    rotation_z(theta)
+
+Return the `Operator` that applies a rotation `theta` about the Z axis.
+
+The `Operator` is defined as:
+```math
+R_z(\\theta) = \\begin{bmatrix}
+\\mathrm{exp}\\left(-i\\frac{\\theta}{2}\\right) & 0 \\\\[0.5em]      
+0 & \\mathrm{exp}\\left(i\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
 rotation_z(theta) = Operator(
     [exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
 
+"""
+    phase_shift(phi)
+
+Return the `Operator` that applies a phase shift `phi`.
+
+The `Operator` is defined as:
+```math
+P(\\phi) = \\begin{bmatrix}
+    i & 0 \\\\[0.5em]      
+    0 & e^{i\\phi}
+\\end{bmatrix}.
+```
+""" 
 phase_shift(phi) = Operator(
     [1 0;
     0 exp(im*phi)]
 )
 
+"""
+    universal(theta, phi, lambda)
+
+Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
+
+The `Operator` is defined as:
+```math
+U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
+    \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
+        -e^{i\\lambda}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    e^{i\\phi}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
+        e^{i\\left(\\phi+\\lambda\\right)}\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
+\\end{bmatrix}.
+```
+""" 
 universal(theta, phi, lambda) = Operator(
     [cos(theta/2) -exp(im*lambda)*sin(theta/2)
      exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
@@ -410,7 +551,7 @@ R_x(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """    
-rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation(theta, 0), target,
+rotation_x(target, theta) = Gate(["Rx($(theta))"], "rx", rotation_x(theta), target,
     [theta])
 
     """
@@ -428,7 +569,7 @@ R_y(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation(theta, pi/2), target,
+rotation_y(target, theta) = Gate(["Ry($(theta))"], "ry", rotation_y(theta), target,
     [theta])
 
     """
