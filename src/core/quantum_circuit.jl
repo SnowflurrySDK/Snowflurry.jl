@@ -136,9 +136,18 @@ function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::I
     circuit_layout = get_circuit_layout(circuit)
     num_wires = size(circuit_layout, 1)
     pipeline_length = size(circuit_layout, 2)
-    for i_wire in range(1, length = num_wires-1)
-        for i_step in range(1, length = pipeline_length)
-            print(io, circuit_layout[i_wire, i_step])
+    split_circuit_layouts = get_split_circuit_layout(io, circuit_layout, padding_width)
+    num_splits = length(split_circuit_layouts)
+
+    for i_split in 1:num_splits
+        if num_splits > 1
+            println(io, "Part $i_split of $num_splits")
+        end
+        for i_wire = 1:size(split_circuit_layouts[i_split], 1)
+            for i_step = 1:size(split_circuit_layouts[i_split], 2)
+                print(io, split_circuit_layouts[i_split][i_wire, i_step])
+            end
+            println(io, "")
         end
         println(io, "")
     end
@@ -231,6 +240,34 @@ function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate
         circuit_layout[id_wire, i_step+1] = '-'^num_left_dashes *
             "$(gate.display_symbol[i_target])" * '-'^num_right_dashes
     end
+end
+
+function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
+    padding_width::Integer)
+
+    (display_height, display_width) = displaysize(io)
+    useable_width = display_width-padding_width
+    num_steps = size(circuit_layout, 2)
+    num_qubit_label_chars = length(circuit_layout[1, 1])
+    char_count = num_qubit_label_chars
+    first_gate_step = 2
+    split_layout = []
+    for i_step = 2:num_steps
+        step = circuit_layout[1, i_step]
+        num_chars_in_step = length(step)
+        char_count += num_chars_in_step
+        if char_count > useable_width
+            push!(split_layout, hcat(circuit_layout[:,1],
+                circuit_layout[:,first_gate_step:i_step-1]))
+            char_count = num_qubit_label_chars + num_chars_in_step
+            first_gate_step = i_step
+        end
+        if i_step == num_steps
+            push!(split_layout, hcat(circuit_layout[:,1],
+                circuit_layout[:,first_gate_step:i_step]))
+        end
+    end
+    return split_layout
 end
 
 """
