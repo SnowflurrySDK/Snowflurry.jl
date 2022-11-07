@@ -134,8 +134,6 @@ end
 
 function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::Integer)
     circuit_layout = get_circuit_layout(circuit)
-    num_wires = size(circuit_layout, 1)
-    pipeline_length = size(circuit_layout, 2)
     split_circuit_layouts = get_split_circuit_layout(io, circuit_layout, padding_width)
     num_splits = length(split_circuit_layouts)
 
@@ -189,9 +187,12 @@ end
 function add_qubit_labels_to_circuit_layout!(circuit_layout::Array{String},
     num_qubits::Integer)
 
+    max_num_digits = ndigits(num_qubits)
     for i_qubit in range(1, length = num_qubits)
+        num_digits = ndigits(i_qubit)
+        padding = max_num_digits-num_digits
         id_wire = 2 * (i_qubit - 1) + 1
-        circuit_layout[id_wire, 1] = "q[$i_qubit]:"
+        circuit_layout[id_wire, 1] = "q[$i_qubit]:" * " "^padding
         circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
     end
 end

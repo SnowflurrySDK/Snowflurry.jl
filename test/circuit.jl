@@ -27,6 +27,10 @@ end
         push_gate!(c, [control_x(1, 2)])
     end
     print(c)
+
+    c = QuantumCircuit(qubit_count = 10, bit_count = 0)
+    push_gate!(c, [control_x(9, 10)])
+    print(c)
 end
 
 
