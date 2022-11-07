@@ -124,15 +124,15 @@ function pop_gate!(circuit::QuantumCircuit)
     return circuit
 end
 
-function Base.show(io::IO, circuit::QuantumCircuit)
+function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer=10)
     println(io, "Quantum Circuit Object:")
     println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
     println(io, "   bit_count: $(circuit.bit_count) ")
-    print_circuit_diagram(io, circuit)
+    print_circuit_diagram(io, circuit, padding_width)
 end
 
-function print_circuit_diagram(io, circuit)
+function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::Integer)
     circuit_layout = get_circuit_layout(circuit)
     num_wires = size(circuit_layout, 1)
     pipeline_length = size(circuit_layout, 2)
@@ -144,7 +144,7 @@ function print_circuit_diagram(io, circuit)
     end
 end
 
-function get_circuit_layout(circuit)
+function get_circuit_layout(circuit::QuantumCircuit)
     wire_count = 2 * circuit.qubit_count
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
@@ -164,7 +164,7 @@ function get_circuit_layout(circuit)
     return circuit_layout
 end
 
-function get_longest_symbol_length(step)
+function get_longest_symbol_length(step::Array{Gate})
     largest_length = 0
     for gate in step
         for symbol in gate.display_symbol
@@ -177,7 +177,9 @@ function get_longest_symbol_length(step)
     return largest_length
 end
 
-function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
+function add_qubit_labels_to_circuit_layout!(circuit_layout::Array{String},
+    num_qubits::Integer)
+
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         circuit_layout[id_wire, 1] = "q[$i_qubit]:"
@@ -185,8 +187,8 @@ function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
     end
 end
 
-function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits,
-    longest_symbol_length)
+function add_wires_to_circuit_layout!(circuit_layout::Array{String}, i_step::Integer,
+    num_qubits::Integer, longest_symbol_length::Integer)
 
     num_chars = 4+longest_symbol_length
     for i_qubit in range(1, length = num_qubits)
@@ -198,8 +200,8 @@ function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits,
     end
 end
 
-function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
-    longest_symbol_length)
+function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
+    i_step::Integer, longest_symbol_length::Integer)
     
     length_difference = longest_symbol_length-1
     num_left_chars = 2 + floor(Int, length_difference/2)
@@ -217,7 +219,8 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout, gate, i_step, longest_symbol_length)
+function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
+    i_step::Integer, longest_symbol_length::Integer)
     
     for (i_target, target) in enumerate(gate.target)
         symbol_length = length(gate.display_symbol[i_target])
