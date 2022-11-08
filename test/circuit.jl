@@ -3,6 +3,7 @@ using Test
 
 @testset "push_pop_gate" begin
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    print(c)
     push_gate!(c, [hadamard(1)])
     @test length(c.pipeline) == 1
 

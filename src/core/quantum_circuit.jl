@@ -253,6 +253,9 @@ function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
     char_count = num_qubit_label_chars
     first_gate_step = 2
     split_layout = []
+    if num_steps == 1
+        push!(split_layout, circuit_layout)
+    end
     for i_step = 2:num_steps
         step = circuit_layout[1, i_step]
         num_chars_in_step = length(step)
