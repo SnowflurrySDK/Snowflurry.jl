@@ -45,12 +45,12 @@ c = QuantumCircuit(qubit_count=2, bit_count=0)
 If you are using Julia REPL you should see an output similar to:
 
 ```
-Circuit Object:
-   id: 1e9c4f6e-64df-11ec-0c5b-036aab5b72cb
-   qubit_count: 2
-   bit_count: 0
+Quantum Circuit Object:
+   id: 62ee9ce2-65f8-11ed-3bb9-03204696f08f 
+   qubit_count: 2 
+   bit_count: 0 
 q[1]:
-
+     
 q[2]:
 ```
 
@@ -66,13 +66,13 @@ push_gate!(c, [control_x(1, 2)])
 The first line adds a Hadamrd gate which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with control qubit being qubit 1 and target qubit being qubit 2. The output in Julia REPL would look like:
 
 ```julia
-Circuit Object:
-   id: 1e9c4f6e-64df-11ec-0c5b-036aab5b72cb
-   qubit_count: 2
-   bit_count: 0
-q[1]:--H----*--
-            |
-q[2]:-------X--
+Quantum Circuit Object:
+   id: 62ee9ce2-65f8-11ed-3bb9-03204696f08f 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H────*──
+            |  
+q[2]:───────X──
 ```
 
 **Note:** Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
@@ -100,9 +100,9 @@ The script below puts all the steps above together:
 ```julia
 using Snowflake
 
-c = Circuit(qubit_count=2, bit_count=0)
-pushGate!(c, [hadamard(1)])
-pushGate!(c, [control_x(1, 2)])
+c = QuantumCircuit(qubit_count=2, bit_count=0)
+push_gate!(c, [hadamard(1)])
+push_gate!(c, [control_x(1, 2)])
 ψ = simulate(c)
 ```
 
