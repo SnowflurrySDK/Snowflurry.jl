@@ -204,7 +204,7 @@ function add_wires_to_circuit_layout!(circuit_layout::Array{String}, i_step::Int
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         # qubit wire
-        circuit_layout[id_wire, i_step+1] = "-"^num_chars
+        circuit_layout[id_wire, i_step+1] = "─"^num_chars
         # spacer line
         circuit_layout[id_wire+1, i_step+1] = " "^num_chars
     end
@@ -224,7 +224,7 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, ga
                 ' '^num_right_chars
         else
             circuit_layout[i_wire, i_step+1] = '-'^num_left_chars * "|" *
-                '-'^num_right_chars
+                '─'^num_right_chars
         end
     end
 end
@@ -238,8 +238,8 @@ function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate
         num_left_dashes = 2 + floor(Int, length_difference/2)
         num_right_dashes = 2 + ceil(Int, length_difference/2)
         id_wire = 2*(target-1)+1
-        circuit_layout[id_wire, i_step+1] = '-'^num_left_dashes *
-            "$(gate.display_symbol[i_target])" * '-'^num_right_dashes
+        circuit_layout[id_wire, i_step+1] = '─'^num_left_dashes *
+            "$(gate.display_symbol[i_target])" * '─'^num_right_dashes
     end
 end
 
