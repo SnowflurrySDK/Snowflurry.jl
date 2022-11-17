@@ -49,9 +49,9 @@ Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:-----
+q[2]:─────
 ```          
 The first command added a Hadamard gate to the quantum circuit object `c`. The gate will operate on qubit 1.
 
@@ -61,9 +61,9 @@ Quantum Circuit Object:
    id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:-------X--
+q[2]:───────X──
 ```
 
  The second command added a CNOT gate (Control-X gate) with qubit 1 as the control and qubit 2 as the target. 

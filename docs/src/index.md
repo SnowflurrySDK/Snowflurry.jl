@@ -85,9 +85,9 @@ Quantum Circuit Object:
    id: 1e9c4f6e-64df-11ec-0c5b-036aab5b72cb
    qubit_count: 2
    bit_count: 0
-q[1]:--H----*--
+q[1]:──H────*──
             |
-q[2]:-------X--
+q[2]:───────X──
 ```
 
 **Note:** Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!

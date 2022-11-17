@@ -43,9 +43,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
           
 
 
@@ -54,9 +54,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:--X----X--
+q[2]:──X────X──
 ```
 """
 function push_gate!(circuit::QuantumCircuit, gate::Gate)
@@ -94,9 +94,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
           
 
 
@@ -105,18 +105,18 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:--X----X--
+q[2]:──X────X──
 
 julia> pop_gate!(c)
 Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
 ```
 """
 function pop_gate!(circuit::QuantumCircuit)
@@ -124,27 +124,34 @@ function pop_gate!(circuit::QuantumCircuit)
     return circuit
 end
 
-function Base.show(io::IO, circuit::QuantumCircuit)
+function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer=10)
     println(io, "Quantum Circuit Object:")
     println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
     println(io, "   bit_count: $(circuit.bit_count) ")
-    print_circuit_diagram(io, circuit)
+    print_circuit_diagram(io, circuit, padding_width)
 end
 
-function print_circuit_diagram(io, circuit)
+function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::Integer)
     circuit_layout = get_circuit_layout(circuit)
-    num_wires = size(circuit_layout, 1)
-    pipeline_length = size(circuit_layout, 2)
-    for i_wire in range(1, length = num_wires-1)
-        for i_step in range(1, length = pipeline_length)
-            print(io, circuit_layout[i_wire, i_step])
+    split_circuit_layouts = get_split_circuit_layout(io, circuit_layout, padding_width)
+    num_splits = length(split_circuit_layouts)
+
+    for i_split in 1:num_splits
+        if num_splits > 1
+            println(io, "Part $i_split of $num_splits")
+        end
+        for i_wire = 1:size(split_circuit_layouts[i_split], 1)
+            for i_step = 1:size(split_circuit_layouts[i_split], 2)
+                print(io, split_circuit_layouts[i_split][i_wire, i_step])
+            end
+            println(io, "")
         end
         println(io, "")
     end
 end
 
-function get_circuit_layout(circuit)
+function get_circuit_layout(circuit::QuantumCircuit)
     wire_count = 2 * circuit.qubit_count
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
@@ -164,7 +171,7 @@ function get_circuit_layout(circuit)
     return circuit_layout
 end
 
-function get_longest_symbol_length(step)
+function get_longest_symbol_length(step::Array{Gate})
     largest_length = 0
     for gate in step
         for symbol in gate.display_symbol
@@ -177,29 +184,34 @@ function get_longest_symbol_length(step)
     return largest_length
 end
 
-function add_qubit_labels_to_circuit_layout!(circuit_layout, num_qubits)
+function add_qubit_labels_to_circuit_layout!(circuit_layout::Array{String},
+    num_qubits::Integer)
+
+    max_num_digits = ndigits(num_qubits)
     for i_qubit in range(1, length = num_qubits)
+        num_digits = ndigits(i_qubit)
+        padding = max_num_digits-num_digits
         id_wire = 2 * (i_qubit - 1) + 1
-        circuit_layout[id_wire, 1] = "q[$i_qubit]:"
+        circuit_layout[id_wire, 1] = "q[$i_qubit]:" * " "^padding
         circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
     end
 end
 
-function add_wires_to_circuit_layout!(circuit_layout, i_step, num_qubits,
-    longest_symbol_length)
+function add_wires_to_circuit_layout!(circuit_layout::Array{String}, i_step::Integer,
+    num_qubits::Integer, longest_symbol_length::Integer)
 
     num_chars = 4+longest_symbol_length
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         # qubit wire
-        circuit_layout[id_wire, i_step+1] = "-"^num_chars
+        circuit_layout[id_wire, i_step+1] = "─"^num_chars
         # spacer line
         circuit_layout[id_wire+1, i_step+1] = " "^num_chars
     end
 end
 
-function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
-    longest_symbol_length)
+function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
+    i_step::Integer, longest_symbol_length::Integer)
     
     length_difference = longest_symbol_length-1
     num_left_chars = 2 + floor(Int, length_difference/2)
@@ -212,12 +224,13 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
                 ' '^num_right_chars
         else
             circuit_layout[i_wire, i_step+1] = '-'^num_left_chars * "|" *
-                '-'^num_right_chars
+                '─'^num_right_chars
         end
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout, gate, i_step, longest_symbol_length)
+function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
+    i_step::Integer, longest_symbol_length::Integer)
     
     for (i_target, target) in enumerate(gate.target)
         symbol_length = length(gate.display_symbol[i_target])
@@ -225,9 +238,40 @@ function add_target_to_circuit_layout!(circuit_layout, gate, i_step, longest_sym
         num_left_dashes = 2 + floor(Int, length_difference/2)
         num_right_dashes = 2 + ceil(Int, length_difference/2)
         id_wire = 2*(target-1)+1
-        circuit_layout[id_wire, i_step+1] = '-'^num_left_dashes *
-            "$(gate.display_symbol[i_target])" * '-'^num_right_dashes
+        circuit_layout[id_wire, i_step+1] = '─'^num_left_dashes *
+            "$(gate.display_symbol[i_target])" * '─'^num_right_dashes
     end
+end
+
+function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
+    padding_width::Integer)
+
+    (display_height, display_width) = displaysize(io)
+    useable_width = display_width-padding_width
+    num_steps = size(circuit_layout, 2)
+    num_qubit_label_chars = length(circuit_layout[1, 1])
+    char_count = num_qubit_label_chars
+    first_gate_step = 2
+    split_layout = []
+    if num_steps == 1
+        push!(split_layout, circuit_layout)
+    end
+    for i_step = 2:num_steps
+        step = circuit_layout[1, i_step]
+        num_chars_in_step = length(step)
+        char_count += num_chars_in_step
+        if char_count > useable_width
+            push!(split_layout, hcat(circuit_layout[:,1],
+                circuit_layout[:,first_gate_step:i_step-1]))
+            char_count = num_qubit_label_chars + num_chars_in_step
+            first_gate_step = i_step
+        end
+        if i_step == num_steps
+            push!(split_layout, hcat(circuit_layout[:,1],
+                circuit_layout[:,first_gate_step:i_step]))
+        end
+    end
+    return split_layout
 end
 
 """
@@ -247,9 +291,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:-----
+q[2]:─────
           
 
 
@@ -258,9 +302,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:-------X--
+q[2]:───────X──
                
 
 
@@ -398,9 +442,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:-----
+q[2]:─────
           
 
 
@@ -409,9 +453,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:-------X--
+q[2]:───────X──
                
 
 

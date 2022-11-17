@@ -98,9 +98,9 @@ Quantum Circuit Object:
    id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
 
 
 ```
