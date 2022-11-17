@@ -43,9 +43,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
           
 
 
@@ -54,9 +54,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:--X----X--
+q[2]:──X────X──
 ```
 """
 function push_gate!(circuit::QuantumCircuit, gate::Gate)
@@ -94,9 +94,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
           
 
 
@@ -105,18 +105,18 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:--X----X--
+q[2]:──X────X──
 
 julia> pop_gate!(c)
 Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:--X--
+q[2]:──X──
 ```
 """
 function pop_gate!(circuit::QuantumCircuit)
@@ -291,9 +291,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:-----
+q[2]:─────
           
 
 
@@ -302,9 +302,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:-------X--
+q[2]:───────X──
                
 
 
@@ -442,9 +442,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H--
+q[1]:──H──
           
-q[2]:-----
+q[2]:─────
           
 
 
@@ -453,9 +453,9 @@ Quantum Circuit Object:
    id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
    bit_count: 0 
-q[1]:--H----*--
+q[1]:──H────*──
             |  
-q[2]:-------X--
+q[2]:───────X──
                
 
 
