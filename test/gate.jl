@@ -62,8 +62,8 @@ end
 
     x90 = x_90(1)
     @test x90.instruction_symbol == "x_90"
-    @test x90*ψ_0 ≈ -im*ψ_1 
-    @test x90*ψ_1 ≈ -im*ψ_0 
+    @test x90*ψ_0 ≈  rotation_x(1, pi/2)*ψ_0
+    @test x90*ψ_1 ≈ rotation_x(1, pi/2)*ψ_1
 
     r = rotation(1, pi/2, pi/2)
     @test r.instruction_symbol == "r"
