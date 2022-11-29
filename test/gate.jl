@@ -47,6 +47,13 @@ end
     CZ = control_z(1, 2)
     @test CZ.instruction_symbol == "cz"
 
+    CCX = toffoli(1, 2, 3)
+    @test CCX.instruction_symbol == "ccx"
+    @test CCX*fock(6,8) ≈ fock(7,8)
+    @test CCX*fock(2,8) ≈ fock(2,8)
+    @test CCX*fock(4,8) ≈ fock(4,8)
+    @test toffoli(3, 1, 2)*fock(5,8) ≈ fock(7,8)
+
     ψ_0 = fock(0,2)
     ψ_1 = fock(1,2)
 
@@ -133,7 +140,7 @@ end
 end
 
 @testset "std_gates" begin
-    std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap"]
+    std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap", "ccx"]
     for gate in std_gates
         @test gate in keys(STD_GATES)
     end

@@ -414,6 +414,17 @@ iswap() = Operator(
     ),
 )
 
+toffoli() = Operator(
+    [1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0
+    0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0]
+)
+
 """
     sigma_x(target)
 
@@ -553,6 +564,9 @@ The corresponding `Operator` is [`iswap()`](@ref).
 """ 
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
+toffoli(control_qubit_1, control_qubit_2, target_qubit) =
+    Gate(["*" "*" "X"], "ccx", toffoli(), [control_qubit_1, control_qubit_2, target_qubit])
+
 """
     Base.:*(M::Gate, x::Ket)
 
@@ -595,6 +609,7 @@ STD_GATES = Dict(
     "cx" => control_x,
     "cz" => control_z,
     "iswap" => iswap,
+    "ccx" => toffoli,
 )
 
 PAULI_GATES = Dict(
