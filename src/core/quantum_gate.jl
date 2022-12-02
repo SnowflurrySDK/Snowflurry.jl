@@ -197,6 +197,19 @@ S = \\begin{bmatrix}
 phase() = Operator(reshape(Complex.([1.0, 0.0, 0.0, im]), 2, 2))
 
 """
+    phase_dagger()
+
+Return the adjoint phase gate `Operator`, which is defined as:
+```math
+S^\\dagger = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & -i
+    \\end{bmatrix}.
+```
+"""
+phase_dagger() = Operator(reshape(Complex.([1.0, 0.0, 0.0, -im]), 2, 2))
+
+"""
     pi_8()
 
 Return the `Operator` for the π/8 gate, which is defined as:
@@ -208,6 +221,19 @@ T = \\begin{bmatrix}
 ```
 """
 pi_8() = Operator(reshape(Complex.([1.0, 0.0, 0.0, exp(im*pi/4.0)]), 2, 2))
+
+"""
+    pi_8_dagger()
+
+Return the adjoint `Operator` of the π/8 gate, which is defined as:
+```math
+T^\\dagger = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & e^{-i\\frac{\\pi}{4}}
+    \\end{bmatrix}.
+```
+"""
+pi_8_dagger() = Operator(reshape(Complex.([1.0, 0.0, 0.0, exp(-im*pi/4.0)]), 2, 2))
 
 """
     eye()
@@ -443,6 +469,25 @@ toffoli() = Operator(
 )
 
 """
+    iswap_dagger()
+
+Return the adjoint of the imaginary swap `Operator`, which is defined as:
+```math
+iSWAP^\\dagger = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 0 & -i & 0 \\\\
+    0 & -i & 0 & 0 \\\\
+    0 & 0 & 0 & 1
+    \\end{bmatrix}.
+```
+"""
+iswap_dagger() = Operator(
+    Complex.(
+        [[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, -im, 0.0] [0.0, -im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]],
+    ),
+)
+
+"""
     sigma_x(target)
 
 Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `Operator` to the target qubit.
@@ -473,16 +518,30 @@ hadamard(target) = Gate(["H"], "h", hadamard(), target)
 """
     phase(target)
 
-Return a phase `Gate` (also known as an S `Gate`), which applies the [`phase()`](@ref) `Operator` to the target qubit.
+Return a phase `Gate` (also known as an ``S`` `Gate`), which applies the [`phase()`](@ref) `Operator` to the target qubit.
 """
 phase(target) = Gate(["S"], "s", phase(), target)
 
 """
+    phase_dagger(target)
+
+Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `Operator` to the target qubit.
+"""
+phase_dagger(target) = Gate(["S†"], "sdag", phase_dagger(), target)
+
+"""
     pi_8(target)
 
-Return a π/8 `Gate` (also known as a T `Gate`), which applies the [`pi_8()`](@ref) `Operator` to the `target` qubit.
+Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `Operator` to the `target` qubit.
 """
 pi_8(target) = Gate(["T"], "t", pi_8(), target)
+
+"""
+    pi_8_dagger(target)
+
+Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
+"""
+pi_8_dagger(target) = Gate(["T†"], "tdag", pi_8_dagger(), target)
 
 """
     x_90(target)
@@ -592,6 +651,15 @@ toffoli(control_qubit_1, control_qubit_2, target_qubit) =
     Gate(["*" "*" "X"], "ccx", toffoli(), [control_qubit_1, control_qubit_2, target_qubit])
 
 """
+    iswap_dagger(qubit_1, qubit_2)
+
+Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swap `Operator` to `qubit_1` and `qubit_2.`
+
+The corresponding `Operator` is [`iswap_dagger()`](@ref).
+""" 
+iswap_dagger(qubit_1, qubit_2) = Gate(["x†" "x†"], "iswapdag", iswap_dagger(), [qubit_1, qubit_2])
+
+"""
     Base.:*(M::Gate, x::Ket)
 
 Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
@@ -620,6 +688,13 @@ function get_transformed_state(state::Ket, gate::Gate)
     transformed_state = deepcopy(state)
     apply_gate!(transformed_state, gate)
     return transformed_state
+end
+
+function get_inverse(gate::Gate)
+    if ishermitian(gate.operator)
+        return gate
+    end
+
 end
 
 STD_GATES = Dict(

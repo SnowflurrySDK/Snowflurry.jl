@@ -104,6 +104,19 @@ end
     @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 end
 
+@testset "adjoint_gates" begin
+    initial_state_10 = Ket([0, 0, 1, 0])
+    @test iswap(1, 2)*(iswap_dagger(1, 2)*initial_state_10) ≈ initial_state_10
+    @test iswap_dagger(1, 2).instruction_symbol == "iswapdag"
+
+    initial_state_1 = Ket([0, 1])
+    @test pi_8_dagger(1)*(pi_8(1)*initial_state_1) ≈ initial_state_1
+    @test pi_8_dagger(1).instruction_symbol == "tdag"
+
+    @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
+    @test phase_dagger(1).instruction_symbol == "sdag"
+end
+
 
 @testset "gate_set_exceptions" begin
     @test_throws DomainError control_x(1, 1)

@@ -25,7 +25,9 @@ sigma_y
 sigma_z
 hadamard
 phase
+phase_dagger
 pi_8
+pi_8_dagger
 x_90
 rotation
 rotation_x
@@ -37,6 +39,7 @@ control_z
 control_x
 iswap
 toffoli
+iswap_dagger
 Base.:*(M::Gate, x::Ket)
 apply_gate!
 ```
