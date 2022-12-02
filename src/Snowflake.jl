@@ -54,6 +54,7 @@ export
     sesolve,
     mesolve,
     tr,
+    get_inverse,
     push_gate!,
     pop_gate!,
     simulate,

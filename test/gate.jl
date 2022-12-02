@@ -107,14 +107,93 @@ end
 @testset "adjoint_gates" begin
     initial_state_10 = Ket([0, 0, 1, 0])
     @test iswap(1, 2)*(iswap_dagger(1, 2)*initial_state_10) ≈ initial_state_10
-    @test iswap_dagger(1, 2).instruction_symbol == "iswapdag"
+    @test iswap_dagger(1, 2).instruction_symbol == "iswap_dag"
 
     initial_state_1 = Ket([0, 1])
     @test pi_8_dagger(1)*(pi_8(1)*initial_state_1) ≈ initial_state_1
-    @test pi_8_dagger(1).instruction_symbol == "tdag"
+    @test pi_8_dagger(1).instruction_symbol == "t_dag"
 
     @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
-    @test phase_dagger(1).instruction_symbol == "sdag"
+    @test phase_dagger(1).instruction_symbol == "s_dag"
+end
+
+@testset "get_inverse" begin
+    cnot = control_x(1, 2)
+    inverse_cnot = get_inverse(cnot)
+    @test cnot.operator*inverse_cnot.operator ≈ kron(eye(), eye())
+    @test inverse_cnot.instruction_symbol == "cx"
+
+    rx = rotation_x(1, pi/3)
+    inverse_rx = get_inverse(rx)
+    @test rx.operator*inverse_rx.operator ≈ eye()
+    @test rx.parameters[1] ≈ -inverse_rx.parameters[1]
+
+    ry = rotation_y(1, pi/3)
+    inverse_ry = get_inverse(ry)
+    @test ry.operator*inverse_ry.operator ≈ eye()
+    @test ry.parameters[1] ≈ -inverse_ry.parameters[1]
+
+    rz = rotation_z(1, pi/3)
+    inverse_rz = get_inverse(rz)
+    @test rz.operator*inverse_rz.operator ≈ eye()
+    @test rz.parameters[1] ≈ -inverse_rz.parameters[1]
+
+    p = phase_shift(1, pi/3)
+    inverse_p = get_inverse(p)
+    @test p.operator*inverse_p.operator ≈ eye()
+    @test p.parameters[1] ≈ -inverse_p.parameters[1]
+
+    x_90_gate = x_90(1)
+    inverse_x_90 = get_inverse(x_90_gate)
+    @test x_90_gate.operator*inverse_x_90.operator ≈ eye()
+    @test inverse_x_90.instruction_symbol == "rx"
+    @test inverse_x_90.parameters[1] ≈ -pi/2
+
+    s = phase(1)
+    inverse_s = get_inverse(s)
+    @test s.operator*inverse_s.operator ≈ eye()
+    @test inverse_s.instruction_symbol == "s_dag"
+
+    s_dag = phase_dagger(1)
+    inverse_s_dag = get_inverse(s_dag)
+    @test s_dag.operator*inverse_s_dag.operator ≈ eye()
+    @test inverse_s_dag.instruction_symbol == "s"
+
+    t = pi_8(1)
+    inverse_t = get_inverse(t)
+    @test t.operator*inverse_t.operator ≈ eye()
+    @test inverse_t.instruction_symbol == "t_dag"
+
+    t_dag = pi_8_dagger(1)
+    inverse_t_dag = get_inverse(t_dag)
+    @test t_dag.operator*inverse_t_dag.operator ≈ eye()
+    @test inverse_t_dag.instruction_symbol == "t"
+
+    iswap_gate = iswap(1, 2)
+    inverse_iswap = get_inverse(iswap_gate)
+    @test iswap_gate.operator*inverse_iswap.operator ≈ kron(eye(), eye())
+    @test inverse_iswap.instruction_symbol == "iswap_dag"
+
+    iswap_dag = iswap_dagger(1, 2)
+    inverse_iswap_dag = get_inverse(iswap_dag)
+    @test iswap_dag.operator*inverse_iswap_dag.operator ≈ kron(eye(), eye())
+    @test inverse_iswap_dag.instruction_symbol == "iswap"
+
+    r = rotation(1, pi/2, -pi/3)
+    inverse_r = get_inverse(r)
+    @test r.operator*inverse_r.operator ≈ eye()
+    @test inverse_r.parameters[1] ≈ -r.parameters[1]
+    @test inverse_r.parameters[2] ≈ r.parameters[2]
+
+    u = universal(1, pi/2, -pi/3, pi/4)
+    inverse_u = get_inverse(u)
+    @test u.operator*inverse_u.operator ≈ eye()
+    @test inverse_u.parameters[1] ≈ -u.parameters[1]
+    @test inverse_u.parameters[2] ≈ -u.parameters[3]
+    @test inverse_u.parameters[3] ≈ -u.parameters[2]
+
+    unknown_gate = Gate(["na"], "na", Operator([1 2; 3 4]), 1)
+    @test_throws ErrorException get_inverse(unknown_gate)
 end
 
 

@@ -527,7 +527,7 @@ phase(target) = Gate(["S"], "s", phase(), target)
 
 Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `Operator` to the target qubit.
 """
-phase_dagger(target) = Gate(["S†"], "sdag", phase_dagger(), target)
+phase_dagger(target) = Gate(["S†"], "s_dag", phase_dagger(), target)
 
 """
     pi_8(target)
@@ -541,7 +541,7 @@ pi_8(target) = Gate(["T"], "t", pi_8(), target)
 
 Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
-pi_8_dagger(target) = Gate(["T†"], "tdag", pi_8_dagger(), target)
+pi_8_dagger(target) = Gate(["T†"], "t_dag", pi_8_dagger(), target)
 
 """
     x_90(target)
@@ -657,7 +657,8 @@ Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swa
 
 The corresponding `Operator` is [`iswap_dagger()`](@ref).
 """ 
-iswap_dagger(qubit_1, qubit_2) = Gate(["x†" "x†"], "iswapdag", iswap_dagger(), [qubit_1, qubit_2])
+iswap_dagger(qubit_1, qubit_2) = Gate(["x†" "x†"], "iswap_dag", iswap_dagger(),
+    [qubit_1, qubit_2])
 
 """
     Base.:*(M::Gate, x::Ket)
@@ -694,7 +695,52 @@ function get_inverse(gate::Gate)
     if ishermitian(gate.operator)
         return gate
     end
+    sym = gate.instruction_symbol
+    is_a_single_axis_rotation = sym == "rx" || sym == "ry" || sym == "rz" || sym == "p"
+    if is_a_single_axis_rotation
+        return get_inverse_single_axis_rotation_gate(gate)
+    elseif sym == "x_90"
+        return rotation_x(gate.target[1], -pi/2)
+    elseif sym == "s"
+        return phase_dagger(gate.target[1])
+    elseif sym == "s_dag"
+        return phase(gate.target[1])
+    elseif sym == "t"
+        return pi_8_dagger(gate.target[1])
+    elseif sym == "t_dag"
+        return pi_8(gate.target[1])
+    elseif sym == "iswap"
+        return iswap_dagger(gate.target[1], gate.target[2])
+    elseif sym == "iswap_dag"
+        return iswap(gate.target[1], gate.target[2])
+    elseif sym == "r"
+        return get_inverse_rotation_gate(gate)
+    elseif sym == "u"
+        return get_inverse_universal_gate(gate)
+    else
+        throw(ErrorException("no adjoint is available for the $sym gate"))
+    end
+end
 
+function get_inverse_single_axis_rotation_gate(gate::Gate)
+    new_operator = gate.operator'
+    new_parameters = [-gate.parameters[1]]
+    return Gate(gate.display_symbol, gate.instruction_symbol, new_operator, gate.target,
+        new_parameters)
+end
+
+function get_inverse_rotation_gate(gate::Gate)
+    new_operator = gate.operator'
+    new_parameters = [-gate.parameters[1], gate.parameters[2]]
+    return Gate(gate.display_symbol, gate.instruction_symbol, new_operator, gate.target,
+        new_parameters)
+end
+
+function get_inverse_universal_gate(gate::Gate)
+    new_operator = gate.operator'
+    new_parameters = [-gate.parameters[1], -gate.parameters[3], -gate.parameters[2]]
+    return Gate(gate.display_symbol, gate.instruction_symbol, new_operator, gate.target,
+        new_parameters)
 end
 
 STD_GATES = Dict(
