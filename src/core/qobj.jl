@@ -113,6 +113,35 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
 
+"""
+    ishermitian(A::Operator)
+
+Determine if Operator `A` is Hermitian (i.e. self-adjoint).
+
+# Examples
+```jldoctest
+julia> Y = sigma_y()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 - 1.0im
+0.0 + 1.0im    0.0 + 0.0im
+
+
+julia> ishermitian(Y)
+true
+
+julia> P = sigma_p()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im
+
+
+julia> ishermitian(P)
+false
+
+```
+"""
 ishermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
