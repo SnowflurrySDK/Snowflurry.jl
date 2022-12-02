@@ -139,3 +139,8 @@ end
     @test get_num_bodies(kron(qutrit_operator, qutrit_operator),
         hilbert_space_size_per_qutrit) == 2
 end
+
+@testset "ishermitian" begin
+    @test ishermitian(sigma_y())
+    @test !ishermitian(sigma_p())
+end

@@ -41,6 +41,7 @@ export
     create,
     destroy,
     number_op,
+    ishermitian,
     eigen,
     ket2dm,
     fock_dm,
