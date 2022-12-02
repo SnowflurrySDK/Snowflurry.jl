@@ -506,6 +506,43 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     return data
 end
 
+"""
+    get_inverse(circuit::QuantumCircuit)
+
+Return a `QuantumCircuit` which is the inverse of the input `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, rotation_y(1, pi/4));
+
+julia> push_gate!(c, control_x(1, 2))
+Quantum Circuit Object:
+   id: 47ddf072-7293-11ed-3d64-9f4fd1e69575 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──Ry(0.7853981633974483)────*──
+                                 |  
+q[2]:────────────────────────────X──
+                                    
+
+
+
+julia> get_inverse(c)
+Quantum Circuit Object:
+   id: 6153cc20-7293-11ed-37d4-e14a7e7df842 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──*────Ry(-0.7853981633974483)──
+       |                             
+q[2]:──X─────────────────────────────
+                                     
+
+
+
+```
+"""
 function get_inverse(circuit::QuantumCircuit)
     reverse_pipeline = reverse(circuit.pipeline)
     inverse_pipeline = Vector{Gate}[]

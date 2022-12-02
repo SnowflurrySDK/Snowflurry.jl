@@ -12,6 +12,7 @@ push_gate!
 pop_gate!
 simulate
 simulate_shots
+get_inverse(circuit::QuantumCircuit)
 ```
 
 ## Quantum Gates
@@ -42,7 +43,7 @@ toffoli
 iswap_dagger
 Base.:*(M::Gate, x::Ket)
 apply_gate!
-get_inverse
+get_inverse(gate::Gate)
 ```
 
 ## Quantum Processing Unit
