@@ -729,9 +729,14 @@ function get_inverse(gate::Gate)
         return gate
     end
     sym = gate.instruction_symbol
-    is_a_single_axis_rotation = sym == "rx" || sym == "ry" || sym == "rz" || sym == "p"
-    if is_a_single_axis_rotation
-        return get_inverse_single_axis_rotation_gate(gate)
+    if sym == "rx"
+        return rotation_x(gate.target[1], -gate.parameters[1])
+    elseif sym == "ry"
+        return rotation_y(gate.target[1], -gate.parameters[1])
+    elseif sym == "rz"
+        return rotation_z(gate.target[1], -gate.parameters[1])
+    elseif sym == "p"
+        return phase_shift(gate.target[1], -gate.parameters[1])
     elseif sym == "x_90"
         return rotation_x(gate.target[1], -pi/2)
     elseif sym == "s"
@@ -747,19 +752,13 @@ function get_inverse(gate::Gate)
     elseif sym == "iswap_dag"
         return iswap(gate.target[1], gate.target[2])
     elseif sym == "r"
-        return get_inverse_rotation_gate(gate)
+        return rotation(gate.target[1], -gate.parameters[1], gate.parameters[2])
     elseif sym == "u"
-        return get_inverse_universal_gate(gate)
+        return universal(gate.target[1], -gate.parameters[1], -gate.parameters[3],
+            -gate.parameters[2])
     else
         throw(ErrorException("no adjoint is available for the $sym gate"))
     end
-end
-
-function get_inverse_single_axis_rotation_gate(gate::Gate)
-    new_operator = gate.operator'
-    new_parameters = [-gate.parameters[1]]
-    return Gate(gate.display_symbol, gate.instruction_symbol, new_operator, gate.target,
-        new_parameters)
 end
 
 function get_inverse_rotation_gate(gate::Gate)
