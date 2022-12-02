@@ -691,6 +691,39 @@ function get_transformed_state(state::Ket, gate::Gate)
     return transformed_state
 end
 
+"""
+    get_inverse(gate::Gate)
+
+Return a `Gate` which is the inverse of the input `gate`.
+
+# Examples
+```jldoctest
+julia> u = universal(1, -pi/2, pi/3, pi/4)
+Gate Object:
+instruction symbol: u
+parameters: [-1.5707963267948966, 1.0471975511965976, 0.7853981633974483]
+targets: [1]
+operator:
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.7071067811865476 + 0.0im    0.5 + 0.4999999999999999im
+-0.3535533905932738 - 0.6123724356957945im    -0.18301270189221924 + 0.6830127018922194im
+
+
+julia> get_inverse(u)
+Gate Object:
+instruction symbol: u
+parameters: [1.5707963267948966, -0.7853981633974483, -1.0471975511965976]
+targets: [1]
+operator:
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.7071067811865476 - 0.0im    -0.3535533905932738 + 0.6123724356957945im
+0.5 - 0.4999999999999999im    -0.18301270189221924 - 0.6830127018922194im
+
+
+```
+"""
 function get_inverse(gate::Gate)
     if ishermitian(gate.operator)
         return gate

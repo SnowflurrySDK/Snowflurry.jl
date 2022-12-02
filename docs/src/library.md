@@ -42,6 +42,7 @@ toffoli
 iswap_dagger
 Base.:*(M::Gate, x::Ket)
 apply_gate!
+get_inverse
 ```
 
 ## Quantum Processing Unit
