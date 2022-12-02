@@ -78,3 +78,16 @@ end
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
     @test_throws DomainError push_gate!(c, control_x(1, 3))
 end
+
+@testset "get_inverse" begin
+    c = QuantumCircuit(qubit_count=2, bit_count=0)
+    push_gate!(c, rotation_x(1, pi/2))
+    push_gate!(c, control_x(1, 2))
+    inverse_c = get_inverse(c)
+
+    @test inverse_c.pipeline[1][1].instruction_symbol == "cx"
+    @test inverse_c.pipeline[1][1].target == [1, 2]
+    @test inverse_c.pipeline[2][1].instruction_symbol == "rx"
+    @test inverse_c.pipeline[2][1].target == [1]
+    @test inverse_c.pipeline[2][1].parameters ≈ [-pi/2]
+end

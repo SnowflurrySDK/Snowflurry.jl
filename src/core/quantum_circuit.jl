@@ -505,3 +505,17 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
 end
+
+function get_inverse(circuit::QuantumCircuit)
+    reverse_pipeline = reverse(circuit.pipeline)
+    inverse_pipeline = Vector{Gate}[]
+    for step in reverse_pipeline
+        inverse_gate_list = Gate[]
+        for gate in step
+            push!(inverse_gate_list, get_inverse(gate))
+        end
+        push!(inverse_pipeline, inverse_gate_list)
+    end
+    return QuantumCircuit(qubit_count=circuit.qubit_count, bit_count=circuit.bit_count,
+        pipeline=inverse_pipeline)
+end
