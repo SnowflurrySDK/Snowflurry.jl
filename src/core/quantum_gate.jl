@@ -415,6 +415,34 @@ iswap() = Operator(
 )
 
 """
+    toffoli()
+
+Return the Toffoli `Operator`, which is defined as:
+```math
+CCX = CCNOT = \\begin{bmatrix}
+    1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+    0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+    0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\\\
+    0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\\\
+    0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\\
+    0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\\\
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\\\
+    0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
+    \\end{bmatrix}.
+```
+"""
+toffoli() = Operator(
+    [1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0
+    0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0]
+)
+
+"""
     sigma_x(target)
 
 Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `Operator` to the target qubit.
@@ -554,6 +582,16 @@ The corresponding `Operator` is [`iswap()`](@ref).
 iswap(qubit_1, qubit_2) = Gate(["x" "x"], "iswap", iswap(), [qubit_1, qubit_2])
 
 """
+    toffoli(control_qubit_1, control_qubit_2, target_qubit)
+
+Return a Toffoli gate (also known as a CCNOT gate) given two control qubits and a `target_qubit`.
+
+The corresponding `Operator` is [`toffoli()`](@ref).
+""" 
+toffoli(control_qubit_1, control_qubit_2, target_qubit) =
+    Gate(["*" "*" "X"], "ccx", toffoli(), [control_qubit_1, control_qubit_2, target_qubit])
+
+"""
     Base.:*(M::Gate, x::Ket)
 
 Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
@@ -595,6 +633,7 @@ STD_GATES = Dict(
     "cx" => control_x,
     "cz" => control_z,
     "iswap" => iswap,
+    "ccx" => toffoli,
 )
 
 PAULI_GATES = Dict(

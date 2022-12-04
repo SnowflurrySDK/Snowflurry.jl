@@ -36,6 +36,7 @@ universal
 control_z
 control_x
 iswap
+toffoli
 Base.:*(M::Gate, x::Ket)
 apply_gate!
 ```

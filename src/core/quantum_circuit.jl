@@ -223,7 +223,7 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, ga
             circuit_layout[i_wire, i_step+1] = ' '^num_left_chars * "|" *
                 ' '^num_right_chars
         else
-            circuit_layout[i_wire, i_step+1] = '-'^num_left_chars * "|" *
+            circuit_layout[i_wire, i_step+1] = '─'^num_left_chars * "|" *
                 '─'^num_right_chars
         end
     end
