@@ -554,3 +554,18 @@ function get_inverse(circuit::QuantumCircuit)
     return QuantumCircuit(qubit_count=circuit.qubit_count, bit_count=circuit.bit_count,
         pipeline=inverse_pipeline)
 end
+
+function get_gate_counts(circuit::QuantumCircuit)
+    gate_counts = Dict{String, Int}()
+    for step in circuit.pipeline
+        for gate in step
+            if haskey(gate_counts, gate.instruction_symbol)
+                gate_counts[gate.instruction_symbol] =
+                    gate_counts[gate.instruction_symbol]+1
+            else
+                gate_counts[gate.instruction_symbol] = 1
+            end
+        end
+    end
+    return gate_counts
+end

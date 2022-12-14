@@ -61,6 +61,7 @@ export
     pop_gate!,
     simulate,
     simulate_shots,
+    get_gate_counts,
     plot_histogram,
     plot_bloch_sphere,
     plot_bloch_sphere_animation,
