@@ -13,6 +13,7 @@ pop_gate!
 simulate
 simulate_shots
 get_inverse(circuit::QuantumCircuit)
+get_gate_counts
 ```
 
 ## Quantum Gates

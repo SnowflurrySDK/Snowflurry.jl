@@ -1,6 +1,6 @@
 
 """
-        QuantumCircuit(qubit_count = .., bit_count = ...)
+    QuantumCircuit(qubit_count = .., bit_count = ...)
 
 A data structure to represent a *quantum circuit*.  
 # Fields
@@ -29,8 +29,8 @@ Base.@kwdef struct QuantumCircuit
 end
 
 """
-        push_gate!(circuit::QuantumCircuit, gate::Gate)
-        push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    push_gate!(circuit::QuantumCircuit, gate::Gate)
+    push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
 
 Pushes a single gate or an array of gates to the `circuit` pipeline. This function is mutable. 
 
@@ -81,7 +81,7 @@ function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Vector{<:Ga
 end
 
 """
-        pop_gate!(circuit::QuantumCircuit)
+    pop_gate!(circuit::QuantumCircuit)
 
 Removes the last gate from `circuit.pipeline`. 
 
@@ -275,7 +275,7 @@ function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
 end
 
 """
-        simulate(circuit::QuantumCircuit)
+    simulate(circuit::QuantumCircuit)
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`. 
 
@@ -427,7 +427,7 @@ function get_b1_bitstrings(gate::Gate, target_space_bitstrings, qubit_count)
 end
 
 """
-        simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
+    simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
 Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
 
@@ -555,6 +555,40 @@ function get_inverse(circuit::QuantumCircuit)
         pipeline=inverse_pipeline)
 end
 
+"""
+    get_gate_counts(circuit::QuantumCircuit)
+
+Returns a dictionary listing the number of gates of each type found in the `circuit`.
+
+The dictionary keys are the instruction_symbol of the gates while the values are the number of gates found.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), hadamard(2)]);
+
+julia> push_gate!(c, control_x(1, 2));
+
+julia> push_gate!(c, hadamard(2))
+Quantum Circuit Object:
+   id: cae04dc4-7bdc-11ed-2223-039a8d93f511 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H────*───────
+            |       
+q[2]:──H────X────H──
+                    
+
+
+
+julia> get_gate_counts(c)
+Dict{String, Int64} with 2 entries:
+  "h"  => 3
+  "cx" => 1
+
+```
+"""
 function get_gate_counts(circuit::QuantumCircuit)
     gate_counts = Dict{String, Int}()
     for step in circuit.pipeline
