@@ -638,3 +638,54 @@ function get_num_gates(circuit::QuantumCircuit)
     end
     return num_gates
 end
+
+"""
+    get_depth(circuit::QuantumCircuit)
+
+Returns the depth of the `circuit`.
+
+Note that the function does not attempt to reduce the circuit depth by parallelizing gates.
+
+# Examples
+```jldoctest
+julia> c1 = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c1, hadamard(1));
+
+julia> push_gate!(c1, hadamard(2))
+Quantum Circuit Object:
+   id: 9902bb26-7be0-11ed-0df8-976e7a0d7b8d 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H───────
+               
+q[2]:───────H──
+               
+
+
+
+julia> get_depth(c1)
+2
+
+julia> c2 = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c2,[hadamard(1),  hadamard(2)])
+Quantum Circuit Object:
+   id: b3b1c0e8-7be0-11ed-0b8b-835771f15fc1 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H──
+          
+q[2]:──H──
+          
+
+
+
+julia> get_depth(c2)
+1
+
+```
+"""
+function get_depth(circuit::QuantumCircuit)
+    return length(circuit.pipeline)
+end
