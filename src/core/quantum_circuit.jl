@@ -594,12 +594,47 @@ function get_gate_counts(circuit::QuantumCircuit)
     for step in circuit.pipeline
         for gate in step
             if haskey(gate_counts, gate.instruction_symbol)
-                gate_counts[gate.instruction_symbol] =
-                    gate_counts[gate.instruction_symbol]+1
+                gate_counts[gate.instruction_symbol] += 1
             else
                 gate_counts[gate.instruction_symbol] = 1
             end
         end
     end
     return gate_counts
+end
+
+"""
+    get_num_gates(circuit::QuantumCircuit)
+
+Returns the number of gates in the `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), hadamard(2)]);
+
+julia> push_gate!(c, control_x(1, 2))
+Quantum Circuit Object:
+   id: 2c899c5e-7bdf-11ed-0810-fbc3222f3890 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H────*──
+            |  
+q[2]:──H────X──
+               
+
+
+
+julia> get_num_gates(c)
+3
+
+```
+"""
+function get_num_gates(circuit::QuantumCircuit)
+    num_gates = 0
+    for step in circuit.pipeline
+        num_gates += length(step)
+    end
+    return num_gates
 end

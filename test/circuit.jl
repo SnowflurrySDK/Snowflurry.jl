@@ -99,4 +99,7 @@ end
     push_gate!(c, sigma_x(2))
     gate_counts = get_gate_counts(c)
     @test gate_counts == Dict("cx"=>1, "x"=>3)
+
+    num_gates = get_num_gates(c)
+    @test num_gates == 4
 end
