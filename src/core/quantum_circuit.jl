@@ -64,13 +64,13 @@ function push_gate!(circuit::QuantumCircuit, gate::Gate)
     return circuit
 end
 
-function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+function push_gate!(circuit::QuantumCircuit, gates::Vector{<:Gate})
     ensure_gates_are_in_circuit(circuit, gates)
     push!(circuit.pipeline, gates)
     return circuit
 end
 
-function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Array{Gate})
+function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Vector{<:Gate})
     for gate in gates
         for target in gate.target
             if target > circuit.qubit_count
@@ -340,7 +340,7 @@ function apply_gate_without_ket_size_check!(state::Ket, gate::Gate, qubit_count)
         for (index, x1) in enumerate(b1)
             temp_state[index] = state.data[x0+x1+1]
         end
-        temp_state = gate.operator.data*temp_state
+        temp_state = get_operator(gate).data*temp_state
         for (index, x1) in enumerate(b1)
             state.data[x0+x1+1] = temp_state[index]
         end

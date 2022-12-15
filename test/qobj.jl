@@ -36,7 +36,7 @@ using Test
     # Bit flip gate (sigma_x)
     @test X * Ψ_0 ≈ Ψ_1
     @test X * Ψ_1 ≈ Ψ_0
-    @test (Bra(Ψ_1) * X.operator) * Ψ_0 ≈ Complex(1.0)
+    @test (Bra(Ψ_1) * get_operator(X)) * Ψ_0 ≈ Complex(1.0)
 
     # Z gate
     @test Z * Ψ_0 ≈ Ψ_0
