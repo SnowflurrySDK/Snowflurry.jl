@@ -64,6 +64,7 @@ end
     @test CCX*fock(2,8) ≈ fock(2,8)
     @test CCX*fock(4,8) ≈ fock(4,8)
     @test toffoli(3, 1, 2)*fock(5,8) ≈ fock(7,8)
+    @test get_inverse(CCX) == CCX
 
     ψ_0 = fock(0,2)
     ψ_1 = fock(1,2)

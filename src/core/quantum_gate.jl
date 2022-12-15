@@ -857,9 +857,23 @@ get_inverse(gate::ISwap) = iswap_dagger(gate.target...)
 Return a Toffoli gate (also known as a CCNOT gate) given two control qubits and a `target_qubit`.
 
 The corresponding `Operator` is [`toffoli()`](@ref).
-""" 
-toffoli(control_qubit_1, control_qubit_2, target_qubit) =
-    Gate(["*" "*" "X"], "ccx", toffoli(), [control_qubit_1, control_qubit_2, target_qubit])
+"""
+function toffoli(control_qubit_1, control_qubit_2, target_qubit)
+    target = [control_qubit_1, control_qubit_2, target_qubit]
+    ensure_target_qubits_are_different(target)
+    return Toffoli(["*", "*", "X"], "ccx", target, [])
+end
+
+struct Toffoli <: Gate
+    display_symbol::Vector{String}
+    instruction_symbol::String
+    target::Vector{Int}
+    parameters::Vector
+end
+
+get_operator(gate::Toffoli) = toffoli()
+
+get_inverse(gate::Toffoli) = gate
 
 """
     iswap_dagger(qubit_1, qubit_2)
