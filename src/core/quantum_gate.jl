@@ -523,6 +523,24 @@ struct SigmaX <: Gate
     parameters::Vector
 end
 
+"""
+    get_operator(gate::Gate)
+
+Returns the `Operator` which is associated to a `Gate`.
+
+# Examples
+```jldoctest
+julia> x = sigma_x(1);
+
+julia> get_operator(x)
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+
+
+```
+"""
 get_operator(gate::SigmaX) = sigma_x()
 
 get_inverse(gate::SigmaX) = gate
