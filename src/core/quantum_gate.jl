@@ -83,8 +83,10 @@ function Base.show(io::IO, gate::Gate)
         println(io)
     end
     println(io, "targets: $(gate.target)")
-    println(io, "operator:")
-    show(io, "text/plain", get_operator(gate))
+    if applicable(get_operator, gate)
+        println(io, "operator:")
+        show(io, "text/plain", get_operator(gate))
+    end
 end
 
 """

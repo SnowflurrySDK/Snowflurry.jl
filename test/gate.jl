@@ -258,6 +258,17 @@ end
 
 end
 
+@testset "show_gate_without_operator" begin
+    struct UnknownGateWithoutOperator <: Gate
+        instruction_symbol::String
+        target::Vector{Int}
+        parameters::Vector{Int}
+    end
+
+    unknown_gate = UnknownGateWithoutOperator("na", [1], [])
+    println(unknown_gate)
+end
+
 @testset "std_gates" begin
     std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap", "ccx"]
     for gate in std_gates
