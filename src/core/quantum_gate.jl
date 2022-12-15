@@ -1,48 +1,78 @@
 using Parameters
 
 """
-    Gate(display_symbol, instruction_symbol, operator, target::Array, parameters=[])
-    Gate(display_symbol, instruction_symbol, operator, target::Int, parameters=[])
+    Gate
 
-Constructs a `Gate` that can be added to a `QuantumCircuit` in order to apply an `operator` to one or more `target` qubits.
+A `Gate` can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
 
-Each `Gate` has a `display_symbol` which determines how the `Gate` is displayed in a `QuantumCircuit`.
-The `instruction_symbol` is used by the quantum compiler to identify the `Gate`.
-Optionally, a `Gate` can contain parameters.
+A `Gate` is an abstract type, which means that it cannot be instantiated.
+Instead, each type of gate must have a struct which is a descendant of `Gate`.
+Each descendant of `Gate` must have at least the following fields:
+- `display_symbol::Vector{String}`: determines how the `Gate` is displayed in a `QuantumCircuit`.
+- `instruction_symbol::String`: used by the quantum compiler to identify the `Gate`.
+- `target::Vector{Int}`: to which qubits the `Gate` is applied.
+- `parameters::Vector`: affect which operation is applied (e.g. rotation angles).
 
 # Examples
-```jldoctest
-julia> pi_x_rotation_on_qubit_1 = Gate(["Rx(π)"], "rx", Operator([0.0 -im; -im 0.0]), 1, [π])
+A struct must be defined for each new gate type, such as the following X_45 gate which
+applies a 45° rotation about the X axis:
+```jldoctest gate_struct
+julia> struct X45 <: Gate
+           display_symbol::Vector{String}
+           instruction_symbol::String
+           target::Vector{Int}
+           parameters::Vector
+       end;
+
+```
+
+For convenience, a constructor can be defined:
+```jldoctest gate_struct
+julia> x_45(target) = X45(["X_45"], "x_45", [target], []);
+
+```
+
+To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
+the function `get_operator` must be extended.
+```jldoctest gate_struct
+julia> Snowflake.get_operator(gate::X45) = rotation_x(π/4);
+
+```
+
+The gate inverse can also be specified by extending the `get_inverse` function.
+```jldoctest gate_struct
+julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -π/4);
+
+```
+
+An instance of the X_45 gate can now be created:
+```jldoctest gate_struct
+julia> x_45_gate = x_45(1)
 Gate Object:
-instruction symbol: rx
-parameters: [π]
+instruction symbol: x_45
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{Complex}:
-0.0 + 0.0im    0.0 - 1.0im
-0.0 - 1.0im    0.0 + 0.0im
+0.9238795325112867 + 0.0im    0.0 - 0.3826834323650898im
+0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
+
+
+julia> get_inverse(x_45_gate)
+Gate Object:
+instruction symbol: rx
+parameters: [-0.7853981633974483]
+targets: [1]
+operator:
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.9238795325112867 + 0.0im    -0.0 + 0.3826834323650898im
+-0.0 + 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
 ```
 """
 abstract type Gate end
-
-# struct Gate
-#     display_symbol::Array{String}
-#     instruction_symbol::String
-#     operator::Operator
-#     target::Array
-#     parameters::Array
-
-#     function Gate(display_symbol, instruction_symbol, operator, target::Array, parameters=[])
-#         ensure_target_qubits_are_different(target)
-#         new(display_symbol, instruction_symbol, operator, target, parameters)
-#     end
-#     Gate(display_symbol, instruction_symbol, operator, target::Int, parameters=[]) =
-#         new(display_symbol, instruction_symbol, operator, [target], parameters)
-
-# end
 
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
