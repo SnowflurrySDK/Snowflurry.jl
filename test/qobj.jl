@@ -36,7 +36,7 @@ using Test
     # Bit flip gate (sigma_x)
     @test X * Ψ_0 ≈ Ψ_1
     @test X * Ψ_1 ≈ Ψ_0
-    @test (Bra(Ψ_1) * X.operator) * Ψ_0 ≈ Complex(1.0)
+    @test (Bra(Ψ_1) * get_operator(X)) * Ψ_0 ≈ Complex(1.0)
 
     # Z gate
     @test Z * Ψ_0 ≈ Ψ_0
@@ -138,4 +138,9 @@ end
                                 0 0 1])
     @test get_num_bodies(kron(qutrit_operator, qutrit_operator),
         hilbert_space_size_per_qutrit) == 2
+end
+
+@testset "is_hermitian" begin
+    @test is_hermitian(sigma_y())
+    @test !is_hermitian(sigma_p())
 end

@@ -21,10 +21,10 @@ using Test
 
     ##Get embedded operators
     target_qubit = 1
-    H = get_embed_operator(h.operator, target_qubit, system)
-    X = get_embed_operator(x.operator, target_qubit, system)
-    Y = get_embed_operator(y.operator, target_qubit, system)
-    Z = get_embed_operator(z.operator, target_qubit, system)
+    H = get_embed_operator(get_operator(h), target_qubit, system)
+    X = get_embed_operator(get_operator(x), target_qubit, system)
+    Y = get_embed_operator(get_operator(y), target_qubit, system)
+    Z = get_embed_operator(get_operator(z), target_qubit, system)
 
     Ψ_init = kron(Ψ_up, Ψ_up)
 

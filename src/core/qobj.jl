@@ -112,6 +112,38 @@ Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+
+"""
+    is_hermitian(A::Operator)
+
+Determine if Operator `A` is Hermitian (i.e. self-adjoint).
+
+# Examples
+```jldoctest
+julia> Y = sigma_y()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    0.0 - 1.0im
+0.0 + 1.0im    0.0 + 0.0im
+
+
+julia> is_hermitian(Y)
+true
+
+julia> P = sigma_p()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{Complex}:
+0.0 + 0.0im    1.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im
+
+
+julia> is_hermitian(P)
+false
+
+```
+"""
+is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
+
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)

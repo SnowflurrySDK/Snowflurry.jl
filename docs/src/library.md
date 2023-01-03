@@ -12,6 +12,7 @@ push_gate!
 pop_gate!
 simulate
 simulate_shots
+get_inverse(circuit::QuantumCircuit)
 ```
 
 ## Quantum Gates
@@ -25,7 +26,9 @@ sigma_y
 sigma_z
 hadamard
 phase
+phase_dagger
 pi_8
+pi_8_dagger
 x_90
 rotation
 rotation_x
@@ -37,8 +40,11 @@ control_z
 control_x
 iswap
 toffoli
+iswap_dagger
 Base.:*(M::Gate, x::Ket)
 apply_gate!
+get_operator
+get_inverse(gate::Gate)
 ```
 
 ## Quantum Processing Unit
@@ -58,6 +64,7 @@ Ket
 Bra
 Operator
 Base.adjoint
+is_hermitian
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr

@@ -64,13 +64,13 @@ function push_gate!(circuit::QuantumCircuit, gate::Gate)
     return circuit
 end
 
-function push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+function push_gate!(circuit::QuantumCircuit, gates::Vector{<:Gate})
     ensure_gates_are_in_circuit(circuit, gates)
     push!(circuit.pipeline, gates)
     return circuit
 end
 
-function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Array{Gate})
+function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Vector{<:Gate})
     for gate in gates
         for target in gate.target
             if target > circuit.qubit_count
@@ -340,7 +340,7 @@ function apply_gate_without_ket_size_check!(state::Ket, gate::Gate, qubit_count)
         for (index, x1) in enumerate(b1)
             temp_state[index] = state.data[x0+x1+1]
         end
-        temp_state = gate.operator.data*temp_state
+        temp_state = get_operator(gate).data*temp_state
         for (index, x1) in enumerate(b1)
             state.data[x0+x1+1] = temp_state[index]
         end
@@ -504,4 +504,55 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
+end
+
+"""
+    get_inverse(circuit::QuantumCircuit)
+
+Return a `QuantumCircuit` which is the inverse of the input `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, rotation_y(1, pi/4));
+
+julia> push_gate!(c, control_x(1, 2))
+Quantum Circuit Object:
+   id: 47ddf072-7293-11ed-3d64-9f4fd1e69575 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──Ry(0.7853981633974483)────*──
+                                 |  
+q[2]:────────────────────────────X──
+                                    
+
+
+
+julia> get_inverse(c)
+Quantum Circuit Object:
+   id: 6153cc20-7293-11ed-37d4-e14a7e7df842 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──*────Ry(-0.7853981633974483)──
+       |                             
+q[2]:──X─────────────────────────────
+                                     
+
+
+
+```
+"""
+function get_inverse(circuit::QuantumCircuit)
+    reverse_pipeline = reverse(circuit.pipeline)
+    inverse_pipeline = Vector{Gate}[]
+    for step in reverse_pipeline
+        inverse_gate_list = Gate[]
+        for gate in step
+            push!(inverse_gate_list, get_inverse(gate))
+        end
+        push!(inverse_pipeline, inverse_gate_list)
+    end
+    return QuantumCircuit(qubit_count=circuit.qubit_count, bit_count=circuit.bit_count,
+        pipeline=inverse_pipeline)
 end
