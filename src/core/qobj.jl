@@ -114,7 +114,7 @@ Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
 
 """
-    ishermitian(A::Operator)
+    is_hermitian(A::Operator)
 
 Determine if Operator `A` is Hermitian (i.e. self-adjoint).
 
@@ -127,7 +127,7 @@ Underlying data Matrix{Complex}:
 0.0 + 1.0im    0.0 + 0.0im
 
 
-julia> ishermitian(Y)
+julia> is_hermitian(Y)
 true
 
 julia> P = sigma_p()
@@ -137,12 +137,12 @@ Underlying data Matrix{Complex}:
 0.0 + 0.0im    0.0 + 0.0im
 
 
-julia> ishermitian(P)
+julia> is_hermitian(P)
 false
 
 ```
 """
-ishermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)

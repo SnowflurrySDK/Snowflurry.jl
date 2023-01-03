@@ -64,7 +64,7 @@ Ket
 Bra
 Operator
 Base.adjoint
-ishermitian
+is_hermitian
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr

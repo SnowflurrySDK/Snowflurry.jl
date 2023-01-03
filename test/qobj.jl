@@ -140,7 +140,7 @@ end
         hilbert_space_size_per_qutrit) == 2
 end
 
-@testset "ishermitian" begin
-    @test ishermitian(sigma_y())
-    @test !ishermitian(sigma_p())
+@testset "is_hermitian" begin
+    @test is_hermitian(sigma_y())
+    @test !is_hermitian(sigma_p())
 end

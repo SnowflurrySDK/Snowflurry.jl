@@ -1014,7 +1014,7 @@ Underlying data Matrix{Complex}:
 ```
 """
 function get_inverse(gate::Gate)
-    if ishermitian(get_operator(gate))
+    if is_hermitian(get_operator(gate))
         return gate
     end
     sym = gate.instruction_symbol
