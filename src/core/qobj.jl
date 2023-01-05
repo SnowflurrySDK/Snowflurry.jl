@@ -709,30 +709,35 @@ function normalize!(x::Ket)
     return x
 end
 
-# function get_measurement_probabilities(x::Ket)
-#     return real.(x .* x)
-# end
+function get_measurement_probabilities(x::Ket)
+    return real.(x .* x)
+end
 
-# function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
-#     hilbert_space_size_per_body::Integer=2)
+function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
+    hilbert_space_size_per_body::Integer=2)
 
-#     amplitudes = real.(x .* x)
-#     num_amplitudes = length(amplitudes)
-#     num_target_amplitudes = hilbert_space_size_per_body^length(target_bodies)
-#     if num_target_amplitudes > num_amplitudes
-#         throw(ErrorException("too many target bodies were provided"))
-#     elseif num_target_amplitudes == num_amplitudes
-#         return get_measurement_probabilities(x)
-#     else
-#         target_amplitudes = Vector{Float64}(undef, num_target_amplitudes)
-#         num_summed_amplitudes = num_amplitudes-num_target_amplitudes
-#         for i_target_amplitude in 0:num_target_amplitudes-1
-#             for i_summed_amplitude in 0:num_summed_amplitudes-1
-
-#             end
-#         end
-#     end
-# end
+    amplitudes = real.(x .* x)
+    num_amplitudes = length(amplitudes)
+    num_target_amplitudes = hilbert_space_size_per_body^length(target_bodies)
+    if num_target_amplitudes == num_amplitudes
+        return get_measurement_probabilities(x)
+    else
+        num_bodies = get_num_bodies(x, hilbert_space_size_per_body)
+        remaining_bodies = [x for x ∈ 1:num_bodies if x ∉ target_bodies]
+        target_amplitudes = Vector{Float64}(undef, num_target_amplitudes)
+        num_summed_amplitudes = hilbert_space_size_per_body^length(remaining_bodies)
+        for i_target_amplitude in 0:num_target_amplitudes-1
+            sum = 0
+            for i_summed_amplitude in 0:num_summed_amplitudes-1
+                ket_index = get_ket_index(target_bodies, remaining_bodies,
+                    hilbert_space_size_per_body, i_target_amplitude, i_summed_amplitude)
+                sum += amplitudes[ket_index]
+            end
+            target_amplitudes[i_target_amplitude+1] = sum
+        end
+        return target_amplitudes
+    end
+end
 
 function get_ket_index(target_bodies::Vector{<:Integer},
     remaining_bodies::Vector{<:Integer},
@@ -751,8 +756,8 @@ function get_ket_index(target_bodies::Vector{<:Integer},
     for (i_remaining, remaining) in enumerate(remaining_bodies)
         combined_symbols[remaining] = remainder_symbols[i_remaining]
     end
-    ket_index = change_to_decimal_integer(combined_symbols, hilbert_space_size_per_body)
-    return ket_index
+    decimal = change_to_decimal_integer(combined_symbols, hilbert_space_size_per_body)
+    return decimal+1
 end
 
 function change_number_base(decimal::Integer, base::Integer, num_symbols::Integer)

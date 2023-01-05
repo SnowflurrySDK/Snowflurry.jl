@@ -199,5 +199,25 @@ end
     remainder_index = 1
     ket_index = Snowflake.get_ket_index(target_bodies, remaining_bodies, base,
         target_index, remainder_index)
-    @test ket_index == 21
+    @test ket_index == 22
+end
+
+@testset "get_measurement_probabilities" begin
+    ket = 1/sqrt(5)*Ket([1, 0, 1, 0, 0, 1, 1, 1, 0])
+    probabilities = get_measurement_probabilities(ket)
+    @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
+
+    target_bodies = [1, 2]
+    base = 3
+    probabilities = get_measurement_probabilities(ket, target_bodies, base)
+    @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
+
+    target_bodies = [1]
+    probabilities = get_measurement_probabilities(ket, target_bodies, base)
+    @test probabilities ≈ [0.4, 0.2, 0.4]
+
+    ket = 1/2*Ket([0, 1, 1, 0, 0, 1, 0, 1])
+    target_bodies = [1, 3]
+    probabilities = get_measurement_probabilities(ket, target_bodies)
+    @test probabilities ≈ [0.25, 0.25, 0, 0.5]
 end
