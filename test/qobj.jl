@@ -168,3 +168,18 @@ end
     @test is_hermitian(sigma_y())
     @test !is_hermitian(sigma_p())
 end
+
+@testset "change_number_base" begin
+    decimal = -1
+    base = 3
+    num_symbols = 4
+    @test_throws ErrorException Snowflake.change_number_base(decimal, base, num_symbols)
+    
+    decimal = 88
+    @test_throws ErrorException Snowflake.change_number_base(decimal, base, num_symbols)
+
+    decimal = 16
+    symbols = Snowflake.change_number_base(decimal, base, num_symbols)
+    expected_symbols = [0, 1, 2, 1]
+    @test symbols == expected_symbols
+end

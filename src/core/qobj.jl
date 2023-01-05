@@ -709,6 +709,63 @@ function normalize!(x::Ket)
     return x
 end
 
+# function get_measurement_probabilities(x::Ket)
+#     return real.(x .* x)
+# end
+
+# function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
+#     hilbert_space_size_per_body::Integer=2)
+
+#     amplitudes = real.(x .* x)
+#     num_amplitudes = length(amplitudes)
+#     num_target_amplitudes = hilbert_space_size_per_body^length(target_bodies)
+#     if num_target_amplitudes > num_amplitudes
+#         throw(ErrorException("too many target bodies were provided"))
+#     elseif num_target_amplitudes == num_amplitudes
+#         return get_measurement_probabilities(x)
+#     else
+#         target_amplitudes = Vector{Float64}(undef, num_target_amplitudes)
+#         num_summed_amplitudes = num_amplitudes-num_target_amplitudes
+#         for i_target_amplitude in 1:num_target_amplitudes
+#             for i_summed_amplitude in 1:num_summed_amplitudes
+
+#             end
+#         end
+#     end
+# end
+
+# function get_ket_index(target_bodies::Vector{<:Integer},
+#     hilbert_space_size_per_body::Integer, target_index::Integer,
+#     remainder_index::Integer)
+
+
+# end
+
+function change_number_base(decimal::Integer, base::Integer, num_symbols::Integer)
+    throw_if_number_base_cannot_be_changed(decimal, base, num_symbols)
+    dividend = decimal
+    symbols = zeros(Int, num_symbols)
+    count = 0
+    while dividend != 0
+        (dividend, remainder) = fldmod(dividend, base)
+        symbols[end-count] = remainder
+        count += 1
+    end
+    return symbols
+end
+
+function throw_if_number_base_cannot_be_changed(decimal::Integer, base::Integer,
+    num_symbols::Integer)
+    
+    if decimal < 0
+        throw(ErrorException("the decimal cannot be negative"))
+    elseif decimal >= base^num_symbols
+        min_num_symbols = Int(ceil(log2(decimal+1)/log2(base)))
+        throw(ErrorException(
+            "the decimal $decimal needs at least $min_num_symbols symbols"))
+    end
+end
+
 """
     Snowflake.commute(A::Operator, B::Operator)
 
