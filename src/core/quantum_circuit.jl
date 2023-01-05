@@ -504,6 +504,18 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     return data
 end
 
+function get_measurement_probabilities(circuit::QuantumCircuit)
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket)
+end
+
+function get_measurement_probabilities(circuit::QuantumCircuit,
+    target_qubit::Vector{<:Integer})
+    
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket, target_qubit)
+end
+
 """
     get_inverse(circuit::QuantumCircuit)
 
