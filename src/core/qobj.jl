@@ -735,10 +735,22 @@ end
 # end
 
 # function get_ket_index(target_bodies::Vector{<:Integer},
+#     remaining_bodies::Vector{<:Integer},
 #     hilbert_space_size_per_body::Integer, target_index::Integer,
 #     remainder_index::Integer)
 
-
+#     target_symbols = change_number_base(target_index, hilbert_space_size_per_body,
+#         length(target_bodies))
+#     remainder_symbols = change_number_base(remainder_index, hilbert_space_size_per_body,
+#         length(remaining_bodies))
+#     num_symbols = length(target_bodies)+length(remaining_bodies)
+#     combined_symbols = Vector{Int}(undef, num_symbols)
+#     for (i_target, target) in enumerate(target_bodies)
+#         combined_symbols[target] = target_symbols[i_target]
+#     end
+#     for (i_remaining, remaining) in enumerate(target_bodies)
+#         combined_symbols[remaining] = remainder_symbols[i_remaining]
+#     end
 # end
 
 function change_number_base(decimal::Integer, base::Integer, num_symbols::Integer)
@@ -764,6 +776,16 @@ function throw_if_number_base_cannot_be_changed(decimal::Integer, base::Integer,
         throw(ErrorException(
             "the decimal $decimal needs at least $min_num_symbols symbols"))
     end
+end
+
+function change_to_decimal_integer(symbols::Vector{<:Integer}, base::Integer)
+    decimal = 0
+    num_symbols = length(symbols)
+    for (i_symbol, digit) in enumerate(symbols)
+        power = num_symbols-i_symbol
+        decimal += digit*base^power
+    end
+    return decimal
 end
 
 """

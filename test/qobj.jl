@@ -183,3 +183,10 @@ end
     expected_symbols = [0, 1, 2, 1]
     @test symbols == expected_symbols
 end
+
+@testset "change_to_decimal_integer" begin
+    symbols = [0, 1, 2, 1]
+    base = 3
+    decimal = Snowflake.change_to_decimal_integer(symbols, base)
+    @test decimal == 16
+end
