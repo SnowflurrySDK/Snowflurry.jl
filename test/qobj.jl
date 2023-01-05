@@ -190,3 +190,14 @@ end
     decimal = Snowflake.change_to_decimal_integer(symbols, base)
     @test decimal == 16
 end
+
+@testset "get_ket_index" begin
+    target_bodies = [1, 3]
+    remaining_bodies = [2]
+    base = 3
+    target_index = 6
+    remainder_index = 1
+    ket_index = Snowflake.get_ket_index(target_bodies, remaining_bodies, base,
+        target_index, remainder_index)
+    @test ket_index == 21
+end

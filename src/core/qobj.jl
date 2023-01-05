@@ -726,32 +726,34 @@ end
 #     else
 #         target_amplitudes = Vector{Float64}(undef, num_target_amplitudes)
 #         num_summed_amplitudes = num_amplitudes-num_target_amplitudes
-#         for i_target_amplitude in 1:num_target_amplitudes
-#             for i_summed_amplitude in 1:num_summed_amplitudes
+#         for i_target_amplitude in 0:num_target_amplitudes-1
+#             for i_summed_amplitude in 0:num_summed_amplitudes-1
 
 #             end
 #         end
 #     end
 # end
 
-# function get_ket_index(target_bodies::Vector{<:Integer},
-#     remaining_bodies::Vector{<:Integer},
-#     hilbert_space_size_per_body::Integer, target_index::Integer,
-#     remainder_index::Integer)
+function get_ket_index(target_bodies::Vector{<:Integer},
+    remaining_bodies::Vector{<:Integer},
+    hilbert_space_size_per_body::Integer, target_index::Integer,
+    remainder_index::Integer)
 
-#     target_symbols = change_number_base(target_index, hilbert_space_size_per_body,
-#         length(target_bodies))
-#     remainder_symbols = change_number_base(remainder_index, hilbert_space_size_per_body,
-#         length(remaining_bodies))
-#     num_symbols = length(target_bodies)+length(remaining_bodies)
-#     combined_symbols = Vector{Int}(undef, num_symbols)
-#     for (i_target, target) in enumerate(target_bodies)
-#         combined_symbols[target] = target_symbols[i_target]
-#     end
-#     for (i_remaining, remaining) in enumerate(target_bodies)
-#         combined_symbols[remaining] = remainder_symbols[i_remaining]
-#     end
-# end
+    target_symbols = change_number_base(target_index, hilbert_space_size_per_body,
+        length(target_bodies))
+    remainder_symbols = change_number_base(remainder_index, hilbert_space_size_per_body,
+        length(remaining_bodies))
+    num_symbols = length(target_bodies)+length(remaining_bodies)
+    combined_symbols = Vector{Int}(undef, num_symbols)
+    for (i_target, target) in enumerate(target_bodies)
+        combined_symbols[target] = target_symbols[i_target]
+    end
+    for (i_remaining, remaining) in enumerate(remaining_bodies)
+        combined_symbols[remaining] = remainder_symbols[i_remaining]
+    end
+    ket_index = change_to_decimal_integer(combined_symbols, hilbert_space_size_per_body)
+    return ket_index
+end
 
 function change_number_base(decimal::Integer, base::Integer, num_symbols::Integer)
     throw_if_number_base_cannot_be_changed(decimal, base, num_symbols)
