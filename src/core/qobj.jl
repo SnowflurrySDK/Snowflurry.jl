@@ -766,7 +766,7 @@ function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
     num_amplitudes = length(amplitudes)
     num_target_amplitudes = hspace_size_per_body^length(target_bodies)
     if num_target_amplitudes == num_amplitudes
-        return get_measurement_probabilities(x)
+        return amplitudes
     else
         num_bodies = get_num_bodies(x, hspace_size_per_body)
         remaining_bodies = [x for x ∈ 1:num_bodies if x ∉ target_bodies]
