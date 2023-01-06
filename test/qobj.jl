@@ -203,7 +203,7 @@ end
 end
 
 @testset "get_measurement_probabilities" begin
-    ket = 1/sqrt(5)*Ket([1, 0, 1, 0, 0, 1, 1, 1, 0])
+    ket = 1/sqrt(5)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0])
     probabilities = get_measurement_probabilities(ket)
     @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
 
@@ -216,7 +216,7 @@ end
     probabilities = get_measurement_probabilities(ket, target_bodies, base)
     @test probabilities ≈ [0.4, 0.2, 0.4]
 
-    ket = 1/2*Ket([0, 1, 1, 0, 0, 1, 0, 1])
+    ket = 1/2*Ket([0, -im, im, 0, 0, 1, 0, -1])
     target_bodies = [1, 3]
     probabilities = get_measurement_probabilities(ket, target_bodies)
     @test probabilities ≈ [0.25, 0.25, 0, 0.5]
