@@ -65,6 +65,7 @@ Bra
 Operator
 Base.adjoint
 is_hermitian
+Base.exp(A::Operator)
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr

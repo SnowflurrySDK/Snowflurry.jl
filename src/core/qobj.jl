@@ -184,6 +184,29 @@ Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 Base.length(x::Union{Ket, Bra}) = length(x.data)
 
+"""
+    exp(A::Operator)
+
+Compute the matrix exponential of `Operator` `A`.
+
+# Examples
+```jldoctest
+julia> X = sigma_x()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{ComplexF64}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+
+
+julia> x_rotation_90_deg = exp(-im*π/4*X)
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{ComplexF64}:
+0.7071067811865477 + 0.0im    0.0 - 0.7071067811865475im
+0.0 - 0.7071067811865475im    0.7071067811865477 + 0.0im
+
+
+```
+"""
 Base.exp(A::Operator) = Operator(exp(A.data))
 
 """
