@@ -34,6 +34,7 @@ julia> ket = Ket(1/sqrt(2)*[1, 1])
 0.7071067811865475 + 0.0im
 0.7071067811865475 + 0.0im
 
+
 julia> bloch_sphere = BlochSphere(vector_color="green");
 
 ```
@@ -140,6 +141,7 @@ julia> ket = Ket(1/sqrt(2)*[1, 1])
 2-element Ket{ComplexF64}:
 0.7071067811865475 + 0.0im
 0.7071067811865475 + 0.0im
+
 
 
 ```
