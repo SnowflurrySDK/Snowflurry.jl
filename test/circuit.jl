@@ -55,6 +55,17 @@ end
     @test ~("01" in readings)
 end
 
+@testset "global_phase" begin
+    circuit = QuantumCircuit(qubit_count=1, bit_count=0)
+    push_gate!(circuit, sigma_x(1))
+    push_gate!(circuit, phase(1))
+    push_gate!(circuit, sigma_x(1))
+    push_gate!(circuit, phase(1))
+    shots = simulate_shots(circuit, 5)
+    @test ("0" in shots)
+    @test ~("1" in shots)
+end
+
 @testset "phase_kickback" begin
 
     Ψ_up = spin_up()
