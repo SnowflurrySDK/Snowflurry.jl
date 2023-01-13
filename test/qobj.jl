@@ -139,6 +139,10 @@ end
     viz_wigner(ket2dm(ψ_0),p,q)
 end
 
+@testset "genlaguerre" begin
+    @test Snowflake.genlaguerre(0, 0, 0) == 1
+end
+
 @testset "qutrit_operators" begin
     hilbert_space_size_per_qutrit = 3
     qutrit_operator = Operator([1 0 0;
