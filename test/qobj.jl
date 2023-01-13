@@ -65,6 +65,14 @@ end
     @test get_num_qubits(xy) == 2
 end
 
+@testset "get_embed_operator" begin
+    X = sigma_x()
+    system = MultiBodySystem(2, 2)
+    target = 2
+    embed_operator = get_embed_operator(X, target, system)
+    @test embed_operator ≈ kron(eye(), sigma_x())
+end
+
 @testset "operator_exceptions" begin
     not_square = Operator(zeros(1, 2))
     @test_throws ErrorException get_num_qubits(not_square)
