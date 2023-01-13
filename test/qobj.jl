@@ -119,6 +119,7 @@ end
     Ψ_1 = Ket([1/sqrt(2), -0.5+0.5im])
     Ψ_2 = Ket([1/sqrt(2), -0.5-0.5im])
     plot_bloch_sphere_animation([Ψ_1, Ψ_2, Ψ_1])
+    plot_bloch_sphere_animation([Ψ_2, Ψ_1, Ψ_2])
     plot_bloch_sphere_animation([ket2dm(Ψ_1), ket2dm(Ψ_0)])
 end
 
