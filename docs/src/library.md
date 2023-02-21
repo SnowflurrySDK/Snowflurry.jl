@@ -104,7 +104,7 @@ plot_bloch_sphere(ket::Ket; qubit_id::Int = 1,
 plot_bloch_sphere(density_matrix::Operator; qubit_id::Int = 1,
     bloch_sphere::BlochSphere = BlochSphere())
 BlochSphere
-plot_bloch_sphere_animation(ket_list::Vector{Ket};
+plot_bloch_sphere_animation(ket_list::Vector{Ket{T}} where {T<:Complex};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 ```

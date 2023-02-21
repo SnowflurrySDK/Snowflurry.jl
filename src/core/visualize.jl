@@ -422,7 +422,7 @@ julia> plot = plot_bloch_sphere_animation(ket_list, animated_bloch_sphere=animat
 end
 
 """
-    plot_bloch_sphere_animation(ket_list::Vector{Ket};
+    plot_bloch_sphere_animation(ket_list::Vector{Ket{T}} where {T<:Complex};
         qubit_id::Int = 1,
         animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 
@@ -447,7 +447,7 @@ julia> PlotlyJS.savefig(plot, "bloch_sphere_animation.html")
 
 ```
 """
-function plot_bloch_sphere_animation(ket_list::Vector{Ket};
+function plot_bloch_sphere_animation(ket_list::Vector{Ket{T}} where {T<:Complex};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 
@@ -456,7 +456,7 @@ function plot_bloch_sphere_animation(ket_list::Vector{Ket};
 end
 
 """
-    plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+    plot_bloch_sphere_animation(density_matrix_list::Vector{Operator{T}} where {T<:Complex};
         qubit_id::Int = 1,
         animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 
@@ -484,7 +484,7 @@ julia> PlotlyJS.savefig(plot, "bloch_sphere_animation.html")
 
 ```
 """
-function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator{T}} where {T<:Complex};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
     
