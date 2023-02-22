@@ -33,6 +33,26 @@ end
 # overload constructor to enable initilization from Real-valued array
 Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},x))
 
+# overload constructor to enable initilization from Integer-valued array
+# Ket precision is obtained from Int precision in argument
+function Ket(x::Vector{T}) where {T<:Integer}
+    
+    bitNum=sizeof(eltype(x))
+    if bitNum<2
+        @warn "Input of $(bitNum*8)-bit not supported, increasing to minimum of 2"
+        bitNum=2
+    elseif bitNum>8
+        @warn "Input of $(bitNum*8)-bit not supported, decreasing to maximum of 8"
+        bitNum=8
+    end
+
+    cmd=(Symbol("ComplexF$(bitNum*8)"))   
+    ex = Expr(:call, cmd, 1.234)
+    tempComplex=eval(ex)
+    vecComplex=Vector{typeof(tempComplex)}(x)
+
+    Ket(vecComplex)
+end
 
 function Base.show(io::IO, x::Ket)
     println("$(length(x.data))-element Ket{$(eltype(x.data))}:")
@@ -40,6 +60,8 @@ function Base.show(io::IO, x::Ket)
         println(val)
     end
 end
+
+Base.length(x::Ket) = Base.length(x.data)
 
 """
 A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
@@ -121,7 +143,9 @@ end
 # overload constructor to enable initilization from Real-valued Matrix
 Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) )
 
-Base.length(x::Ket) = Base.length(x.data)
+# Constructor using Adjoint(Operator{T})
+Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
+
 
 """
     Base.adjoint(x)

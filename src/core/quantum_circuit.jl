@@ -335,7 +335,7 @@ end
 function apply_gate_without_ket_size_check!(state::Ket, gate::Gate, qubit_count)
     b0 = get_b0_bases_list(gate, qubit_count)
     b1 = get_b1_bases_list(gate, qubit_count)
-    temp_state = zeros(Complex, length(b1))
+    temp_state = zeros(eltype(state.data), length(b1))   
     for x0 in b0
         for (index, x1) in enumerate(b1)
             temp_state[index] = state.data[x0+x1+1]
