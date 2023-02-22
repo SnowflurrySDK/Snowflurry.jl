@@ -34,24 +34,8 @@ end
 Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},x))
 
 # overload constructor to enable initilization from Integer-valued array
-# Ket precision is obtained from Int precision in argument
-function Ket(x::Vector{T}) where {T<:Integer}
-    
-    bitNum=sizeof(eltype(x))
-    if bitNum<2
-        @warn "Input of $(bitNum*8)-bit not supported, increasing to minimum of 16"
-        bitNum=2
-    elseif bitNum>8
-        @warn "Input of $(bitNum*8)-bit not supported, decreasing to maximum of 64"
-        bitNum=8
-    end
-
-    cmd=(Symbol("ComplexF$(bitNum*8)"))   
-    ex = Expr(:call, cmd, 1.234)
-    tempComplex=eval(ex)
-
-    Ket(Vector{typeof(tempComplex)}(x))
-end
+# default output is Ket{ComplexF64}
+Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer}=Ket(Vector{S}(x))
 
 function Base.show(io::IO, x::Ket)
     println("$(length(x.data))-element Ket{$(eltype(x.data))}:")
