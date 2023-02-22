@@ -39,19 +39,18 @@ function Ket(x::Vector{T}) where {T<:Integer}
     
     bitNum=sizeof(eltype(x))
     if bitNum<2
-        @warn "Input of $(bitNum*8)-bit not supported, increasing to minimum of 2"
+        @warn "Input of $(bitNum*8)-bit not supported, increasing to minimum of 16"
         bitNum=2
     elseif bitNum>8
-        @warn "Input of $(bitNum*8)-bit not supported, decreasing to maximum of 8"
+        @warn "Input of $(bitNum*8)-bit not supported, decreasing to maximum of 64"
         bitNum=8
     end
 
     cmd=(Symbol("ComplexF$(bitNum*8)"))   
     ex = Expr(:call, cmd, 1.234)
     tempComplex=eval(ex)
-    vecComplex=Vector{typeof(tempComplex)}(x)
 
-    Ket(vecComplex)
+    Ket(Vector{typeof(tempComplex)}(x))
 end
 
 function Base.show(io::IO, x::Ket)

@@ -268,7 +268,7 @@ I = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-eye(T::Type{<:Complex}=ComplexF64) = Operator(Matrix{T}(1.0I, 2, 2)) #Question
+eye(T::Type{<:Complex}=ComplexF64) = Operator(Matrix{T}(1.0I, 2, 2))
 
 """
     x_90()
