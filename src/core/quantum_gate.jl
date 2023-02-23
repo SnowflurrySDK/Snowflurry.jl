@@ -12,6 +12,7 @@ Each descendant of `Gate` must have at least the following fields:
 - `instruction_symbol::String`: used by the quantum compiler to identify the `Gate`.
 - `target::Vector{Int}`: to which qubits the `Gate` is applied.
 - `parameters::Vector`: affect which operation is applied (e.g. rotation angles).
+- `type::Type{<:Complex}`: datatype used to construct underlying operator, default being ComplexF64.
 
 # Examples
 A struct must be defined for each new gate type, such as the following X_45 gate which
@@ -22,26 +23,27 @@ julia> struct X45 <: Gate
            instruction_symbol::String
            target::Vector{Int}
            parameters::Vector
+           type::Type{<:Complex}
        end;
 
 ```
 
 For convenience, a constructor can be defined:
 ```jldoctest gate_struct
-julia> x_45(target) = X45(["X_45"], "x_45", [target], []);
+julia> x_45(target,T::Type{<:Complex}=ComplexF64) = X45(["X_45"], "x_45", [target], [], T);
 
 ```
 
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
 the function `get_operator` must be extended.
 ```jldoctest gate_struct
-julia> Snowflake.get_operator(gate::X45) = rotation_x(π/4);
+julia> Snowflake.get_operator(gate::X45) = rotation_x(π/4, gate.type);
 
 ```
 
 The gate inverse can also be specified by extending the `get_inverse` function.
 ```jldoctest gate_struct
-julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -π/4);
+julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -π/4, gate.type);
 
 ```
 
@@ -53,7 +55,7 @@ instruction symbol: x_45
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
-Underlying data Matrix{Complex}:
+Underlying data Matrix{ComplexF64}:
 0.9238795325112867 + 0.0im    0.0 - 0.3826834323650898im
 0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
 
@@ -65,12 +67,27 @@ parameters: [-0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
-Underlying data Matrix{Complex}:
+Underlying data Matrix{ComplexF64}:
 0.9238795325112867 + 0.0im    -0.0 + 0.3826834323650898im
 -0.0 + 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
 ```
+
+Alternatively, an instance of the X_45 gate using ComplexF32 datatype is constructed as per:
+```jldoctest gate_struct
+julia> x_45_gate_ComplexF32 = x_45(1, ComplexF32)
+Gate Object:
+instruction symbol: x_45
+targets: [1]
+operator:
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{ComplexF32}:
+0.9238795f0 + 0.0f0im    0.0f0 - 0.38268343f0im
+0.0f0 - 0.38268343f0im    0.9238795f0 + 0.0f0im
+
+```
+
 """
 abstract type Gate end
 
@@ -99,14 +116,14 @@ Update the `state` by applying a `gate` to it.
 julia> ψ_0 = fock(0, 2);
 
 julia> print(ψ_0)
-2-element Ket:
+2-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 
 julia> apply_gate!(ψ_0, sigma_x(1));
 
 julia> print(ψ_0)
-2-element Ket:
+2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 
@@ -971,14 +988,14 @@ Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 julia> ψ_0 = fock(0, 2);
 
 julia> print(ψ_0)
-2-element Ket:
+2-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 
 julia> ψ_1 = sigma_x(1)*ψ_0;
 
 julia> print(ψ_1)
-2-element Ket:
+2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 
@@ -1006,7 +1023,7 @@ parameters: [-1.5707963267948966, 1.0471975511965976, 0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
-Underlying data Matrix{Complex}:
+Underlying data Matrix{ComplexF64}:
 0.7071067811865476 + 0.0im    0.5 + 0.4999999999999999im
 -0.3535533905932738 - 0.6123724356957945im    -0.18301270189221924 + 0.6830127018922194im
 
@@ -1018,7 +1035,7 @@ parameters: [1.5707963267948966, -0.7853981633974483, -1.0471975511965976]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
-Underlying data Matrix{Complex}:
+Underlying data Matrix{ComplexF64}:
 0.7071067811865476 + 0.0im    -0.3535533905932738 + 0.6123724356957945im
 0.5 - 0.4999999999999999im    -0.18301270189221924 - 0.6830127018922194im
 
