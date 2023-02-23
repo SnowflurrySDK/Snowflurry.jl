@@ -9,6 +9,7 @@ using Test
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_0 - Ψ_1)
     _Ψ = Bra(Ψ_p)
+    print(_Ψ)
 
     # test if adjoin operations work properly
     @test adjoint(Ψ_p) ≈ Bra(Ψ_p)
@@ -68,6 +69,10 @@ end
 @testset "get_embed_operator" begin
     X = sigma_x()
     system = MultiBodySystem(2, 2)
+    target = 1
+    embed_operator = get_embed_operator(X, target, system)
+    @test embed_operator ≈ kron(sigma_x(), eye())
+
     target = 2
     embed_operator = get_embed_operator(X, target, system)
     @test embed_operator ≈ kron(eye(), sigma_x())

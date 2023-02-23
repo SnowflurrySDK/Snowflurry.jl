@@ -12,12 +12,24 @@ Solves the Shrodinger equation:
 - `t_range` -- time interval for which the system has to be simulated. 
 - `e_ops` -- list of operators for which the expected value will be returned as a function of time. 
 """
-function sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+function sesolve(
+        H::Operator, 
+        ψ_0::Ket, 
+        t_range::StepRangeLen; 
+        e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], 
+        kwargs...
+    )
     Hamiltonian(t)=H
     sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops, kwargs=kwargs)
 end
 
-function sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+function sesolve(
+        H::Function, 
+        ψ_0::Ket, 
+        t_range::StepRangeLen; 
+        e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], 
+        kwargs...
+    )
     dpsi_dt(t,ψ) = -im*H(t)*ψ
     y=rungekutta2(dpsi_dt, ψ_0, t_range)
     n_t = length(t_range)
@@ -46,7 +58,13 @@ Solves the Lindblad Master equation:
 - `e_ops` -- list of operators for which the expected value will be returned as function of time. 
 - `c_ops` -- list of collapse operators ``L_i``'s.
 """
-function mesolve(H::Operator, ρ_0::Operator, t::StepRangeLen; c_ops::Vector{Operator}=[], e_ops::Vector{Operator}=(Operator)[], kwargs...)
+function mesolve(
+    H::Operator, 
+    ρ_0::Operator, 
+    t::StepRangeLen; 
+    c_ops::Vector{Operator{T}} where {T<:Complex}=[], 
+    e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], kwargs...
+    )
     drho_dt(t,ρ) = -im*commute(H,ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
     n_t = length(t)
     n_o = length(e_ops)
