@@ -9,6 +9,7 @@ using Test
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_0 - Ψ_1)
     _Ψ = Bra(Ψ_p)
+    print(_Ψ)
 
     # test if adjoin operations work properly
     @test adjoint(Ψ_p) ≈ Bra(Ψ_p)
