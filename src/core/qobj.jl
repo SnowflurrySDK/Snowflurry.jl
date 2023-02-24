@@ -7,9 +7,7 @@ Although NOT the preferred way, one can directly build a Ket object by passing a
 ```jldoctest
 julia> using Snowflake
 
-julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0]);
-
-julia> print(ψ)
+julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
@@ -17,9 +15,7 @@ julia> print(ψ)
 ```
 A better way to initialize a Ket is to use a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
 ```jldoctest
-julia> ψ = Snowflake.fock(2, 3);
-
-julia> print(ψ)
+julia> ψ = Snowflake.fock(2, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 0.0 + 0.0im
@@ -38,9 +34,9 @@ Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},
 Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer}=Ket(Vector{S}(x))
 
 function Base.show(io::IO, x::Ket)
-    println("$(length(x.data))-element Ket{$(eltype(x.data))}:")
+    println(io, "$(length(x.data))-element Ket{$(eltype(x.data))}:")
     for val in x.data
-        println(val)
+        println(io, val)
     end
 end
 
@@ -52,17 +48,14 @@ A structure representing a Bra (i.e. a row vector of complex values). A Bra is c
 - `data` -- the stored values.
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(1, 3);
-
-julia> print(ψ)
+julia> ψ = Snowflake.fock(1, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 0.0 + 0.0im
 
-julia> _ψ = Snowflake.Bra(ψ);
 
-julia> print(_ψ)
+julia> _ψ = Snowflake.Bra(ψ)
 3-element Bra{ComplexF64}:
 0.0 - 0.0im
 1.0 - 0.0im
@@ -80,7 +73,6 @@ Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 ```
 """
-
 struct Bra{T<:Complex}
     data::LinearAlgebra.Adjoint{T,Vector{T}}
     # constructor overload from Ket{Complex{T}}
@@ -90,9 +82,9 @@ struct Bra{T<:Complex}
 end
 
 function Base.show(io::IO, x::Bra)
-    println("$(length(x.data))-element Bra{$(eltype(x.data))}:")
+    println(io, "$(length(x.data))-element Bra{$(eltype(x.data))}:")
     for val in x.data
-        println(val)
+        println(io, val)
     end
 end
 
@@ -235,12 +227,13 @@ Compute the trace of Operator `A`.
 julia> I = eye()
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}:
-1.0 + 0.0im    0 + 0im
-0 + 0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im
 
 
 julia> trace = tr(I)
 2.0 + 0.0im
+
 ```
 """
 tr(A::Operator)=LinearAlgebra.tr(A.data)
@@ -252,9 +245,7 @@ Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`�
 
 # Examples
 ```jldoctest
-julia> ψ = Ket([0.0; 1.0]);
-
-julia> print(ψ)
+julia> ψ = Ket([0.0; 1.0])
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
@@ -289,25 +280,19 @@ More details about the Kronecker product can be found
 
 # Examples
 ```jldoctest
-julia> ψ_0 = Ket([0.0; 1.0]);
-
-julia> print(ψ_0)
+julia> ψ_0 = Ket([0.0; 1.0])
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 
 
-julia> ψ_1 = Ket([1.0; 0.0]);
-
-julia> print(ψ_1)
+julia> ψ_1 = Ket([1.0; 0.0])
 2-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ_0_1 = kron(ψ_0, ψ_1);
-
-julia> print(ψ_0_1)
+julia> ψ_0_1 = kron(ψ_0, ψ_1)
 4-element Ket{ComplexF64}:
 0.0 + 0.0im
 0.0 + 0.0im
@@ -461,14 +446,13 @@ end
 Returns the number of qubits associated with a `Ket` or a `Bra`.
 # Examples
 ```jldoctest
-julia> ψ = Ket([1., 0., 0., 0.]);
-
-julia> print(ψ)
+julia> ψ = Ket([1., 0., 0., 0.])
 4-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
+
 
 julia> get_num_qubits(ψ)
 2
@@ -525,9 +509,7 @@ Returns the number of bodies associated with a `Ket` or a `Bra` given the
 `hilbert_space_size_per_body`.
 # Examples
 ```jldoctest
-julia> ψ = Ket([1., 0., 0., 0., 0., 0., 0., 0., 0.]);
-
-julia> print(ψ)
+julia> ψ = Ket([1., 0., 0., 0., 0., 0., 0., 0., 0.])
 9-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
@@ -538,6 +520,7 @@ julia> print(ψ)
 0.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
+
 
 julia> get_num_bodies(ψ, 3)
 2
@@ -559,31 +542,26 @@ end
 Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket, of default type ComplexF64.
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(0, 3);
-
-julia> print(ψ)
+julia> ψ = Snowflake.fock(0, 3)
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ = Snowflake.fock(1, 3);
-
-julia> print(ψ)
+julia> ψ = Snowflake.fock(1, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 0.0 + 0.0im
 
-# specifying a type other than ComplexF64:
-julia> ψ = Snowflake.fock(1, 3,ComplexF32);
 
-julia> print(ψ)
+julia> ψ = Snowflake.fock(1, 3,ComplexF32) # specifying a type other than ComplexF64
 3-element Ket{ComplexF32}:
-0.0 + 0.0im
-1.0 + 0.0im
-0.0 + 0.0im
+0.0f0 + 0.0f0im
+1.0f0 + 0.0f0im
+0.0f0 + 0.0f0im
+
 
 ```
 """
@@ -643,9 +621,7 @@ Returns a coherent state for the parameter `alpha` in a Fock space of size `hspa
 
     # Examples
 ```jldoctest
-julia> ψ = Snowflake.coherent(2.0,20);
-
-julia> print(ψ)
+julia> ψ = Snowflake.coherent(2.0,20)
 20-element Ket{ComplexF64}:
 0.1353352832366127 + 0.0im
 0.2706705664732254 + 0.0im

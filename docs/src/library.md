@@ -114,7 +114,7 @@ style="height:825px;width:100%;">
 </iframe>
 ```
 ```@docs
-plot_bloch_sphere_animation(density_matrix_list::Vector{Operator};
+plot_bloch_sphere_animation(density_matrix_list::Vector{Operator{T}} where {T<:Complex};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 ```

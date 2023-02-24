@@ -15,7 +15,8 @@ makedocs(
         #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
         "Library" => "library.md",
     ],
-    doctestfilters = [uuid_regex]
+    doctestfilters = [uuid_regex],
+    strict = true
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
