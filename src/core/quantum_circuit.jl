@@ -308,10 +308,8 @@ q[2]:───────X──
                
 
 
-julia> ket = simulate(c);
-
-julia> print(ket)
-4-element Ket:
+julia> ket = simulate(c)
+4-element Ket{ComplexF64}:
 0.7071067811865475 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
