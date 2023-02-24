@@ -6,7 +6,7 @@ A Ket represents a *quantum wavefunction* and is mathematically equivalent to a 
 Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
 julia> using Snowflake
-# THIS SHOULD CAUSE THE DOCUMENTATION CI/CD TO FAIL
+
 julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
