@@ -73,7 +73,6 @@ Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 ```
 """
-
 struct Bra{T<:Complex}
     data::LinearAlgebra.Adjoint{T,Vector{T}}
     # constructor overload from Ket{Complex{T}}
@@ -83,9 +82,9 @@ struct Bra{T<:Complex}
 end
 
 function Base.show(io::IO, x::Bra)
-    println("$(length(x.data))-element Bra{$(eltype(x.data))}:")
+    println(io, "$(length(x.data))-element Bra{$(eltype(x.data))}:")
     for val in x.data
-        println(val)
+        println(io, val)
     end
 end
 
