@@ -544,7 +544,7 @@ julia> x = sigma_x(1);
 
 julia> get_operator(x)
 (2, 2)-element Snowflake.Operator:
-Underlying data Matrix{Complex}:
+Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    1.0 + 0.0im
 1.0 + 0.0im    0.0 + 0.0im
 
