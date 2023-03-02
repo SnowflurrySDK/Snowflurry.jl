@@ -759,8 +759,9 @@ function get_measurement_probabilities(x::Ket)
     return real.(adjoint.(x) .* x)
 end
 
-function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
-    hspace_size_per_body::Integer=2)
+function get_measurement_probabilities(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
+    hspace_size_per_body::U=2) where {T<:Real, U<:Integer}
 
     amplitudes = real.(adjoint.(x) .* x)
     num_amplitudes = length(amplitudes)
@@ -770,7 +771,7 @@ function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
     else
         num_bodies = get_num_bodies(x, hspace_size_per_body)
         remaining_bodies = [x for x ∈ 1:num_bodies if x ∉ target_bodies]
-        target_amplitudes = Vector{Float64}(undef, num_target_amplitudes)
+        target_amplitudes = Vector{T}(undef, num_target_amplitudes)
         num_summed_amplitudes = hspace_size_per_body^length(remaining_bodies)
         for i_target_amplitude in 0:num_target_amplitudes-1
             sum = 0
@@ -785,10 +786,10 @@ function get_measurement_probabilities(x::Ket, target_bodies::Vector{<:Integer},
     end
 end
 
-function get_ket_index(target_bodies::Vector{<:Integer},
-    remaining_bodies::Vector{<:Integer},
-    hspace_size_per_body::Integer, target_index::Integer,
-    remainder_index::Integer)
+function get_ket_index(target_bodies::Vector{T},
+    remaining_bodies::Vector{T},
+    hspace_size_per_body::T, target_index::T,
+    remainder_index::T) where T<:Integer
 
     target_symbols = change_number_base(target_index, hspace_size_per_body,
         length(target_bodies))
@@ -806,10 +807,10 @@ function get_ket_index(target_bodies::Vector{<:Integer},
     return decimal+1
 end
 
-function change_number_base(decimal::Integer, base::Integer, num_symbols::Integer)
+function change_number_base(decimal::T, base::T, num_symbols::T) where T<:Integer
     throw_if_number_base_cannot_be_changed(decimal, base, num_symbols)
     dividend = decimal
-    symbols = zeros(Int, num_symbols)
+    symbols = zeros(T, num_symbols)
     count = 0
     while dividend != 0
         (dividend, remainder) = fldmod(dividend, base)
