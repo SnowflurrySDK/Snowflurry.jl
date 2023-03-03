@@ -1,5 +1,4 @@
 using Parameters
-using StaticArrays
 
 """
     Gate
