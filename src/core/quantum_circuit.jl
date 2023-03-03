@@ -506,7 +506,7 @@ end
 
 """
     get_measurement_probabilities(circuit::QuantumCircuit,
-        [target_qubits::Vector{<:Integer}])
+        [target_qubits::Vector{<:Integer}])::AbstractVector{<:Real}
 
 Returns a vector listing the measurement probabilities for the `target_qubits` in the `circuit`.
 
