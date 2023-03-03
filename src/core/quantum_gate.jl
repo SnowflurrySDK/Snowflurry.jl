@@ -10,19 +10,23 @@ Instead, each type of gate must have a struct which is a descendant of `Gate`.
 Each descendant of `Gate` must have at least the following fields:
 - `display_symbol::Vector{String}`: determines how the `Gate` is displayed in a `QuantumCircuit`.
 - `instruction_symbol::String`: used by the quantum compiler to identify the `Gate`.
-- `target::Vector{Int}`: to which qubits the `Gate` is applied.
-- `parameters::Vector`: affect which operation is applied (e.g. rotation angles).
+- `target::SVector{1,Int}`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
+- `parameters::Vector{Real}`: for parameterized gates, affect which operation is applied (e.g. rotation angles).
 - `type::Type{<:Complex}`: datatype used to construct underlying operator, default being ComplexF64.
 
 # Examples
 A struct must be defined for each new gate type, such as the following X_45 gate which
 applies a 45° rotation about the X axis:
 ```jldoctest gate_struct
+julia> using StaticArrays
+```
+
+```jldoctest gate_struct
 julia> struct X45 <: Gate
            display_symbol::Vector{String}
            instruction_symbol::String
-           target::Vector{Int}
-           parameters::Vector
+           target::SVector{1,Int}
+           parameters::SVector{1,Real}
            type::Type{<:Complex}
        end;
 
@@ -30,20 +34,20 @@ julia> struct X45 <: Gate
 
 For convenience, a constructor can be defined:
 ```jldoctest gate_struct
-julia> x_45(target,T::Type{<:Complex}=ComplexF64) = X45(["X_45"], "x_45", [target], [], T);
+julia> x_45(target::Integer, T::Type{<:Complex}=ComplexF64) = X45(["X_45"], "x_45", [target], [π/4], T);
 
 ```
 
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
 the function `get_operator` must be extended.
 ```jldoctest gate_struct
-julia> Snowflake.get_operator(gate::X45) = rotation_x(π/4, gate.type);
+julia> Snowflake.get_operator(gate::X45) = rotation_x(gate.parameters[1], gate.type);
 
 ```
 
 The gate inverse can also be specified by extending the `get_inverse` function.
 ```jldoctest gate_struct
-julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -π/4, gate.type);
+julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -gate.parameters[1], gate.type);
 
 ```
 
@@ -52,6 +56,7 @@ An instance of the X_45 gate can now be created:
 julia> x_45_gate = x_45(1)
 Gate Object:
 instruction symbol: x_45
+parameters: Real[0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
@@ -63,7 +68,7 @@ Underlying data Matrix{ComplexF64}:
 julia> get_inverse(x_45_gate)
 Gate Object:
 instruction symbol: rx
-parameters: [-0.7853981633974483]
+parameters: Real[-0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
@@ -79,6 +84,7 @@ Alternatively, an instance of the X_45 gate using ComplexF32 datatype is constru
 julia> x_45_gate_ComplexF32 = x_45(1, ComplexF32)
 Gate Object:
 instruction symbol: x_45
+parameters: Real[0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
@@ -94,7 +100,7 @@ abstract type Gate end
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
     println(io, "instruction symbol: " * gate.instruction_symbol)
-    if !isempty(gate.parameters)
+    if  :parameters in fieldnames(typeof(gate))
         print(io, "parameters: " )
         show(io, gate.parameters)
         println(io)
@@ -317,7 +323,7 @@ R(\\theta, \\phi) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """
-rotation(theta, phi,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+rotation(theta::Real, phi::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
     T[cos(theta/2) -im*exp(-im*phi)*sin(theta/2);
      -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
 )
@@ -337,7 +343,7 @@ R_x(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """   
-rotation_x(theta,T::Type{<:Complex}=ComplexF64) = rotation(theta, 0,T)
+rotation_x(theta::Real,T::Type{<:Complex}=ComplexF64) = rotation(theta, 0,T)
 
 """
     rotation_y(theta)
@@ -354,7 +360,7 @@ R_y(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-rotation_y(theta,T::Type{<:Complex}=ComplexF64) = rotation(theta, pi/2,T)
+rotation_y(theta::Real,T::Type{<:Complex}=ComplexF64) = rotation(theta, pi/2,T)
 
 """
     rotation_z(theta)
@@ -369,7 +375,7 @@ R_z(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-rotation_z(theta,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
     T[exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
@@ -407,7 +413,7 @@ U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-universal(theta, phi, lambda,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+universal(theta::Real, phi::Real, lambda,T::Type{<:Complex}=ComplexF64) = Operator{T}(
     T[cos(theta/2) -exp(im*lambda)*sin(theta/2)
      exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
 )
@@ -523,13 +529,12 @@ iswap_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(
 
 Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `Operator` to the target qubit.
 """
-sigma_x(target,T::Type{<:Complex}=ComplexF64) = SigmaX(["X"], "x", [target], [], T)
+sigma_x(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaX(["X"], "x", [target], T)
 
 struct SigmaX <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -560,13 +565,12 @@ get_inverse(gate::SigmaX) = gate
 
 Return the Pauli-Y `Gate`, which applies the [`sigma_y()`](@ref) `Operator` to the target qubit.
 """
-sigma_y(target,T::Type{<:Complex}=ComplexF64) = SigmaY(["Y"], "y", [target], [], T)
+sigma_y(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaY(["Y"], "y", [target], T)
 
 struct SigmaY <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -579,13 +583,12 @@ get_inverse(gate::SigmaY) = gate
 
 Return the Pauli-Z `Gate`, which applies the [`sigma_z()`](@ref) `Operator` to the target qubit.
 """
-sigma_z(target,T::Type{<:Complex}=ComplexF64) = SigmaZ(["Z"], "z", [target], [], T)
+sigma_z(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaZ(["Z"], "z", [target], T)
 
 struct SigmaZ <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -598,13 +601,12 @@ get_inverse(gate::SigmaZ) = gate
 
 Return the Hadamard `Gate`, which applies the [`hadamard()`](@ref) `Operator` to the `target` qubit.
 """
-hadamard(target,T::Type{<:Complex}=ComplexF64) = Hadamard(["H"], "h", [target], [], T)
+hadamard(target::Integer,T::Type{<:Complex}=ComplexF64) = Hadamard(["H"], "h", [target], T)
 
 struct Hadamard <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -617,13 +619,12 @@ get_inverse(gate::Hadamard) = gate
 
 Return a phase `Gate` (also known as an ``S`` `Gate`), which applies the [`phase()`](@ref) `Operator` to the target qubit.
 """
-phase(target, T::Type{<:Complex}=ComplexF64) = Phase(["S"], "s", [target], [], T)
+phase(target::Integer, T::Type{<:Complex}=ComplexF64) = Phase(["S"], "s", [target], T)
 
 struct Phase <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -635,13 +636,12 @@ get_inverse(gate::Phase) = phase_dagger(gate.target[1],gate.type)
 
 Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `Operator` to the target qubit.
 """
-phase_dagger(target, T::Type{<:Complex}=ComplexF64) = PhaseDagger(["S†"], "s_dag", [target], [], T)
+phase_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = PhaseDagger(["S†"], "s_dag", [target], T)
 
 struct PhaseDagger <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -654,13 +654,12 @@ get_inverse(gate::PhaseDagger) = phase(gate.target[1])
 
 Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `Operator` to the `target` qubit.
 """
-pi_8(target, T::Type{<:Complex}=ComplexF64) = Pi8(["T"], "t", [target], [], T)
+pi_8(target::Integer, T::Type{<:Complex}=ComplexF64) = Pi8(["T"], "t", [target], T)
 
 struct Pi8 <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -673,13 +672,12 @@ get_inverse(gate::Pi8) = pi_8_dagger(gate.target[1],gate.type)
 
 Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
-pi_8_dagger(target, T::Type{<:Complex}=ComplexF64) = Pi8Dagger(["T†"], "t_dag", [target], [], T)
+pi_8_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = Pi8Dagger(["T†"], "t_dag", [target], T)
 
 struct Pi8Dagger <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -692,13 +690,12 @@ get_inverse(gate::Pi8Dagger) = pi_8(gate.target[1], gate.type)
 
 Return a `Gate` that applies a 90° rotation about the X axis as defined by the [`x_90()`](@ref) `Operator`.
 """
-x_90(target, T::Type{<:Complex}=ComplexF64) = X90(["X_90"], "x_90", [target], [], T)
+x_90(target::Integer, T::Type{<:Complex}=ComplexF64) = X90(["X_90"], "x_90", [target], T)
 
 struct X90 <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
     type::Type{<:Complex}
 end
 
@@ -713,14 +710,14 @@ Return a gate that applies a rotation `theta` to the `target` qubit about the co
 
 The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
-rotation(target, theta, phi, T::Type{<:Complex}=ComplexF64) = Rotation(["R(θ=$(theta),ϕ=$(phi))"], "r", [target],
+rotation(target::Integer, theta::Real, phi::Real, T::Type{<:Complex}=ComplexF64) = Rotation(["R(θ=$(theta),ϕ=$(phi))"], "r", [target],
     [theta, phi], T)
 
 struct Rotation <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{2,Real}
     type::Type{<:Complex}
 end
 
@@ -736,13 +733,13 @@ Return a `Gate` that applies a rotation `theta` about the X axis of the `target`
 
 The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
-rotation_x(target, theta, T::Type{<:Complex}=ComplexF64) = RotationX(["Rx($(theta))"], "rx", [target], [theta], T)
+rotation_x(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationX(["Rx($(theta))"], "rx", [target], [theta], T)
 
 struct RotationX <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{1,Real}
     type::Type{<:Complex}
 end
 
@@ -757,13 +754,13 @@ Return a `Gate` that applies a rotation `theta` about the Y axis of the `target`
 
 The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
-rotation_y(target, theta, T::Type{<:Complex}=ComplexF64) = RotationY(["Ry($(theta))"], "ry", [target], [theta], T)
+rotation_y(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationY(["Ry($(theta))"], "ry", [target], [theta], T)
 
 struct RotationY <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{1,Real}
     type::Type{<:Complex}
 end
 
@@ -778,13 +775,13 @@ Return a `Gate` that applies a rotation `theta` about the Z axis of the `target`
 
 The corresponding `Operator` is [`rotation_z(theta)`](@ref).
 """ 
-rotation_z(target, theta, T::Type{<:Complex}=ComplexF64) = RotationZ(["Rz($(theta))"], "rz", [target], [theta], T)
+rotation_z(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationZ(["Rz($(theta))"], "rz", [target], [theta], T)
 
 struct RotationZ <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{1,Real}
     type::Type{<:Complex}
 end
 
@@ -797,13 +794,13 @@ get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],ga
 
 Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `Operator`.
 """ 
-phase_shift(target, phi, T::Type{<:Complex}=ComplexF64) = PhaseShift(["P($(phi))"], "p", [target], [phi], T)
+phase_shift(target::Integer, phi::Real, T::Type{<:Complex}=ComplexF64) = PhaseShift(["P($(phi))"], "p", [target], [phi], T)
 
 struct PhaseShift <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{1,Real}
     type::Type{<:Complex}
 end
 
@@ -818,14 +815,14 @@ Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, 
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
-universal(target, theta, phi, lambda, T::Type{<:Complex}=ComplexF64) = Universal(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"],
+universal(target::Integer, theta::Real, phi::Real, lambda::Real, T::Type{<:Complex}=ComplexF64) = Universal(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"],
     "u", [target], [theta, phi, lambda], T)
 
 struct Universal <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{1,Int}
+    parameters::SVector{3,Real}
     type::Type{<:Complex}
 end
 
@@ -849,7 +846,7 @@ The corresponding `Operator` is [`control_z()`](@ref).
 function control_z(control_qubit, target_qubit, T::Type{<:Complex}=ComplexF64)
     target = [control_qubit, target_qubit]
     ensure_target_qubits_are_different(target)
-    return ControlZ(["*", "Z"], "cz", target, [], T)
+    return ControlZ(["*", "Z"], "cz", target, T)
 end
 
 function ensure_target_qubits_are_different(target::Array)
@@ -869,8 +866,7 @@ end
 struct ControlZ <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{2,Int}
     type::Type{<:Complex}
 end
 
@@ -885,17 +881,16 @@ Return a controlled-X gate (also known as a controlled NOT gate) given a `contro
 
 The corresponding `Operator` is [`control_x()`](@ref).
 """ 
-function control_x(control_qubit, target_qubit, T::Type{<:Complex}=ComplexF64)
+function control_x(control_qubit::Integer, target_qubit::Integer, T::Type{<:Complex}=ComplexF64)
     target = [control_qubit, target_qubit]
     ensure_target_qubits_are_different(target)
-    return ControlX(["*", "X"], "cx", target, [], T)
+    return ControlX(["*", "X"], "cx", target, T)
 end
 
 struct ControlX <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{2,Int}
     type::Type{<:Complex}
 end
 
@@ -913,14 +908,13 @@ The corresponding `Operator` is [`iswap()`](@ref).
 function iswap(qubit_1, qubit_2, T::Type{<:Complex}=ComplexF64)
     target = [qubit_1, qubit_2]
     ensure_target_qubits_are_different(target)
-    return ISwap(["x", "x"], "iswap", target, [], T)
+    return ISwap(["x", "x"], "iswap", target, T)
 end
 
 struct ISwap <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{2,Int}
     type::Type{<:Complex}
 end
 
@@ -935,17 +929,21 @@ Return a Toffoli gate (also known as a CCNOT gate) given two control qubits and 
 
 The corresponding `Operator` is [`toffoli()`](@ref).
 """
-function toffoli(control_qubit_1, control_qubit_2, target_qubit, T::Type{<:Complex}=ComplexF64)
+function toffoli(
+        control_qubit_1::Integer, 
+        control_qubit_2::Integer, 
+        target_qubit::Integer, 
+        T::Type{<:Complex}=ComplexF64
+    )
     target = [control_qubit_1, control_qubit_2, target_qubit]
     ensure_target_qubits_are_different(target)
-    return Toffoli(["*", "*", "X"], "ccx", target, [], T)
+    return Toffoli(["*", "*", "X"], "ccx", target, T)
 end
 
 struct Toffoli <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{3,Int}
     type::Type{<:Complex}
 end
 
@@ -960,17 +958,16 @@ Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swa
 
 The corresponding `Operator` is [`iswap_dagger()`](@ref).
 """ 
-function iswap_dagger(qubit_1, qubit_2, T::Type{<:Complex}=ComplexF64)
+function iswap_dagger(qubit_1::Integer, qubit_2::Integer, T::Type{<:Complex}=ComplexF64)
     target = [qubit_1, qubit_2]
     ensure_target_qubits_are_different(target)
-    return ISwapDagger(["x†", "x†"], "iswap_dag", target, [], T)
+    return ISwapDagger(["x†", "x†"], "iswap_dag", target, T)
 end
 
 struct ISwapDagger <: Gate
     display_symbol::Vector{String}
     instruction_symbol::String
-    target::Vector{Int}
-    parameters::Vector
+    target::SVector{2,Int}
     type::Type{<:Complex}
 end
 
@@ -1019,7 +1016,7 @@ Return a `Gate` which is the inverse of the input `gate`.
 julia> u = universal(1, -pi/2, pi/3, pi/4)
 Gate Object:
 instruction symbol: u
-parameters: [-1.5707963267948966, 1.0471975511965976, 0.7853981633974483]
+parameters: Real[-1.5707963267948966, 1.0471975511965976, 0.7853981633974483]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:
@@ -1031,7 +1028,7 @@ Underlying data Matrix{ComplexF64}:
 julia> get_inverse(u)
 Gate Object:
 instruction symbol: u
-parameters: [1.5707963267948966, -0.7853981633974483, -1.0471975511965976]
+parameters: Real[1.5707963267948966, -0.7853981633974483, -1.0471975511965976]
 targets: [1]
 operator:
 (2, 2)-element Snowflake.Operator:

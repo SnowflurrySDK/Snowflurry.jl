@@ -13,6 +13,7 @@ using UUIDs
 using Parameters
 using Printf
 using Plots
+using StaticArrays
 import SparseArrays
 
 
