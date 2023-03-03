@@ -169,55 +169,14 @@ end
     @test !is_hermitian(sigma_p())
 end
 
-@testset "change_number_base" begin
-    decimal = -1
-    base = 3
-    num_symbols = 4
-    @test_throws ErrorException Snowflake.change_number_base(decimal, base, num_symbols)
-    
-    decimal = 88
-    @test_throws ErrorException Snowflake.change_number_base(decimal, base, num_symbols)
-
-    decimal = 16
-    symbols = Snowflake.change_number_base(decimal, base, num_symbols)
-    expected_symbols = [0, 1, 2, 1]
-    @test symbols == expected_symbols
-end
-
-@testset "change_to_decimal_integer" begin
-    symbols = [0, 1, 2, 1]
-    base = 3
-    decimal = Snowflake.change_to_decimal_integer(symbols, base)
-    @test decimal == 16
-end
-
-@testset "get_ket_index" begin
-    target_bodies = [1, 3]
-    remaining_bodies = [2]
-    base = 3
-    target_index = 6
-    remainder_index = 1
-    ket_index = Snowflake.get_ket_index(target_bodies, remaining_bodies, base,
-        target_index, remainder_index)
-    @test ket_index == 22
-end
-
 @testset "get_measurement_probabilities" begin
     ket = 1/sqrt(5)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0])
     probabilities = get_measurement_probabilities(ket)
     @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
 
+    ket = 1/sqrt(7)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0, 1, 1, 0])
     target_bodies = [1, 2]
-    base = 3
-    probabilities = get_measurement_probabilities(ket, target_bodies, base)
-    @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
-
-    target_bodies = [1]
-    probabilities = get_measurement_probabilities(ket, target_bodies, base)
-    @test probabilities ≈ [0.4, 0.2, 0.4]
-
-    ket = 1/2*Ket([0, -im, im, 0, 0, 1, 0, -1])
-    target_bodies = [1, 3]
-    probabilities = get_measurement_probabilities(ket, target_bodies)
-    @test probabilities ≈ [0.25, 0.25, 0, 0.5]
+    hspace_size_per_body = [2, 3, 2]
+    probabilities = get_measurement_probabilities(ket, target_bodies, hspace_size_per_body)
+    @test probabilities ≈ 1/7*[1, 1, 1, 2, 1, 1]
 end

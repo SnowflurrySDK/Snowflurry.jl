@@ -761,28 +761,91 @@ end
 
 function get_measurement_probabilities(x::Ket{Complex{T}},
     target_bodies::Vector{U},
-    hspace_size_per_body::U=2) where {T<:Real, U<:Integer}
+    hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
 
     amplitudes = real.(adjoint.(x) .* x)
     num_amplitudes = length(amplitudes)
-    num_target_amplitudes = hspace_size_per_body^length(target_bodies)
+    num_target_amplitudes = get_num_target_amplitudes(target_bodies, hspace_size_per_body)
     if num_target_amplitudes == num_amplitudes
         return amplitudes
     else
-        num_bodies = get_num_bodies(x, hspace_size_per_body)
-        remaining_bodies = [x for x ∈ 1:num_bodies if x ∉ target_bodies]
-        target_amplitudes = Vector{T}(undef, num_target_amplitudes)
-        num_summed_amplitudes = hspace_size_per_body^length(remaining_bodies)
-        for i_target_amplitude in 0:num_target_amplitudes-1
-            sum = 0
-            for i_summed_amplitude in 0:num_summed_amplitudes-1
-                ket_index = get_ket_index(target_bodies, remaining_bodies,
-                    hspace_size_per_body, i_target_amplitude, i_summed_amplitude)
-                sum += amplitudes[ket_index]
-            end
-            target_amplitudes[i_target_amplitude+1] = sum
+        num_bodies = length(hspace_size_per_body)
+        bitstring = zeros(U, num_bodies)
+        target_amplitudes = zeros(T, num_target_amplitudes)
+        for single_amplitude in amplitudes
+            target_index = get_target_amplitude_index(bitstring, target_bodies,
+                hspace_size_per_body)
+            target_amplitudes[target_index] += single_amplitude
+            increment_bitstring!(bitstring, hspace_size_per_body)
         end
         return target_amplitudes
+    end
+end
+
+function throw_if_targets_are_invalid(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
+    hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
+
+    expected_ket_length = prod(hspace_size_per_body)
+    if expected_ket_length != length(x)
+        throw(ErrorException("the hspace_size_per_body is incorrect for the provided ket"))
+    end
+
+    if !allunique(target_bodies)
+        throw(ErrorException("the elements of target_bodies must be unique"))
+    end
+
+    if !issorted(target_bodies)
+        throw(ErrorException("target_bodies must be sorted in ascending order"))
+    end
+
+    num_bodies = length(hspace_size_per_body)
+    if target_bodies[end] > num_bodies
+        throw(ErrorException("elements of target_bodies cannot be greater than the "*
+            "number of bodies"))
+    end
+end
+
+function get_num_target_amplitudes(target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T}) where T<:Integer
+
+    num_amplitudes = 1
+    if isempty(target_bodies)
+        num_amplitudes = 0
+    end 
+    for target_index in target_bodies
+        num_amplitudes *= hspace_size_per_body[target_index]
+    end
+    return num_amplitudes
+end
+
+function get_target_amplitude_index(bitstring::Vector{T}, target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T}) where T<:Integer
+
+    amplitude_index = 1
+    previous_base = 1
+    for i_body in reverse(target_bodies)
+        amplitude_index +=
+            bitstring[i_body]*previous_base
+        previous_base *= hspace_size_per_body[i_body]
+    end
+    return amplitude_index
+end
+
+function increment_bitstring!(bitstring::Vector{T},
+    hspace_size_per_bit::Vector{T}) where T<:Integer
+
+    num_bits = length(bitstring)
+    i_bit = num_bits
+    finished_updating = false
+    while i_bit > 0 && !finished_updating
+        if bitstring[i_bit] == hspace_size_per_bit[i_bit]-1
+            bitstring[i_bit] = 0
+            i_bit -= 1
+        else
+            bitstring[i_bit] += 1
+            finished_updating = true
+        end
     end
 end
 
