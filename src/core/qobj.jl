@@ -761,6 +761,15 @@ end
 
 function get_measurement_probabilities(x::Ket{Complex{T}},
     target_bodies::Vector{U},
+    hspace_size_per_body::U = 2) where {T<:Real, U<:Integer}
+
+    num_bodies = get_num_bodies(x, hspace_size_per_body)
+    hspace_size_per_body_list = fill(hspace_size_per_body, num_bodies)
+    return get_measurement_probabilities(x, target_bodies, hspace_size_per_body_list)
+end
+
+function get_measurement_probabilities(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
     hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
 
     amplitudes = real.(adjoint.(x) .* x)

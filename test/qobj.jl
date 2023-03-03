@@ -174,6 +174,16 @@ end
     probabilities = get_measurement_probabilities(ket)
     @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
 
+    target_bodies = [2]
+    hspace_size_per_body = 3
+    probabilities = get_measurement_probabilities(ket, target_bodies, hspace_size_per_body)
+    @test probabilities ≈ 1/5*[2, 1, 2]
+
+    ket = 1/sqrt(3)*Ket([1, 0, -im, 1])
+    target_bodies = [1]
+    probabilities = get_measurement_probabilities(ket, target_bodies)
+    @test probabilities ≈ [1/3, 2/3]
+
     ket = 1/sqrt(7)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0, 1, 1, 0])
     target_bodies = [1, 2]
     hspace_size_per_body = [2, 3, 2]
