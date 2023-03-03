@@ -690,6 +690,7 @@ end
 
 Normalizes Ket `x` such that its magnitude becomes unity.
 
+```jldoctest
 julia> ψ=Ket([1.,2.,4.])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
@@ -701,6 +702,7 @@ julia> normalize!(ψ)
 0.2182178902359924 + 0.0im
 0.4364357804719848 + 0.0im
 0.8728715609439696 + 0.0im
+```
 
 """
 function normalize!(x::Ket)
@@ -710,14 +712,17 @@ function normalize!(x::Ket)
 end
 
 """
-    get_measurement_probabilities(x::Ket, [target_bodies::Vector{<:Integer},
-        hspace_size_per_body::Integer=2])
+    get_measurement_probabilities(x::Ket{Complex{T}},
+        [target_bodies::Vector{U},
+        hspace_size_per_body::Union{U,Vector{U}}=2])::AbstractVector{T}
+        where {T<:Real, U<:Integer}
 
 Returns a vector listing the measurement probabilities of the `target_bodies` of `Ket` `x`.
 
-The Hilbert space size per body can be specified by providing a value for the
-`hspace_size_per_body` argument. If only `x` is provided, the probabilities are provided for
-all the bodies.
+The Hilbert space size per body can be specified by providing a `Vector` of `Integer` for
+the `hspace_size_per_body` argument. The `Vector` must specify the Hilbert space size for
+each body. If the space size is uniform, a single `Integer` can be given instead. If
+only `x` is provided, the probabilities are provided for all the bodies.
 
 The measurement probabilities are listed from the smallest to the largest computational
 basis state. For instance, for a 2-qubit `Ket`, the probabilities are listed for 00, 01, 10,
@@ -726,14 +731,13 @@ and 11.
 The following example constructs a `Ket`, where the probability of measuring 00 is 50% and
 the probability of measuring 10 is also 50%.
 ```jldoctest get_measurement_probabilities
-julia> ψ = 1/sqrt(2)*Ket([1, 0, 1, 0]);
+julia> ψ = 1/sqrt(2)*Ket([1, 0, 1, 0])
+4-element Ket{ComplexF64}:
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
 
-julia> print(ψ)
-4-element Ket:
-0.7071067811865475 + 0.0im
-0.0 + 0.0im
-0.7071067811865475 + 0.0im
-0.0 + 0.0im
 
 julia> get_measurement_probabilities(ψ)
 4-element Vector{Float64}:

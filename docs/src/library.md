@@ -79,7 +79,7 @@ MultiBodySystem
 commute
 anticommute
 normalize!
-get_measurement_probabilities(x::Ket)
+get_measurement_probabilities(x::Ket{Complex{T}}) where T<:Real
 ket2dm
 fock_dm
 Snowflake.moyal
