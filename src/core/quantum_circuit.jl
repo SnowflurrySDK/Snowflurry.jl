@@ -553,13 +553,13 @@ julia> get_measurement_probabilities(circuit, target_qubit)
 
 ```
 """
-function get_measurement_probabilities(circuit::QuantumCircuit)
+function get_measurement_probabilities(circuit::QuantumCircuit)::AbstractVector{<:Real}
     ket = simulate(circuit)
     return get_measurement_probabilities(ket)
 end
 
 function get_measurement_probabilities(circuit::QuantumCircuit,
-    target_qubits::Vector{<:Integer})
+    target_qubits::Vector{<:Integer})::AbstractVector{<:Real}
     
     ket = simulate(circuit)
     return get_measurement_probabilities(ket, target_qubits)
