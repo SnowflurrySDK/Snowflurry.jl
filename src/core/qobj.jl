@@ -772,6 +772,7 @@ function get_measurement_probabilities(x::Ket{Complex{T}},
     target_bodies::Vector{U},
     hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
 
+    throw_if_targets_are_invalid(x, target_bodies, hspace_size_per_body)
     amplitudes = real.(adjoint.(x) .* x)
     num_amplitudes = length(amplitudes)
     num_target_amplitudes = get_num_target_amplitudes(target_bodies, hspace_size_per_body)
@@ -800,6 +801,10 @@ function throw_if_targets_are_invalid(x::Ket{Complex{T}},
         throw(ErrorException("the hspace_size_per_body is incorrect for the provided ket"))
     end
 
+    if isempty(target_bodies)
+        throw(ErrorException("target_bodies is empty"))
+    end
+
     if !allunique(target_bodies)
         throw(ErrorException("the elements of target_bodies must be unique"))
     end
@@ -819,9 +824,6 @@ function get_num_target_amplitudes(target_bodies::Vector{T},
     hspace_size_per_body::Vector{T}) where T<:Integer
 
     num_amplitudes = 1
-    if isempty(target_bodies)
-        num_amplitudes = 0
-    end 
     for target_index in target_bodies
         num_amplitudes *= hspace_size_per_body[target_index]
     end
@@ -856,62 +858,6 @@ function increment_bitstring!(bitstring::Vector{T},
             finished_updating = true
         end
     end
-end
-
-function get_ket_index(target_bodies::Vector{T},
-    remaining_bodies::Vector{T},
-    hspace_size_per_body::T, target_index::T,
-    remainder_index::T) where T<:Integer
-
-    target_symbols = change_number_base(target_index, hspace_size_per_body,
-        length(target_bodies))
-    remainder_symbols = change_number_base(remainder_index, hspace_size_per_body,
-        length(remaining_bodies))
-    num_symbols = length(target_bodies)+length(remaining_bodies)
-    combined_symbols = Vector{Int}(undef, num_symbols)
-    for (i_target, target) in enumerate(target_bodies)
-        combined_symbols[target] = target_symbols[i_target]
-    end
-    for (i_remaining, remaining) in enumerate(remaining_bodies)
-        combined_symbols[remaining] = remainder_symbols[i_remaining]
-    end
-    decimal = change_to_decimal_integer(combined_symbols, hspace_size_per_body)
-    return decimal+1
-end
-
-function change_number_base(decimal::T, base::T, num_symbols::T) where T<:Integer
-    throw_if_number_base_cannot_be_changed(decimal, base, num_symbols)
-    dividend = decimal
-    symbols = zeros(T, num_symbols)
-    count = 0
-    while dividend != 0
-        (dividend, remainder) = fldmod(dividend, base)
-        symbols[end-count] = remainder
-        count += 1
-    end
-    return symbols
-end
-
-function throw_if_number_base_cannot_be_changed(decimal::Integer, base::Integer,
-    num_symbols::Integer)
-    
-    if decimal < 0
-        throw(ErrorException("the decimal cannot be negative"))
-    elseif decimal >= base^num_symbols
-        min_num_symbols = Int(ceil(log2(decimal+1)/log2(base)))
-        throw(ErrorException(
-            "the decimal $decimal needs at least $min_num_symbols symbols"))
-    end
-end
-
-function change_to_decimal_integer(symbols::Vector{<:Integer}, base::Integer)
-    decimal = 0
-    num_symbols = length(symbols)
-    for (i_symbol, digit) in enumerate(symbols)
-        power = num_symbols-i_symbol
-        decimal += digit*base^power
-    end
-    return decimal
 end
 
 """
