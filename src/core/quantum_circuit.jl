@@ -640,9 +640,9 @@ function get_num_gates(circuit::QuantumCircuit)::Integer
 end
 
 """
-    get_depth(circuit::QuantumCircuit)
+    get_logical_depth(circuit::QuantumCircuit)::Integer
 
-Returns the depth of the `circuit`.
+Returns the logical depth of the `circuit`.
 
 Note that the function does not attempt to reduce the circuit depth by parallelizing gates.
 
@@ -664,7 +664,7 @@ q[2]:───────H──
 
 
 
-julia> get_depth(c1)
+julia> get_logical_depth(c1)
 2
 
 julia> c2 = QuantumCircuit(qubit_count=2, bit_count=0);
@@ -681,11 +681,11 @@ q[2]:──H──
 
 
 
-julia> get_depth(c2)
+julia> get_logical_depth(c2)
 1
 
 ```
 """
-function get_depth(circuit::QuantumCircuit)::Integer
+function get_logical_depth(circuit::QuantumCircuit)::Integer
     return length(circuit.pipeline)
 end
