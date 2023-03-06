@@ -556,7 +556,7 @@ function get_inverse(circuit::QuantumCircuit)
 end
 
 """
-    get_gate_counts(circuit::QuantumCircuit)
+    get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
 
 Returns a dictionary listing the number of gates of each type found in the `circuit`.
 
@@ -589,7 +589,7 @@ Dict{String, Int64} with 2 entries:
 
 ```
 """
-function get_gate_counts(circuit::QuantumCircuit)
+function get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
     for step in circuit.pipeline
         for gate in step
@@ -604,7 +604,7 @@ function get_gate_counts(circuit::QuantumCircuit)
 end
 
 """
-    get_num_gates(circuit::QuantumCircuit)
+    get_num_gates(circuit::QuantumCircuit)::Integer
 
 Returns the number of gates in the `circuit`.
 
@@ -631,7 +631,7 @@ julia> get_num_gates(c)
 
 ```
 """
-function get_num_gates(circuit::QuantumCircuit)
+function get_num_gates(circuit::QuantumCircuit)::Integer
     num_gates = 0
     for step in circuit.pipeline
         num_gates += length(step)
@@ -686,6 +686,6 @@ julia> get_depth(c2)
 
 ```
 """
-function get_depth(circuit::QuantumCircuit)
+function get_depth(circuit::QuantumCircuit)::Integer
     return length(circuit.pipeline)
 end
