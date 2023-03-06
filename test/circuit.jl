@@ -99,10 +99,22 @@ end
     push_gate!(c, sigma_x(2))
     gate_counts = get_gate_counts(c)
     @test gate_counts == Dict("cx"=>1, "x"=>3)
+end
 
+@testset "get_num_gates" begin
+    c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(c, [sigma_x(1), sigma_x(2)])
+    push_gate!(c, control_x(1, 2))
+    push_gate!(c, sigma_x(2))
     num_gates = get_num_gates(c)
     @test num_gates == 4
+end
 
+@testset "get_logical_depth" begin
+    c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+    push_gate!(c, [sigma_x(1), sigma_x(2)])
+    push_gate!(c, control_x(1, 2))
+    push_gate!(c, sigma_x(2))
     depth = get_logical_depth(c)
     @test depth == 3
 end
