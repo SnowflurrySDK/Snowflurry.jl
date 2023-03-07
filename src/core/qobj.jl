@@ -12,6 +12,8 @@ julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
+
+
 ```
 A better way to initialize a Ket is to use a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
 ```jldoctest
@@ -20,6 +22,8 @@ julia> ψ = Snowflake.fock(2, 3)
 0.0 + 0.0im
 0.0 + 0.0im
 1.0 + 0.0im
+
+
 ```
 """
 struct Ket{T<:Complex}
@@ -177,7 +181,32 @@ Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
 Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
-Base.length(x::Union{Ket, Bra}) = Base.length(x.data)
+Base.length(x::Union{Ket, Bra}) = length(x.data)
+
+"""
+    exp(A::Operator)
+
+Compute the matrix exponential of `Operator` `A`.
+
+# Examples
+```jldoctest
+julia> X = sigma_x()
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{ComplexF64}:
+0.0 + 0.0im    1.0 + 0.0im
+1.0 + 0.0im    0.0 + 0.0im
+
+
+julia> x_rotation_90_deg = exp(-im*π/4*X)
+(2, 2)-element Snowflake.Operator:
+Underlying data Matrix{ComplexF64}:
+0.7071067811865477 + 0.0im    0.0 - 0.7071067811865475im
+0.0 - 0.7071067811865475im    0.7071067811865477 + 0.0im
+
+
+```
+"""
+Base.exp(A::Operator) = Operator(exp(A.data))
 
 """
     Base.getindex(A::Operator, m::Int64, n::Int64)
@@ -561,8 +590,6 @@ julia> ψ = Snowflake.fock(1, 3,ComplexF32) # specifying a type other than Compl
 0.0f0 + 0.0f0im
 1.0f0 + 0.0f0im
 0.0f0 + 0.0f0im
-
-
 ```
 """
 function fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)

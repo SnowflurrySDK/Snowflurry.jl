@@ -45,6 +45,12 @@ using Test
 
 end
 
+@testset "operator_exp" begin
+    theta = pi/8
+    exponential = exp(-im*theta/2*sigma_x())
+    @test exponential ≈ rotation_x(theta)
+end
+
 @testset "pauli_operators" begin
     x = sigma_x()
     z = sigma_z()

@@ -119,14 +119,13 @@ Update the `state` by applying a `gate` to it.
 
 # Examples
 ```jldoctest
-julia> ψ_0 = fock(0, 2);
-
-julia> print(ψ_0)
+julia> ψ_0 = fock(0, 2)
 2-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 
-julia> apply_gate!(ψ_0, sigma_x(1));
+
+julia> apply_gate!(ψ_0, sigma_x(1))
 
 julia> print(ψ_0)
 2-element Ket{ComplexF64}:
@@ -982,19 +981,17 @@ Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 
 # Examples
 ```jldoctest
-julia> ψ_0 = fock(0, 2);
-
-julia> print(ψ_0)
+julia> ψ_0 = fock(0, 2)
 2-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 
-julia> ψ_1 = sigma_x(1)*ψ_0;
 
-julia> print(ψ_1)
+julia> ψ_1 = sigma_x(1)*ψ_0
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
+
 
 ```
 """
