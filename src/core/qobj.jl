@@ -690,6 +690,7 @@ end
 
 Normalizes Ket `x` such that its magnitude becomes unity.
 
+```jldoctest
 julia> ψ=Ket([1.,2.,4.])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
@@ -701,12 +702,166 @@ julia> normalize!(ψ)
 0.2182178902359924 + 0.0im
 0.4364357804719848 + 0.0im
 0.8728715609439696 + 0.0im
+```
 
 """
 function normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
     x = 1.0/a*x
     return x
+end
+
+"""
+    get_measurement_probabilities(x::Ket{Complex{T}},
+        [target_bodies::Vector{U},
+        hspace_size_per_body::Union{U,Vector{U}}=2])::AbstractVector{T}
+        where {T<:Real, U<:Integer}
+
+Returns a vector listing the measurement probabilities of the `target_bodies` of `Ket` `x`.
+
+The Hilbert space size per body can be specified by providing a `Vector` of `Integer` for
+the `hspace_size_per_body` argument. The `Vector` must specify the Hilbert space size for
+each body. If the space size is uniform, a single `Integer` can be given instead. If
+only `x` is provided, the probabilities are provided for all the bodies.
+
+The measurement probabilities are listed from the smallest to the largest computational
+basis state. For instance, for a 2-qubit `Ket`, the probabilities are listed for 00, 01, 10,
+and 11.
+# Examples
+The following example constructs a `Ket`, where the probability of measuring 00 is 50% and
+the probability of measuring 10 is also 50%.
+```jldoctest get_measurement_probabilities
+julia> ψ = 1/sqrt(2)*Ket([1, 0, 1, 0])
+4-element Ket{ComplexF64}:
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
+0.7071067811865475 + 0.0im
+0.0 + 0.0im
+
+
+julia> get_measurement_probabilities(ψ)
+4-element Vector{Float64}:
+ 0.4999999999999999
+ 0.0
+ 0.4999999999999999
+ 0.0
+
+```
+
+For the same `Ket`, the probability of measuring qubit 2 and finding 0 is 100%.
+```jldoctest get_measurement_probabilities
+julia> target_qubit = [2];
+
+julia> get_measurement_probabilities(ψ, target_qubit)
+2-element Vector{Float64}:
+ 0.9999999999999998
+ 0.0
+
+```
+"""
+function get_measurement_probabilities(x::Ket{Complex{T}})::AbstractVector{T} where T<:Real
+    return real.(adjoint.(x) .* x)
+end
+
+function get_measurement_probabilities(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
+    hspace_size_per_body::U = 2)::AbstractVector{T} where {T<:Real, U<:Integer}
+
+    num_bodies = get_num_bodies(x, hspace_size_per_body)
+    hspace_size_per_body_list = fill(hspace_size_per_body, num_bodies)
+    return get_measurement_probabilities(x, target_bodies, hspace_size_per_body_list)
+end
+
+function get_measurement_probabilities(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
+    hspace_size_per_body::Vector{U})::AbstractVector{T} where {T<:Real, U<:Integer}
+
+    throw_if_targets_are_invalid(x, target_bodies, hspace_size_per_body)
+    amplitudes = get_measurement_probabilities(x)
+    num_amplitudes = length(amplitudes)
+    num_target_amplitudes = get_num_target_amplitudes(target_bodies, hspace_size_per_body)
+    if num_target_amplitudes == num_amplitudes
+        return amplitudes
+    else
+        num_bodies = length(hspace_size_per_body)
+        bitstring = zeros(U, num_bodies)
+        target_amplitudes = zeros(T, num_target_amplitudes)
+        for single_amplitude in amplitudes
+            target_index = get_target_amplitude_index(bitstring, target_bodies,
+                hspace_size_per_body)
+            target_amplitudes[target_index] += single_amplitude
+            increment_bitstring!(bitstring, hspace_size_per_body)
+        end
+        return target_amplitudes
+    end
+end
+
+function throw_if_targets_are_invalid(x::Ket{Complex{T}},
+    target_bodies::Vector{U},
+    hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
+
+    expected_ket_length = prod(hspace_size_per_body)
+    if expected_ket_length != length(x)
+        throw(ErrorException("the hspace_size_per_body is incorrect for the provided ket"))
+    end
+
+    if isempty(target_bodies)
+        throw(ErrorException("target_bodies is empty"))
+    end
+
+    if !allunique(target_bodies)
+        throw(ErrorException("the elements of target_bodies must be unique"))
+    end
+
+    if !issorted(target_bodies)
+        throw(ErrorException("target_bodies must be sorted in ascending order"))
+    end
+
+    num_bodies = length(hspace_size_per_body)
+    if target_bodies[end] > num_bodies
+        throw(ErrorException("elements of target_bodies cannot be greater than the "*
+            "number of bodies"))
+    end
+end
+
+function get_num_target_amplitudes(target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T}) where T<:Integer
+
+    num_amplitudes = 1
+    for target_index in target_bodies
+        num_amplitudes *= hspace_size_per_body[target_index]
+    end
+    return num_amplitudes
+end
+
+function get_target_amplitude_index(bitstring::Vector{T}, target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T}) where T<:Integer
+
+    amplitude_index = 1
+    previous_base = 1
+    for i_body in reverse(target_bodies)
+        amplitude_index +=
+            bitstring[i_body]*previous_base
+        previous_base *= hspace_size_per_body[i_body]
+    end
+    return amplitude_index
+end
+
+function increment_bitstring!(bitstring::Vector{T},
+    hspace_size_per_bit::Vector{T}) where T<:Integer
+
+    num_bits = length(bitstring)
+    i_bit = num_bits
+    finished_updating = false
+    while i_bit > 0 && !finished_updating
+        if bitstring[i_bit] == hspace_size_per_bit[i_bit]-1
+            bitstring[i_bit] = 0
+            i_bit -= 1
+        else
+            bitstring[i_bit] += 1
+            finished_updating = true
+        end
+    end
 end
 
 """

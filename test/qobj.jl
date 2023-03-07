@@ -168,3 +168,49 @@ end
     @test is_hermitian(sigma_y())
     @test !is_hermitian(sigma_p())
 end
+
+@testset "get_measurement_probabilities" begin
+    ket = 1/sqrt(5)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0])
+    probabilities = get_measurement_probabilities(ket)
+    @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
+
+    target_bodies = [2]
+    hspace_size_per_body = 3
+    probabilities = get_measurement_probabilities(ket, target_bodies, hspace_size_per_body)
+    @test probabilities ≈ 1/5*[2, 1, 2]
+
+    target_bodies = [1,2]
+    probabilities = get_measurement_probabilities(ket, target_bodies, hspace_size_per_body)
+    @test probabilities ≈ [0.2, 0, 0.2, 0, 0, 0.2, 0.2, 0.2, 0]
+
+    ket = 1/sqrt(3)*Ket([1, 0, -im, 1])
+    target_bodies = [1]
+    probabilities = get_measurement_probabilities(ket, target_bodies)
+    @test probabilities ≈ [1/3, 2/3]
+
+    ket = 1/sqrt(7)*Ket([1, 0, -im, 0, 0, im, -1, 1, 0, 1, 1, 0])
+    target_bodies = [1, 2]
+    hspace_size_per_body = [2, 3, 2]
+    probabilities = get_measurement_probabilities(ket, target_bodies, hspace_size_per_body)
+    @test probabilities ≈ 1/7*[1, 1, 1, 2, 1, 1]
+
+    wrong_hspace_size_per_body = Int[]
+    @test_throws ErrorException get_measurement_probabilities(ket, target_bodies,
+        wrong_hspace_size_per_body)
+
+    not_unique_targets = [1, 1]
+    @test_throws ErrorException get_measurement_probabilities(ket, not_unique_targets,
+        hspace_size_per_body)
+
+    unsorted_targets = [2, 1]
+    @test_throws ErrorException get_measurement_probabilities(ket, unsorted_targets,
+        hspace_size_per_body)
+
+    large_targets = [1, 4]
+    @test_throws ErrorException get_measurement_probabilities(ket, large_targets,
+        hspace_size_per_body)
+
+    empty_target_bodies = Int[]
+    @test_throws ErrorException get_measurement_probabilities(ket, empty_target_bodies,
+        hspace_size_per_body)
+end

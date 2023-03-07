@@ -12,6 +12,7 @@ push_gate!
 pop_gate!
 simulate
 simulate_shots
+get_measurement_probabilities(circuit::QuantumCircuit)
 get_inverse(circuit::QuantumCircuit)
 get_gate_counts
 get_num_gates
@@ -78,6 +79,7 @@ MultiBodySystem
 commute
 anticommute
 normalize!
+get_measurement_probabilities(x::Ket{Complex{T}}) where T<:Real
 ket2dm
 fock_dm
 Snowflake.moyal

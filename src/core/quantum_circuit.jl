@@ -484,7 +484,7 @@ julia> simulate_shots(c, 99)
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     # return simulateShots(c, shots_count)
     ψ = simulate(c)
-    amplitudes = real.(ψ .* ψ)
+    amplitudes = adjoint.(ψ) .* ψ
     weights = Float32[]
 
     for a in amplitudes
@@ -502,6 +502,67 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
+end
+
+"""
+    get_measurement_probabilities(circuit::QuantumCircuit,
+        [target_qubits::Vector{<:Integer}])::AbstractVector{<:Real}
+
+Returns a vector listing the measurement probabilities for the `target_qubits` in the `circuit`.
+
+If no `target_qubits` are provided, the probabilities are computed for all the qubits.
+
+The measurement probabilities are listed from the smallest to the largest computational
+basis state. For instance, for a 2-qubit `QuantumCircuit`, the probabilities are listed
+for 00, 01, 10, and 11.
+# Examples
+The following example constructs a `QuantumCircuit` where the probability of measuring 01
+is 50% and the probability of measuring 11 is also 50%.
+```jldoctest get_circuit_measurement_probabilities
+julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: 43eb23ac-8d4b-11ed-0419-f390b8ec7cef 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H──
+          
+q[2]:──X──
+          
+
+
+
+julia> get_measurement_probabilities(circuit)
+4-element Vector{Float64}:
+ 0.0
+ 0.4999999999999999
+ 0.0
+ 0.4999999999999999
+
+```
+
+For the same `circuit`, the probability of measuring qubit 2 and finding 1 is 100%.
+```jldoctest get_circuit_measurement_probabilities
+julia> target_qubit = [2];
+
+julia> get_measurement_probabilities(circuit, target_qubit)
+2-element Vector{Float64}:
+ 0.0
+ 0.9999999999999998
+
+```
+"""
+function get_measurement_probabilities(circuit::QuantumCircuit)::AbstractVector{<:Real}
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket)
+end
+
+function get_measurement_probabilities(circuit::QuantumCircuit,
+    target_qubits::Vector{<:Integer})::AbstractVector{<:Real}
+    
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket, target_qubits)
 end
 
 """

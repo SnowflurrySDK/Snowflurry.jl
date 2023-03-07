@@ -50,6 +50,7 @@ export
     get_num_qubits,
     get_num_bodies,
     normalize!,
+    get_measurement_probabilities,
     wigner, 
     viz_wigner, 
     sesolve,
