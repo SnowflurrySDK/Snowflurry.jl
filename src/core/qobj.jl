@@ -777,7 +777,7 @@ function get_measurement_probabilities(x::Ket{Complex{T}},
     hspace_size_per_body::Vector{U})::AbstractVector{T} where {T<:Real, U<:Integer}
 
     throw_if_targets_are_invalid(x, target_bodies, hspace_size_per_body)
-    amplitudes = real.(adjoint.(x) .* x)
+    amplitudes = get_measurement_probabilities(x)
     num_amplitudes = length(amplitudes)
     num_target_amplitudes = get_num_target_amplitudes(target_bodies, hspace_size_per_body)
     if num_target_amplitudes == num_amplitudes
