@@ -1,6 +1,6 @@
 
 """
-        QuantumCircuit(qubit_count = .., bit_count = ...)
+    QuantumCircuit(qubit_count = .., bit_count = ...)
 
 A data structure to represent a *quantum circuit*.  
 # Fields
@@ -29,8 +29,8 @@ Base.@kwdef struct QuantumCircuit
 end
 
 """
-        push_gate!(circuit::QuantumCircuit, gate::Gate)
-        push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    push_gate!(circuit::QuantumCircuit, gate::Gate)
+    push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
 
 Pushes a single gate or an array of gates to the `circuit` pipeline. This function is mutable. 
 
@@ -81,7 +81,7 @@ function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Vector{<:Ga
 end
 
 """
-        pop_gate!(circuit::QuantumCircuit)
+    pop_gate!(circuit::QuantumCircuit)
 
 Removes the last gate from `circuit.pipeline`. 
 
@@ -275,7 +275,7 @@ function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
 end
 
 """
-        simulate(circuit::QuantumCircuit)
+    simulate(circuit::QuantumCircuit)
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`. 
 
@@ -427,7 +427,7 @@ function get_b1_bitstrings(gate::Gate, target_space_bitstrings, qubit_count)
 end
 
 """
-        simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
+    simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
 Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
 
@@ -484,7 +484,7 @@ julia> simulate_shots(c, 99)
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     # return simulateShots(c, shots_count)
     ψ = simulate(c)
-    amplitudes = real.(ψ .* ψ)
+    amplitudes = adjoint.(ψ) .* ψ
     weights = Float32[]
 
     for a in amplitudes
@@ -502,6 +502,67 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
+end
+
+"""
+    get_measurement_probabilities(circuit::QuantumCircuit,
+        [target_qubits::Vector{<:Integer}])::AbstractVector{<:Real}
+
+Returns a vector listing the measurement probabilities for the `target_qubits` in the `circuit`.
+
+If no `target_qubits` are provided, the probabilities are computed for all the qubits.
+
+The measurement probabilities are listed from the smallest to the largest computational
+basis state. For instance, for a 2-qubit `QuantumCircuit`, the probabilities are listed
+for 00, 01, 10, and 11.
+# Examples
+The following example constructs a `QuantumCircuit` where the probability of measuring 01
+is 50% and the probability of measuring 11 is also 50%.
+```jldoctest get_circuit_measurement_probabilities
+julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
+Quantum Circuit Object:
+   id: 43eb23ac-8d4b-11ed-0419-f390b8ec7cef 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H──
+          
+q[2]:──X──
+          
+
+
+
+julia> get_measurement_probabilities(circuit)
+4-element Vector{Float64}:
+ 0.0
+ 0.4999999999999999
+ 0.0
+ 0.4999999999999999
+
+```
+
+For the same `circuit`, the probability of measuring qubit 2 and finding 1 is 100%.
+```jldoctest get_circuit_measurement_probabilities
+julia> target_qubit = [2];
+
+julia> get_measurement_probabilities(circuit, target_qubit)
+2-element Vector{Float64}:
+ 0.0
+ 0.9999999999999998
+
+```
+"""
+function get_measurement_probabilities(circuit::QuantumCircuit)::AbstractVector{<:Real}
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket)
+end
+
+function get_measurement_probabilities(circuit::QuantumCircuit,
+    target_qubits::Vector{<:Integer})::AbstractVector{<:Real}
+    
+    ket = simulate(circuit)
+    return get_measurement_probabilities(ket, target_qubits)
 end
 
 """
@@ -553,4 +614,139 @@ function get_inverse(circuit::QuantumCircuit)
     end
     return QuantumCircuit(qubit_count=circuit.qubit_count, bit_count=circuit.bit_count,
         pipeline=inverse_pipeline)
+end
+
+"""
+    get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+
+Returns a dictionary listing the number of gates of each type found in the `circuit`.
+
+The dictionary keys are the instruction_symbol of the gates while the values are the number of gates found.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), hadamard(2)]);
+
+julia> push_gate!(c, control_x(1, 2));
+
+julia> push_gate!(c, hadamard(2))
+Quantum Circuit Object:
+   id: cae04dc4-7bdc-11ed-2223-039a8d93f511 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H────*───────
+            |       
+q[2]:──H────X────H──
+                    
+
+
+
+julia> get_gate_counts(c)
+Dict{String, Int64} with 2 entries:
+  "h"  => 3
+  "cx" => 1
+
+```
+"""
+function get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+    gate_counts = Dict{String, Int}()
+    for step in circuit.pipeline
+        for gate in step
+            if haskey(gate_counts, gate.instruction_symbol)
+                gate_counts[gate.instruction_symbol] += 1
+            else
+                gate_counts[gate.instruction_symbol] = 1
+            end
+        end
+    end
+    return gate_counts
+end
+
+"""
+    get_num_gates(circuit::QuantumCircuit)::Integer
+
+Returns the number of gates in the `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c, [hadamard(1), hadamard(2)]);
+
+julia> push_gate!(c, control_x(1, 2))
+Quantum Circuit Object:
+   id: 2c899c5e-7bdf-11ed-0810-fbc3222f3890 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H────*──
+            |  
+q[2]:──H────X──
+               
+
+
+
+julia> get_num_gates(c)
+3
+
+```
+"""
+function get_num_gates(circuit::QuantumCircuit)::Integer
+    num_gates = 0
+    for step in circuit.pipeline
+        num_gates += length(step)
+    end
+    return num_gates
+end
+
+"""
+    get_logical_depth(circuit::QuantumCircuit)::Integer
+
+Returns the logical depth of the `circuit`.
+
+Note that the function does not attempt to reduce the circuit depth by parallelizing gates.
+
+# Examples
+```jldoctest
+julia> c1 = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c1, hadamard(1));
+
+julia> push_gate!(c1, hadamard(2))
+Quantum Circuit Object:
+   id: 9902bb26-7be0-11ed-0df8-976e7a0d7b8d 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H───────
+               
+q[2]:───────H──
+               
+
+
+
+julia> get_logical_depth(c1)
+2
+
+julia> c2 = QuantumCircuit(qubit_count=2, bit_count=0);
+
+julia> push_gate!(c2,[hadamard(1),  hadamard(2)])
+Quantum Circuit Object:
+   id: b3b1c0e8-7be0-11ed-0b8b-835771f15fc1 
+   qubit_count: 2 
+   bit_count: 0 
+q[1]:──H──
+          
+q[2]:──H──
+          
+
+
+
+julia> get_logical_depth(c2)
+1
+
+```
+"""
+function get_logical_depth(circuit::QuantumCircuit)::Integer
+    return length(circuit.pipeline)
 end

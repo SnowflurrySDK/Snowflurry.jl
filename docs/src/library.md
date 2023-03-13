@@ -12,7 +12,11 @@ push_gate!
 pop_gate!
 simulate
 simulate_shots
+get_measurement_probabilities(circuit::QuantumCircuit)
 get_inverse(circuit::QuantumCircuit)
+get_gate_counts
+get_num_gates
+get_logical_depth
 ```
 
 ## Quantum Gates
@@ -65,6 +69,7 @@ Bra
 Operator
 Base.adjoint
 is_hermitian
+Base.exp(A::Operator)
 Base.getindex(A::Operator, m::Int64, n::Int64)
 eigen
 tr
@@ -74,6 +79,7 @@ MultiBodySystem
 commute
 anticommute
 normalize!
+get_measurement_probabilities(x::Ket{Complex{T}}) where T<:Real
 ket2dm
 fock_dm
 Snowflake.moyal
