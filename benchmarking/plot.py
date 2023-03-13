@@ -18,6 +18,7 @@ gatesList=[
 
 fig, axs = plt.subplots(2, 3,figsize=[12,8])
 
+# specify labels for particular files. Filename is used by default.
 labelsDict={
     "dataYao_target=1"              :"Yao",
 }
