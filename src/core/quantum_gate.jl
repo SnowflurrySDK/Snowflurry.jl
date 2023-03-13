@@ -942,7 +942,7 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
 
-phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", [target], [phi])
+phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", target, phi)
 
 
 struct PhaseGate <: AbstractGate
