@@ -595,6 +595,9 @@ rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
      0 exp(im*theta/2)]
 )
 
+phase_gate(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
+
+
 """
     phase_shift(phi)
 
@@ -999,6 +1002,23 @@ end
 get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
+
+
+phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", [target], [phi])
+
+
+struct PhaseGate <: AbstractGate
+    display_symbol::Vector{String}
+    instruction_symbol::String
+    target::Int
+    parameter::Real
+end
+
+get_operator(gate::PhaseGate) = phase_gate(gate.parameter)
+
+get_inverse(gate::PhaseGate) = phase_gate(gate.target, -gate.parameter)
+
+
 
 """
     phase_shift(target, phi)
