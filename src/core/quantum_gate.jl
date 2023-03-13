@@ -1014,10 +1014,11 @@ struct PhaseGate <: AbstractGate
     parameter::Real
 end
 
-get_operator(gate::PhaseGate) = phase_gate(gate.parameter)
+get_operator(gate::PhaseGate,T::Type{<:Complex}=ComplexF64) = phase_gate(gate.parameter,T)
 
 get_inverse(gate::PhaseGate) = phase_gate(gate.target, -gate.parameter)
 
+get_connected_qubits(gate::PhaseGate)=gate.target
 
 
 """
