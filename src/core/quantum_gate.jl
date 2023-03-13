@@ -162,44 +162,37 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 
     connected_qubits=get_connected_qubits(gate)
 
-    operator=get_operator(gate)
+    type_in_ket=eltype(state.data)
 
-    apply_operator(ket,operator,connected_qubits)
+    operator=get_operator(gate,type_in_ket)
 
-    Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
+    apply_operator(ket,operator,connected_qubits,qubit_count)
+
 end
 
 function get_connected_qubits(gate::AbstractGate)
     error("not implemented for gate type: $(typeof(gate))")
 end
 
-get_connected_qubits(gate::PhaseGate)=gate.target
 
-function apply_operator(ket::Ket,operator::DiagonalOperator,connected_qubits::Int)
-    
-    function apply_gate_without_ket_size_check_qulacs_single_diag!(state::Ket, gate::Gate, qubit_count::Integer)
+function apply_operator(ket::Ket,operator::DiagonalOperator,connected_qubit::Int,qubit_count::Int)
 
-        # this is from single_qubit_dense_matrix_gate_parallel: single target gate with dense matrix
+    dim=2^qubit_count
+    target_qubit_index=qubit_count-connected_qubit # indexing of targets in qulacs starts at 0
     
-        dim=2^qubit_count
-        target_qubit_index=qubit_count-gate.target[1] # indexing of targets in qulacs starts at 0
-        
-        type_in_ket=eltype(state.data)
-    
-        diagonal_matrix=get_operator(gate,type_in_ket).data
-    
-        if target_qubit_index==0
-            for state_index in StepRange(0,2,dim-1)
-                @inbounds state.data[state_index+1] *= diagonal_matrix[1];
-                @inbounds state.data[state_index+2] *= diagonal_matrix[2];
-            end 
-        else
-            mask = UInt64(1) << target_qubit_index;
-            for state_index in StepRange(0,2,dim-1)
-                bitval = UInt64((state_index & mask) != 0)
-                @inbounds state.data[state_index + 1] *= diagonal_matrix[bitval+1];
-                @inbounds state.data[state_index + 2] *= diagonal_matrix[bitval+1];
-            end
+    diagonal_in_matrix=operator.data
+
+    if target_qubit_index==0
+        for state_index in StepRange(0,2,dim-1)
+            @inbounds state.data[state_index+1] *= diagonal_in_matrix[1];
+            @inbounds state.data[state_index+2] *= diagonal_in_matrix[2];
+        end 
+    else
+        mask = UInt64(1) << target_qubit_index;
+        for state_index in StepRange(0,2,dim-1)
+            bitval = UInt64((state_index & mask) != 0)
+            @inbounds state.data[state_index + 1] *= diagonal_in_matrix[bitval+1];
+            @inbounds state.data[state_index + 2] *= diagonal_in_matrix[bitval+1];
         end
     end
 end
@@ -858,10 +851,11 @@ struct PhaseGate <: AbstractGate
     parameter::Real
 end
 
-get_operator(gate::PhaseGate) = phase_gate(gate.parameter)
+get_operator(gate::PhaseGate,T::Type{<:Complex}=ComplexF64) = phase_gate(gate.parameter,T)
 
 get_inverse(gate::PhaseGate) = phase_gate(gate.target, -gate.parameter)
 
+get_connected_qubits(gate::PhaseGate)=gate.target
 
 
 """

@@ -117,7 +117,7 @@ Underlying data Matrix{ComplexF64}:
 """
 abstract type AbstractOperator end
 
-struct DiagonalOperator<:AbstractOperator{T<:Complex}
+struct DiagonalOperator{T<:Complex}<:AbstractOperator
     data::SVector{2,T}
 end
 
