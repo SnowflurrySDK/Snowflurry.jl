@@ -97,6 +97,8 @@ Underlying data Matrix{ComplexF32}:
 """
 abstract type Gate end
 
+abstract type AbstractGate end
+
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
     println(io, "instruction symbol: " * gate.instruction_symbol)
@@ -147,6 +149,35 @@ function apply_gate!(state::Ket, gate::Gate)
     Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
 end
 
+function apply_gate!(state::Ket, gate::AbstractGate)
+    qubit_count = log2(length(state))
+    if mod(qubit_count, 1) != 0
+        throw(DomainError(qubit_count,
+            "Ket does not correspond to an integer number of qubits"))
+    end
+    if any(i_target->(i_target>qubit_count), gate.target)
+        throw(DomainError(gate.target,
+            "not enough qubits in the Ket for the Gate"))
+    end
+
+    connected_qubits=get_connected_qubits(gate)
+
+    operator=get_operator(gate)
+
+    apply_operator(ket,operator,connected_qubits)
+
+    Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
+end
+
+function get_connected_qubits(gate::AbstractGate)
+    error("not implemented for gate type: $(typeof(gate))")
+end
+
+get_connected_qubits(gate::PhaseGate)=gate.target
+
+function apply_operator(ket::Ket,operator::DiagonalOperator,connected_qubits::Int)
+    
+end
 
 # Single Qubit Gates
 """
@@ -378,6 +409,9 @@ rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
     T[exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
+
+phase_gate(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
+
 
 """
     phase_shift(phi)
@@ -787,6 +821,23 @@ end
 get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
+
+
+phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", [target], [phi])
+
+
+struct PhaseGate <: AbstractGate
+    display_symbol::Vector{String}
+    instruction_symbol::String
+    target::Int
+    parameter::Real
+end
+
+get_operator(gate::PhaseGate) = phase_gate(gate.parameter)
+
+get_inverse(gate::PhaseGate) = phase_gate(gate.target, -gate.parameter)
+
+
 
 """
     phase_shift(target, phi)
