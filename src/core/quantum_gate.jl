@@ -177,6 +177,31 @@ get_connected_qubits(gate::PhaseGate)=gate.target
 
 function apply_operator(ket::Ket,operator::DiagonalOperator,connected_qubits::Int)
     
+    function apply_gate_without_ket_size_check_qulacs_single_diag!(state::Ket, gate::Gate, qubit_count::Integer)
+
+        # this is from single_qubit_dense_matrix_gate_parallel: single target gate with dense matrix
+    
+        dim=2^qubit_count
+        target_qubit_index=qubit_count-gate.target[1] # indexing of targets in qulacs starts at 0
+        
+        type_in_ket=eltype(state.data)
+    
+        diagonal_matrix=get_operator(gate,type_in_ket).data
+    
+        if target_qubit_index==0
+            for state_index in StepRange(0,2,dim-1)
+                @inbounds state.data[state_index+1] *= diagonal_matrix[1];
+                @inbounds state.data[state_index+2] *= diagonal_matrix[2];
+            end 
+        else
+            mask = UInt64(1) << target_qubit_index;
+            for state_index in StepRange(0,2,dim-1)
+                bitval = UInt64((state_index & mask) != 0)
+                @inbounds state.data[state_index + 1] *= diagonal_matrix[bitval+1];
+                @inbounds state.data[state_index + 2] *= diagonal_matrix[bitval+1];
+            end
+        end
+    end
 end
 
 # Single Qubit Gates
