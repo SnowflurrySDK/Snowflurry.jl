@@ -166,7 +166,7 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 
     operator=get_operator(gate,type_in_ket)
 
-    apply_operator(ket,operator,connected_qubits,qubit_count)
+    apply_operator!(state,operator,connected_qubits,Int(qubit_count))
 
 end
 
@@ -175,7 +175,7 @@ function get_connected_qubits(gate::AbstractGate)
 end
 
 
-function apply_operator(ket::Ket,operator::DiagonalOperator,connected_qubit::Int,qubit_count::Int)
+function apply_operator!(state::Ket,operator::DiagonalOperator,connected_qubit::Int,qubit_count::Int)
 
     dim=2^qubit_count
     target_qubit_index=qubit_count-connected_qubit # indexing of targets in qulacs starts at 0
@@ -841,7 +841,7 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
 
-phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", [target], [phi])
+phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", target, phi)
 
 
 struct PhaseGate <: AbstractGate

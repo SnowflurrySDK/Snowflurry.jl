@@ -6,3 +6,4 @@ circuit
 gate
 transpile
 submit_circuit
+diagonal
