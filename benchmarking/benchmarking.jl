@@ -66,4 +66,4 @@ if !ispath("data")
     mkpath("data")
 end
 
-write("benchmarking/data/data/data_$(time_stamp).json", JSON.json(benchmarks))
+write("benchmarking/data/data_$(time_stamp).json", JSON.json(benchmarks))
