@@ -17,6 +17,8 @@ target_qubit_2=2
 control_qubit_1=3
 control_qubit_2=4
 
+ϕ=π/4 # for phase_shift()
+
 benchmarks = Dict()
 
 commonpath="benchmarking/data/"
