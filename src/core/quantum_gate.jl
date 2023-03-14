@@ -315,6 +315,9 @@ T = \\begin{bmatrix}
 """
 pi_8(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, exp(im*pi/4.0)]])
 
+pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*pi/4.0)])
+
+
 """
     pi_8_dagger()
 
@@ -428,7 +431,21 @@ rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
      0 exp(im*theta/2)]
 )
 
-phase_gate(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
+"""
+    phase_shift_diag(phi)
+
+Return the `DiagonalOperator` that applies a phase shift `phi`.
+
+The `DiagonalOperator` is defined as:
+```math
+P(\\phi) = \\begin{bmatrix}
+    i & 0 \\\\[0.5em]      
+    0 & e^{i\\phi}
+\\end{bmatrix}.
+```
+""" 
+
+phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
 
 
 """
@@ -719,6 +736,26 @@ get_operator(gate::Pi8) = pi_8(gate.type)
 get_inverse(gate::Pi8) = pi_8_dagger(gate.target[1],gate.type)
 
 """
+    pi_8_diag(target)
+
+Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diagonal()`](@ref) `DiagonalOperator` to the `target` qubit.
+"""
+pi_8_diag(target::Integer) = Pi8_Diag(["T"], "t", target)
+
+struct Pi8_Diag <: AbstractGate
+    display_symbol::Vector{String}
+    instruction_symbol::String
+    target::Int
+end
+
+get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
+
+get_inverse(gate::Pi8_Diag) = error("pi_8_dagger not implemented for DiagonalOperator") #TODO
+
+get_connected_qubits(gate::Pi8_Diag)=gate.target
+
+
+"""
     pi_8_dagger(target)
 
 Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
@@ -840,22 +877,20 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
+phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag(["P($(phi))"], "p", target, phi)
 
-phase_gate(target::Integer, phi::Real) = PhaseGate(["P($(phi))"], "p", target, phi)
-
-
-struct PhaseGate <: AbstractGate
+struct PhaseShift_Diag <: AbstractGate
     display_symbol::Vector{String}
     instruction_symbol::String
     target::Int
     parameter::Real
 end
 
-get_operator(gate::PhaseGate,T::Type{<:Complex}=ComplexF64) = phase_gate(gate.parameter,T)
+get_operator(gate::PhaseShift_Diag,T::Type{<:Complex}=ComplexF64) = phase_shift_diag(gate.parameter,T)
 
-get_inverse(gate::PhaseGate) = phase_gate(gate.target, -gate.parameter)
+get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target, -gate.parameter)
 
-get_connected_qubits(gate::PhaseGate)=gate.target
+get_connected_qubits(gate::PhaseShift_Diag)=gate.target
 
 
 """

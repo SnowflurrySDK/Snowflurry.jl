@@ -9,8 +9,8 @@ using Test
     ϕ=π  
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    diagGate=Snowflake.phase_gate(target,ϕ)
-    apply_gate!(ψ, diagGate)
+    phase_gate=Snowflake.phase_shift_diag(target,ϕ)
+    apply_gate!(ψ, phase_gate)
     
     ψ_z = Ket([v for v in 1:2^qubit_count])
 
@@ -18,6 +18,24 @@ using Test
     apply_gate!(ψ_z, ZGate)
 
     @test ψ≈ψ_z
+    
+    ψ = Ket([v for v in 1:2^qubit_count])
+
+    T_gate=Snowflake.pi_8_diag(target)
+    apply_gate!(ψ, T_gate)
+    
+    ψ_result = Ket([
+        1.0 + 0.0im,
+        2.0 + 0.0im,
+        3.0 + 0.0im,
+        4.0 + 0.0im,
+        3.5355339059327378 + 3.5355339059327373im,
+        4.242640687119286 + 4.242640687119285im,
+        4.949747468305833 + 4.949747468305832im,
+        5.656854249492381 + 5.65685424949238im,
+    ])
+
+    @test ψ≈ψ_result
 end
 
 
