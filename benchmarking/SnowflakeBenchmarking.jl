@@ -10,7 +10,7 @@ end
 
 BLAS.set_num_threads(1)
 
-nqubits=4:10 #25
+nqubits=4:25
 
 target_qubit_1=1
 target_qubit_2=2

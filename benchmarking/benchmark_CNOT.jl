@@ -34,4 +34,4 @@ scatter!(
     color="blue"
 )
 
-savefig(joinpath(outputpath,plot_CNOT_$(time_stamp).png"))
+savefig(joinpath(outputpath,"plot_CNOT_$(time_stamp).png"))
