@@ -116,7 +116,6 @@ include("core/quantum_circuit.jl")
 include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
-include("remote/circuit_jobs.jl")
 
 
 
