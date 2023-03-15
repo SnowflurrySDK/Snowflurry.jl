@@ -913,7 +913,7 @@ end
 
 get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
 
-get_inverse(gate::Pi8_Diag) = error("pi_8_dagger not implemented for DiagonalOperator") #TODO
+get_inverse(gate::Pi8_Diag) =  throw(NotImplementedError(:get_inverse, gate)) #TODO
 
 get_connected_qubits(gate::Pi8_Diag)=gate.target
 
