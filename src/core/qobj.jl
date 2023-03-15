@@ -116,12 +116,6 @@ Underlying data type: ComplexF64:
 
 ```
 """
-abstract type AbstractOperator end
-
-struct DiagonalOperator{T<:Complex}<:AbstractOperator
-    data::SVector{2,T}
-end
-
 struct Operator{T<:Complex}
     data::Matrix{T}
 end

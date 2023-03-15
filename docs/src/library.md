@@ -32,6 +32,7 @@ hadamard
 phase
 phase_dagger
 pi_8
+pi_8_diag
 pi_8_dagger
 x_90
 rotation
