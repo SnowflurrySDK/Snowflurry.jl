@@ -115,12 +115,6 @@ Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    -1.0 + 0.0im
 ```
 """
-abstract type AbstractOperator end
-
-struct DiagonalOperator{T<:Complex}<:AbstractOperator
-    data::SVector{2,T}
-end
-
 struct Operator{T<:Complex}
     data::Matrix{T}
 end
@@ -130,6 +124,35 @@ Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) 
 
 # Constructor using Adjoint(Operator{T})
 Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
+
+abstract type AbstractOperator end
+
+"""
+A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
+
+# Fields
+- `data` -- a vector containing the diagonal.
+
+# Examples
+```jldoctest
+julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
+(2,)-element Snowflake.DiagonalOperator:
+Underlying data StaticArraysCore.SVector{2, ComplexF64}:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
+
+```
+"""
+struct DiagonalOperator{T<:Complex}<:AbstractOperator
+    data::SVector{2,T}
+end
+
+# overload constructor to enable initilization from Real-valued Vector
+DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{2,Complex{T}},x) )
+
+# Constructor using Adjoint(Operator{T})
+DiagonalOperator(x::LinearAlgebra.Adjoint{T,Vector{T}}) where {T<:Complex} = DiagonalOperator{T}(x) 
+
 
 
 """
@@ -437,6 +460,32 @@ function Base.show(io::IO, x::Operator)
                 print(io, "$(x.data[i, j])")
             else
                 print(io, "    $(x.data[i, j])")
+            end
+        end
+        println(io)
+    end
+end
+
+function Base.show(io::IO, x::DiagonalOperator)
+    println(io, "$(size(x.data))-element Snowflake.DiagonalOperator:")
+    println(io, "Underlying data $(typeof(x.data)):")
+    nrow=length(x.data) 
+    ncol=length(x.data) 
+    dtype=eltype(x.data)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
+            if j == i
+                if j==1
+                    print(io, "$(x.data[i])")
+                else
+                    print(io, "    $(x.data[i])")
+                end
+            else
+                if j==1
+                    print(io, "$(dtype(0.))")
+                else
+                    print(io, "    $(dtype(0.))")
+                end
             end
         end
         println(io)

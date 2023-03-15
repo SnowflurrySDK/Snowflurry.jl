@@ -32,6 +32,7 @@ hadamard
 phase
 phase_dagger
 pi_8
+pi_8_diag
 pi_8_dagger
 x_90
 rotation
@@ -67,6 +68,7 @@ There are three basic quantum objects in Snowflake to simulate a quantum system.
 Ket
 Bra
 Operator
+Snowflake.DiagonalOperator
 Base.adjoint
 is_hermitian
 Base.exp(A::Operator)

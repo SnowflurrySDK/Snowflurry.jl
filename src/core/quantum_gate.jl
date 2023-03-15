@@ -99,6 +99,18 @@ abstract type Gate end
 
 abstract type AbstractGate end
 
+nonexistent_gate(target::Integer) = NonExistentGate(target) # to test MethodError on non-implemented AbstractGates
+
+struct NonExistentGate <: AbstractGate
+    target::Int
+end
+
+struct NotImplementedError{ArgsT} <: Exception
+    name::Symbol
+    args::ArgsT
+end
+
+
 function Base.show(io::IO, gate::Gate)
     println(io, "Gate Object:")
     println(io, "instruction symbol: " * gate.instruction_symbol)
@@ -155,7 +167,7 @@ function apply_gate!(state::Ket, gate::AbstractGate)
         throw(DomainError(qubit_count,
             "Ket does not correspond to an integer number of qubits"))
     end
-    if any(i_target->(i_target>qubit_count), gate.target)
+    if gate.target>qubit_count #TODO: implement for multi-target gates
         throw(DomainError(gate.target,
             "not enough qubits in the Ket for the Gate"))
     end
@@ -170,9 +182,8 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 
 end
 
-function get_connected_qubits(gate::AbstractGate)
-    error("not implemented for gate type: $(typeof(gate))")
-end
+get_connected_qubits(gate::AbstractGate)=
+    throw(NotImplementedError(:get_connected_qubits, gate))
 
 
 function apply_operator!(state::Ket,operator::DiagonalOperator,connected_qubit::Int,qubit_count::Int)
@@ -738,7 +749,7 @@ get_inverse(gate::Pi8) = pi_8_dagger(gate.target[1],gate.type)
 """
     pi_8_diag(target)
 
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diagonal()`](@ref) `DiagonalOperator` to the `target` qubit.
+Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
 pi_8_diag(target::Integer) = Pi8_Diag(["T"], "t", target)
 

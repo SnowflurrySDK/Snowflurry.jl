@@ -19,6 +19,28 @@ using Test
 
     @test ψ≈ψ_z
     
+    ###############################################
+    ### different code path in apply_operator when target is last qubit
+
+    target=3
+    
+    ψ = Ket([v for v in 1:2^qubit_count])
+
+    phase_gate=Snowflake.phase_shift_diag(target,ϕ)
+    apply_gate!(ψ, phase_gate)
+    
+    ψ_z = Ket([v for v in 1:2^qubit_count])
+
+    ZGate=sigma_z(target)
+    apply_gate!(ψ_z, ZGate)
+
+    @test ψ≈ψ_z
+
+    ###############################################
+    # T gate (PhaseGate with π/8 phase) test
+
+    target=1
+
     ψ = Ket([v for v in 1:2^qubit_count])
 
     T_gate=Snowflake.pi_8_diag(target)
@@ -36,6 +58,31 @@ using Test
     ])
 
     @test ψ≈ψ_result
+
+    ψ_error = Ket([
+        1.0 + 0.0im,
+        2.0 + 0.0im,
+        3.0 + 0.0im,
+        4.0 + 0.0im,
+        5.0 + 0.0im,
+        6.0 + 0.0im,
+        7.0 + 0.0im,
+        ]
+    )
+
+    @test_throws DomainError apply_gate!(ψ_error, T_gate)
+
+    target_error=100
+
+    T_gate_error=Snowflake.pi_8_diag(target_error)
+
+    @test_throws DomainError apply_gate!(ψ, T_gate_error)
+
+    nonexistent_gate=Snowflake.nonexistent_gate(target)
+
+    @test_throws NotImplementedError Snowflake.get_connected_qubits(nonexistent_gate)
+
+
 end
 
 
