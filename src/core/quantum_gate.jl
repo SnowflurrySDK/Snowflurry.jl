@@ -901,7 +901,7 @@ get_connected_qubits(gate::Pi8)=[gate.target]
 """
     pi_8_diag(target)
 
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diagonal()`](@ref) `DiagonalOperator` to the `target` qubit.
+Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
 pi_8_diag(target::Integer) = Pi8_Diag(["T"], "t", target)
 
