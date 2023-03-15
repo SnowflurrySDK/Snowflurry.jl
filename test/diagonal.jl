@@ -46,6 +46,9 @@ using StaticArrays
     ψ = Ket([v for v in 1:2^qubit_count])
 
     phase_gate=Snowflake.phase_shift_diag(target,ϕ)
+    
+    @test get_operator(get_inverse(phase_gate))==get_operator(Snowflake.phase_shift_diag(target,-ϕ))
+    
     apply_gate!(ψ, phase_gate)
     
     ψ_z = Ket([v for v in 1:2^qubit_count])
