@@ -119,10 +119,10 @@ struct Operator{T<:Complex}
     data::Matrix{T}
 end
 
-# overload constructor to enable initilization from Real-valued Matrix
+# overload constructor to enable initialization from Real-valued Matrix
 Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) )
 
-# Constructor using Adjoint(Operator{T})
+# Constructor using adjoint(Operator{T})
 Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
 
 abstract type AbstractOperator end
@@ -147,11 +147,11 @@ struct DiagonalOperator{T<:Complex}<:AbstractOperator
     data::SVector{2,T}
 end
 
-# overload constructor to enable initilization from Real-valued Vector
+# overload constructor to enable initialization from Real-valued Vector
 DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{2,Complex{T}},x) )
 
-# Constructor using Adjoint(Operator{T})
-DiagonalOperator(x::LinearAlgebra.Adjoint{T,Vector{T}}) where {T<:Complex} = DiagonalOperator{T}(x) 
+# Constructor using adjoint(DiagonalOperator{T})
+DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{2,T}}) where {T<:Complex} = DiagonalOperator{T}(x) 
 
 
 
@@ -163,6 +163,7 @@ Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+Base.adjoint(A::DiagonalOperator) = DiagonalOperator(adjoint(A.data))
 
 """
     is_hermitian(A::Operator)
