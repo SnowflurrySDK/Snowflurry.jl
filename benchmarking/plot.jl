@@ -1,5 +1,7 @@
 using JSON
 using Plots
+using ColorSchemes
+
 
 single_target_gates=[
     "X",
@@ -45,10 +47,23 @@ get_tag(s::String,gatename::String)=replace(s, string("_",gatename) =>"",".json"
 for gate in all_gates
     global data_index
 
+    filepath=joinpath(commonpath, path_per_gate[gate])
+
+    if !isdir(filepath)
+        @warn("Path at: $filepath does not exist")
+        continue
+    end
+
     resultFiles[gate]=sort(
-        [p for p in readdir(joinpath(commonpath, path_per_gate[gate])) if endswith(p,".json")])
+        [p for p in readdir(filepath) if endswith(p,".json")])
     
-    println("\nFiles found for gate: $gate: ")
+    if resultFiles[gate]==[]
+        @warn("No files found for gate: $gate at path: $filepath")
+        delete!(resultFiles,gate)
+        continue
+    end
+
+    println("\nFiles found for gate: $gate")
     for p in resultFiles[gate]
         println("\t$p")
         data_tag=get_tag(p,gate)
@@ -100,26 +115,25 @@ for (gates_list,outputname) in [
     for gate in gates_list
         color_list=nothing
 
+        if !haskey(resultFiles,gate)
+            continue
+        end
+
         for (i_line,filepath) in enumerate(resultFiles[gate])
 
             filename=split(filepath,".json")[1]
 
             data_tag=get_tag(filepath,gate)
 
-            if filename in ignoreList
-                continue
-            end
-
             println("Processing filename: ",filename,".json")
             
             dataDict=JSON.parsefile(joinpath(commonpath,path_per_gate[gate],filepath))
 
             if !haskey(dataDict,gate)
-                @error ("file $filename doesn't contain benchmarking related to gate type: $gate") 
+                @warn ("file $filename doesn't contain benchmarking related to gate type: $gate") 
             end
 
             if color_list===nothing
-                println("i_line: ",i_line)
                 color_list=[mycolors[data_tags_color_index[data_tag]]]
             else
                 color_list=hcat(color_list,mycolors[data_tags_color_index[data_tag]])
