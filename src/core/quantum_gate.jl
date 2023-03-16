@@ -465,7 +465,7 @@ T = \\begin{bmatrix}
 """
 pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 
-pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*pi/4.0)])
+pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
 
 
 """
@@ -612,7 +612,7 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
+phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
 
 
 """
@@ -903,19 +903,17 @@ get_connected_qubits(gate::Pi8)=[gate.target]
 
 Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
-pi_8_diag(target::Integer) = Pi8_Diag(["T"], "t", target)
+pi_8_diag(target::Integer) = Pi8_Diag([target])
 
 struct Pi8_Diag <: AbstractGate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::Int
+    target_list::Vector{<:Integer}
 end
 
 get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
 
 get_inverse(gate::Pi8_Diag) =  throw(NotImplementedError(:get_inverse, gate)) #TODO
 
-get_connected_qubits(gate::Pi8_Diag)=gate.target
+get_connected_qubits(gate::Pi8_Diag)=gate.target_list[1]
 
 
 """
@@ -1040,20 +1038,18 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
-phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag(["P($(phi))"], "p", target, phi)
+phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag([target], phi)
 
 struct PhaseShift_Diag <: AbstractGate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::Int
+    target_list::Vector{<:Integer}
     parameter::Real
 end
 
 get_operator(gate::PhaseShift_Diag,T::Type{<:Complex}=ComplexF64) = phase_shift_diag(gate.parameter,T)
 
-get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target, -gate.parameter)
+get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target_list[1], -gate.parameter)
 
-get_connected_qubits(gate::PhaseShift_Diag)=gate.target
+get_connected_qubits(gate::PhaseShift_Diag)=gate.target_list[1]
 
 
 """
