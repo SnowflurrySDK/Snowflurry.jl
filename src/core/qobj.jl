@@ -137,21 +137,21 @@ A structure representing a diagonal quantum operator (i.e. a complex matrix, wit
 ```jldoctest
 julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
 (2,)-element Snowflake.DiagonalOperator:
-Underlying data StaticArraysCore.SVector{2, ComplexF64}:
+Underlying data type: ComplexF64
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
 ```
 """
-struct DiagonalOperator{T<:Complex}<:AbstractOperator
-    data::SVector{2,T}
+struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
+    data::SVector{N,T}
 end
 
 # overload constructor to enable initialization from Real-valued Vector
-DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{2,Complex{T}},x) )
+DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
 
-# Constructor using adjoint(DiagonalOperator{T})
-DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{2,T}}) where {T<:Complex} = DiagonalOperator{T}(x) 
+# # Constructor using adjoint(DiagonalOperator{T})
+DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
 
 
 
@@ -469,7 +469,7 @@ end
 
 function Base.show(io::IO, x::DiagonalOperator)
     println(io, "$(size(x.data))-element Snowflake.DiagonalOperator:")
-    println(io, "Underlying data $(typeof(x.data)):")
+    println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=length(x.data) 
     dtype=eltype(x.data)

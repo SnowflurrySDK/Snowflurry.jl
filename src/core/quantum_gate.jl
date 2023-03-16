@@ -99,12 +99,6 @@ abstract type Gate end
 
 abstract type AbstractGate end
 
-nonexistent_gate(target::Integer) = NonExistentGate(target) # to test MethodError on non-implemented AbstractGates
-
-struct NonExistentGate <: AbstractGate
-    target::Int
-end
-
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
     args::ArgsT
@@ -167,9 +161,10 @@ function apply_gate!(state::Ket, gate::AbstractGate)
         throw(DomainError(qubit_count,
             "Ket does not correspond to an integer number of qubits"))
     end
-    if gate.target>qubit_count #TODO: implement for multi-target gates
-        throw(DomainError(gate.target,
-            "not enough qubits in the Ket for the Gate"))
+    
+    if any(t -> t>qubit_count ,gate.target_list)
+        throw(DomainError(gate.target_list,
+            "not enough qubits in the Ket for the targets in gate"))
     end
 
     connected_qubits=get_connected_qubits(gate)
@@ -178,7 +173,7 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 
     operator=get_operator(gate,type_in_ket)
 
-    apply_operator!(state,operator,connected_qubits,Int(qubit_count))
+    apply_operator!(state,operator,connected_qubits,Int(qubit_count),Val(length(connected_qubits)))
 
 end
 
@@ -186,7 +181,12 @@ get_connected_qubits(gate::AbstractGate)=
     throw(NotImplementedError(:get_connected_qubits, gate))
 
 
-function apply_operator!(state::Ket,operator::DiagonalOperator,connected_qubit::Int,qubit_count::Int)
+function apply_operator!(
+    state::Ket,
+    operator::DiagonalOperator,
+    connected_qubit::Int,
+    qubit_count::Int,::Val{1}
+    )
 
     dim=2^qubit_count
     target_qubit_index=qubit_count-connected_qubit # indexing of targets in qulacs starts at 0
@@ -207,6 +207,94 @@ function apply_operator!(state::Ket,operator::DiagonalOperator,connected_qubit::
         end
     end
 end
+
+# Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
+function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qubit_index::UInt64)
+    temp_basis = (basis_index >> qubit_index) << (qubit_index + 1)
+    return temp_basis + basis_index % basis_mask
+end
+
+function create_matrix_mask_list(qubit_index_list::Vector{Int64},qubit_index_count::UInt64,matrix_dim::UInt64)
+    mask_list=zeros(UInt64,matrix_dim)
+
+    for cursor in 0:(matrix_dim-1)
+        for bit_cursor in 0:(qubit_index_count-1)
+            if Bool((cursor >> bit_cursor) % 2)
+                bit_index = qubit_index_list[bit_cursor+1]
+                mask_list[cursor+1] ⊻= (UInt64(1) << bit_index) # ⊻ is binary XOR
+            end
+        end
+    end
+
+    return mask_list
+end
+
+function create_shift_mask_list_from_list_buf!(
+    target_qubit_index_list::Vector{Int64},
+    dst_array::Vector{UInt64},
+    dst_mask::Vector{UInt64}
+)
+
+#copy using mutation, not assignment, so dst_array still points to array in caller's scope
+for (i,target) in enumerate(target_qubit_index_list)
+    dst_array[i]=target 
+end
+
+#sort the copy, so the initial array can be used in the original order
+sort!(dst_array)
+
+for (i,target) in enumerate(target_qubit_index_list)
+    dst_mask[i]=(1<<target)-1 
+end
+
+end
+
+function apply_operator!(
+    state::Ket,
+    operator::DiagonalOperator,
+    connected_qubits::Vector{<:Integer},
+    qubit_count::Int,
+    ::Val{N_targets}) where {N_targets} #specialization by N_targets, for N_targets>1
+
+    dim=2^qubit_count
+    
+    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)]) # the bitwise implementation assumes target numbering starting at 0
+    target_qubit_index_count=UInt64(N_targets)
+    
+    diagonal_in_matrix=operator.data
+    
+    matrix_dim = UInt64(1) << target_qubit_index_count
+
+    matrix_mask_list=create_matrix_mask_list(
+        target_qubit_index_list, 
+        target_qubit_index_count,
+        matrix_dim
+    )
+
+    sorted_targets=Vector{UInt64}(undef, target_qubit_index_count)
+    mask_array=Vector{UInt64}(undef, target_qubit_index_count)
+
+    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sorted_targets, mask_array)
+        
+    # loop variables
+    loop_dim = dim >> target_qubit_index_count
+
+    for state_index in 0:(loop_dim-1)
+        # create base index
+        basis_0 = UInt64(state_index);
+        for cursor in UnitRange{UInt64}(0,target_qubit_index_count-1)
+            insert_index = sorted_targets[cursor+1]
+            basis_0=insert_zero_to_basis_index(basis_0, UInt64(1) << insert_index, insert_index)
+        end
+
+        # compute matrix-vector multiply
+        for y in 0:(matrix_dim-1)
+            state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
+        end
+
+    end
+end
+
 
 # Single Qubit Gates
 """
@@ -326,7 +414,7 @@ T = \\begin{bmatrix}
 """
 pi_8(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, exp(im*pi/4.0)]])
 
-pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*pi/4.0)])
+pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
 
 
 """
@@ -456,7 +544,7 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{T}(T[1.,exp(im*phi)])
+phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
 
 
 """
@@ -751,19 +839,17 @@ get_inverse(gate::Pi8) = pi_8_dagger(gate.target[1],gate.type)
 
 Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
-pi_8_diag(target::Integer) = Pi8_Diag(["T"], "t", target)
+pi_8_diag(target::Integer) = Pi8_Diag([target])
 
 struct Pi8_Diag <: AbstractGate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::Int
+    target_list::Vector{<:Integer}
 end
 
 get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
 
 get_inverse(gate::Pi8_Diag) =  throw(NotImplementedError(:get_inverse, gate)) #TODO
 
-get_connected_qubits(gate::Pi8_Diag)=gate.target
+get_connected_qubits(gate::Pi8_Diag)=gate.target_list[1]
 
 
 """
@@ -888,20 +974,18 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
-phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag(["P($(phi))"], "p", target, phi)
+phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag([target], phi)
 
 struct PhaseShift_Diag <: AbstractGate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::Int
+    target_list::Vector{<:Integer}
     parameter::Real
 end
 
 get_operator(gate::PhaseShift_Diag,T::Type{<:Complex}=ComplexF64) = phase_shift_diag(gate.parameter,T)
 
-get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target, -gate.parameter)
+get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target_list[1], -gate.parameter)
 
-get_connected_qubits(gate::PhaseShift_Diag)=gate.target
+get_connected_qubits(gate::PhaseShift_Diag)=gate.target_list[1]
 
 
 """
