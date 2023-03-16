@@ -281,7 +281,7 @@ function apply_operator!(
     for state_index in 0:(loop_dim-1)
         # create base index
         basis_0 = UInt64(state_index);
-        for cursor in UnitRange{UInt64}(0,target_qubit_index_count-1)
+        for cursor in UnitRange{UInt64}(UInt64(0),target_qubit_index_count-1)
             insert_index = sorted_targets[cursor+1]
             basis_0=insert_zero_to_basis_index(basis_0, UInt64(1) << insert_index, insert_index)
         end

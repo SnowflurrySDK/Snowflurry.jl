@@ -165,7 +165,6 @@ DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVe
 DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
 
 
-
 """
     Base.adjoint(x)
 
