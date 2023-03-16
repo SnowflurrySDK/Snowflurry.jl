@@ -141,6 +141,14 @@ Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
+julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
+(4,4)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
+1.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+
 ```
 """
 struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
@@ -149,6 +157,9 @@ end
 
 # overload constructor to enable initialization from Real-valued Vector
 DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
+
+# overload constructor to enable initialization from Complex-valued Vector
+DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVector{length(x),T},x) )
 
 # # Constructor using adjoint(DiagonalOperator{T})
 DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
