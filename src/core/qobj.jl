@@ -123,6 +123,14 @@ Underlying data type: ComplexF64:
 .    .    .    0.0 - 1.0im
 
 
+julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
+(4,4)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
+1.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+
 ```
 """
 struct Operator{T<:Complex}

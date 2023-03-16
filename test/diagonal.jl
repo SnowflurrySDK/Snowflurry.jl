@@ -31,6 +31,10 @@ using StaticArrays
     # Ctor from Real-valued array
     @test DiagonalOperator([1.,2.])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
 
+    # Ctor from Complex-valued array
+    @test DiagonalOperator([1.0+im,2.0-im])==DiagonalOperator(SVector{2,ComplexF64}([1.0+im,2.0-im]))
+
+    # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
     @test adjoint(phase_gate_operator).data≈get_operator(Snowflake.phase_shift_diag(target,-ϕ)).data
         
     ###############################################
