@@ -279,7 +279,6 @@ function Base.getindex(anti_diag_op::AntiDiagonalOperator{N,T}, i::Integer, j::I
     end
 end
 
-
 """
     Base.adjoint(x)
 
