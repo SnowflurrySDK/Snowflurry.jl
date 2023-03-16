@@ -30,3 +30,5 @@ Manifest*.toml
 #coverage information
 coverage/
 coverage-lcov.info
+
+benchmarking/data
