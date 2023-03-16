@@ -185,8 +185,8 @@ function apply_operator!(
     state::Ket,
     operator::DiagonalOperator,
     connected_qubit::Int,
-    qubit_count::Int,::Val{1}
-    )
+    qubit_count::Int,
+    ::Val{1}) # specialization for single target diagonal gate
 
     dim=2^qubit_count
     target_qubit_index=qubit_count-connected_qubit # indexing of targets in qulacs starts at 0
@@ -233,19 +233,18 @@ function create_shift_mask_list_from_list_buf!(
     target_qubit_index_list::Vector{Int64},
     dst_array::Vector{UInt64},
     dst_mask::Vector{UInt64}
-)
+    )
+    #copy using mutation, not assignment, so dst_array still points to array in caller's scope
+    for (i,target) in enumerate(target_qubit_index_list)
+        dst_array[i]=target 
+    end
 
-#copy using mutation, not assignment, so dst_array still points to array in caller's scope
-for (i,target) in enumerate(target_qubit_index_list)
-    dst_array[i]=target 
-end
+    #sort the copy, so the initial array can be used in the original order
+    sort!(dst_array)
 
-#sort the copy, so the initial array can be used in the original order
-sort!(dst_array)
-
-for (i,target) in enumerate(target_qubit_index_list)
-    dst_mask[i]=(1<<target)-1 
-end
+    for (i,target) in enumerate(target_qubit_index_list)
+        dst_mask[i]=(1<<target)-1 
+    end
 
 end
 
@@ -254,7 +253,7 @@ function apply_operator!(
     operator::DiagonalOperator,
     connected_qubits::Vector{<:Integer},
     qubit_count::Int,
-    ::Val{N_targets}) where {N_targets} #specialization by N_targets, for N_targets>1
+    ::Val{N_targets}) where {N_targets} #specialization for N_targets>1 diagonal gates
 
     dim=2^qubit_count
     

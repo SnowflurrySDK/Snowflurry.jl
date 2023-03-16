@@ -136,8 +136,8 @@ A structure representing a diagonal quantum operator (i.e. a complex matrix, wit
 # Examples
 ```jldoctest
 julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
-(2,)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
@@ -468,7 +468,7 @@ function Base.show(io::IO, x::Operator)
 end
 
 function Base.show(io::IO, x::DiagonalOperator)
-    println(io, "$(size(x.data))-element Snowflake.DiagonalOperator:")
+    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.DiagonalOperator:")
     println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=length(x.data) 
