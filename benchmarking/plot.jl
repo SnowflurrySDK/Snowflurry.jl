@@ -1,147 +1,211 @@
 using JSON
 using Plots
 
-path="./data"
-
-resultFiles=sort([a for a in readdir(path) if endswith(a,".json")])
-
-dataDict=Dict()
-
-gatesList=[
+single_target_gates=[
     "X",
     "H",
     "T",
-    "CNOT",
-    "Y"
+    "Y",
+    "PHASE",
+    "Z",
     ]
 
+multiple_target_gates=[
+    "CNOT",
+    "CZ",
+    "TOFFOLI",
+    "ISWAP",
+    ]
 
-# specify labels for particular files. Filename is used by default.
-labelsDict=Dict("dataYao_target=1"  => "Yao")
+all_gates=vcat(single_target_gates,multiple_target_gates)
 
-# add file names to list to ignore
-ignoreList=[]
-
-## specify color for particular files, otherwise next color in default cycle is used 
-colorsDict=Dict(
-    "dataYao_target=1"=>"#C71585",
+path_per_gate=Dict(
+    "CNOT"  =>"data_CNOT",
+    "CZ"    =>"data_CZ",
+    "H"     =>"data_H",
+    "ISWAP" =>"data_ISWAP",
+    "PHASE" =>"data_PHASE",
+    "T"     =>"data_T",
+    "TOFFOLI"=>"data_TOFFOLI",
+    "X"     =>"data_X",
+    "Y"     =>"data_Y",
+    "Z"     =>"data_Z",
 )
 
-# markerSize=20
-linewidth=1.
+commonpath="benchmarking/data"
 
-gr(size=(1200,800), legend=false)
+resultFiles=Dict()
 
-times_per_gate=Dict()
-vectorQubits=nothing
+data_tags_color_index=Dict()
+data_index=1
 
-firstPlotDict=Dict()
 
-for gate in gatesList
-    firstPlotDict[gate]=true
+get_tag(s::String,gatename::String)=replace(s, string("_",gatename) =>"",".json"=>"")
+
+for gate in all_gates
+    global data_index
+
+    resultFiles[gate]=sort(
+        [p for p in readdir(joinpath(commonpath, path_per_gate[gate])) if endswith(p,".json")])
+    
+    println("\nFiles found for gate: $gate: ")
+    for p in resultFiles[gate]
+        println("\t$p")
+        data_tag=get_tag(p,gate)
+
+        if !haskey(data_tags_color_index,data_tag)
+            data_tags_color_index[data_tag]=data_index
+            data_index+=1
+        end
+    end   
 end
 
+linewidth=3.
 
-for fPath in resultFiles
-    fName=split(fPath,".json")[1]
+println("\n\n")
 
-    if fName in ignoreList
-        continue
+#define ColorScheme for all datasets
+myscheme=ColorSchemes.delta
+low_val=0.1
+high_val=0.8
+
+max_num_lines=length(keys(data_tags_color_index))
+
+if max_num_lines>1
+    mycolors =ColorScheme([get(myscheme, i) for i in LinRange(low_val,high_val,max_num_lines)])
+else
+    mycolors =ColorScheme([get(myscheme, low_val)])
+end
+
+for (gates_list,outputname) in [
+        (single_target_gates,   "single_target_gates"   )
+        (multiple_target_gates, "multiple_target_gates" )
+    ]
+    
+    gr(size=(1200,800), legend=true)
+
+    plot_list=[] 
+    scatter_list=[]
+
+    times_per_gate=Dict()
+    labels_per_gate=Dict()
+    vectorQubits=nothing
+
+    firstPlotDict=Dict()
+
+    for gate in gates_list
+        firstPlotDict[gate]=true
     end
 
-    println("Processing fileName: ",fName,".json")
-    
-    dataDict[fName]=JSON.parsefile(joinpath(path,fPath))
+    for gate in gates_list
+        color_list=nothing
 
-    for gate in gatesList
+        for (i_line,filepath) in enumerate(resultFiles[gate])
 
-        if gate in keys(dataDict[fName])
+            filename=split(filepath,".json")[1]
+
+            data_tag=get_tag(filepath,gate)
+
+            if filename in ignoreList
+                continue
+            end
+
+            println("Processing filename: ",filename,".json")
+            
+            dataDict=JSON.parsefile(joinpath(commonpath,path_per_gate[gate],filepath))
+
+            if !haskey(dataDict,gate)
+                @error ("file $filename doesn't contain benchmarking related to gate type: $gate") 
+            end
+
+            if color_list===nothing
+                println("i_line: ",i_line)
+                color_list=[mycolors[data_tags_color_index[data_tag]]]
+            else
+                color_list=hcat(color_list,mycolors[data_tags_color_index[data_tag]])
+            end
 
             if firstPlotDict[gate]
                 
-                if vectorQubits == nothing
-                    global vectorQubits=Vector{Float64}(dataDict[fName][gate]["nqubits"])
+                if vectorQubits === nothing
+                    vectorQubits=Vector{Float64}(dataDict[gate]["nqubits"])
                 end
 
-                times_per_gate[gate]=Vector{Float64}(dataDict[fName][gate]["times"])
-                
-                
-                if ~(fName in keys(labelsDict))
-                    labelsDict[fName]=fName
-                end
+                times_per_gate[gate]=Vector{Float64}(dataDict[gate]["times"])
+                labels_per_gate[gate]=filename
+        
 
-                # plotsPerGate[gate]=plot(
-                #     dataDict[fName][gate]["nqubits"],
-                #     dataDict[fName][gate]["times"],
-                #     label=labelsDict[fName],
-                #     linewidth=linewidth,
-                #     yaxis=:log 
-                #     )
                 firstPlotDict[gate]=false
 
             else
 
-                if length(dataDict[fName][gate]["times"]) ==  size(times_per_gate[gate],1)               
+                if length(dataDict[gate]["times"]) ==  size(times_per_gate[gate],1)               
                     times_per_gate[gate]=hcat(
                         times_per_gate[gate],
-                        Vector{Float64}(dataDict[fName][gate]["times"])
+                        Vector{Float64}(dataDict[gate]["times"])
                         )
 
-                    if ~(fName in keys(labelsDict))
-                        labelsDict[fName]=fName
+                    if typeof(labels_per_gate[gate])==String
+                        labels_per_gate[gate]=hcat(
+                            [labels_per_gate[gate]],
+                            Vector{String}([filename])
+                            )
+                    else
+
+                    labels_per_gate[gate]=hcat(
+                        labels_per_gate[gate],
+                        Vector{String}([filename])
+                        )
                     end
+
                 else
-                    println("Skipping $fName, wrong number of entries: ")
+                    println("Skipping $filename, wrong number of entries: ")
                     print("Should be: ",size(times_per_gate[gate],1))
-                    println(" instead is: ",length(dataDict[fName][gate]["times"]))
+                    println(" instead is: ",length(dataDict[gate]["times"]))
 
                 end
-                # plotsPerGate[gate]=plot!(
-                #     dataDict[fName][gate]["nqubits"],
-                #     dataDict[fName][gate]["times"],
-                #     label=labelsDict[fName],
-                #     linewidth=linewidth,
-                #     yaxis=:log 
-                #     )
             end
-
-            # colorsDict[fName]=line[0].get_c()
-            # scatter!(
-            #     dataDict[fName][gate]["nqubits"],
-            #     dataDict[fName][gate]["times"],
-            #     # color=colorsDict[fName],
-            #     # s=markerSize
-            #     )
+            
         end
+        
+        num_lines=size(times_per_gate[gate],2)
+
+        append!(plot_list,[
+            plot(
+                vectorQubits,
+                times_per_gate[gate],
+                linewidth=linewidth,
+                label=labels_per_gate[gate],
+                title=gate*" Gate",
+                yaxis=:log,
+                color=reshape([c for c in color_list],1,length(color_list)),
+                xlabel = "Qubit count",
+                ylabel = "Time (ns)",
+            )
+        ])
+        
+        append!(scatter_list,[
+            scatter!(
+                vectorQubits,
+                times_per_gate[gate],
+                linewidth=linewidth,
+                label=nothing,
+                yaxis=:log,
+                markercolor=reshape([c for c in color_list],1,length(color_list)),
+                markerstrokewidth = 0
+            )
+        ])
     end
-end
 
-plotList=[]
-scatterList=[]
-
-for gate in gatesList
-    append!(plotList,[plot(
-        vectorQubits,
-        times_per_gate[gate],
-        linewidth=linewidth,
-        yaxis=:log 
-        )]
+    plot(
+        plot_list... ,
+        layout=(2,3),
+        left_margin = 5Plots.mm
     )
+    
 
-    append!(scatterList,[scatter!(
-        vectorQubits,
-        times_per_gate[gate],
-        linewidth=linewidth,
-        yaxis=:log 
-        )]
-    )
+    println("\noutput path: ",joinpath(commonpath,string(outputname,".png")),"\n")
+
+    savefig(joinpath(commonpath,string(outputname,".png")))
+
 end
-
-plot(
-    plotList... ,
-    # times_per_gate["H"],
-    # times_per_gate["T"], 
-    # times_per_gate["CNOT"], 
-    # times_per_gate["Y"], 
-    layout=(2,3)
-)

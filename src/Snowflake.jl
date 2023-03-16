@@ -68,8 +68,6 @@ export
     plot_histogram,
     plot_bloch_sphere,
     plot_bloch_sphere_animation,
-    submit_circuit,
-    get_circuit_status,
    
     create_virtual_qpu,
     is_circuit_native_on_qpu,
@@ -105,9 +103,6 @@ export
     STD_GATES,
     PAULI_GATES,
     
-
-    #  Enums
-    JobStatus
 
 include("core/qobj.jl")
 include("core/dynamic_system.jl")
