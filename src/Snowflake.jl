@@ -101,7 +101,7 @@ export
     control_x,
     toffoli,
     STD_GATES,
-    PAULI_GATES,
+    PAULI_GATES
     
 
 include("core/qobj.jl")
