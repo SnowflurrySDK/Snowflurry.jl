@@ -210,7 +210,11 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
+<<<<<<< HEAD
 A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
+=======
+A structure representing a off-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
+>>>>>>> 81c56d1 (docs: comments)
 
 # Examples
 ```jldoctest
@@ -1198,26 +1202,11 @@ Underlying data type: ComplexF64:
 """
 commute(A::Operator, B::Operator) = A*B-B*A
 
-<<<<<<< HEAD
 # generic cases
 commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
-=======
-<<<<<<< HEAD
-commute(A::Operator, B::DiagonalOperator)=commute(A,Operator(B))
-commute(A::DiagonalOperator, B::Operator)=commute(Operator(A),B)
-=======
-commute(A::DiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::DiagonalOperator)= commute(A,Operator(B))
-
-commute(A::OffDiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::OffDiagonalOperator)= commute(A,Operator(B))
-
-commute(A::OffDiagonalOperator, B::OffDiagonalOperator)= commute(Operator(A),Operator(B))
->>>>>>> d59f70f (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
->>>>>>> 1d7eeba (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
 
 
 """
