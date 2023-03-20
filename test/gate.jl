@@ -31,14 +31,10 @@ end
     println(H)
 
     X = sigma_x(1)
-    @test X.instruction_symbol == "x"
-    @test X.display_symbol == ["X"]
     @test get_operator(X) ≈ sigma_x()
     @test get_inverse(X) == X
 
     Y = sigma_y(1)
-    @test Y.instruction_symbol == "y"
-    @test Y.display_symbol == ["Y"]
     @test get_operator(Y) ≈ sigma_y()
     @test get_inverse(Y) == Y
 

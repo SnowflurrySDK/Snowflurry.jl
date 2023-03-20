@@ -8,3 +8,4 @@ transpile
 submit_circuit
 abstractGate
 diagonalGate
+offDiagonalGate
