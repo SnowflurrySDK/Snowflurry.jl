@@ -216,9 +216,6 @@ end
 """
 A structure representing a off-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
-# Fields
-- `data` -- a vector containing the off-diagonal.
-
 # Examples
 ```jldoctest
 julia> Snowflake.OffDiagonalOperator([1,2,3,4])
