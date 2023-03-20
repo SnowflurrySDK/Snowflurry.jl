@@ -184,13 +184,6 @@ end
 
 Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op::DiagonalOperator{N,T})
 
-# promote_rule(::Type{DiagonalOperator{N,T}}, ::Type{Operator{T}}) where {N,T<:Complex} = Operator{T}
-
-# promote_rule(::Type{DiagonalOperator{N}}, ::Type{Operator}) where {N<:Integer} = Operator
-
-# Base.convert{T<:Complex}(::Type{Operator{T}}, diag_op::DiagonalOperator{N,S}) where {N,S<:Complex} = Operator(diag_op)
-
-Base.convert(::Type{Operator{T}}, diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} = Operator(diag_op)
 
 
 """
