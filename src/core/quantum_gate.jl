@@ -173,7 +173,7 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 
     operator=get_operator(gate,type_in_ket)
 
-    apply_operator!(state,operator,connected_qubits,Int(qubit_count))
+    apply_operator!(state,operator,connected_qubits)
 
 end
 
@@ -184,8 +184,9 @@ get_connected_qubits(gate::AbstractGate)=
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{2},
-    connected_qubit::Vector{<:Integer},
-    qubit_count::Int)
+    connected_qubit::Vector{<:Integer})
+
+    qubit_count = Int(log2(length(state)))
 
     dim=2^qubit_count
 
@@ -214,8 +215,9 @@ end
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{N},
-    connected_qubits::Vector{<:Integer},
-    qubit_count::Int) where {N} 
+    connected_qubits::Vector{<:Integer}) where {N} 
+
+    qubit_count = Int(log2(length(state)))
 
     dim=2^qubit_count
     
@@ -337,7 +339,7 @@ Return the Pauli-Z `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_z(T::Type{<:Complex}=ComplexF64)=Operator{T}(T[[1.0, 0.0] [0.0, -1.0]])
+sigma_z(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -1.0])
 
 """
     sigma_p()
@@ -731,18 +733,17 @@ get_inverse(gate::SigmaY) = gate
 
 Return the Pauli-Z `Gate`, which applies the [`sigma_z()`](@ref) `Operator` to the target qubit.
 """
-sigma_z(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaZ(["Z"], "z", [target], T)
+sigma_z(target::Integer) = SigmaZ(target)
 
-struct SigmaZ <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct SigmaZ <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::SigmaZ) = sigma_z(gate.type)
+get_operator(gate::SigmaZ,T::Type{<:Complex}=ComplexF64) = sigma_z(T)
 
 get_inverse(gate::SigmaZ) = gate
+
+get_connected_qubits(gate::SigmaZ)=[gate.target]
 
 """
     hadamard(target)

@@ -134,9 +134,6 @@ abstract type AbstractOperator end
 """
 A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
 
-# Fields
-- `data` -- a vector containing the diagonal.
-
 # Examples
 ```jldoctest
 julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
@@ -232,6 +229,8 @@ Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, ato
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Operator{T}, y::Operator{T}; atol::Real=1.0e-6) where {T<:Complex}= isapprox(x.data, y.data, atol=atol)
 
+Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+
 Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
@@ -244,10 +243,15 @@ Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
 
+Base.:*(A::Operator, B::DiagonalOperator) = Operator(A.data * Operator(B).data)
+
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 
-Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+Base.:*(s::Number, A::Operator) = Operator(s*A.data)
+
+Base.:*(s::Number, A::DiagonalOperator) = s*Operator(A)
+
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 Base.length(x::Union{Ket, Bra}) = length(x.data)
@@ -314,6 +318,9 @@ julia> eigenvector_1 = F.vectors[:, 1]
 ```
 """
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+
+eigen(A::DiagonalOperator) = LinearAlgebra.eigen(Operator(A).data)
+
 
 """
     tr(A::Operator)
@@ -489,6 +496,8 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
+get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+    get_embed_operator(Operator(op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -988,6 +997,10 @@ Underlying data Matrix{ComplexF64}:
 function commute(A::Operator, B::Operator)
     return A*B-B*A
 end
+
+commute(A::Operator, B::DiagonalOperator)=commute(A,Operator(B))
+commute(A::DiagonalOperator, B::Operator)=commute(Operator(A),B)
+
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)

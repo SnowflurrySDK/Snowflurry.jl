@@ -43,8 +43,6 @@ end
     @test get_inverse(Y) == Y
 
     Z = sigma_z(1)
-    @test Z.instruction_symbol == "z"
-    @test Z.display_symbol == ["Z"]
     @test get_operator(Z) ≈ sigma_z()
     @test get_inverse(Z) == Z
 

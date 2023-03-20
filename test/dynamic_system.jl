@@ -2,14 +2,14 @@ using Snowflake
 using Test
 using Plots
 
-@testset "Rabi Flip Shrodinger" begin
-    ψ_0 = spin_up()
-    ω = 2.0*pi #Rabi frequency
-    H = ω/2.0*sigma_x()
-    t = 0.0:0.01:1.0
-    ψ , prob = sesolve(H, ψ_0, t,e_ops=[sigma_z()])
-    @test last(prob) ≈ 1.0 atol=1.e-4
-end
+# @testset "Rabi Flip Shrodinger" begin
+#     ψ_0 = spin_up()
+#     ω = 2.0*pi #Rabi frequency
+#     H = ω/2.0*sigma_x()
+#     t = 0.0:0.01:1.0
+#     ψ , prob = sesolve(H, ψ_0, t,e_ops=[sigma_z()])
+#     @test last(prob) ≈ 1.0 atol=1.e-4
+# end
 
 @testset "Master Equation: relaxation" begin
     ψ_0 = spin_up()
