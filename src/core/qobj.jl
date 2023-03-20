@@ -109,10 +109,11 @@ Underlying data Matrix{ComplexF64}:
 Alternatively:
 ```jldoctest
 julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
+
 ```
 """
 struct Operator{T<:Complex}
@@ -357,8 +358,8 @@ julia> ψ = Ket([0.0; 1.0])
 
 
 julia> A = sigma_z()
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
@@ -368,6 +369,8 @@ julia> expected_value(A, ψ)
 ```
 """
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
+expected_value(A::DiagonalOperator, psi::Ket) = (Bra(psi)*(Operator(A)*psi))
 
 
 Base.:size(M::Operator) = size(M.data)
