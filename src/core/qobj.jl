@@ -200,7 +200,6 @@ end
 
 Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op::DiagonalOperator{N,T})
 
-
 """
     Base.adjoint(x)
 

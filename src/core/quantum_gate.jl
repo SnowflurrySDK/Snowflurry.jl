@@ -536,7 +536,7 @@ rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
 )
 
 """
-    phase_shift_diag(phi)
+    phase_shift(phi)
 
 Return the `DiagonalOperator` that applies a phase shift `phi`.
 
@@ -836,22 +836,7 @@ get_inverse(gate::Pi8) =  pi_8_dagger(gate.target)
 get_connected_qubits(gate::Pi8)=[gate.target]
 
 
-"""
-    pi_8_diag(target)
-
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
-"""
-pi_8_diag(target::Integer) = Pi8_Diag([target])
-
-struct Pi8_Diag <: AbstractGate
-    target_list::Vector{<:Integer}
-end
-
-get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
-
-get_inverse(gate::Pi8_Diag) =  throw(NotImplementedError(:get_inverse, gate)) #TODO
-
-get_connected_qubits(gate::Pi8_Diag)=gate.target_list[1]
+get_connected_qubits(gate::Pi8)=[gate.target]
 
 
 """
@@ -975,20 +960,6 @@ end
 get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
-
-phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag([target], phi)
-
-struct PhaseShift_Diag <: AbstractGate
-    target_list::Vector{<:Integer}
-    parameter::Real
-end
-
-get_operator(gate::PhaseShift_Diag,T::Type{<:Complex}=ComplexF64) = phase_shift_diag(gate.parameter,T)
-
-get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target_list[1], -gate.parameter)
-
-get_connected_qubits(gate::PhaseShift_Diag)=gate.target_list[1]
-
 
 """
     phase_shift(target, phi)
