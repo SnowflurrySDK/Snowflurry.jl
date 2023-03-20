@@ -2,7 +2,7 @@ using Snowflake
 using Test
 using StaticArrays
 
-@testset "diagonal_gate" begin
+@testset "Diagonal Gate: phase_shift" begin
 
     qubit_count=3
     target=1
@@ -10,7 +10,7 @@ using StaticArrays
     ϕ=π  
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    phase_gate=Snowflake.phase_shift_diag(target,ϕ)
+    phase_gate=Snowflake.phase_shift(target,ϕ)
 
     phase_gate_operator=get_operator(phase_gate)
 
@@ -28,6 +28,9 @@ using StaticArrays
     ##############################################
     # DiagonalOperator
 
+    # Ctor from Integer-valued array
+    @test DiagonalOperator([1,2])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
+
     # Ctor from Real-valued array
     @test DiagonalOperator([1.,2.])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
 
@@ -35,8 +38,14 @@ using StaticArrays
     @test DiagonalOperator([1.0+im,2.0-im])==DiagonalOperator(SVector{2,ComplexF64}([1.0+im,2.0-im]))
 
     # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
-    @test adjoint(phase_gate_operator).data≈get_operator(Snowflake.phase_shift_diag(target,-ϕ)).data
+    @test adjoint(phase_gate_operator).data≈get_operator(Snowflake.phase_shift(target,-ϕ)).data
         
+    # Construction of Operator from DiagonalOperator
+    @test Operator(DiagonalOperator{4,ComplexF64}([1,2,3,4])).data ==
+        Operator([[1,0,0,0] [0,2,0,0] [0,0,3,0] [0,0,0,4]]).data
+    
+
+
     ###############################################
     ### different code path in apply_operator when target is last qubit
 
@@ -44,9 +53,9 @@ using StaticArrays
     
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    phase_gate=Snowflake.phase_shift_diag(target,ϕ)
+    phase_gate=Snowflake.phase_shift(target,ϕ)
     
-    @test get_operator(get_inverse(phase_gate))==get_operator(Snowflake.phase_shift_diag(target,-ϕ))
+    @test get_operator(get_inverse(phase_gate))==get_operator(Snowflake.phase_shift(target,-ϕ))
     
     apply_gate!(ψ, phase_gate)
     
@@ -57,14 +66,19 @@ using StaticArrays
 
     @test ψ≈ψ_z
 
+end
+
+@testset "Diagonal Gate: Pi8" begin
+
     ###############################################
     # T gate (PhaseGate with π/8 phase) test
 
+    qubit_count=3
     target=1
 
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    T_gate=Snowflake.pi_8_diag(target)
+    T_gate=Snowflake.pi_8(target)
     apply_gate!(ψ, T_gate)
     
     ψ_result = Ket([
@@ -95,25 +109,15 @@ using StaticArrays
 
     target_error=100
 
-    T_gate_error=Snowflake.pi_8_diag(target_error)
+    T_gate_error=Snowflake.pi_8(target_error)
 
     @test_throws DomainError apply_gate!(ψ, T_gate_error)
 
-    @test_throws NotImplementedError get_inverse(T_gate_error) #TODO, implement inverse of DiagonalGate
+end
 
-    ######################################################
+@testset "Diagonal Gate: N targets" begin
 
 
-    nonexistent_gate(target::Integer) = NonExistentGate(target) # to test MethodError on non-implemented AbstractGates
-
-    struct NonExistentGate <: Snowflake.AbstractGate
-        target::Int
-    end
-
-    nonexistent_gate=nonexistent_gate(target)
-
-    @test_throws NotImplementedError Snowflake.get_connected_qubits(nonexistent_gate)
-   
     ######################################################
 
     diagonalGate_N_targets(target_list::Vector{<:Integer}) = 

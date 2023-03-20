@@ -119,10 +119,14 @@ struct Operator{T<:Complex}
     data::Matrix{T}
 end
 
-# overload constructor to enable initialization from Real-valued Matrix
+# Constructor from Real-valued Matrix
 Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) )
 
-# Constructor using adjoint(Operator{T})
+# Constructor from Integer-valued Matrix
+# default output is Operator{ComplexF64}
+Operator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = Operator(Matrix{S}(x))
+
+# Constructor from adjoint(Operator{T})
 Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
 
 abstract type AbstractOperator end
@@ -155,14 +159,38 @@ struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
     data::SVector{N,T}
 end
 
-# overload constructor to enable initialization from Real-valued Vector
+# Constructor from Real-valued Vector
 DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
 
-# overload constructor to enable initialization from Complex-valued Vector
+# Constructor from Complex-valued Vector
 DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVector{length(x),T},x) )
 
-# # Constructor using adjoint(DiagonalOperator{T})
+# Constructor from Integer-valued Vector
+# default output is Operator{ComplexF64}
+DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
+
+# Constructor from adjoint(DiagonalOperator{T})
 DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
+
+# Constructor using DiagonalOperator{N,T}, used in promote_rule
+function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
+    op_matrix=  zeros(T,N,N)
+
+    for i in 1:N
+        op_matrix[i,i]=diag_op.data[i]
+    end
+    return Operator{T}(op_matrix) 
+end
+
+Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op::DiagonalOperator{N,T})
+
+# promote_rule(::Type{DiagonalOperator{N,T}}, ::Type{Operator{T}}) where {N,T<:Complex} = Operator{T}
+
+# promote_rule(::Type{DiagonalOperator{N}}, ::Type{Operator}) where {N<:Integer} = Operator
+
+# Base.convert{T<:Complex}(::Type{Operator{T}}, diag_op::DiagonalOperator{N,S}) where {N,S<:Complex} = Operator(diag_op)
+
+Base.convert(::Type{Operator{T}}, diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} = Operator(diag_op)
 
 
 """
@@ -209,7 +237,11 @@ is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator{T}, y::Operator{T}; atol::Real=1.0e-6) where {T<:Complex}= isapprox(x.data, y.data, atol=atol)
+
+Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -218,6 +250,10 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+
+Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T} =
+    DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
+
 Base.:*(s::Any, A::Operator) = Operator(s*A.data)
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)

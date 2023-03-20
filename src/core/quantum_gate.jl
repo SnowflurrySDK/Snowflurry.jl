@@ -162,34 +162,36 @@ function apply_gate!(state::Ket, gate::AbstractGate)
             "Ket does not correspond to an integer number of qubits"))
     end
     
-    if any(t -> t>qubit_count ,gate.target_list)
-        throw(DomainError(gate.target_list,
-            "not enough qubits in the Ket for the targets in gate"))
-    end
-
     connected_qubits=get_connected_qubits(gate)
+
+    if any(t -> t>qubit_count ,connected_qubits)
+        throw(DomainError(connected_qubits,
+            "Not enough qubits in the Ket for the targets in gate"))
+    end
 
     type_in_ket=eltype(state.data)
 
     operator=get_operator(gate,type_in_ket)
 
-    apply_operator!(state,operator,connected_qubits,Int(qubit_count),Val(length(connected_qubits)))
+    apply_operator!(state,operator,connected_qubits,Int(qubit_count))
 
 end
 
 get_connected_qubits(gate::AbstractGate)=
     throw(NotImplementedError(:get_connected_qubits, gate))
 
-
+# specialization for single target diagonal gate (size N=2^target_count=2)
 function apply_operator!(
     state::Ket,
-    operator::DiagonalOperator,
-    connected_qubit::Int,
-    qubit_count::Int,
-    ::Val{1}) # specialization for single target diagonal gate
+    operator::DiagonalOperator{2},
+    connected_qubit::Vector{<:Integer},
+    qubit_count::Int)
 
     dim=2^qubit_count
-    target_qubit_index=qubit_count-connected_qubit # indexing of targets in qulacs starts at 0
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-connected_qubit[1] 
     
     diagonal_in_matrix=operator.data
 
@@ -205,6 +207,54 @@ function apply_operator!(
             @inbounds state.data[state_index + 1] *= diagonal_in_matrix[bitval+1];
             @inbounds state.data[state_index + 2] *= diagonal_in_matrix[bitval+1];
         end
+    end
+end
+
+#specialization for (N=2^target_count)>2 diagonal gates
+function apply_operator!(
+    state::Ket,
+    operator::DiagonalOperator{N},
+    connected_qubits::Vector{<:Integer},
+    qubit_count::Int) where {N} 
+
+    dim=2^qubit_count
+    
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)])
+    target_qubit_index_count=UInt64(log2(N))
+    
+    diagonal_in_matrix=operator.data
+    
+    matrix_dim = UInt64(1) << target_qubit_index_count
+
+    matrix_mask_list=create_matrix_mask_list(
+        target_qubit_index_list, 
+        target_qubit_index_count,
+        matrix_dim
+    )
+
+    sorted_targets=Vector{UInt64}(undef, target_qubit_index_count)
+    mask_array=Vector{UInt64}(undef, target_qubit_index_count)
+
+    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sorted_targets, mask_array)
+        
+    # loop variables
+    loop_dim = dim >> target_qubit_index_count
+
+    for state_index in 0:(loop_dim-1)
+        # create base index
+        basis_0 = UInt64(state_index);
+        for cursor in UnitRange{UInt64}(UInt64(0),target_qubit_index_count-1)
+            insert_index = sorted_targets[cursor+1]
+            basis_0=insert_zero_to_basis_index(basis_0, UInt64(1) << insert_index, insert_index)
+        end
+
+        # compute matrix-vector multiply
+        for y in 0:(matrix_dim-1)
+            state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
+        end
+
     end
 end
 
@@ -246,52 +296,6 @@ function create_shift_mask_list_from_list_buf!(
         dst_mask[i]=(1<<target)-1 
     end
 
-end
-
-function apply_operator!(
-    state::Ket,
-    operator::DiagonalOperator,
-    connected_qubits::Vector{<:Integer},
-    qubit_count::Int,
-    ::Val{N_targets}) where {N_targets} #specialization for N_targets>1 diagonal gates
-
-    dim=2^qubit_count
-    
-    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)]) # the bitwise implementation assumes target numbering starting at 0
-    target_qubit_index_count=UInt64(N_targets)
-    
-    diagonal_in_matrix=operator.data
-    
-    matrix_dim = UInt64(1) << target_qubit_index_count
-
-    matrix_mask_list=create_matrix_mask_list(
-        target_qubit_index_list, 
-        target_qubit_index_count,
-        matrix_dim
-    )
-
-    sorted_targets=Vector{UInt64}(undef, target_qubit_index_count)
-    mask_array=Vector{UInt64}(undef, target_qubit_index_count)
-
-    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sorted_targets, mask_array)
-        
-    # loop variables
-    loop_dim = dim >> target_qubit_index_count
-
-    for state_index in 0:(loop_dim-1)
-        # create base index
-        basis_0 = UInt64(state_index);
-        for cursor in UnitRange{UInt64}(UInt64(0),target_qubit_index_count-1)
-            insert_index = sorted_targets[cursor+1]
-            basis_0=insert_zero_to_basis_index(basis_0, UInt64(1) << insert_index, insert_index)
-        end
-
-        # compute matrix-vector multiply
-        for y in 0:(matrix_dim-1)
-            state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
-        end
-
-    end
 end
 
 
@@ -385,7 +389,7 @@ S = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, im]])
+phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, im])
 
 """
     phase_dagger()
@@ -398,7 +402,7 @@ S^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, -im]])
+phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -im])
 
 """
     pi_8()
@@ -411,15 +415,12 @@ T = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, exp(im*pi/4.0)]])
-
-pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
-
+pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
 
 """
     pi_8_dagger()
 
-Return the adjoint `Operator` of the π/8 gate, which is defined as:
+Return the adjoint `DiagonalOperator` of the π/8 gate, which is defined as:
 ```math
 T^\\dagger = \\begin{bmatrix}
     1 & 0 \\\\
@@ -427,7 +428,7 @@ T^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(T[[1.0, 0.0] [0.0, exp(-im*pi/4.0)]])
+pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, exp(-im*pi/4.0)])
 
 """
     eye()
@@ -530,7 +531,7 @@ rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
 )
 
 """
-    phase_shift_diag(phi)
+    phase_shift(phi)
 
 Return the `DiagonalOperator` that applies a phase shift `phi`.
 
@@ -543,26 +544,7 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
-
-
-"""
-    phase_shift(phi)
-
-Return the `Operator` that applies a phase shift `phi`.
-
-The `Operator` is defined as:
-```math
-P(\\phi) = \\begin{bmatrix}
-    i & 0 \\\\[0.5em]      
-    0 & e^{i\\phi}
-\\end{bmatrix}.
-```
-""" 
-phase_shift(phi,T::Type{<:Complex}=ComplexF64) = Operator{T}(
-    T[1 0;
-    0 exp(im*phi)]
-)
+phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
 
 """
     universal(theta, phi, lambda)
@@ -783,72 +765,54 @@ get_inverse(gate::Hadamard) = gate
 """
     phase(target)
 
-Return a phase `Gate` (also known as an ``S`` `Gate`), which applies the [`phase()`](@ref) `Operator` to the target qubit.
+Return a phase `Gate` (also known as an ``S`` `Gate`), which applies the [`phase()`](@ref) `DiagonalOperator` to the target qubit.
 """
-phase(target::Integer, T::Type{<:Complex}=ComplexF64) = Phase(["S"], "s", [target], T)
+phase(target::Integer, T::Type{<:Complex}=ComplexF64) = Phase(target)
 
-struct Phase <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct Phase <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::Phase) = phase(gate.type)
+get_operator(gate::Phase,T::Type{<:Complex}=ComplexF64) = phase(T)
 
-get_inverse(gate::Phase) = phase_dagger(gate.target[1],gate.type)
+get_inverse(gate::Phase) = phase_dagger(gate.target)
+
+get_connected_qubits(gate::Phase)=[gate.target]
+
 """
     phase_dagger(target)
 
-Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `Operator` to the target qubit.
+Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `DiagonalOperator` to the target qubit.
 """
-phase_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = PhaseDagger(["S†"], "s_dag", [target], T)
+phase_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = PhaseDagger(target)
 
-struct PhaseDagger <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct PhaseDagger <: AbstractGate
+    target::Integer
 end
 
-get_operator(gate::PhaseDagger) = phase_dagger(gate.type)
+get_operator(gate::PhaseDagger,T::Type{<:Complex}=ComplexF64) = phase_dagger(T)
 
-get_inverse(gate::PhaseDagger) = phase(gate.target[1])
+get_inverse(gate::PhaseDagger) = phase(gate.target)
+
+get_connected_qubits(gate::PhaseDagger)=[gate.target]
+
 
 """
     pi_8(target)
 
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `Operator` to the `target` qubit.
+Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
-pi_8(target::Integer, T::Type{<:Complex}=ComplexF64) = Pi8(["T"], "t", [target], T)
+pi_8(target::Integer) = Pi8(target)
 
-struct Pi8 <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct Pi8 <: AbstractGate
+    target::Integer
 end
 
-get_operator(gate::Pi8) = pi_8(gate.type)
+get_operator(gate::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
 
-get_inverse(gate::Pi8) = pi_8_dagger(gate.target[1],gate.type)
+get_inverse(gate::Pi8) =  pi_8_dagger(gate.target)
 
-"""
-    pi_8_diag(target)
-
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8_diag()`](@ref) `DiagonalOperator` to the `target` qubit.
-"""
-pi_8_diag(target::Integer) = Pi8_Diag([target])
-
-struct Pi8_Diag <: AbstractGate
-    target_list::Vector{<:Integer}
-end
-
-get_operator(gate::Pi8_Diag,T::Type{<:Complex}=ComplexF64) = pi_8_diag(T)
-
-get_inverse(gate::Pi8_Diag) =  throw(NotImplementedError(:get_inverse, gate)) #TODO
-
-get_connected_qubits(gate::Pi8_Diag)=gate.target_list[1]
+get_connected_qubits(gate::Pi8)=[gate.target]
 
 
 """
@@ -856,18 +820,18 @@ get_connected_qubits(gate::Pi8_Diag)=gate.target_list[1]
 
 Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
-pi_8_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = Pi8Dagger(["T†"], "t_dag", [target], T)
+pi_8_dagger(target::Integer) = Pi8Dagger(target)
 
-struct Pi8Dagger <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct Pi8Dagger <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::Pi8Dagger) = pi_8_dagger(gate.type)
+get_operator(gate::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
 
-get_inverse(gate::Pi8Dagger) = pi_8(gate.target[1], gate.type)
+get_inverse(gate::Pi8Dagger) = pi_8(gate.target)
+
+get_connected_qubits(gate::Pi8Dagger)=[gate.target]
+
 
 """
     x_90(target)
@@ -973,38 +937,23 @@ get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
 
-phase_shift_diag(target::Integer, phi::Real) = PhaseShift_Diag([target], phi)
-
-struct PhaseShift_Diag <: AbstractGate
-    target_list::Vector{<:Integer}
-    parameter::Real
-end
-
-get_operator(gate::PhaseShift_Diag,T::Type{<:Complex}=ComplexF64) = phase_shift_diag(gate.parameter,T)
-
-get_inverse(gate::PhaseShift_Diag) = phase_shift_diag(gate.target_list[1], -gate.parameter)
-
-get_connected_qubits(gate::PhaseShift_Diag)=gate.target_list[1]
-
-
 """
     phase_shift(target, phi)
 
-Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `Operator`.
+Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `DiagonalOperator`.
 """ 
-phase_shift(target::Integer, phi::Real, T::Type{<:Complex}=ComplexF64) = PhaseShift(["P($(phi))"], "p", [target], [phi], T)
+phase_shift(target::Integer, phi::Real) = PhaseShift(target, phi)
 
-struct PhaseShift <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    parameters::SVector{1,Real}
-    type::Type{<:Complex}
+struct PhaseShift <: AbstractGate
+    target::Integer
+    parameter::Real
 end
 
-get_operator(gate::PhaseShift) = phase_shift(gate.parameters[1],gate.type)
+get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.parameter,T)
 
-get_inverse(gate::PhaseShift) = phase_shift(gate.target[1], -gate.parameters[1],gate.type)
+get_inverse(gate::PhaseShift) = phase_shift(gate.target, -gate.parameter)
+
+get_connected_qubits(gate::PhaseShift)=[gate.target]
 
 """
     universal(target, theta, phi, lambda)
@@ -1196,7 +1145,15 @@ julia> ψ_1 = sigma_x(1)*ψ_0
 """
 Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M)
 
-function get_transformed_state(state::Ket, gate::Gate)
+function get_transformed_state(state::Ket, gate::Gate) 
+    transformed_state = deepcopy(state)
+    apply_gate!(transformed_state, gate)
+    return transformed_state
+end
+
+Base.:*(M::AbstractGate, x::Ket) = get_transformed_state(x, M) 
+
+function get_transformed_state(state::Ket, gate::AbstractGate)
     transformed_state = deepcopy(state)
     apply_gate!(transformed_state, gate)
     return transformed_state
