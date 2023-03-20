@@ -97,7 +97,6 @@ export
     iswap,
     iswap_dagger,
     pi_8,
-    pi_8_diag,
     pi_8_dagger,
     phase,
     phase_dagger,
