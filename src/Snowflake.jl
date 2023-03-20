@@ -93,7 +93,6 @@ export
     rotation_y,
     rotation_z,
     phase_shift,
-    phase_shift_diag,
     universal,
     iswap,
     iswap_dagger,
