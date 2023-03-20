@@ -186,6 +186,9 @@ DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVe
 # default output is Operator{ComplexF64}
 DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
 
+# Constructor from adjoint(DiagonalOperator{T})
+DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
+
 # Construction of Operator using DiagonalOperator{N,T}
 function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
@@ -339,6 +342,12 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 # specializations
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+
+Base.:isapprox(x::OffDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+
+Base.:isapprox(x::OffDiagonalOperator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+
 
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
@@ -643,7 +652,7 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
 end
 
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
-    get_embed_operator(Operator(op), target_body_index, system)
+
 
 get_matrix(op::AbstractOperator) = 
     throw(NotImplementedError(:get_matrix,op))
@@ -1189,11 +1198,26 @@ Underlying data type: ComplexF64:
 """
 commute(A::Operator, B::Operator) = A*B-B*A
 
+<<<<<<< HEAD
 # generic cases
 commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
+=======
+<<<<<<< HEAD
+commute(A::Operator, B::DiagonalOperator)=commute(A,Operator(B))
+commute(A::DiagonalOperator, B::Operator)=commute(Operator(A),B)
+=======
+commute(A::DiagonalOperator, B::Operator)= commute(Operator(A),B)
+commute(A::Operator, B::DiagonalOperator)= commute(A,Operator(B))
+
+commute(A::OffDiagonalOperator, B::Operator)= commute(Operator(A),B)
+commute(A::Operator, B::OffDiagonalOperator)= commute(A,Operator(B))
+
+commute(A::OffDiagonalOperator, B::OffDiagonalOperator)= commute(Operator(A),Operator(B))
+>>>>>>> d59f70f (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
+>>>>>>> 1d7eeba (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
 
 
 """
@@ -1224,6 +1248,14 @@ anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
 
 anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
 
+
+anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
+
+anticommute(A::OffDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::OffDiagonalOperator)=anticommute(A,Operator(B))
+
+anticommute(A::OffDiagonalOperator, B::OffDiagonalOperator)=anticommute(Operator(A),Operator(B))
 
 """
     Snowflake.ket2dm(ψ)
