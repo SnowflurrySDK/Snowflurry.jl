@@ -127,6 +127,20 @@ end
     @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
 end
 
+function test_inverse(gate::Gate)
+    inverse_gate=get_inverse(gate)
+    target_count=length(gate.target)
+
+    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
+end
+
+function test_inverse(gate::Snowflake.AbstractGate)
+    inverse_gate=get_inverse(gate)
+    target_count=length(Snowflake.get_connected_qubits(gate))
+
+    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
+end
+
 @testset "get_inverse" begin
     cnot = control_x(1, 2)
     @test test_inverse(cnot)

@@ -2,6 +2,64 @@ using Snowflake
 using Test
 using StaticArrays
 
+@testset "DiagonalOperator" begin
+
+    ##############################################
+    # DiagonalOperator
+
+    # Ctor from Integer-valued array
+    @test DiagonalOperator([1,2])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
+
+    # Ctor from Real-valued array
+    diag_op=DiagonalOperator([1.,2.])
+    @test diag_op==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
+
+    # Ctor from Complex-valued array
+    @test DiagonalOperator([1.0+im,2.0-im])==DiagonalOperator(SVector{2,ComplexF64}([1.0+im,2.0-im]))
+       
+    # Construction of Operator from DiagonalOperator
+    @test Operator(DiagonalOperator{4,ComplexF64}([1,2,3,4])).data ==
+        Operator([[1,0,0,0] [0,2,0,0] [0,0,3,0] [0,0,0,4]]).data
+    
+    @test 2*diag_op ≈ DiagonalOperator([2.,4.])
+
+    # Base.:+ and Base.:- 
+
+    @test (2*diag_op).data == (diag_op + diag_op).data
+    @test 2*diag_op ≈ diag_op + Operator(diag_op)
+    @test 2*diag_op ≈ Operator(diag_op) + diag_op
+
+    @test diag_op.data == (2*diag_op - diag_op).data
+    @test Operator(diag_op) ≈ 2*diag_op - Operator(diag_op)
+    @test Operator(diag_op) ≈ 2*Operator(diag_op) - diag_op
+
+    # Base.:*
+
+    @test (Operator(diag_op)*diag_op)≈ DiagonalOperator([v^2 for v in Vector(diag_op.data)])
+    @test (diag_op*Operator(diag_op))≈ DiagonalOperator([v^2 for v in Vector(diag_op.data)])
+
+    # Commutation relations
+    result=diag_op*diag_op-diag_op*diag_op
+
+    @test commute(diag_op,diag_op)  ≈ result
+    @test commute(diag_op,Operator(diag_op))  ≈ result
+    @test commute(Operator(diag_op),(diag_op))≈ result
+
+    result=diag_op*diag_op+diag_op*diag_op
+
+    @test anticommute(diag_op,diag_op)  ≈ result
+    @test anticommute(diag_op,Operator(diag_op))  ≈ result
+    @test anticommute(Operator(diag_op),(diag_op))≈ result
+
+    θ=π
+    @test (exp(-im*θ/2*diag_op)).data ≈ [-im,-1.]
+
+    # LinearAlgebra.eigen
+    vals, vecs = eigen(diag_op)
+    @test vals[1] ≈ 1.0
+    @test vals[2] ≈ 2.0 
+
+end
 
 @testset "Diagonal Gate: phase_shift" begin
 

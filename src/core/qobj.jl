@@ -344,10 +344,12 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
+Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+
 Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
-Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
 
 Base.:-(x::Ket) = -1.0 * x
@@ -371,6 +373,12 @@ Base.:*(A::AbstractOperator, B::AbstractOperator) = Operator(A) * Operator(B)
 # specializations
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
+Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
+    DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
+
+Base.:*(A::AntiDiagonalOperator, B::Operator) = Operator(A) * B
+Base.:*(A::Operator, B::AntiDiagonalOperator) = A * Operator(B)
+
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
@@ -1203,9 +1211,16 @@ commute(A::Operator, B::Operator) = A*B-B*A
 commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
+<<<<<<< HEAD
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
+=======
+commute(A::DiagonalOperator, B::DiagonalOperator)= A*B-B*A
 
-commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
+commute(A::AntiDiagonalOperator, B::Operator)= commute(Operator(A),B)
+commute(A::Operator, B::AntiDiagonalOperator)= commute(A,Operator(B))
+>>>>>>> 18eea39 (feat: extend Base for Diagonal and AntiDiagonal Operators)
+
+commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
@@ -1239,10 +1254,12 @@ anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A
 anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
 anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
 
+anticommute(A::DiagonalOperator, B::DiagonalOperator)=A*B+B*A
+
 anticommute(A::AntiDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
 anticommute(A::Operator, B::AntiDiagonalOperator)=anticommute(A,Operator(B))
 
-anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=anticommute(Operator(A),Operator(B))
+anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=A*B+B*A
 
 """
     Snowflake.ket2dm(ψ)
