@@ -212,9 +212,6 @@ end
 """
 A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
-# Fields
-- `data` -- a vector containing the off-diagonal.
-
 # Examples
 ```jldoctest
 julia> Snowflake.AntiDiagonalOperator([1,2])
@@ -344,8 +341,6 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
-Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-
 Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
@@ -381,6 +376,8 @@ Base.:*(A::Operator, B::AntiDiagonalOperator) = A * Operator(B)
 
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
+
+Base.:*(A::AntiDiagonalOperator, B::DiagonalOperator) = Operator(A) * Operator(B)
 
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
@@ -1211,16 +1208,13 @@ commute(A::Operator, B::Operator) = A*B-B*A
 commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
-<<<<<<< HEAD
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
-=======
-commute(A::DiagonalOperator, B::DiagonalOperator)= A*B-B*A
-
-commute(A::AntiDiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::AntiDiagonalOperator)= commute(A,Operator(B))
->>>>>>> 18eea39 (feat: extend Base for Diagonal and AntiDiagonal Operators)
 
 commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
+
+commute(A::AntiDiagonalOperator, B::DiagonalOperator)= commute(Operator(A),Operator(B))
+commute(A::DiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
+
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
