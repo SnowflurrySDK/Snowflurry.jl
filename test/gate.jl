@@ -22,13 +22,21 @@ end
 
 
 @testset "gate_set" begin
+
+    @test eye(2)≈kron(eye(),eye())
+    @test_throws DomainError eye(0)
+    @test eye(3)≈kron(eye(2),eye())
+
     H = hadamard(1)
     @test H.instruction_symbol == "h"
     @test H.display_symbol == ["H"]
-    @test get_operator(H) ≈ hadamard()
+    h_oper=get_operator(H)
+    @test h_oper ≈ hadamard()
     @test get_inverse(H) == H
 
     println(H)
+
+    @test (2*h_oper).data == 2*(h_oper.data)
 
     X = sigma_x(1)
     @test get_operator(X) ≈ sigma_x()
@@ -118,74 +126,85 @@ end
     @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
 end
 
+function test_inverse(gate::Gate)
+    inverse_gate=get_inverse(gate)
+    target_count=length(gate.target)
+
+    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
+end
+
+function test_inverse(gate::Snowflake.AbstractGate)
+    inverse_gate=get_inverse(gate)
+    target_count=length(Snowflake.get_connected_qubits(gate))
+
+    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
+end
+
 @testset "get_inverse" begin
     cnot = control_x(1, 2)
+    @test test_inverse(cnot)
     inverse_cnot = get_inverse(cnot)
-    @test get_operator(cnot)*get_operator(inverse_cnot) ≈ kron(eye(), eye())
     @test inverse_cnot.instruction_symbol == "cx"
 
     rx = rotation_x(1, pi/3)
+    @test test_inverse(rx)
     inverse_rx = get_inverse(rx)
-    @test get_operator(rx)*get_operator(inverse_rx) ≈ eye()
     @test rx.parameters[1] ≈ -inverse_rx.parameters[1]
 
     ry = rotation_y(1, pi/3)
+    @test test_inverse(ry)
     inverse_ry = get_inverse(ry)
-    @test get_operator(ry)*get_operator(inverse_ry) ≈ eye()
     @test ry.parameters[1] ≈ -inverse_ry.parameters[1]
 
     rz = rotation_z(1, pi/3)
+    @test test_inverse(rz)
     inverse_rz = get_inverse(rz)
-    @test get_operator(rz)*get_operator(inverse_rz) ≈ eye()
     @test rz.parameters[1] ≈ -inverse_rz.parameters[1]
 
     p = phase_shift(1, pi/3)
+    @test test_inverse(p)
     inverse_p = get_inverse(p)
-    @test get_operator(p)*get_operator(inverse_p) ≈ eye()
     @test p.parameter[1] ≈ -inverse_p.parameter[1]
 
     x_90_gate = x_90(1)
+    @test test_inverse(x_90_gate)
     inverse_x_90 = get_inverse(x_90_gate)
-    @test get_operator(x_90_gate)*get_operator(inverse_x_90) ≈ eye()
     @test inverse_x_90.instruction_symbol == "rx"
     @test inverse_x_90.parameters[1] ≈ -pi/2
 
     s = phase(1)
+    @test test_inverse(s)
     inverse_s = get_inverse(s)
-    @test get_operator(s)*get_operator(inverse_s) ≈ eye()
     @test eye() ≈ get_operator(s)*get_operator(inverse_s)
 
     s_dag = phase_dagger(1)
-    inverse_s_dag = get_inverse(s_dag)
-    @test get_operator(s_dag)*get_operator(inverse_s_dag) ≈ eye()
+    @test test_inverse(s_dag)
 
     t = pi_8(1)
-    inverse_t = get_inverse(t)
-    @test get_operator(t)*get_operator(inverse_t) ≈ eye()
-
+    @test test_inverse(t)
+    
     t_dag = pi_8_dagger(1)
-    inverse_t_dag = get_inverse(t_dag)
-    @test get_operator(t_dag)*get_operator(inverse_t_dag) ≈ eye()
+    @test test_inverse(t_dag)
 
     iswap_gate = iswap(1, 2)
+    @test test_inverse(iswap_gate) 
     inverse_iswap = get_inverse(iswap_gate)
-    @test get_operator(iswap_gate)*get_operator(inverse_iswap) ≈ kron(eye(), eye())
     @test inverse_iswap.instruction_symbol == "iswap_dag"
 
     iswap_dag = iswap_dagger(1, 2)
+    @test test_inverse(iswap_dag)
     inverse_iswap_dag = get_inverse(iswap_dag)
-    @test get_operator(iswap_dag)*get_operator(inverse_iswap_dag) ≈ kron(eye(), eye())
     @test inverse_iswap_dag.instruction_symbol == "iswap"
 
     r = rotation(1, pi/2, -pi/3)
+    @test test_inverse(r)
     inverse_r = get_inverse(r)
-    @test get_operator(r)*get_operator(inverse_r) ≈ eye()
     @test inverse_r.parameters[1] ≈ -r.parameters[1]
     @test inverse_r.parameters[2] ≈ r.parameters[2]
 
     u = universal(1, pi/2, -pi/3, pi/4)
+    @test test_inverse(u)
     inverse_u = get_inverse(u)
-    @test get_operator(u)*get_operator(inverse_u) ≈ eye()
     @test inverse_u.parameters[1] ≈ -u.parameters[1]
     @test inverse_u.parameters[2] ≈ -u.parameters[3]
     @test inverse_u.parameters[3] ≈ -u.parameters[2]

@@ -493,6 +493,23 @@ I = \\begin{bmatrix}
 """
 eye(T::Type{<:Complex}=ComplexF64) = Operator(Matrix{T}(1.0I, 2, 2))
 
+# Contruct eye() of any size (or qubit_count)
+function eye(qubit_count::Integer,T::Type{<:Complex}=ComplexF64)
+    if qubit_count<1
+        throw(DomainError(qubit_count,
+            "Must have qubit_count>0"))
+    end 
+
+    if qubit_count==1
+        return eye(T)
+    elseif qubit_count==2
+        return kron(eye(qubit_count-1,T),eye(T))
+    else
+        return kron(eye(qubit_count-1,T),eye(qubit_count-2,T))
+    end
+end
+
+
 """
     x_90()
 
@@ -760,10 +777,10 @@ Returns the `Operator` which is associated to a `Gate`.
 julia> x = sigma_x(1);
 
 julia> get_operator(x)
-(2, 2)-element Snowflake.AntiDiagonalOperator:
-Underlying data Matrix{ComplexF64}:
-0.0 + 0.0im    1.0 + 0.0im
-1.0 + 0.0im    0.0 + 0.0im
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
 
 
 ```
