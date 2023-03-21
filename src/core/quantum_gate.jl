@@ -260,14 +260,15 @@ function apply_operator!(
     end
 end
 
-# specialization for single target off-diagonal gate (size N=2^target_count=2)
+# specialization for single target anti-diagonal gate (size N=2^target_count=2)
 function apply_operator!(
     state::Ket,
     operator::AntiDiagonalOperator{2},
-    connected_qubit::Vector{<:Integer},
-    qubit_count::Int)
+    connected_qubit::Vector{<:Integer})
 
     # see qulacs::Y_gate_parallel_unroll
+
+    qubit_count = Int(log2(length(state)))
 
     dim=2^qubit_count
 

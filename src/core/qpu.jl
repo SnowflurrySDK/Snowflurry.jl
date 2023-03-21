@@ -55,7 +55,7 @@ julia> connectivity = [1 0 0
 ```
 
 Here, the ones in the diagonal indicate that all qubits can perform single-qubit gates.
-If there is a one in an off-diagonal entry with row i and column j, it indicates that
+If there is a one in an anti-diagonal entry with row i and column j, it indicates that
 a two-qubit gate with control qubit i and target qubit j can be applied.
 
 If the native gates are the Pauli-X gate, the Hadamard gate, and the control-X gate,

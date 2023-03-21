@@ -111,8 +111,8 @@ Alternatively:
 julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
 (2,2)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
-1.0 + 0.0im    0.0 + 0.0im
-0.0 + 0.0im    -1.0 + 0.0im
+1.0 + 0.0im    .
+.    -1.0 + 0.0im
 
 julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
 (4,4)-element Snowflake.DiagonalOperator:
@@ -214,10 +214,7 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
-A structure representing a off-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
-
-# Fields
-- `data` -- a vector containing the off-diagonal.
+A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
 # Examples
 ```jldoctest
@@ -332,8 +329,6 @@ Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
-Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-
 Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
@@ -364,6 +359,8 @@ Base.:*(A::Operator, B::AntiDiagonalOperator) = A * Operator(B)
 
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
+
+Base.:*(A::AntiDiagonalOperator, B::DiagonalOperator) = Operator(A) * Operator(B)
 
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 
@@ -426,14 +423,6 @@ Base.exp(A::AntiDiagonalOperator) = exp(Operator(A))
 Return the element at row `m` and column `n` of Operator `A`.
 """
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-
-function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
-    if i == j
-        return diag_op.data[i]
-    else
-        return T(0.)
-    end
-end
 
 """
     eigen(A::Operator)
@@ -506,8 +495,8 @@ julia> ψ = Ket([0.0; 1.0])
 julia> A = sigma_z()
 (2,2)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
-1.0 + 0.0im    0.0 + 0.0im
-0.0 + 0.0im    -1.0 + 0.0im
+1.0 + 0.0im    .
+.    -1.0 + 0.0im
 
 
 julia> expected_value(A, ψ)
@@ -1171,9 +1160,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-function commute(A::Operator, B::Operator)
-    return A*B-B*A
-end
+commute(A::Operator, B::Operator) = A*B-B*A
 
 commute(A::DiagonalOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::DiagonalOperator)= commute(A,Operator(B))
@@ -1184,6 +1171,10 @@ commute(A::AntiDiagonalOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AntiDiagonalOperator)= commute(A,Operator(B))
 
 commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
+
+commute(A::AntiDiagonalOperator, B::DiagonalOperator)= commute(Operator(A),Operator(B))
+commute(A::DiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
+
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
