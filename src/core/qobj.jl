@@ -289,6 +289,14 @@ Return the element at row `m` and column `n` of Operator `A`.
 """
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
 
+function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
+    if i == j
+        return diag_op.data[i]
+    else
+        return T(0.)
+    end
+end
+
 """
     eigen(A::Operator)
 

@@ -10,7 +10,7 @@ using StaticArrays
     ϕ=π  
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    phase_gate=Snowflake.phase_shift(target,ϕ)
+    phase_gate=phase_shift(target,ϕ)
 
     phase_gate_operator=get_operator(phase_gate)
 
@@ -38,25 +38,27 @@ using StaticArrays
     @test DiagonalOperator([1.0+im,2.0-im])==DiagonalOperator(SVector{2,ComplexF64}([1.0+im,2.0-im]))
 
     # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
-    @test adjoint(phase_gate_operator).data≈get_operator(Snowflake.phase_shift(target,-ϕ)).data
+    @test adjoint(phase_gate_operator).data≈get_operator(phase_shift(target,-ϕ)).data
         
     # Construction of Operator from DiagonalOperator
     @test Operator(DiagonalOperator{4,ComplexF64}([1,2,3,4])).data ==
         Operator([[1,0,0,0] [0,2,0,0] [0,0,3,0] [0,0,0,4]]).data
     
 
-
-    ###############################################
     ### different code path in apply_operator when target is last qubit
-
     target=3
     
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    phase_gate=Snowflake.phase_shift(target,ϕ)
+    phase_gate=phase_shift(target,ϕ)
     
-    @test get_operator(get_inverse(phase_gate))==get_operator(Snowflake.phase_shift(target,-ϕ))
-    
+    op=get_operator(phase_gate)
+
+    @test op[2,2] == op.data[2]
+    @test op[2,1] == 0
+
+    @test get_operator(get_inverse(phase_gate))==get_operator(phase_shift(target,-ϕ))
+  
     apply_gate!(ψ, phase_gate)
     
     ψ_z = Ket([v for v in 1:2^qubit_count])
@@ -65,6 +67,15 @@ using StaticArrays
     apply_gate!(ψ_z, ZGate)
 
     @test ψ≈ψ_z
+
+    #############################
+
+    qubit_count=1
+
+    ψ_z = Ket([v for v in 1:2^qubit_count])
+
+    @test expected_value(get_operator(ZGate), ψ_z) == ComplexF64(-3.)
+    
 
 end
 
@@ -78,7 +89,7 @@ end
 
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    T_gate=Snowflake.pi_8(target)
+    T_gate=pi_8(target)
     apply_gate!(ψ, T_gate)
     
     ψ_result = Ket([
@@ -109,7 +120,7 @@ end
 
     target_error=100
 
-    T_gate_error=Snowflake.pi_8(target_error)
+    T_gate_error=pi_8(target_error)
 
     @test_throws DomainError apply_gate!(ψ, T_gate_error)
 

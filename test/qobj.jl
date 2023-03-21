@@ -28,6 +28,10 @@ using Test
     Y = sigma_y(1)
     Z = sigma_z(1)
 
+    vals, vecs = Snowflake.eigen(hadamard())
+    @test vals[1] ≈ -1.0
+    @test vals[2] ≈ 1.0 
+
     # Hadamard gate on a single qubit
     @test H * Ψ_0 ≈ Ψ_p
     @test H * Ψ_1 ≈ Ψ_m
