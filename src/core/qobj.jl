@@ -210,11 +210,10 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
-<<<<<<< HEAD
 A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
-=======
-A structure representing a off-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
->>>>>>> 81c56d1 (docs: comments)
+
+# Fields
+- `data` -- a vector containing the off-diagonal.
 
 # Examples
 ```jldoctest
@@ -255,10 +254,8 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
 
-# # Constructor from adjoint()
-# AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T, StaticArraysCore.SVector{N, T}}) where {N,T<:Complex} =
-#     AntiDiagonalOperator(reverse(SVector{N,T}(x)))
-
+# Constructor from adjoint(AntiDiagonalOperator{T})
+AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = AntiDiagonalOperator{N,T}(x) 
 
 # Construction of Operator from AntiDiagonalOperator{N,T}
 function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
@@ -347,10 +344,10 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
-Base.:isapprox(x::OffDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
-Base.:isapprox(x::OffDiagonalOperator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
 
 
 Base.:-(x::Ket) = -1.0 * x
@@ -655,11 +652,11 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
-get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
+get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+    get_embed_operator(Operator(op), target_body_index, system)
 
-
-get_matrix(op::AbstractOperator) = 
-    throw(NotImplementedError(:get_matrix,op))
+get_embed_operator(anti_diag_op::AntiDiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+    get_embed_operator(Operator(anti_diag_op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -1208,6 +1205,7 @@ commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
 
+commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
@@ -1241,10 +1239,10 @@ anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A
 anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
 anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
 
-anticommute(A::OffDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::OffDiagonalOperator)=anticommute(A,Operator(B))
+anticommute(A::AntiDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::AntiDiagonalOperator)=anticommute(A,Operator(B))
 
-anticommute(A::OffDiagonalOperator, B::OffDiagonalOperator)=anticommute(Operator(A),Operator(B))
+anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=anticommute(Operator(A),Operator(B))
 
 """
     Snowflake.ket2dm(ψ)

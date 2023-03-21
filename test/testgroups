@@ -8,5 +8,8 @@ transpile
 submit_circuit
 abstractOperator
 diagonalGate
+<<<<<<< HEAD
 diagonalOperator
+=======
+>>>>>>> e0c5de5 (feat: add tests for AntiDiagonalOperators)
 antiDiagonalGate
