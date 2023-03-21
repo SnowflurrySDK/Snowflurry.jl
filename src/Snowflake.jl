@@ -25,6 +25,7 @@ export
     Ket,
     Operator,
     DiagonalOperator,
+    AntiDiagonalOperator,
     MultiBodySystem,
     QuantumCircuit,
     Gate,

@@ -205,7 +205,7 @@ end
 
 Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op)
 
-function Base.getindex(diag_op::Snowflake.DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
+function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
     if j == i
         return diag_op.data[i]
     else
@@ -216,10 +216,13 @@ end
 """
 A structure representing a off-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
+# Fields
+- `data` -- a vector containing the off-diagonal.
+
 # Examples
 ```jldoctest
-julia> Snowflake.OffDiagonalOperator([1,2,3,4])
-(4,4)-element Snowflake.OffDiagonalOperator:
+julia> Snowflake.AntiDiagonalOperator([1,2,3,4])
+(4,4)-element Snowflake.AntiDiagonalOperator:
 Underlying data type: Complex{Int64}:
     .    .    .    1 + 0im
     .    .    2 + 0im    .
@@ -228,26 +231,26 @@ Underlying data type: Complex{Int64}:
 
 ```
 """
-struct OffDiagonalOperator{N,T<:Complex}<:AbstractOperator
+struct AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
     data::SVector{N,T}
 end
 
 # Constructor from Integer-valued Vector
-# default output is DiagonalOperator{N,ComplexF64}
-OffDiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = 
-    OffDiagonalOperator(convert(SVector{length(x),S},x) )
+# default output is AntiDiagonalOperator{N,ComplexF64}
+AntiDiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = 
+    AntiDiagonalOperator(convert(SVector{length(x),S},x) )
 
 # Constructor from Real-valued Vector
-OffDiagonalOperator(x::Vector{T}) where {T<:Real} = OffDiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
+AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
 
 # Constructor from Complex-valued Vector
-OffDiagonalOperator(x::Vector{T}) where {T<:Complex} = OffDiagonalOperator(convert(SVector{length(x),T},x) )
+AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
 
-# Constructor from adjoint(DiagonalOperator{T})
-OffDiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = OffDiagonalOperator{N,T}(x) 
+# Constructor from adjoint(AntiDiagonalOperator{T})
+AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = AntiDiagonalOperator{N,T}(x) 
 
-# Construction of Operator from OffDiagonalOperator{N,T}
-function Operator{T}(off_diag_op::OffDiagonalOperator{N,T}) where {N,T<:Complex} 
+# Construction of Operator from AntiDiagonalOperator{N,T}
+function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
 
     nrow=N
@@ -255,18 +258,18 @@ function Operator{T}(off_diag_op::OffDiagonalOperator{N,T}) where {N,T<:Complex}
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
             if ncol-j+1 == i
-                op_matrix[i,j]=off_diag_op.data[i]
+                op_matrix[i,j]=anti_diag_op.data[i]
             end
         end
     end
     return Operator{T}(op_matrix) 
 end
 
-Operator(off_diag_op::OffDiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(off_diag_op)
+Operator(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(anti_diag_op)
 
-function Base.getindex(off_diag_op::Snowflake.OffDiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
+function Base.getindex(anti_diag_op::AntiDiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
     if N-j+1 == i
-        return off_diag_op.data[i]
+        return anti_diag_op.data[i]
     else
         return T(0.)
     end
@@ -282,7 +285,7 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
 Base.adjoint(A::DiagonalOperator) = DiagonalOperator(adjoint(A.data))
-Base.adjoint(A::OffDiagonalOperator) = OffDiagonalOperator(adjoint(A.data))
+Base.adjoint(A::AntiDiagonalOperator) = AntiDiagonalOperator(adjoint(A.data))
 
 """
     is_hermitian(A::Operator)
@@ -316,7 +319,7 @@ false
 is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 
 is_hermitian(A::DiagonalOperator)    = LinearAlgebra.ishermitian(Operator(A).data)
-is_hermitian(A::OffDiagonalOperator) = LinearAlgebra.ishermitian(Operator(A).data)
+is_hermitian(A::AntiDiagonalOperator) = LinearAlgebra.ishermitian(Operator(A).data)
 
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
@@ -329,10 +332,10 @@ Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
 Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
-Base.:isapprox(x::OffDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
 
-Base.:isapprox(x::OffDiagonalOperator, y::OffDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
 
 
 Base.:-(x::Ket) = -1.0 * x
@@ -343,7 +346,7 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 
-Base.:*(x::Bra, M::OffDiagonalOperator) = Bra(x.data * Operator(M).data)
+Base.:*(x::Bra, M::AntiDiagonalOperator) = Bra(x.data * Operator(M).data)
 
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
 
@@ -355,15 +358,16 @@ Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T} =
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 
 Base.:*(s::Number, A::DiagonalOperator) = s*Operator(A)
+Base.:*(s::Number, A::AntiDiagonalOperator) = s*Operator(A)
 
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 
-Base.:+(A::OffDiagonalOperator, B::Operator) = Operator(A) + B
-Base.:+(A::OffDiagonalOperator, B::OffDiagonalOperator) = A + Operator(B)
+Base.:+(A::AntiDiagonalOperator, B::Operator) = Operator(A) + B
+Base.:+(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = A + Operator(B)
 
-Base.:-(A::OffDiagonalOperator, B::Operator) = Operator(A) - B
-Base.:-(A::OffDiagonalOperator, B::OffDiagonalOperator) = A - Operator(B)
+Base.:-(A::AntiDiagonalOperator, B::Operator) = Operator(A) - B
+Base.:-(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = A - Operator(B)
 
 
 Base.length(x::Union{Ket, Bra}) = length(x.data)
@@ -542,10 +546,10 @@ Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 Base.kron(x::DiagonalOperator, y::Operator) = kron(Operator(x), y)
 Base.kron(x::Operator, y::DiagonalOperator) = kron(x, Operator(y))
 
-Base.kron(x::OffDiagonalOperator, y::Operator) = kron(Operator(x), y)
-Base.kron(x::Operator, y::OffDiagonalOperator) = kron(x, Operator(y))
+Base.kron(x::AntiDiagonalOperator, y::Operator) = kron(Operator(x), y)
+Base.kron(x::Operator, y::AntiDiagonalOperator) = kron(x, Operator(y))
 
-Base.kron(x::OffDiagonalOperator, y::OffDiagonalOperator) = kron(Operator(x), Operator(y))
+Base.kron(x::AntiDiagonalOperator, y::AntiDiagonalOperator) = kron(Operator(x), Operator(y))
 
 
 """
@@ -627,14 +631,11 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
-<<<<<<< HEAD
 get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(Operator(op), target_body_index, system)
-=======
-get_embed_operator(off_diag_op::OffDiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
-    get_embed_operator(Operator(off_diag_op), target_body_index, system)
 
->>>>>>> d59f70f (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
+get_embed_operator(anti_diag_op::AntiDiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+    get_embed_operator(Operator(anti_diag_op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -677,8 +678,8 @@ function Base.show(io::IO, x::DiagonalOperator)
     end
 end
 
-function Base.show(io::IO, x::OffDiagonalOperator)
-    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.OffDiagonalOperator:")
+function Base.show(io::IO, x::AntiDiagonalOperator)
+    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.AntiDiagonalOperator:")
     println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=nrow
@@ -1150,19 +1151,13 @@ function commute(A::Operator, B::Operator)
     return A*B-B*A
 end
 
-<<<<<<< HEAD
-commute(A::Operator, B::DiagonalOperator)=commute(A,Operator(B))
-commute(A::DiagonalOperator, B::Operator)=commute(Operator(A),B)
-=======
 commute(A::DiagonalOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::DiagonalOperator)= commute(A,Operator(B))
 
-commute(A::OffDiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::OffDiagonalOperator)= commute(A,Operator(B))
+commute(A::AntiDiagonalOperator, B::Operator)= commute(Operator(A),B)
+commute(A::Operator, B::AntiDiagonalOperator)= commute(A,Operator(B))
 
-commute(A::OffDiagonalOperator, B::OffDiagonalOperator)= commute(Operator(A),Operator(B))
->>>>>>> d59f70f (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
-
+commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
@@ -1190,10 +1185,10 @@ end
 anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
 anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
 
-anticommute(A::OffDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::OffDiagonalOperator)=anticommute(A,Operator(B))
+anticommute(A::AntiDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::AntiDiagonalOperator)=anticommute(A,Operator(B))
 
-anticommute(A::OffDiagonalOperator, B::OffDiagonalOperator)=anticommute(Operator(A),Operator(B))
+anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=anticommute(Operator(A),Operator(B))
 
 """
     Snowflake.ket2dm(ψ)

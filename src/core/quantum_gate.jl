@@ -263,7 +263,7 @@ end
 # specialization for single target off-diagonal gate (size N=2^target_count=2)
 function apply_operator!(
     state::Ket,
-    operator::OffDiagonalOperator{2},
+    operator::AntiDiagonalOperator{2},
     connected_qubit::Vector{<:Integer},
     qubit_count::Int)
 
@@ -350,7 +350,7 @@ end
 """
     sigma_x()
 
-Return the Pauli-X `OffDiagonalOperator`, which is defined as:
+Return the Pauli-X `AntiDiagonalOperator`, which is defined as:
 ```math
 \\sigma_x = \\begin{bmatrix}
     0 & 1 \\\\
@@ -358,7 +358,7 @@ Return the Pauli-X `OffDiagonalOperator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_x(T::Type{<:Complex}=ComplexF64)=OffDiagonalOperator{2,T}( T[1.0, 1.0])
+sigma_x(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator{2,T}( T[1.0, 1.0])
 
 """
     sigma_y()
@@ -371,7 +371,7 @@ Return the Pauli-Y `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_y(T::Type{<:Complex}=ComplexF64)=OffDiagonalOperator{2,T}(T[-im, im])
+sigma_y(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator{2,T}(T[-im, im])
 
 """
     sigma_z()
@@ -742,7 +742,7 @@ iswap_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(
 """
     sigma_x(target)
 
-Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `OffDiagonalOperator` to the target qubit.
+Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to the target qubit.
 """
 sigma_x(target::Integer) = SigmaX(target)
 
@@ -760,7 +760,7 @@ Returns the `Operator` which is associated to a `Gate`.
 julia> x = sigma_x(1);
 
 julia> get_operator(x)
-(2, 2)-element Snowflake.OffDiagonalOperator:
+(2, 2)-element Snowflake.AntiDiagonalOperator:
 Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    1.0 + 0.0im
 1.0 + 0.0im    0.0 + 0.0im
