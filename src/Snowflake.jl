@@ -24,12 +24,14 @@ export
     Bra,
     Ket,
     Operator,
+    DiagonalOperator,
     MultiBodySystem,
     QuantumCircuit,
     Gate,
     QPU,
     BlochSphere,
     AnimatedBlochSphere,
+    NotImplementedError,
 
     # Functions
     commute, 

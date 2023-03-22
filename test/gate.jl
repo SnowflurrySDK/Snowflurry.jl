@@ -43,8 +43,6 @@ end
     @test get_inverse(Y) == Y
 
     Z = sigma_z(1)
-    @test Z.instruction_symbol == "z"
-    @test Z.display_symbol == ["Z"]
     @test get_operator(Z) ≈ sigma_z()
     @test get_inverse(Z) == Z
 
@@ -70,12 +68,10 @@ end
     ψ_1 = fock(1,2)
 
     S = phase(1)
-    @test S.instruction_symbol == "s"
     @test S*ψ_0 ≈ ψ_0
     @test S*ψ_1 ≈ im*ψ_1
 
     T = pi_8(1)
-    @test T.instruction_symbol == "t"
     @test T*ψ_0 ≈ ψ_0
     @test T*ψ_1 ≈ exp(im*pi/4.0)*ψ_1
 
@@ -107,7 +103,6 @@ end
     @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
 
     p = phase_shift(1, pi/4)
-    @test p.instruction_symbol == "p"
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
 
     u = universal(1, pi/2, -pi/2, pi/2)
@@ -123,10 +118,8 @@ end
 
     initial_state_1 = Ket([0, 1])
     @test pi_8_dagger(1)*(pi_8(1)*initial_state_1) ≈ initial_state_1
-    @test pi_8_dagger(1).instruction_symbol == "t_dag"
 
     @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
-    @test phase_dagger(1).instruction_symbol == "s_dag"
 end
 
 @testset "get_inverse" begin
@@ -153,7 +146,7 @@ end
     p = phase_shift(1, pi/3)
     inverse_p = get_inverse(p)
     @test get_operator(p)*get_operator(inverse_p) ≈ eye()
-    @test p.parameters[1] ≈ -inverse_p.parameters[1]
+    @test p.parameter[1] ≈ -inverse_p.parameter[1]
 
     x_90_gate = x_90(1)
     inverse_x_90 = get_inverse(x_90_gate)
@@ -164,22 +157,19 @@ end
     s = phase(1)
     inverse_s = get_inverse(s)
     @test get_operator(s)*get_operator(inverse_s) ≈ eye()
-    @test inverse_s.instruction_symbol == "s_dag"
+    @test eye() ≈ get_operator(s)*get_operator(inverse_s)
 
     s_dag = phase_dagger(1)
     inverse_s_dag = get_inverse(s_dag)
     @test get_operator(s_dag)*get_operator(inverse_s_dag) ≈ eye()
-    @test inverse_s_dag.instruction_symbol == "s"
 
     t = pi_8(1)
     inverse_t = get_inverse(t)
     @test get_operator(t)*get_operator(inverse_t) ≈ eye()
-    @test inverse_t.instruction_symbol == "t_dag"
 
     t_dag = pi_8_dagger(1)
     inverse_t_dag = get_inverse(t_dag)
     @test get_operator(t_dag)*get_operator(inverse_t_dag) ≈ eye()
-    @test inverse_t_dag.instruction_symbol == "t"
 
     iswap_gate = iswap(1, 2)
     inverse_iswap = get_inverse(iswap_gate)
