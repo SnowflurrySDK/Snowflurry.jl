@@ -109,21 +109,79 @@ Underlying data Matrix{ComplexF64}:
 Alternatively:
 ```jldoctest
 julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
+
 ```
 """
 struct Operator{T<:Complex}
     data::Matrix{T}
 end
 
-# overload constructor to enable initilization from Real-valued Matrix
+# Constructor from Real-valued Matrix
 Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) )
 
-# Constructor using Adjoint(Operator{T})
+# Constructor from Integer-valued Matrix
+# default output is Operator{ComplexF64}
+Operator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = Operator(Matrix{S}(x))
+
+# Constructor from adjoint(Operator{T})
 Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
+
+abstract type AbstractOperator end
+
+"""
+A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
+
+# Examples
+```jldoctest
+julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
+
+julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
+(4,4)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
+1.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
+
+```
+"""
+struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
+    data::SVector{N,T}
+end
+
+# Constructor from Real-valued Vector
+DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
+
+# Constructor from Complex-valued Vector
+DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVector{length(x),T},x) )
+
+# Constructor from Integer-valued Vector
+# default output is Operator{ComplexF64}
+DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
+
+# Constructor from adjoint(DiagonalOperator{T})
+DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
+
+# Constructor using DiagonalOperator{N,T}, used in promote_rule
+function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
+    op_matrix=  zeros(T,N,N)
+
+    for i in 1:N
+        op_matrix[i,i]=diag_op.data[i]
+    end
+    return Operator{T}(op_matrix) 
+end
+
+Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op::DiagonalOperator{N,T})
+
 
 
 """
@@ -134,6 +192,7 @@ Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+Base.adjoint(A::DiagonalOperator) = DiagonalOperator(adjoint(A.data))
 
 """
     is_hermitian(A::Operator)
@@ -169,7 +228,13 @@ is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator, y::Operator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::Operator{T}, y::Operator{T}; atol::Real=1.0e-6) where {T<:Complex}= isapprox(x.data, y.data, atol=atol)
+
+Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+
+Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -178,7 +243,16 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
-Base.:*(s::Any, A::Operator) = Operator(s*A.data)
+
+Base.:*(A::Operator, B::DiagonalOperator) = Operator(A.data * Operator(B).data)
+
+Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T} =
+    DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
+
+Base.:*(s::Number, A::Operator) = Operator(s*A.data)
+
+Base.:*(s::Number, A::DiagonalOperator) = s*Operator(A)
+
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 Base.length(x::Union{Ket, Bra}) = length(x.data)
@@ -215,6 +289,14 @@ Return the element at row `m` and column `n` of Operator `A`.
 """
 Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
 
+function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
+    if i == j
+        return diag_op.data[i]
+    else
+        return T(0.)
+    end
+end
+
 """
     eigen(A::Operator)
 
@@ -245,6 +327,9 @@ julia> eigenvector_1 = F.vectors[:, 1]
 ```
 """
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+
+eigen(A::DiagonalOperator) = LinearAlgebra.eigen(Operator(A).data)
+
 
 """
     tr(A::Operator)
@@ -281,8 +366,8 @@ julia> ψ = Ket([0.0; 1.0])
 
 
 julia> A = sigma_z()
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2,2)-element Snowflake.DiagonalOperator:
+Underlying data type: ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
@@ -292,6 +377,8 @@ julia> expected_value(A, ψ)
 ```
 """
 expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+
+expected_value(A::DiagonalOperator, psi::Ket) = (Bra(psi)*(Operator(A)*psi))
 
 
 Base.:size(M::Operator) = size(M.data)
@@ -420,6 +507,8 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
+get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+    get_embed_operator(Operator(op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -431,6 +520,32 @@ function Base.show(io::IO, x::Operator)
                 print(io, "$(x.data[i, j])")
             else
                 print(io, "    $(x.data[i, j])")
+            end
+        end
+        println(io)
+    end
+end
+
+function Base.show(io::IO, x::DiagonalOperator)
+    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.DiagonalOperator:")
+    println(io, "Underlying data type: $(eltype(x.data)):")
+    nrow=length(x.data) 
+    ncol=length(x.data) 
+    dtype=eltype(x.data)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
+            if j == i
+                if j==1
+                    print(io, "$(x.data[i])")
+                else
+                    print(io, "    $(x.data[i])")
+                end
+            else
+                if j==1
+                    print(io, "$(dtype(0.))")
+                else
+                    print(io, "    $(dtype(0.))")
+                end
             end
         end
         println(io)
@@ -893,6 +1008,10 @@ Underlying data Matrix{ComplexF64}:
 function commute(A::Operator, B::Operator)
     return A*B-B*A
 end
+
+commute(A::Operator, B::DiagonalOperator)=commute(A,Operator(B))
+commute(A::DiagonalOperator, B::Operator)=commute(Operator(A),B)
+
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)

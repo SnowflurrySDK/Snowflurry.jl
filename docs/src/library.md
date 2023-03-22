@@ -67,6 +67,7 @@ There are three basic quantum objects in Snowflake to simulate a quantum system.
 Ket
 Bra
 Operator
+Snowflake.DiagonalOperator
 Base.adjoint
 is_hermitian
 Base.exp(A::Operator)
