@@ -1,6 +1,7 @@
 using Snowflake
 using Test
 
+include("testFunctions.jl")
 
 @testset "apply_gate" begin
     ψ_0 = fock(0,2)
@@ -124,20 +125,6 @@ end
     @test pi_8_dagger(1)*(pi_8(1)*initial_state_1) ≈ initial_state_1
 
     @test phase_dagger(1)*(phase(1)*initial_state_1) ≈ initial_state_1
-end
-
-function test_inverse(gate::Gate)
-    inverse_gate=get_inverse(gate)
-    target_count=length(gate.target)
-
-    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
-end
-
-function test_inverse(gate::Snowflake.AbstractGate)
-    inverse_gate=get_inverse(gate)
-    target_count=length(Snowflake.get_connected_qubits(gate))
-
-    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
 end
 
 @testset "get_inverse" begin

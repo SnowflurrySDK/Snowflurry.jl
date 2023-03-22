@@ -190,9 +190,6 @@ DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVe
 # default output is Operator{ComplexF64}
 DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
 
-# Constructor from adjoint(DiagonalOperator{T})
-DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
-
 # Construction of Operator using DiagonalOperator{N,T}
 function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
@@ -243,9 +240,6 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
 
-# Constructor from adjoint(AntiDiagonalOperator{T})
-AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = AntiDiagonalOperator{N,T}(x) 
-
 # Construction of Operator from AntiDiagonalOperator{N,T}
 function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
@@ -281,8 +275,8 @@ Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
-Base.adjoint(A::DiagonalOperator) = DiagonalOperator(adjoint(A.data))
-Base.adjoint(A::AntiDiagonalOperator) = AntiDiagonalOperator(adjoint(A.data))
+Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
+
 
 """
     is_hermitian(A::Operator)
@@ -315,25 +309,21 @@ false
 """
 is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
 
-is_hermitian(A::DiagonalOperator)    = LinearAlgebra.ishermitian(Operator(A).data)
-is_hermitian(A::AntiDiagonalOperator) = LinearAlgebra.ishermitian(Operator(A).data)
-
+is_hermitian(A::AbstractOperator)    = LinearAlgebra.ishermitian(Operator(A).data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Operator{T}, y::Operator{T}; atol::Real=1.0e-6) where {T<:Complex}= isapprox(x.data, y.data, atol=atol)
 
+# generic cases
+Base.:isapprox(x::AbstractOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
+Base.:isapprox(x::Operator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
+Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+
+# specializations
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-
-Base.:isapprox(x::DiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
-
-Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
-
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-
 
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
@@ -343,47 +333,42 @@ Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
 Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
 
-Base.:*(M::AntiDiagonalOperator, x::Ket) = Ket(Operator(M).data * x.data)
-Base.:*(x::Bra, M::AntiDiagonalOperator) = Bra(x.data * Operator(M).data)
+Base.:*(M::AbstractOperator, x::Ket) = Ket(Operator(M).data * x.data)
+Base.:*(x::Bra, M::AbstractOperator) = Bra(x.data * Operator(M).data)
 
 Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
 
-Base.:*(A::DiagonalOperator, B::Operator) = Operator(A) * B
-Base.:*(A::Operator, B::DiagonalOperator) = A * Operator(B)
+# generic cases
+Base.:*(A::AbstractOperator, B::Operator) = Operator(A) * B
+Base.:*(A::Operator, B::AbstractOperator) = A * Operator(B)
+Base.:*(A::AbstractOperator, B::AbstractOperator) = Operator(A) * Operator(B)
 
+# specializations
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
-
-Base.:*(A::AntiDiagonalOperator, B::Operator) = Operator(A) * B
-Base.:*(A::Operator, B::AntiDiagonalOperator) = A * Operator(B)
-
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(A::AntiDiagonalOperator, B::DiagonalOperator) = Operator(A) * Operator(B)
-
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
-
-Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
-Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
+Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
 
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
 
-Base.:+(A::DiagonalOperator, B::Operator) = Operator(A) + B
-Base.:+(A::Operator, B::DiagonalOperator) = A + Operator(B)
-Base.:+(A::DiagonalOperator, B::DiagonalOperator) = DiagonalOperator(A.data+B.data)
+# generic cases
+Base.:+(A::AbstractOperator, B::Operator) = Operator(A) + B
+Base.:+(A::Operator, B::AbstractOperator) = A + Operator(B)
+Base.:+(A::AbstractOperator, B::AbstractOperator) = Operator(A) + Operator(B)
 
-Base.:-(A::DiagonalOperator, B::Operator) = Operator(A) - B
-Base.:-(A::Operator, B::DiagonalOperator) = A - Operator(B)
+Base.:-(A::AbstractOperator, B::Operator) = Operator(A) - B
+Base.:-(A::Operator, B::AbstractOperator) = A - Operator(B)
+Base.:-(A::AbstractOperator, B::AbstractOperator) = Operator(A) - Operator(B)
+
+# specializations
+Base.:+(A::DiagonalOperator, B::DiagonalOperator) = DiagonalOperator(A.data+B.data)
 Base.:-(A::DiagonalOperator, B::DiagonalOperator) = DiagonalOperator(A.data-B.data)
 
-Base.:+(A::AntiDiagonalOperator, B::Operator) = Operator(A) + B
-Base.:+(A::Operator, B::AntiDiagonalOperator) = A + Operator(B)
 Base.:+(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = AntiDiagonalOperator(A.data+B.data)
-
-Base.:-(A::AntiDiagonalOperator, B::Operator) = Operator(A) - B
-Base.:-(A::Operator, B::AntiDiagonalOperator) = A - Operator(B)
 Base.:-(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = AntiDiagonalOperator(A.data-B.data)
 
 
@@ -414,8 +399,9 @@ Underlying data Matrix{ComplexF64}:
 """
 Base.exp(A::Operator) = Operator(exp(A.data))
 
+Base.exp(A::AbstractOperator) = exp(Operator(A))
+
 Base.exp(A::DiagonalOperator) = DiagonalOperator([exp(a) for a in Vector(A.data)])
-Base.exp(A::AntiDiagonalOperator) = exp(Operator(A))
 
 """
     Base.getindex(A::Operator, m::Int64, n::Int64)
@@ -455,8 +441,7 @@ julia> eigenvector_1 = F.vectors[:, 1]
 """
 eigen(A::Operator) = LinearAlgebra.eigen(A.data)
 
-eigen(A::DiagonalOperator) = LinearAlgebra.eigen(Operator(A).data)
-eigen(A::AntiDiagonalOperator) = LinearAlgebra.eigen(Operator(A).data)
+eigen(A::AbstractOperator) = LinearAlgebra.eigen(Operator(A).data)
 
 """
     tr(A::Operator)
@@ -555,13 +540,9 @@ Underlying data Matrix{ComplexF64}:
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
 Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 
-Base.kron(x::DiagonalOperator, y::Operator) = kron(Operator(x), y)
-Base.kron(x::Operator, y::DiagonalOperator) = kron(x, Operator(y))
-
-Base.kron(x::AntiDiagonalOperator, y::Operator) = kron(Operator(x), y)
-Base.kron(x::Operator, y::AntiDiagonalOperator) = kron(x, Operator(y))
-
-Base.kron(x::AntiDiagonalOperator, y::AntiDiagonalOperator) = kron(Operator(x), Operator(y))
+Base.kron(x::AbstractOperator, y::Operator) = kron(Operator(x), y)
+Base.kron(x::Operator, y::AbstractOperator) = kron(x, Operator(y))
+Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(Operator(x), Operator(y))
 
 
 """
@@ -643,11 +624,8 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
-get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(Operator(op), target_body_index, system)
-
-get_embed_operator(anti_diag_op::AntiDiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
-    get_embed_operator(Operator(anti_diag_op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -1162,18 +1140,14 @@ Underlying data type: ComplexF64:
 """
 commute(A::Operator, B::Operator) = A*B-B*A
 
-commute(A::DiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::DiagonalOperator)= commute(A,Operator(B))
+# generic cases
+commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
+commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
+commute(A::AbstractOperator, B::AbstractOperator)= commute(Operator(A),Operator(B))
 
+# specializations
 commute(A::DiagonalOperator, B::DiagonalOperator)= A*B-B*A
-
-commute(A::AntiDiagonalOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::AntiDiagonalOperator)= commute(A,Operator(B))
-
 commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
-
-commute(A::AntiDiagonalOperator, B::DiagonalOperator)= commute(Operator(A),Operator(B))
-commute(A::DiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
 
 
 """
@@ -1196,18 +1170,15 @@ Underlying data type: ComplexF64:
 
 ```
 """
-function anticommute(A::Operator, B::Operator)
-    return A*B+B*A
-end
+anticommute(A::Operator, B::Operator)= A*B+B*A
 
-anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
+# generic cases
+anticommute(A::AbstractOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
+anticommute(A::AbstractOperator, B::AbstractOperator)=anticommute(Operator(A),Operator(B))
 
+# specializations
 anticommute(A::DiagonalOperator, B::DiagonalOperator)=A*B+B*A
-
-anticommute(A::AntiDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::AntiDiagonalOperator)=anticommute(A,Operator(B))
-
 anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=A*B+B*A
 
 """

@@ -1,44 +1,15 @@
 using Snowflake
 using Test
 
+include("testFunctions.jl")
+
+test_operator_implementation(AntiDiagonalOperator,dim=1,label="AntiDiagonalOperator")
+
 @testset "AntiDiagonalOperator" begin
-    
-    # Constructor from Integer-valued Vector
+
     anti_diag_op=AntiDiagonalOperator([1,2,3,4])
 
-    @test anti_diag_op.data==ComplexF64[1.,2.,3.,4.]
-
-    # Constructor from Integer-valued Vector, specifying ComplexF32
-    anti_diag_op=AntiDiagonalOperator([1,2,3,4],ComplexF32)
-
-    @test anti_diag_op.data==ComplexF32[1.,2.,3.,4.]
-    @test anti_diag_op.data[1]===ComplexF32(1.)
-
-    # Constructor from Real-valued Vector
-    anti_diag_op=AntiDiagonalOperator([1.,2.,3.,4.])
-    @test anti_diag_op.data==ComplexF64[1.,2.,3.,4.]
-
-    # Constructor from Complex-valued Vector
-    anti_diag_op=AntiDiagonalOperator(ComplexF64[1.,2.,3.,4.])
-    @test anti_diag_op.data==ComplexF64[1.,2.,3.,4.]
-
-    # Constructor from adjoint(AntiDiagonalOperator{T})
-    anti_diag_op=AntiDiagonalOperator(
-        ComplexF64[
-            1.0+im,
-            2.0+im,
-            3.0+im,
-            4.0+im])
-
-    adjoint_anti_diag_op=adjoint(anti_diag_op)
-
-    @test adjoint_anti_diag_op.data==ComplexF64[
-        1.0-im,
-        2.0-im,
-        3.0-im,
-        4.0-im]
-
-
+    #kron
     composite_op=kron(anti_diag_op,eye())
 
     @test composite_op[1,1]==anti_diag_op[1,1]
@@ -55,38 +26,9 @@ using Test
     @test composite_op[3,3]≈ anti_diag_op[1,1]
     @test composite_op[4,4]≈ anti_diag_op[2,2]
 
-    # Cast to Operator
-    @test Operator(anti_diag_op) ≈ anti_diag_op
+    # Base.:* 
 
-    sum_anti_diag_op=anti_diag_op+anti_diag_op
-    @test sum_anti_diag_op≈ 2*anti_diag_op
-    @test sum_anti_diag_op≈ Operator(anti_diag_op)+anti_diag_op
-    @test sum_anti_diag_op≈ anti_diag_op+Operator(anti_diag_op)
-         
-    anti_diag_op_2=AntiDiagonalOperator(
-        ComplexF64[
-            2.0+2im,
-            4.0+2im,
-            6.0+2im,
-            8.0+2im])
-
-    diff_anti_diag_op=sum_anti_diag_op-anti_diag_op
-    @test diff_anti_diag_op ≈ anti_diag_op
-
-    diff_anti_diag_op=anti_diag_op_2-anti_diag_op
-    @test Operator(anti_diag_op)≈ diff_anti_diag_op
-
-    # Base.:+ and Base.:- 
-
-    @test (2*anti_diag_op).data == (anti_diag_op + anti_diag_op).data
-    @test 2*anti_diag_op ≈ anti_diag_op + Operator(anti_diag_op)
-    @test 2*anti_diag_op ≈ Operator(anti_diag_op) + anti_diag_op
-
-    @test anti_diag_op.data == (2*anti_diag_op - anti_diag_op).data
-    @test Operator(anti_diag_op) ≈ 2*anti_diag_op - Operator(anti_diag_op)
-    @test Operator(anti_diag_op) ≈ 2*Operator(anti_diag_op) - anti_diag_op
-
-    # Base.:*
+    anti_diag_op=AntiDiagonalOperator(make_array(1, Int64))
 
     result=DiagonalOperator(
         [a*b for (a,b) in zip(
@@ -99,21 +41,8 @@ using Test
     @test Operator(anti_diag_op)*anti_diag_op≈ result
     @test anti_diag_op*Operator(anti_diag_op)≈ result
     
-    # Commutation relations
-    
-    result=anti_diag_op*anti_diag_op-anti_diag_op*anti_diag_op
-
-    @test commute(anti_diag_op,anti_diag_op)  ≈ result
-    @test commute(anti_diag_op,Operator(anti_diag_op))  ≈ result
-    @test commute(Operator(anti_diag_op),(anti_diag_op))≈ result
-
-    result= anti_diag_op*anti_diag_op+anti_diag_op*anti_diag_op
-
-    @test anticommute(anti_diag_op,anti_diag_op)  ≈ result
-    @test anticommute(anti_diag_op,Operator(anti_diag_op))  ≈ result
-    @test anticommute(Operator(anti_diag_op),(anti_diag_op))≈ result
-
-    θ=π
+    # Exponentiation
+    θ=π 
     anti_diag_op=AntiDiagonalOperator([1,1])
     @test (exp(-im*θ/2*anti_diag_op)).data ≈ [[0.,-im] [-im,0.]]
 
