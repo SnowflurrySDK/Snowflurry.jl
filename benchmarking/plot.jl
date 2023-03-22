@@ -75,7 +75,7 @@ for gate in all_gates
     end   
 end
 
-linewidth=3.
+linewidth=1.5
 
 println("\n\n")
 
