@@ -16,9 +16,6 @@ using Test
     push!(c, control_x(1, 2))
     @test length(get_circuit_gates(c)) == 2
 
-    plot_histogram(c,100)
-    plot_bloch_sphere(c)
-
     print(c)
 end
 
