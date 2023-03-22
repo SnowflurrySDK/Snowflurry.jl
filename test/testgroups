@@ -7,9 +7,14 @@ gate
 transpile
 submit_circuit
 abstractOperator
+<<<<<<< HEAD
 diagonalGate
 <<<<<<< HEAD
 diagonalOperator
 =======
 >>>>>>> e0c5de5 (feat: add tests for AntiDiagonalOperators)
+=======
+diagonalGates
+diagonalOperator
+>>>>>>> 3844d06 (feat: refactor tests that are common to all AbstractOperators.)
 antiDiagonalGate

@@ -186,9 +186,6 @@ DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVe
 # default output is Operator{ComplexF64}
 DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
 
-# Constructor from adjoint(DiagonalOperator{T})
-DiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = DiagonalOperator{N,T}(x) 
-
 # Construction of Operator using DiagonalOperator{N,T}
 function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
@@ -250,9 +247,6 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
-
-# Constructor from adjoint(AntiDiagonalOperator{T})
-AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {T<:Complex,N} = AntiDiagonalOperator{N,T}(x) 
 
 # Construction of Operator from AntiDiagonalOperator{N,T}
 function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
@@ -346,7 +340,6 @@ Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isappr
 
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
-
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -377,12 +370,8 @@ Base.:*(A::Operator, B::AntiDiagonalOperator) = A * Operator(B)
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(A::AntiDiagonalOperator, B::DiagonalOperator) = Operator(A) * Operator(B)
-
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
-
-Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 
 
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
@@ -657,11 +646,8 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
     return result
 end
 
-get_embed_operator(op::DiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
+get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(Operator(op), target_body_index, system)
-
-get_embed_operator(anti_diag_op::AntiDiagonalOperator, target_body_index::Int, system::MultiBodySystem)=
-    get_embed_operator(Operator(anti_diag_op), target_body_index, system)
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -1212,9 +1198,6 @@ commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A
 
 commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
 
-commute(A::AntiDiagonalOperator, B::DiagonalOperator)= commute(Operator(A),Operator(B))
-commute(A::DiagonalOperator, B::AntiDiagonalOperator)= commute(Operator(A),Operator(B))
-
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
@@ -1245,14 +1228,13 @@ anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
 anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
 
 
-anticommute(A::DiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::DiagonalOperator)=anticommute(A,Operator(B))
+# generic cases
+anticommute(A::AbstractOperator, B::Operator)=anticommute(Operator(A),B)
+anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
+anticommute(A::AbstractOperator, B::AbstractOperator)=anticommute(Operator(A),Operator(B))
 
+# specializations
 anticommute(A::DiagonalOperator, B::DiagonalOperator)=A*B+B*A
-
-anticommute(A::AntiDiagonalOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::AntiDiagonalOperator)=anticommute(A,Operator(B))
-
 anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=A*B+B*A
 
 """
