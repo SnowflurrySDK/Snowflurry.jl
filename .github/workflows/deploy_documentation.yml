@@ -1,4 +1,4 @@
-name: Documentation
+name: Test and Deploy Documentation
 on:
   push:
     branches:
