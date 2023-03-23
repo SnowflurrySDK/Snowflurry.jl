@@ -40,7 +40,7 @@ jobs:
 
       - uses: julia-actions/julia-runtest@v1
         with:
-          project: '@SnowflakePlots.jl'
+          project: 'SnowflakePlots.jl'
         env:
           SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
           SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
