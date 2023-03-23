@@ -7,6 +7,6 @@ gate
 transpile
 submit_circuit
 abstractOperator
-diagonalGates
+diagonalGate
 diagonalOperator
 antiDiagonalGate

@@ -881,9 +881,6 @@ get_inverse(gate::Pi8) =  pi_8_dagger(gate.target)
 get_connected_qubits(gate::Pi8)=[gate.target]
 
 
-get_connected_qubits(gate::Pi8)=[gate.target]
-
-
 """
     pi_8_dagger(target)
 
