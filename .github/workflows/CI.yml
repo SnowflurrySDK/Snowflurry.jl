@@ -54,4 +54,4 @@ jobs:
           directories: src/core,SnowflakePlots.jl/src
       - uses: codecov/codecov-action@v2
         with:
-          files: lcov.info,SnowflakePlots.jl/lcov.info
+          files: lcov.info
