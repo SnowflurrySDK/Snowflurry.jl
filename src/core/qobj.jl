@@ -138,6 +138,8 @@ Operator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = Operat
 # Constructor from adjoint(Operator{T})
 Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
 
+get_matrix(op::Operator) = op.data
+
 abstract type AbstractOperator end
 
 """
@@ -215,19 +217,31 @@ A structure representing a anti-diagonal quantum operator (i.e. a complex matrix
 
 # Examples
 ```jldoctest
-julia> Snowflake.AntiDiagonalOperator([1,2,3,4])
-(4,4)-element Snowflake.AntiDiagonalOperator:
+julia> Snowflake.AntiDiagonalOperator([1,2])
+(2,2)-element Snowflake.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
-    .    .    .    1.0 + 0.0im
-    .    .    2.0 + 0.0im    .
-    .    3.0 + 0.0im    .    .
-    4.0 + 0.0im    .    .    .
+    .    1.0 + 0.0im
+    2.0 + 0.0im    .
 
 ```
 """
 struct AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
     data::SVector{N,T}
+
+    function AntiDiagonalOperator(
+        x::Union{
+            Vector{T},
+            SVector{N,T},
+            }
+        ) where {N,T<:Complex}
+        if Val(N)!=Val(2)
+            throw(DomainError("$(:AntiDiagonalOperator) only implemented for single target (N=2). Received N=$N"))
+        else
+            return new{N,T}(x)
+        end
+    end
 end
+
 
 # Constructor from Integer-valued Vector
 # default output is AntiDiagonalOperator{N,ComplexF64}
@@ -239,6 +253,11 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
+
+# # Constructor from adjoint()
+# AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T, StaticArraysCore.SVector{N, T}}) where {N,T<:Complex} =
+#     AntiDiagonalOperator(reverse(SVector{N,T}(x)))
+
 
 # Construction of Operator from AntiDiagonalOperator{N,T}
 function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
@@ -276,6 +295,9 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 Base.adjoint(A::Operator) = Operator(adjoint(A.data))
 Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
+
+Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
+    AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
 
 """
@@ -351,6 +373,9 @@ Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:
 
 Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
+
+Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
+
 
 Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
 Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
@@ -627,6 +652,9 @@ end
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(Operator(op), target_body_index, system)
 
+get_matrix(op::AbstractOperator) = 
+    throw(NotImplementedError(:get_matrix,op))
+
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
     println(io, "Underlying data $(typeof(x.data)):")
@@ -668,6 +696,20 @@ function Base.show(io::IO, x::DiagonalOperator)
     end
 end
 
+function get_matrix(op::DiagonalOperator{N,T}) where {N,T<:Complex}
+    matrix=zeros(T,N,N)
+    nrow=length(op.data) 
+    ncol=nrow
+    for i in 1:nrow
+        for j in 1:ncol
+            if i == j
+                matrix[i,j]= op.data[i]
+            end
+        end
+    end
+    return matrix
+end
+
 function Base.show(io::IO, x::AntiDiagonalOperator)
     println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.AntiDiagonalOperator:")
     println(io, "Underlying data type: $(eltype(x.data)):")
@@ -683,6 +725,20 @@ function Base.show(io::IO, x::AntiDiagonalOperator)
         end
         println(io)
     end
+end
+
+function get_matrix(op::AntiDiagonalOperator{N,T}) where {N,T<:Complex}
+    matrix=zeros(T,N,N)
+    nrow=length(op.data) 
+    ncol=nrow
+    for i in 1:nrow
+        for j in 1:ncol
+            if ncol-j+1 == i
+                matrix[i,j]= op.data[i]
+            end
+        end
+    end
+    return matrix
 end
 
 """
@@ -1143,11 +1199,8 @@ commute(A::Operator, B::Operator) = A*B-B*A
 # generic cases
 commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
 commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
-commute(A::AbstractOperator, B::AbstractOperator)= commute(Operator(A),Operator(B))
 
-# specializations
-commute(A::DiagonalOperator, B::DiagonalOperator)= A*B-B*A
-commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
+commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
 
 
 """
@@ -1175,11 +1228,9 @@ anticommute(A::Operator, B::Operator)= A*B+B*A
 # generic cases
 anticommute(A::AbstractOperator, B::Operator)=anticommute(Operator(A),B)
 anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
-anticommute(A::AbstractOperator, B::AbstractOperator)=anticommute(Operator(A),Operator(B))
 
-# specializations
-anticommute(A::DiagonalOperator, B::DiagonalOperator)=A*B+B*A
-anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=A*B+B*A
+anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
+
 
 """
     Snowflake.ket2dm(ψ)

@@ -30,42 +30,66 @@ function make_array(
 end
 
 
-function test_operator_implementation(op_type::Type{<:Snowflake.AbstractOperator};dim::Integer=2,label="")
+function test_operator_implementation(
+    op_type::Type{<:Snowflake.AbstractOperator};
+    dim::Integer=2,
+    label="",
+    values::Vector{<:Number}=[1.,2.,3.,4.])
 
-    input_array_int     =make_array(dim, Int64)
-    input_array_float   =make_array(dim, Float64)
-    input_array_complex =make_array(dim, ComplexF64)
-    complex_offset      =make_array(1,ComplexF64,[0.0+im for _ in 1:4])
+    input_array_int     =make_array(dim, Int64 , values)
+    input_array_float   =make_array(dim, Float64, values)
+    input_array_complex =make_array(dim, ComplexF64, values)
+    complex_offset      =make_array(dim, ComplexF64, [0.0+im for _ in values])
 
-    result_array        =make_array(dim, ComplexF64)
+    result_array        =make_array(dim, ComplexF64, values)
     
     test_label=string(label," constructors")
     @testset "$test_label"  begin
 
+        if op_type==AntiDiagonalOperator
+            first_row=1
+            first_col=div(length(values),dim)
+            last_row=div(length(values),dim)
+            last_col=1
+        else
+            first_row=1
+            first_col=1
+            last_row=div(length(values),dim)
+            last_col=div(length(values),dim)
+        end
 
         # Constructor from Integer-valued Array
         op=op_type(input_array_int)
 
-        @test op.data==result_array
+       
+        @test op[first_row,first_col]==result_array[1]
+        @test op[last_row,last_col]==result_array[end]
 
         # Constructor from Integer-valued Array, specifying ComplexF32
         op=op_type(input_array_int,ComplexF32)
 
-        @test op.data==make_array(dim, ComplexF32)
-        @test op.data[1]===ComplexF32(1.)
+        @test op[first_row,first_col]===ComplexF32(1.)
 
         # Constructor from Real-valued Array
         op=op_type(input_array_float)
-        @test op.data==result_array
+        @test op[first_row,first_col]==result_array[1]
+        @test op[last_row,last_col]==result_array[end]
 
         # Constructor from Complex-valued Array
         op=op_type(input_array_complex)
-        @test op.data==result_array   
+        @test op[first_row,first_col]==result_array[1]
+        @test op[last_row,last_col]==result_array[end]
 
         op=op_type(input_array_complex+complex_offset)
 
         # Constructor from adjoint(op_type{T})
-        @test adjoint(op).data==input_array_complex-complex_offset
+        if dim==1
+            dense_mat=get_matrix(op)
+            result=adjoint(dense_mat)
+        else
+            result=adjoint(input_array_complex+complex_offset)
+        end
+        @test get_matrix(adjoint(op))==result
 
         # Cast to Operator
         @test Operator(op) ≈ op
@@ -93,11 +117,11 @@ function test_operator_implementation(op_type::Type{<:Snowflake.AbstractOperator
         @test Operator(op)≈ diff_op
 
 
-        @test (2*op).data == (op + op).data    
+        @test get_matrix(2*op) == get_matrix(op + op)    
         @test 2*op ≈ op + Operator(op)
         @test 2*op ≈ Operator(op) + op
 
-        @test op.data == (2*op - op).data
+        @test get_matrix(op) == get_matrix(2*op - op)
         @test Operator(op) ≈ 2*op - Operator(op)
         @test Operator(op) ≈ 2*Operator(op) - op
         

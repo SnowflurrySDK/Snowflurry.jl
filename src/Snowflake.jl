@@ -38,6 +38,7 @@ export
     commute, 
     anticommute, 
     get_embed_operator,
+    get_matrix,
     fock,
     spin_up,
     spin_down,

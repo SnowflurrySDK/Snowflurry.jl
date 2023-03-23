@@ -3,38 +3,47 @@ using Test
 
 include("testFunctions.jl")
 
-test_operator_implementation(AntiDiagonalOperator,dim=1,label="AntiDiagonalOperator")
+test_operator_implementation(
+    AntiDiagonalOperator,
+    dim=1,
+    label="AntiDiagonalOperator",
+    values=[1.,2.] # only single target AntiDiagonalOperator are allowed
+)
 
 @testset "AntiDiagonalOperator" begin
 
-    anti_diag_op=AntiDiagonalOperator([1,2,3,4])
+    @test_throws DomainError AntiDiagonalOperator([1,2,3,4]) 
+
+    anti_diag_op=AntiDiagonalOperator([1,2])
 
     #kron
     composite_op=kron(anti_diag_op,eye())
 
-    @test composite_op[1,1]==anti_diag_op[1,1]
-    @test composite_op[2,2]==anti_diag_op[1,1]
-    @test composite_op[1,2]==ComplexF64(0.)
-    @test composite_op[3,3]≈ anti_diag_op[2,2]
-    @test composite_op[4,4]≈ anti_diag_op[2,2]
+    @test composite_op[1,3]==anti_diag_op[1,2]
+    @test composite_op[2,4]==anti_diag_op[1,2]
+    @test composite_op[1,1]==ComplexF64(0.)
+    @test composite_op[3,1]≈ anti_diag_op[2,1]
+    @test composite_op[4,2]≈ anti_diag_op[2,1]
 
     composite_op=kron(eye(),anti_diag_op)
 
-    @test composite_op[1,1]==anti_diag_op[1,1]
-    @test composite_op[2,2]==anti_diag_op[2,2]
-    @test composite_op[1,2]==ComplexF64(0.)
-    @test composite_op[3,3]≈ anti_diag_op[1,1]
-    @test composite_op[4,4]≈ anti_diag_op[2,2]
+    @test composite_op[1,2]==anti_diag_op[1,2]
+    @test composite_op[2,1]==anti_diag_op[2,1]
+    @test composite_op[1,1]==ComplexF64(0.)
+    @test composite_op[3,4]≈ anti_diag_op[1,2]
+    @test composite_op[4,3]≈ anti_diag_op[2,1]
 
     # Base.:* 
 
-    anti_diag_op=AntiDiagonalOperator(make_array(1, Int64))
+    input_array_complex=make_array(1, ComplexF64,[1.,2.])
+
+    anti_diag_op=AntiDiagonalOperator(input_array_complex)
 
     result=DiagonalOperator(
         [a*b for (a,b) in zip(
-            Vector(anti_diag_op.data),
-            Vector(reverse(anti_diag_op.data)
-            ))
+            input_array_complex,
+            reverse(input_array_complex)
+            )
         ])
 
     @test anti_diag_op*anti_diag_op≈ result
@@ -42,9 +51,14 @@ test_operator_implementation(AntiDiagonalOperator,dim=1,label="AntiDiagonalOpera
     @test anti_diag_op*Operator(anti_diag_op)≈ result
     
     # Exponentiation
-    θ=π 
+
     anti_diag_op=AntiDiagonalOperator([1,1])
-    @test (exp(-im*θ/2*anti_diag_op)).data ≈ [[0.,-im] [-im,0.]]
+    op=exp(-im*π/2*anti_diag_op)
+    
+    @test isapprox(op[1,1],ComplexF64(0.),atol=1e-12)
+    @test op[1,2] ≈ -im
+    @test op[2,1] ≈ -im
+    @test isapprox(op[2,2],ComplexF64(0.),atol=1e-12)
 
     # LinearAlgebra.eigen
     vals, vecs = eigen(anti_diag_op)
@@ -81,6 +95,6 @@ end
 
     @test ψ ≈ ψ_result
 
-    @test adjoint(y_operator).data==ComplexF64[im,-im]
+    @test adjoint(y_operator) ≈ y_operator
 
 end

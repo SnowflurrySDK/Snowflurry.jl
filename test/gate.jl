@@ -37,7 +37,7 @@ end
 
     println(H)
 
-    @test (2*h_oper).data == 2*(h_oper.data)
+    @test get_matrix(2*h_oper) == get_matrix(h_oper).*2
 
     X = sigma_x(1)
     @test get_operator(X) ≈ sigma_x()

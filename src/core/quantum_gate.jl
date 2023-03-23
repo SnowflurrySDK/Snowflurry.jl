@@ -359,7 +359,7 @@ Return the Pauli-X `AntiDiagonalOperator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_x(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator{2,T}( T[1.0, 1.0])
+sigma_x(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator(T[1.0, 1.0])
 
 """
     sigma_y()
@@ -372,7 +372,7 @@ Return the Pauli-Y `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_y(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator{2,T}(T[-im, im])
+sigma_y(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator(T[-im, im])
 
 """
     sigma_z()
@@ -385,7 +385,7 @@ Return the Pauli-Z `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_z(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -1.0])
+sigma_z(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, -1.0])
 
 """
     sigma_p()
@@ -437,7 +437,7 @@ S = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, im])
+phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, im])
 
 """
     phase_dagger()
@@ -450,7 +450,7 @@ S^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -im])
+phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, -im])
 
 """
     pi_8()
@@ -463,7 +463,7 @@ T = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
+pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 
 pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
 
@@ -479,7 +479,7 @@ T^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, exp(-im*pi/4.0)])
+pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, exp(-im*pi/4.0)])
 
 """
     eye()
@@ -612,24 +612,7 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift_diag(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
-
-
-"""
-    phase_shift(phi)
-
-Return the `DiagonalOperator` that applies a phase shift `phi`.
-
-The `DiagonalOperator` is defined as:
-```math
-P(\\phi) = \\begin{bmatrix}
-    i & 0 \\\\[0.5em]      
-    0 & e^{i\\phi}
-\\end{bmatrix}.
-```
-""" 
-
-phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
+phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
 
 """
     universal(theta, phi, lambda)

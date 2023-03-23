@@ -28,11 +28,11 @@ end
     
     sum_op=diag_op+anti_diag_op
 
-    @test sum_op.data==Matrix{ComplexF64}([[1.,4.] [3.,2.]])
+    @test get_matrix(sum_op)==Matrix{ComplexF64}([[1.,4.] [3.,2.]])
     
     diff_op=diag_op-anti_diag_op
 
-    @test diff_op.data==Matrix{ComplexF64}([[1.,-4.] [-3.,2.]])
+    @test get_matrix(diff_op)==Matrix{ComplexF64}([[1.,-4.] [-3.,2.]])
     
     @test commute(diag_op,anti_diag_op) ≈ commute(Operator(diag_op),Operator(anti_diag_op))
     @test anticommute(diag_op,anti_diag_op) ≈ anticommute(Operator(diag_op),Operator(anti_diag_op))
