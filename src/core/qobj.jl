@@ -248,6 +248,11 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
 
+# # Constructor from adjoint()
+# AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T, StaticArraysCore.SVector{N, T}}) where {N,T<:Complex} =
+#     AntiDiagonalOperator(reverse(SVector{N,T}(x)))
+
+
 # Construction of Operator from AntiDiagonalOperator{N,T}
 function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
     op_matrix=  zeros(T,N,N)
@@ -648,6 +653,9 @@ end
 
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(Operator(op), target_body_index, system)
+
+get_matrix(op::AbstractOperator) = 
+    throw(NotImplementedError(:get_matrix,op))
 
 function Base.show(io::IO, x::Operator)
     println(io, "$(size(x.data))-element Snowflake.Operator:")
@@ -1196,8 +1204,6 @@ commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
 
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
 
-commute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)= A*B-B*A
-
 
 """
     Snowflake.anticommute(A::Operator, B::Operator)
@@ -1227,15 +1233,6 @@ anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
 
 anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
 
-
-# generic cases
-anticommute(A::AbstractOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
-anticommute(A::AbstractOperator, B::AbstractOperator)=anticommute(Operator(A),Operator(B))
-
-# specializations
-anticommute(A::DiagonalOperator, B::DiagonalOperator)=A*B+B*A
-anticommute(A::AntiDiagonalOperator, B::AntiDiagonalOperator)=A*B+B*A
 
 """
     Snowflake.ket2dm(ψ)
