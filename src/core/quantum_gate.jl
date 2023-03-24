@@ -465,9 +465,6 @@ T = \\begin{bmatrix}
 """
 pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 
-pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
-
-
 """
     pi_8_dagger()
 
