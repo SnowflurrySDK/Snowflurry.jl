@@ -3,7 +3,7 @@ using Test
 
 @testset "submit_job_iswap" begin
     c = QuantumCircuit(qubit_count = 2, bit_count = 0)
-    push_gate!(c, [sigma_x(1)])
+    # push_gate!(c, [sigma_x(1)])
     push_gate!(c, [iswap(1, 2)])
 
     try

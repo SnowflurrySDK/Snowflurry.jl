@@ -36,7 +36,11 @@ using Test
     @test H * Ψ_0 ≈ Ψ_p
     @test H * Ψ_1 ≈ Ψ_m
 
+    # Base.:*(::Bra,::Operator)
+    @test _Ψ*hadamard() ≈ Bra(spin_up())
 
+    # Ctor from adjoint
+    @test adjoint(hadamard()) ≈ hadamard()
 
     # Bit flip gate (sigma_x)
     @test X * Ψ_0 ≈ Ψ_1
@@ -68,7 +72,7 @@ end
     @test commute(z,x) ≈ 2.0im*y
     @test anticommute(x,x) ≈ 2.0*eye()
 
-    vals, vecs = Snowflake.eigen(z)
+    vals, vecs = eigen(z)
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ 1.0 
     

@@ -6,5 +6,7 @@ circuit
 gate
 transpile
 submit_circuit
-abstractGate
+abstractOperator
 diagonalGate
+diagonalOperator
+antiDiagonalGate
