@@ -2,6 +2,7 @@ using Snowflake
 using Test
 using StaticArrays
 
+
 @testset "Diagonal Gate: phase_shift" begin
 
     qubit_count=3
@@ -16,6 +17,27 @@ using StaticArrays
 
     println(phase_gate_operator)
 
+    @test !is_hermitian(phase_gate_operator)
+
+    @test phase_gate_operator[2,2]==exp(ϕ*im)
+    @test phase_gate_operator[2,1]===ComplexF64(0.)
+
+    composite_op=kron(phase_gate_operator,eye())
+
+    @test composite_op[1,1]==phase_gate_operator[1,1]
+    @test composite_op[2,2]==phase_gate_operator[1,1]
+    @test composite_op[1,2]==ComplexF64(0.)
+    @test composite_op[3,3]≈ phase_gate_operator[2,2]
+    @test composite_op[4,4]≈ phase_gate_operator[2,2]
+
+    composite_op=kron(eye(),phase_gate_operator)
+
+    @test composite_op[1,1]==phase_gate_operator[1,1]
+    @test composite_op[2,2]==phase_gate_operator[2,2]
+    @test composite_op[1,2]==ComplexF64(0.)
+    @test composite_op[3,3]≈ phase_gate_operator[1,1]
+    @test composite_op[4,4]≈ phase_gate_operator[2,2]
+
     apply_gate!(ψ, phase_gate)
     
     ψ_z = Ket([v for v in 1:2^qubit_count])
@@ -25,57 +47,63 @@ using StaticArrays
 
     @test ψ≈ψ_z
 
-    ##############################################
-    # DiagonalOperator
-
-    # Ctor from Integer-valued array
-    @test DiagonalOperator([1,2])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
-
-    # Ctor from Real-valued array
-    @test DiagonalOperator([1.,2.])==DiagonalOperator(SVector{2,ComplexF64}([1.,2.]))
-
-    # Ctor from Complex-valued array
-    @test DiagonalOperator([1.0+im,2.0-im])==DiagonalOperator(SVector{2,ComplexF64}([1.0+im,2.0-im]))
-
     # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
-    @test adjoint(phase_gate_operator).data≈get_operator(phase_shift(target,-ϕ)).data
-        
-    # Construction of Operator from DiagonalOperator
-    @test Operator(DiagonalOperator{4,ComplexF64}([1,2,3,4])).data ==
-        Operator([[1,0,0,0] [0,2,0,0] [0,0,3,0] [0,0,0,4]]).data
-    
+    @test adjoint(phase_gate_operator)≈get_operator(Snowflake.phase_shift(target,-ϕ))
 
+    @test test_inverse(phase_gate)
+
+end
+
+@testset "Diagonal Gate: apply_operator to last qubit" begin
+
+    ###############################################
     ### different code path in apply_operator when target is last qubit
+    qubit_count=3
     target=3
     
+    ϕ=π  
+
     ψ = Ket([v for v in 1:2^qubit_count])
 
     phase_gate=phase_shift(target,ϕ)
     
     op=get_operator(phase_gate)
 
-    @test op[2,2] == op.data[2]
-    @test op[2,1] == 0
+    @test op[1,1] === ComplexF64(1.)
+    @test op[2,2] === exp(im*ϕ)
+    @test op[2,1] === ComplexF64(0.)
 
     @test get_operator(get_inverse(phase_gate))==get_operator(phase_shift(target,-ϕ))
   
     apply_gate!(ψ, phase_gate)
+
+end
+
+@testset "Diagonal Gate: sigma_z" begin
     
-    ψ_z = Ket([v for v in 1:2^qubit_count])
+    qubit_count=3
+    target=1
 
-    ZGate=sigma_z(target)
-    apply_gate!(ψ_z, ZGate)
+    input_array=[v for v in 1:2^qubit_count]
+    
+    ψ_z = Ket(input_array)
 
-    @test ψ≈ψ_z
+    z_gate=sigma_z(target)
+    apply_gate!(ψ_z, z_gate)
 
-    #############################
+    input_array[5:end]=-input_array[5:end]
+
+    result=Ket(input_array)
+
+    @test ψ_z≈result
 
     qubit_count=1
 
     ψ_z = Ket([v for v in 1:2^qubit_count])
 
-    @test expected_value(get_operator(ZGate), ψ_z) == ComplexF64(-3.)
-    
+    @test expected_value(get_operator(z_gate), ψ_z) == ComplexF64(-3.)
+
+    @test test_inverse(z_gate)
 
 end
 
@@ -123,98 +151,6 @@ end
     T_gate_error=pi_8(target_error)
 
     @test_throws DomainError apply_gate!(ψ, T_gate_error)
-
+   
 end
-
-@testset "Diagonal Gate: N targets" begin
-
-
-    ######################################################
-
-    diagonalGate_N_targets(target_list::Vector{<:Integer}) = 
-        Diagonal_N_TargetGate(target_list)
-
-    struct Diagonal_N_TargetGate <: Snowflake.AbstractGate
-        target_list::Vector{<:Integer}
-    end
-
-    Snowflake.get_operator(gate::Diagonal_N_TargetGate,T::Type{<:Complex}=ComplexF64) = 
-        diagonalGate_N_targets(length(gate.target_list),T)
-
-    diagonalGate_N_targets(N_targets::Integer,T::Type{<:Complex}=ComplexF64) =
-        DiagonalOperator{2^N_targets,T}(T[exp(im*n*pi/4.0) for n in 1:2^N_targets])
-
-    Snowflake.get_connected_qubits(gate::Diagonal_N_TargetGate)=gate.target_list
-
-    #####################################
-
-    target_qubit_1=1
-    target_qubit_2=2
-
-    my_diagonalGate_2targets=diagonalGate_N_targets([target_qubit_1,target_qubit_2])
-
-    ψ= Ket([1., 10., 100., 1000.])
-
-    apply_gate!(ψ, my_diagonalGate_2targets)
-
-    ψ_result=Ket([
-        0.7071067811865476 + 0.7071067811865475im
-        0.0 + 10.0im
-        -70.71067811865474 + 70.71067811865476im
-        -1000.0 + 0.0im
-    ])
-
-    @test ψ≈ψ_result
-
-    #####################################
-
-    target_qubit_1=1
-    target_qubit_2=2
-    target_qubit_3=3
-
-    qubit_count=3
-
-    my_diagonalGate_3targets=
-        diagonalGate_N_targets([target_qubit_1,target_qubit_2,target_qubit_3])
-
-    ψ= Ket([10^v for v in 1:2^qubit_count])
-
-    apply_gate!(ψ, my_diagonalGate_3targets)
-
-    ψ_result=Ket([
-        7.0710678118654755 + 7.071067811865475im
-        0.0 + 100.0im
-        -707.1067811865474 + 707.1067811865476im
-        -10000.0 + 0.0im
-        -70710.67811865477 - 70710.67811865475im
-        0.0 - 1.0e6im
-        7.071067811865473e6 - 7.071067811865477e6im
-        1.0e8 - 0.0im  
-    ])
-
-    @test ψ≈ψ_result
-
-
-    #####################################
-
-    target_qubit_1=1
-    target_qubit_2=2
-    target_qubit_3=10 # erroneous
-
-    qubit_count=3
-
-    my_diagonalGate_3targets=
-        diagonalGate_N_targets([target_qubit_1,target_qubit_2,target_qubit_3])
-
-    ψ= Ket([10^v for v in 1:2^qubit_count])
-
-    @test_throws DomainError apply_gate!(ψ, my_diagonalGate_3targets)
-
-    ψ= Ket([10^v for v in 1:2^(qubit_count-1)])
-
-    @test_throws DomainError apply_gate!(ψ, my_diagonalGate_3targets)
-
-
-end
-
 

@@ -260,6 +260,52 @@ function apply_operator!(
     end
 end
 
+# specialization for single target anti-diagonal gate (size N=2^target_count=2)
+function apply_operator!(
+    state::Ket,
+    operator::AntiDiagonalOperator{2},
+    connected_qubit::Vector{<:Integer})
+
+    # see qulacs::Y_gate_parallel_unroll
+
+    qubit_count = Int(log2(length(state)))
+
+    dim=2^qubit_count
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-connected_qubit[1]
+    
+    offdiagonal=operator.data
+
+    loop_dim = div(dim, 2);
+    mask = (UInt64(1) << target_qubit_index);
+    mask_low = mask - 1;
+    mask_high = ~mask_low;
+    
+    if target_qubit_index==0 # (qubit_count-1)
+        for basis_index in StepRange(0,2,(dim-2))
+            temp = state.data[basis_index+1]
+            state.data[basis_index+1] = offdiagonal[1]*state.data[basis_index + 2]
+            state.data[basis_index+2] = offdiagonal[2]*temp
+        end
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)
+            basis_index_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
+            basis_index_1 = basis_index_0 + mask
+
+            temp0 = state.data[basis_index_0+1];
+            temp1 = state.data[basis_index_0 + 2];
+            state.data[basis_index_0+1] = offdiagonal[1]*state.data[basis_index_1+1];
+            state.data[basis_index_0+2] = offdiagonal[1]*state.data[basis_index_1 + 2];
+            state.data[basis_index_1+1] = offdiagonal[2]*temp0;
+            state.data[basis_index_1+2] = offdiagonal[2]*temp1;
+        end
+    end
+end
+
+
+
 # Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
 function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qubit_index::UInt64)
     temp_basis = (basis_index >> qubit_index) << (qubit_index + 1)
@@ -305,7 +351,7 @@ end
 """
     sigma_x()
 
-Return the Pauli-X `Operator`, which is defined as:
+Return the Pauli-X `AntiDiagonalOperator`, which is defined as:
 ```math
 \\sigma_x = \\begin{bmatrix}
     0 & 1 \\\\
@@ -313,7 +359,7 @@ Return the Pauli-X `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_x(T::Type{<:Complex}=ComplexF64)=Operator{T}( T[[0.0, 1.0] [1.0, 0.0]])
+sigma_x(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator(T[1.0, 1.0])
 
 """
     sigma_y()
@@ -326,7 +372,7 @@ Return the Pauli-Y `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_y(T::Type{<:Complex}=ComplexF64)=Operator{T}(T[[0.0, im] [-im, 0.0]])
+sigma_y(T::Type{<:Complex}=ComplexF64)=AntiDiagonalOperator(T[-im, im])
 
 """
     sigma_z()
@@ -339,7 +385,7 @@ Return the Pauli-Z `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_z(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -1.0])
+sigma_z(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, -1.0])
 
 """
     sigma_p()
@@ -391,7 +437,7 @@ S = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, im])
+phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, im])
 
 """
     phase_dagger()
@@ -404,7 +450,7 @@ S^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, -im])
+phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, -im])
 
 """
     pi_8()
@@ -417,7 +463,7 @@ T = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
+pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 
 """
     pi_8_dagger()
@@ -430,7 +476,7 @@ T^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.0, exp(-im*pi/4.0)])
+pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, exp(-im*pi/4.0)])
 
 """
     eye()
@@ -444,6 +490,23 @@ I = \\begin{bmatrix}
 ```
 """
 eye(T::Type{<:Complex}=ComplexF64) = Operator(Matrix{T}(1.0I, 2, 2))
+
+# Contruct eye() of any size (or qubit_count)
+function eye(qubit_count::Integer,T::Type{<:Complex}=ComplexF64)
+    if qubit_count<1
+        throw(DomainError(qubit_count,
+            "Must have qubit_count>0"))
+    end 
+
+    if qubit_count==1
+        return eye(T)
+    elseif qubit_count==2
+        return kron(eye(qubit_count-1,T),eye(T))
+    else
+        return kron(eye(qubit_count-1,T),eye(qubit_count-2,T))
+    end
+end
+
 
 """
     x_90()
@@ -546,7 +609,7 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*phi)])
+phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
 
 """
     universal(theta, phi, lambda)
@@ -677,15 +740,12 @@ iswap_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(
 """
     sigma_x(target)
 
-Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `Operator` to the target qubit.
+Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to the target qubit.
 """
-sigma_x(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaX(["X"], "x", [target], T)
+sigma_x(target::Integer) = SigmaX(target)
 
-struct SigmaX <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct SigmaX <: AbstractGate
+    target::Integer
 end
 
 """
@@ -698,35 +758,37 @@ Returns the `Operator` which is associated to a `Gate`.
 julia> x = sigma_x(1);
 
 julia> get_operator(x)
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
-0.0 + 0.0im    1.0 + 0.0im
-1.0 + 0.0im    0.0 + 0.0im
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
 
 
 ```
 """
-get_operator(gate::SigmaX) = sigma_x(gate.type)
+get_operator(gate::SigmaX,T::Type{<:Complex}=ComplexF64) = sigma_x(T)
 
 get_inverse(gate::SigmaX) = gate
+
+get_connected_qubits(gate::SigmaX)=[gate.target]
 
 """
     sigma_y(target)
 
 Return the Pauli-Y `Gate`, which applies the [`sigma_y()`](@ref) `Operator` to the target qubit.
 """
-sigma_y(target::Integer,T::Type{<:Complex}=ComplexF64) = SigmaY(["Y"], "y", [target], T)
+sigma_y(target::Integer) = SigmaY(target)
 
-struct SigmaY <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct SigmaY <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::SigmaY) = sigma_y(gate.type)
+get_operator(gate::SigmaY,T::Type{<:Complex}=ComplexF64) = sigma_y(T)
 
 get_inverse(gate::SigmaY) = gate
+
+get_connected_qubits(gate::SigmaY)=[gate.target]
+
 
 """
     sigma_z(target)
