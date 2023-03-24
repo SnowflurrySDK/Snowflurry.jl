@@ -29,8 +29,6 @@ end
     @test eye(3)≈kron(eye(2),eye())
 
     H = hadamard(1)
-    @test H.instruction_symbol == "h"
-    @test H.display_symbol == ["H"]
     h_oper=get_operator(H)
     @test h_oper ≈ hadamard()
     @test get_inverse(H) == H
@@ -52,17 +50,14 @@ end
     @test get_inverse(Z) == Z
 
     CX = control_x(1, 2)
-    @test CX.instruction_symbol == "cx"
     @test get_operator(CX) ≈ control_x()
     @test get_inverse(CX) == CX
 
     CZ = control_z(1, 2)
-    @test CZ.instruction_symbol == "cz"
     @test get_operator(CZ) ≈ control_z()
     @test get_inverse(CZ) == CZ
 
     CCX = toffoli(1, 2, 3)
-    @test CCX.instruction_symbol == "ccx"
     @test CCX*fock(6,8) ≈ fock(7,8)
     @test CCX*fock(2,8) ≈ fock(2,8)
     @test CCX*fock(4,8) ≈ fock(4,8)
@@ -81,29 +76,24 @@ end
     @test T*ψ_1 ≈ exp(im*pi/4.0)*ψ_1
 
     x90 = x_90(1)
-    @test x90.instruction_symbol == "x_90"
     @test x90*ψ_0 ≈  rotation_x(1, pi/2)*ψ_0
     @test x90*ψ_1 ≈ rotation_x(1, pi/2)*ψ_1
 
     r = rotation(1, pi/2, pi/2)
-    @test r.instruction_symbol == "r"
     @test r*ψ_0 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test r*ψ_1 ≈ 1/2^.5*(-ψ_0+ψ_1)
 
     println(r)
 
     rx = rotation_x(1, pi/2)
-    @test rx.instruction_symbol == "rx"
     @test rx*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test rx*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 
     ry = rotation_y(1, -pi/2)
-    @test ry.instruction_symbol == "ry"
     @test ry*ψ_0 ≈ 1/2^.5*(ψ_0-ψ_1)
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
 
     rz = rotation_z(1, pi/2)
-    @test rz.instruction_symbol == "rz"
     @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
     @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
 
@@ -111,7 +101,6 @@ end
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
 
     u = universal(1, pi/2, -pi/2, pi/2)
-    @test u.instruction_symbol == "u"
     @test u*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
 end
@@ -119,7 +108,6 @@ end
 @testset "adjoint_gates" begin
     initial_state_10 = Ket([0, 0, 1, 0])
     @test iswap(1, 2)*(iswap_dagger(1, 2)*initial_state_10) ≈ initial_state_10
-    @test iswap_dagger(1, 2).instruction_symbol == "iswap_dag"
 
     initial_state_1 = Ket([0, 1])
     @test pi_8_dagger(1)*(pi_8(1)*initial_state_1) ≈ initial_state_1
@@ -131,22 +119,21 @@ end
     cnot = control_x(1, 2)
     @test test_inverse(cnot)
     inverse_cnot = get_inverse(cnot)
-    @test inverse_cnot.instruction_symbol == "cx"
 
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
     inverse_rx = get_inverse(rx)
-    @test rx.parameters[1] ≈ -inverse_rx.parameters[1]
+    @test rx.parameter ≈ -inverse_rx.parameter
 
     ry = rotation_y(1, pi/3)
     @test test_inverse(ry)
     inverse_ry = get_inverse(ry)
-    @test ry.parameters[1] ≈ -inverse_ry.parameters[1]
+    @test ry.parameter ≈ -inverse_ry.parameter
 
     rz = rotation_z(1, pi/3)
     @test test_inverse(rz)
     inverse_rz = get_inverse(rz)
-    @test rz.parameters[1] ≈ -inverse_rz.parameters[1]
+    @test rz.parameter ≈ -inverse_rz.parameter
 
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
@@ -156,8 +143,7 @@ end
     x_90_gate = x_90(1)
     @test test_inverse(x_90_gate)
     inverse_x_90 = get_inverse(x_90_gate)
-    @test inverse_x_90.instruction_symbol == "rx"
-    @test inverse_x_90.parameters[1] ≈ -pi/2
+    @test inverse_x_90.parameter ≈ -pi/2
 
     s = phase(1)
     @test test_inverse(s)
@@ -176,12 +162,10 @@ end
     iswap_gate = iswap(1, 2)
     @test test_inverse(iswap_gate) 
     inverse_iswap = get_inverse(iswap_gate)
-    @test inverse_iswap.instruction_symbol == "iswap_dag"
 
     iswap_dag = iswap_dagger(1, 2)
     @test test_inverse(iswap_dag)
     inverse_iswap_dag = get_inverse(iswap_dag)
-    @test inverse_iswap_dag.instruction_symbol == "iswap"
 
     r = rotation(1, pi/2, -pi/3)
     @test test_inverse(r)
@@ -196,20 +180,20 @@ end
     @test inverse_u.parameters[2] ≈ -u.parameters[3]
     @test inverse_u.parameters[3] ≈ -u.parameters[2]
 
-    struct UnknownGate <: Gate
+    struct UnknownGate <: AbstractGate
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownGate) = Operator([1 2; 3 4])
+    Snowflake.get_operator(gate::UnknownGate) = DenseOperator([1 2; 3 4])
 
-    unknown_gate = UnknownGate("na")
-    @test_throws ErrorException get_inverse(unknown_gate)
+    unknown_gate=UnknownGate("na")
+    @test_throws NotImplementedError get_inverse(unknown_gate)
 
-    struct UnknownHermitianGate <: Gate
+    struct UnknownHermitianGate <: AbstractGate
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownHermitianGate) = Operator([1 im; -im 1])
+    Snowflake.get_operator(gate::UnknownHermitianGate) = DenseOperator([1 im; -im 1])
 
     unknown_hermitian_gate = UnknownHermitianGate("na")
     @test get_inverse(unknown_hermitian_gate) == unknown_hermitian_gate
@@ -251,13 +235,12 @@ end
 end
 
 @testset "show_gate_without_operator" begin
-    struct UnknownGateWithoutOperator <: Gate
-        instruction_symbol::String
-        target::Vector{Int}
-        parameters::Vector{Int}
+    struct UnknownGateWithoutOperator <: AbstractGate
+        target::Int
+        parameter::Int
     end
 
-    unknown_gate = UnknownGateWithoutOperator("na", [1], [])
+    unknown_gate = UnknownGateWithoutOperator(1, 1)
     println(unknown_gate)
 end
 

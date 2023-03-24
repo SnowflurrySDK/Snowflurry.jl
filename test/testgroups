@@ -1,12 +1,9 @@
 qobj
-qpu
 multi_body_system
 dynamic_system
-circuit
 gate
-transpile
-submit_circuit
 abstractOperator
-diagonalGate
+denseGate
 diagonalOperator
+diagonalGate
 antiDiagonalGate

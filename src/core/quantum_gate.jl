@@ -22,82 +22,68 @@ julia> using StaticArrays
 ```
 
 ```jldoctest gate_struct
-julia> struct X45 <: Gate
-           display_symbol::Vector{String}
-           instruction_symbol::String
-           target::SVector{1,Int}
-           parameters::SVector{1,Real}
-           type::Type{<:Complex}
+julia> struct X45 <: AbstractGate
+           target::Int
+           parameter::Real
        end;
 
 ```
 
 For convenience, a constructor can be defined:
 ```jldoctest gate_struct
-julia> x_45(target::Integer, T::Type{<:Complex}=ComplexF64) = X45(["X_45"], "x_45", [target], [π/4], T);
+julia> x_45(target::Integer) = X45(target, π/4);
 
 ```
 
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
 the function `get_operator` must be extended.
 ```jldoctest gate_struct
-julia> Snowflake.get_operator(gate::X45) = rotation_x(gate.parameters[1], gate.type);
+julia> Snowflake.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotation_x(gate.parameter[1], T);
 
 ```
 
 The gate inverse can also be specified by extending the `get_inverse` function.
 ```jldoctest gate_struct
-julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -gate.parameters[1], gate.type);
+julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -gate.parameter[1]);
 
 ```
 
 An instance of the X_45 gate can now be created:
 ```jldoctest gate_struct
 julia> x_45_gate = x_45(1)
-Gate Object:
-instruction symbol: x_45
-parameters: Real[0.7853981633974483]
-targets: [1]
+X45 Object:
+parameters: 0.7853981633974483
+targets: 1
 operator:
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.9238795325112867 + 0.0im    0.0 - 0.3826834323650898im
 0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
 julia> get_inverse(x_45_gate)
-Gate Object:
-instruction symbol: rx
-parameters: Real[-0.7853981633974483]
-targets: [1]
+Snowflake.RotationX Object:
+parameters: -0.7853981633974483
+targets: 1
 operator:
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.9238795325112867 + 0.0im    -0.0 + 0.3826834323650898im
 -0.0 + 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
 ```
 
-Alternatively, an instance of the X_45 gate using ComplexF32 datatype is constructed as per:
-```jldoctest gate_struct
-julia> x_45_gate_ComplexF32 = x_45(1, ComplexF32)
-Gate Object:
-instruction symbol: x_45
-parameters: Real[0.7853981633974483]
-targets: [1]
-operator:
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF32}:
-0.9238795f0 + 0.0f0im    0.0f0 - 0.38268343f0im
-0.0f0 - 0.38268343f0im    0.9238795f0 + 0.0f0im
-
-```
-
 """
-abstract type Gate end
-
 abstract type AbstractGate end
+
+function get_connected_qubits(gate::AbstractGate)
+    if length(gate.target)==1
+        [gate.target]
+    else
+        Vector(gate.target)
+    end
+end
 
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
@@ -105,14 +91,22 @@ struct NotImplementedError{ArgsT} <: Exception
 end
 
 
-function Base.show(io::IO, gate::Gate)
-    println(io, "Gate Object:")
-    println(io, "instruction symbol: " * gate.instruction_symbol)
+function Base.show(io::IO, gate::AbstractGate)
+    println(io, "$(typeof(gate)) Object:")
     if  :parameters in fieldnames(typeof(gate))
+        parameters=gate.parameters
+    elseif  :parameter in fieldnames(typeof(gate))
+        parameters=gate.parameter
+    else
+        parameters=nothing
+    end
+
+    if  parameters !== nothing
         print(io, "parameters: " )
-        show(io, gate.parameters)
+        show(io, parameters)
         println(io)
     end
+
     println(io, "targets: $(gate.target)")
     if applicable(get_operator, gate)
         println(io, "operator:")
@@ -142,25 +136,8 @@ julia> print(ψ_0)
 
 ```
 """
-function apply_gate!(state::Ket, gate::Gate)
-    qubit_count = log2(length(state))
-    if mod(qubit_count, 1) != 0
-        throw(DomainError(qubit_count,
-            "Ket does not correspond to an integer number of qubits"))
-    end
-    if any(i_target->(i_target>qubit_count), gate.target)
-        throw(DomainError(gate.target,
-            "not enough qubits in the Ket for the Gate"))
-    end
-    Snowflake.apply_gate_without_ket_size_check!(state, gate, Int(qubit_count))
-end
-
 function apply_gate!(state::Ket, gate::AbstractGate)
-    qubit_count = log2(length(state))
-    if mod(qubit_count, 1) != 0
-        throw(DomainError(qubit_count,
-            "Ket does not correspond to an integer number of qubits"))
-    end
+    qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
 
@@ -174,13 +151,112 @@ function apply_gate!(state::Ket, gate::AbstractGate)
     operator=get_operator(gate,type_in_ket)
 
     apply_operator!(state,operator,connected_qubits)
-
 end
 
-get_connected_qubits(gate::AbstractGate)=
-    throw(NotImplementedError(:get_connected_qubits, gate))
+# specialization for single target dense gate (size N=2, for N=2^target_count)
+function apply_operator!(
+    state::Ket,
+    operator::DenseOperator{2},
+    connected_qubit::Vector{<:Integer})
 
-# specialization for single target diagonal gate (size N=2^target_count=2)
+    qubit_count = Int(log2(length(state)))
+
+    dim=2^qubit_count
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-connected_qubit[1] 
+    
+    loop_dim = dim / 2;
+    mask = (UInt64(1) << target_qubit_index);
+    mask_low = mask - 1;
+    mask_high = ~mask_low;
+    
+    matrix=operator.data
+
+    for state_index in UnitRange{UInt64}(UInt64(0),loop_dim-1)
+        basis_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
+        basis_1 = basis_0 + mask
+
+        # fetch values
+        @inbounds cval_0 = state.data[basis_0+1];
+        @inbounds cval_1 = state.data[basis_1+1];
+
+        @inbounds state.data[basis_0+1] = matrix[1] * cval_0 + matrix[3] * cval_1;
+        @inbounds state.data[basis_1+1] = matrix[2] * cval_0 + matrix[4] * cval_1;
+    end
+end
+
+# specialization for multiple target dense gate (size N>=4, for N=2^target_count)
+function apply_operator!(
+    state::Ket,
+    operator::DenseOperator{N},
+    connected_qubit::Vector{<:Integer}) where N 
+
+    # this is from multi_qubit_dense_matrix_gate_parallel
+
+    qubit_count = Int(log2(length(state)))
+
+    dim=2^qubit_count
+    
+    type_in_ket=eltype(state.data)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubit)])
+    target_qubit_index_count=UInt64(length(connected_qubit))
+    
+    sort_array=Vector{UInt64}(undef, target_qubit_index_count)
+    mask_array=Vector{UInt64}(undef, target_qubit_index_count)
+
+    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sort_array, mask_array); # 2 allocations, 128 bytes
+
+    # matrix dim, mask, buffer
+    matrix_dim = UInt64(1) << target_qubit_index_count;
+    matrix_mask_list=create_matrix_mask_list( 
+        target_qubit_index_list, 
+        target_qubit_index_count,
+        matrix_dim
+        )
+
+    # loop variables
+    loop_dim = dim >> target_qubit_index_count;
+
+    buffer_list = Vector{type_in_ket}(undef,matrix_dim)
+    
+    start_index =0
+    end_index =loop_dim;
+
+    matrix=operator.data
+
+    for state_index in start_index:(end_index-1)
+       # create base index
+       basis_0 = UInt64(state_index);
+
+        for cursor in 0:(target_qubit_index_count-1)
+            basis_0=(basis_0 & mask_array[cursor+1]) +
+             ((basis_0 & (~mask_array[cursor+1])) << 1)
+        end
+
+        # compute matrix-vector multiply
+        for y in 0:(matrix_dim-1)
+            buffer_list[y+1] = 0
+            for x in 0:matrix_dim-1
+                buffer_list[y+1] += matrix[Int(x * matrix_dim + y +1)] *
+                 state.data[Int(basis_0 ⊻ matrix_mask_list[x+1] +1)]
+            end
+        end
+
+        # set result
+        for y in  0:(matrix_dim-1)
+            state.data[Int(basis_0 ⊻ matrix_mask_list[y+1]+1)] = buffer_list[y+1];
+        end
+
+    end
+end
+
+
+# specialization for single target diagonal gate (size N=2, for N=2^target_count)
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{2},
@@ -211,7 +287,7 @@ function apply_operator!(
     end
 end
 
-#specialization for (N=2^target_count)>2 diagonal gates
+#specialization for N target diagonal gates (size N>2, for N=2^target_count)
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{N},
@@ -424,7 +500,7 @@ H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-hadamard(T::Type{<:Complex}=ComplexF64) = Operator{T}(1.0 / sqrt(2.0) * T[[1.0, 1.0] [1.0, -1.0]])
+hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(1.0 / sqrt(2.0) * T[[1.0, 1.0] [1.0, -1.0]])
 
 """
     phase()
@@ -465,9 +541,6 @@ T = \\begin{bmatrix}
 """
 pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 
-pi_8_diag(T::Type{<:Complex}=ComplexF64) = DiagonalOperator{2,T}(T[1.,exp(im*pi/4.0)])
-
-
 """
     pi_8_dagger()
 
@@ -492,7 +565,7 @@ I = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-eye(T::Type{<:Complex}=ComplexF64) = Operator(Matrix{T}(1.0I, 2, 2))
+eye(T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, 2, 2))
 
 # Contruct eye() of any size (or qubit_count)
 function eye(qubit_count::Integer,T::Type{<:Complex}=ComplexF64)
@@ -541,7 +614,7 @@ R(\\theta, \\phi) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """
-rotation(theta::Real, phi::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+rotation(theta::Real, phi::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[cos(theta/2) -im*exp(-im*phi)*sin(theta/2);
      -im*exp(im*phi)*sin(theta/2) cos(theta/2)]
 )
@@ -593,7 +666,7 @@ R_z(\\theta) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[exp(-im*theta/2) 0;
      0 exp(im*theta/2)]
 )
@@ -629,7 +702,7 @@ U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-universal(theta::Real, phi::Real, lambda,T::Type{<:Complex}=ComplexF64) = Operator{T}(
+universal(theta::Real, phi::Real, lambda,T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[cos(theta/2) -exp(im*lambda)*sin(theta/2)
      exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
 )
@@ -647,7 +720,7 @@ CX = CNOT = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-control_x(T::Type{<:Complex}=ComplexF64) = Operator{T}(
+control_x(T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0] [
             0.0,
             0.0,
@@ -669,7 +742,7 @@ CZ = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-control_z(T::Type{<:Complex}=ComplexF64) = Operator{T}(
+control_z(T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [
             0.0,
             0.0,
@@ -691,7 +764,7 @@ iSWAP = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap(T::Type{<:Complex}=ComplexF64) = Operator{T}(
+iswap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, im, 0.0] [0.0, im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
 )
 
@@ -712,7 +785,7 @@ CCX = CCNOT = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-toffoli(T::Type{<:Complex}=ComplexF64) = Operator{T}(
+toffoli(T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
     0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
     0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
@@ -736,7 +809,7 @@ iSWAP^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap_dagger(T::Type{<:Complex}=ComplexF64) = Operator{T}(
+iswap_dagger(T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, -im, 0.0] [0.0, -im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]],
 )
 
@@ -771,10 +844,6 @@ Underlying data type: ComplexF64:
 """
 get_operator(gate::SigmaX,T::Type{<:Complex}=ComplexF64) = sigma_x(T)
 
-get_inverse(gate::SigmaX) = gate
-
-get_connected_qubits(gate::SigmaX)=[gate.target]
-
 """
     sigma_y(target)
 
@@ -787,10 +856,6 @@ struct SigmaY <: AbstractGate
 end
 
 get_operator(gate::SigmaY,T::Type{<:Complex}=ComplexF64) = sigma_y(T)
-
-get_inverse(gate::SigmaY) = gate
-
-get_connected_qubits(gate::SigmaY)=[gate.target]
 
 
 """
@@ -806,27 +871,18 @@ end
 
 get_operator(gate::SigmaZ,T::Type{<:Complex}=ComplexF64) = sigma_z(T)
 
-get_inverse(gate::SigmaZ) = gate
-
-get_connected_qubits(gate::SigmaZ)=[gate.target]
-
 """
     hadamard(target)
 
 Return the Hadamard `Gate`, which applies the [`hadamard()`](@ref) `Operator` to the `target` qubit.
 """
-hadamard(target::Integer,T::Type{<:Complex}=ComplexF64) = Hadamard(["H"], "h", [target], T)
+hadamard(target::Integer) = Hadamard(target)
 
-struct Hadamard <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct Hadamard <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::Hadamard) = hadamard(gate.type)
-
-get_inverse(gate::Hadamard) = gate
+get_operator(gate::Hadamard,T::Type{<:Complex}=ComplexF64) = hadamard(T)
 
 """
     phase(target)
@@ -843,8 +899,6 @@ get_operator(gate::Phase,T::Type{<:Complex}=ComplexF64) = phase(T)
 
 get_inverse(gate::Phase) = phase_dagger(gate.target)
 
-get_connected_qubits(gate::Phase)=[gate.target]
-
 """
     phase_dagger(target)
 
@@ -859,8 +913,6 @@ end
 get_operator(gate::PhaseDagger,T::Type{<:Complex}=ComplexF64) = phase_dagger(T)
 
 get_inverse(gate::PhaseDagger) = phase(gate.target)
-
-get_connected_qubits(gate::PhaseDagger)=[gate.target]
 
 
 """
@@ -878,8 +930,6 @@ get_operator(gate::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
 
 get_inverse(gate::Pi8) =  pi_8_dagger(gate.target)
 
-get_connected_qubits(gate::Pi8)=[gate.target]
-
 
 """
     pi_8_dagger(target)
@@ -896,26 +946,21 @@ get_operator(gate::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
 
 get_inverse(gate::Pi8Dagger) = pi_8(gate.target)
 
-get_connected_qubits(gate::Pi8Dagger)=[gate.target]
-
 
 """
     x_90(target)
 
 Return a `Gate` that applies a 90° rotation about the X axis as defined by the [`x_90()`](@ref) `Operator`.
 """
-x_90(target::Integer, T::Type{<:Complex}=ComplexF64) = X90(["X_90"], "x_90", [target], T)
+x_90(target::Integer) = X90(target)
 
-struct X90 <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    type::Type{<:Complex}
+struct X90 <: AbstractGate
+    target::Int
 end
 
-get_operator(gate::X90) = x_90(gate.type)
+get_operator(gate::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
 
-get_inverse(gate::X90) = rotation_x(gate.target[1], -pi/2,gate.type)
+get_inverse(gate::X90) = rotation_x(gate.target, -pi/2)
 
 """
     rotation(target, theta, phi)
@@ -924,21 +969,21 @@ Return a gate that applies a rotation `theta` to the `target` qubit about the co
 
 The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
-rotation(target::Integer, theta::Real, phi::Real, T::Type{<:Complex}=ComplexF64) = Rotation(["R(θ=$(theta),ϕ=$(phi))"], "r", [target],
-    [theta, phi], T)
+rotation(target::Integer, theta::Real, phi::Real) = Rotation(target, [theta, phi])
 
-struct Rotation <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
+struct Rotation <: AbstractGate
+    target::Int
     parameters::SVector{2,Real}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::Rotation) = rotation(gate.parameters...,gate.type)
+get_operator(gate::Rotation, T::Type{<:Complex}=ComplexF64) = rotation(gate.parameters...,T)
 
-get_inverse(gate::Rotation) = rotation(gate.target[1], -gate.parameters[1],
-    gate.parameters[2],gate.type)
+get_inverse(gate::Rotation) = rotation(gate.target, -gate.parameters[1],
+    gate.parameters[2])
+
+
+########################################################################
+
 
     """
     rotation_x(target, theta)
@@ -947,19 +992,16 @@ Return a `Gate` that applies a rotation `theta` about the X axis of the `target`
 
 The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
-rotation_x(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationX(["Rx($(theta))"], "rx", [target], [theta], T)
+rotation_x(target::Integer, theta::Real) = RotationX(target, theta)
 
-struct RotationX <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    parameters::SVector{1,Real}
-    type::Type{<:Complex}
+struct RotationX <: AbstractGate
+    target::Int
+    parameter::Real
 end
 
-get_operator(gate::RotationX) = rotation_x(gate.parameters[1],gate.type)
+get_operator(gate::RotationX, T::Type{<:Complex}=ComplexF64) = rotation_x(gate.parameter,T)
 
-get_inverse(gate::RotationX) = rotation_x(gate.target[1], -gate.parameters[1],gate.type)
+get_inverse(gate::RotationX) = rotation_x(gate.target[1], -gate.parameter)
 
     """
     rotation_y(target, theta)
@@ -968,19 +1010,17 @@ Return a `Gate` that applies a rotation `theta` about the Y axis of the `target`
 
 The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
-rotation_y(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationY(["Ry($(theta))"], "ry", [target], [theta], T)
+rotation_y(target::Integer, theta::Real) = RotationY(target, theta)
 
-struct RotationY <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    parameters::SVector{1,Real}
-    type::Type{<:Complex}
+struct RotationY <: AbstractGate
+    target::Int
+    parameter::Real
 end
 
-get_operator(gate::RotationY) = rotation_y(gate.parameters[1],gate.type)
+get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.parameter,T)
 
-get_inverse(gate::RotationY) = rotation_y(gate.target[1], -gate.parameters[1],gate.type)    
+get_inverse(gate::RotationY) = rotation_y(gate.target[1], -gate.parameter)    
+
 
     """
     rotation_z(target, theta)
@@ -989,19 +1029,17 @@ Return a `Gate` that applies a rotation `theta` about the Z axis of the `target`
 
 The corresponding `Operator` is [`rotation_z(theta)`](@ref).
 """ 
-rotation_z(target::Integer, theta::Real, T::Type{<:Complex}=ComplexF64) = RotationZ(["Rz($(theta))"], "rz", [target], [theta], T)
+rotation_z(target::Integer, theta::Real) = RotationZ(target, theta)
 
-struct RotationZ <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
-    parameters::SVector{1,Real}
-    type::Type{<:Complex}
+struct RotationZ <: AbstractGate
+    target::Int
+    parameter::Real
 end
 
-get_operator(gate::RotationZ) = rotation_z(gate.parameters[1],gate.type)
+get_operator(gate::RotationZ, T::Type{<:Complex}=ComplexF64) = rotation_z(gate.parameter,T)
 
-get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameters[1],gate.type)  
+get_inverse(gate::RotationZ) = rotation_z(gate.target[1], -gate.parameter)  
+
 
 """
     phase_shift(target, phi)
@@ -1019,8 +1057,6 @@ get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.
 
 get_inverse(gate::PhaseShift) = phase_shift(gate.target, -gate.parameter)
 
-get_connected_qubits(gate::PhaseShift)=[gate.target]
-
 """
     universal(target, theta, phi, lambda)
 
@@ -1028,24 +1064,17 @@ Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, 
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
-universal(target::Integer, theta::Real, phi::Real, lambda::Real, T::Type{<:Complex}=ComplexF64) = Universal(["U(θ=$(theta),ϕ=$(phi),λ=$(lambda))"],
-    "u", [target], [theta, phi, lambda], T)
+universal(target::Integer, theta::Real, phi::Real, lambda::Real) = Universal(target, [theta, phi, lambda])
 
-struct Universal <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
-    target::SVector{1,Int}
+struct Universal <: AbstractGate
+    target::Int
     parameters::SVector{3,Real}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::Universal) = universal(gate.parameters..., gate.type)
+get_operator(gate::Universal, T::Type{<:Complex}=ComplexF64) = universal(gate.parameters...,T)
 
 get_inverse(gate::Universal) = universal(gate.target[1], -gate.parameters[1],
-    -gate.parameters[3], -gate.parameters[2], gate.type)
-
-
-
+    -gate.parameters[3], -gate.parameters[2])
 
 # two qubit gates
 
@@ -1056,10 +1085,10 @@ Return a controlled-Z gate given a `control_qubit` and a `target_qubit`.
 
 The corresponding `Operator` is [`control_z()`](@ref).
 """ 
-function control_z(control_qubit, target_qubit, T::Type{<:Complex}=ComplexF64)
+function control_z(control_qubit, target_qubit)
     target = [control_qubit, target_qubit]
     ensure_target_qubits_are_different(target)
-    return ControlZ(["*", "Z"], "cz", target, T)
+    return ControlZ(target)
 end
 
 function ensure_target_qubits_are_different(target::Array)
@@ -1076,16 +1105,11 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-struct ControlZ <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
+struct ControlZ <: AbstractGate
     target::SVector{2,Int}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::ControlZ) = control_z(gate.type)
-
-get_inverse(gate::ControlZ) = gate
+get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 """
     control_x(control_qubit, target_qubit)
@@ -1094,22 +1118,17 @@ Return a controlled-X gate (also known as a controlled NOT gate) given a `contro
 
 The corresponding `Operator` is [`control_x()`](@ref).
 """ 
-function control_x(control_qubit::Integer, target_qubit::Integer, T::Type{<:Complex}=ComplexF64)
+function control_x(control_qubit::Integer, target_qubit::Integer)
     target = [control_qubit, target_qubit]
     ensure_target_qubits_are_different(target)
-    return ControlX(["*", "X"], "cx", target, T)
+    return ControlX(target)
 end
 
-struct ControlX <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
+struct ControlX <: AbstractGate
     target::SVector{2,Int}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::ControlX) = control_x(gate.type)
-
-get_inverse(gate::ControlX) = gate
+get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 """
     iswap(qubit_1, qubit_2)
@@ -1118,22 +1137,19 @@ Return the imaginary swap `Gate` which applies the imaginary swap `Operator` to 
 
 The corresponding `Operator` is [`iswap()`](@ref).
 """ 
-function iswap(qubit_1, qubit_2, T::Type{<:Complex}=ComplexF64)
+function iswap(qubit_1, qubit_2)
     target = [qubit_1, qubit_2]
     ensure_target_qubits_are_different(target)
-    return ISwap(["x", "x"], "iswap", target, T)
+    return ISwap(target)
 end
 
-struct ISwap <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
+struct ISwap <: AbstractGate
     target::SVector{2,Int}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::ISwap) = iswap(gate.type)
+get_operator(gate::ISwap, T::Type{<:Complex}=ComplexF64) = iswap(T)
 
-get_inverse(gate::ISwap) = iswap_dagger(gate.target...,gate.type)
+get_inverse(gate::ISwap) = iswap_dagger(gate.target...)
 
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
@@ -1145,24 +1161,18 @@ The corresponding `Operator` is [`toffoli()`](@ref).
 function toffoli(
         control_qubit_1::Integer, 
         control_qubit_2::Integer, 
-        target_qubit::Integer, 
-        T::Type{<:Complex}=ComplexF64
+        target_qubit::Integer
     )
     target = [control_qubit_1, control_qubit_2, target_qubit]
     ensure_target_qubits_are_different(target)
-    return Toffoli(["*", "*", "X"], "ccx", target, T)
+    return Toffoli(target)
 end
 
-struct Toffoli <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
+struct Toffoli <: AbstractGate
     target::SVector{3,Int}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::Toffoli) = toffoli(gate.type)
-
-get_inverse(gate::Toffoli) = gate
+get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 """
     iswap_dagger(qubit_1, qubit_2)
@@ -1171,25 +1181,22 @@ Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swa
 
 The corresponding `Operator` is [`iswap_dagger()`](@ref).
 """ 
-function iswap_dagger(qubit_1::Integer, qubit_2::Integer, T::Type{<:Complex}=ComplexF64)
+function iswap_dagger(qubit_1::Integer, qubit_2::Integer)
     target = [qubit_1, qubit_2]
     ensure_target_qubits_are_different(target)
-    return ISwapDagger(["x†", "x†"], "iswap_dag", target, T)
+    return ISwapDagger(target)
 end
 
-struct ISwapDagger <: Gate
-    display_symbol::Vector{String}
-    instruction_symbol::String
+struct ISwapDagger <: AbstractGate
     target::SVector{2,Int}
-    type::Type{<:Complex}
 end
 
-get_operator(gate::ISwapDagger) = iswap_dagger(gate.type)
+get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 
-get_inverse(gate::ISwapDagger) = iswap(gate.target..., gate.type)
+get_inverse(gate::ISwapDagger) = iswap(gate.target...)
 
 """
-    Base.:*(M::Gate, x::Ket)
+    Base.:*(M::AbstractGate, x::Ket)
 
 Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 
@@ -1209,14 +1216,6 @@ julia> ψ_1 = sigma_x(1)*ψ_0
 
 ```
 """
-Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M)
-
-function get_transformed_state(state::Ket, gate::Gate) 
-    transformed_state = deepcopy(state)
-    apply_gate!(transformed_state, gate)
-    return transformed_state
-end
-
 Base.:*(M::AbstractGate, x::Ket) = get_transformed_state(x, M) 
 
 function get_transformed_state(state::Ket, gate::AbstractGate)
@@ -1226,7 +1225,7 @@ function get_transformed_state(state::Ket, gate::AbstractGate)
 end
 
 """
-    get_inverse(gate::Gate)
+    get_inverse(gate::AbstractGate)
 
 Return a `Gate` which is the inverse of the input `gate`.
 
@@ -1258,12 +1257,11 @@ Underlying data Matrix{ComplexF64}:
 
 ```
 """
-function get_inverse(gate::Gate)
+function get_inverse(gate::AbstractGate)
     if is_hermitian(get_operator(gate))
         return gate
     end
-    sym = gate.instruction_symbol
-    throw(ErrorException("no adjoint is available for the $sym gate"))
+    throw(NotImplementedError(:get_inverse, gate))
 end
 
 STD_GATES = Dict(

@@ -15,8 +15,8 @@ test_operator_implementation(DiagonalOperator,dim=1,label="DiagonalOperator")
 
     result=Matrix{ComplexF64}([[1.,0.] [0.,4.]])
 
-    @test get_matrix(Operator(diag_op)*diag_op)≈ result
-    @test get_matrix(diag_op*Operator(diag_op))≈ result
+    @test get_matrix(DenseOperator(diag_op)*diag_op)≈ result
+    @test get_matrix(diag_op*DenseOperator(diag_op))≈ result
 
     # Exponentiation
 

@@ -1,26 +1,18 @@
 using Snowflake
 using Test
 
-@testset "AbstractGate: notImplemented" begin
+@testset "AbstractOperator: NotImplemented" begin
 
-    nonexistent_gate(target::Integer) = NonExistentGate(target) # to test MethodError on non-implemented AbstractGates
-
-    struct NonExistentGate <: Snowflake.AbstractGate
-        target::Int
+    struct NonExistentOperator{T<:ComplexF64} <: Snowflake.AbstractOperator
+        data::Matrix{T}
     end
 
-    target=1
+    non_square_op=NonExistentOperator(ComplexF64[[1.,2.,3.] [4.,5.,6.]])
+    
+    @test_throws NotImplementedError get_matrix(non_square_op)
 
-    nonexistent_gate=nonexistent_gate(target)
-
-    @test_throws NotImplementedError Snowflake.get_connected_qubits(nonexistent_gate)
-
-    struct NonExistentOperator <: Snowflake.AbstractOperator
-        data::Int
-    end
-
-    @test_throws NotImplementedError get_matrix(NonExistentOperator(1))
-
+    @test_throws ErrorException get_num_qubits(non_square_op)
+    @test_throws ErrorException get_num_bodies(non_square_op)
 end
 
 @testset "AbstractOperator: math operations" begin
@@ -28,7 +20,10 @@ end
     # mixing AbstractOperator subtypes
 
     diag_op=DiagonalOperator([1.,2.])
+    diag_op_dense=DenseOperator(get_matrix(diag_op))
+
     anti_diag_op=AntiDiagonalOperator([3.,4.])
+    anti_diag_op_dense=DenseOperator(get_matrix(anti_diag_op))
 
     @test !isapprox(diag_op,anti_diag_op)
     
@@ -40,9 +35,9 @@ end
 
     @test get_matrix(diff_op)==Matrix{ComplexF64}([[1.,-4.] [-3.,2.]])
     
-    @test commute(diag_op,anti_diag_op) ≈ commute(Operator(diag_op),Operator(anti_diag_op))
-    @test anticommute(diag_op,anti_diag_op) ≈ anticommute(Operator(diag_op),Operator(anti_diag_op))
+    @test commute(diag_op,anti_diag_op) ≈ commute(diag_op_dense,anti_diag_op_dense)
+    @test anticommute(diag_op,anti_diag_op) ≈ anticommute(diag_op_dense,anti_diag_op_dense)
 
-    @test kron(diag_op,anti_diag_op)≈ kron(Operator(diag_op),Operator(anti_diag_op))
+    @test kron(diag_op,anti_diag_op)≈ kron(diag_op_dense,anti_diag_op_dense)
 
 end

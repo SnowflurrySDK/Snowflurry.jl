@@ -24,11 +24,12 @@ export
     Bra,
     Ket,
     Operator,
+    DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
     MultiBodySystem,
     QuantumCircuit,
-    Gate,
+    AbstractGate,
     QPU,
     BlochSphere,
     AnimatedBlochSphere,
@@ -109,12 +110,12 @@ export
     
 
 include("core/qobj.jl")
-include("core/dynamic_system.jl")
+# include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
-include("core/quantum_circuit.jl")
-include("core/qpu.jl")
-include("core/transpile.jl")
-include("core/visualize.jl")
+# include("core/quantum_circuit.jl")
+# include("core/qpu.jl")
+# include("core/transpile.jl")
+# include("core/visualize.jl")
 
 
 

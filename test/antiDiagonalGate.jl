@@ -48,8 +48,8 @@ test_operator_implementation(
         ])
 
     @test anti_diag_op*anti_diag_op≈ result
-    @test Operator(anti_diag_op)*anti_diag_op≈ result
-    @test anti_diag_op*Operator(anti_diag_op)≈ result
+    @test DenseOperator(anti_diag_op)*anti_diag_op≈ result
+    @test anti_diag_op*DenseOperator(anti_diag_op)≈ result
     
     # Exponentiation
 
@@ -188,5 +188,12 @@ end
     @test ψ ≈ ψ_result
 
     @test adjoint(y_operator) ≈ y_operator
+
+end
+
+@testset "AntiDiagonal Gate: sigma_p, sigma_m" begin
+
+    @test typeof(sigma_p())==AntiDiagonalOperator{2,ComplexF64}
+    @test typeof(sigma_m())==AntiDiagonalOperator{2,ComplexF64}
 
 end
