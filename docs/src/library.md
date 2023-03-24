@@ -1,7 +1,7 @@
 # Library
 
 ```@meta
-DocTestSetup = :(using Snowflake)
+DocTestSetup = :(using Snowflake, SnowflakePlots)
 ```
 
 
