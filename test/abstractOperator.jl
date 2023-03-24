@@ -15,6 +15,12 @@ using Test
 
     @test_throws NotImplementedError Snowflake.get_connected_qubits(nonexistent_gate)
 
+    struct NonExistentOperator <: Snowflake.AbstractOperator
+        data::Int
+    end
+
+    @test_throws NotImplementedError get_matrix(NonExistentOperator(1))
+
 end
 
 @testset "AbstractOperator: math operations" begin

@@ -148,25 +148,10 @@ A structure representing a diagonal quantum operator (i.e. a complex matrix, wit
 # Examples
 ```jldoctest
 julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
-<<<<<<< HEAD
-<<<<<<< HEAD
 (2,2)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
-<<<<<<< HEAD
-=======
-(2,)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64
->>>>>>> 6e83c49 (feat: added support for DiagonalOperator with N targets)
-=======
-(2,2)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64:
->>>>>>> 7ffa468 (docs: fix doctests)
-1.0 + 0.0im    0.0 + 0.0im
-0.0 + 0.0im    -1.0 + 0.0im
-=======
 1.0 + 0.0im    .
 .    -1.0 + 0.0im
->>>>>>> 8cb600c (feat: implementation and testing of OffDiagonal Gates SigmaX and SigmaY)
 
 julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
 (4,4)-element Snowflake.DiagonalOperator:
