@@ -24,10 +24,6 @@ docs/site/
 # environment.
 Manifest*.toml
 
-# Exception for SnowflakePlots.jl since the CI tests must use the development version of
-# Snowflake.
-!SnowflakePlots.jl/Manifest.toml
-
 .DS_Store
 .vscode/
 
