@@ -14,7 +14,9 @@ jobs:
       - name: Install dependencies
         run: >
           julia --project=docs/ -e 
-          'using Pkg; Pkg.develop(PackageSpec(path=pwd())); 
+          'using Pkg;
+          Pkg.Registry.rm("General");
+          Pkg.develop(PackageSpec(path=pwd())); 
           Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
           Pkg.instantiate()'
       - name: Build
