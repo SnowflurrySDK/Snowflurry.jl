@@ -167,14 +167,14 @@ function apply_operator!(
     # with first qubit on the rightmost side
     target_qubit_index=qubit_count-connected_qubit[1] 
     
-    loop_dim = dim / 2;
+    loop_dim = div(dim,2);
     mask = (UInt64(1) << target_qubit_index);
     mask_low = mask - 1;
     mask_high = ~mask_low;
     
     matrix=operator.data
 
-    for state_index in UnitRange{UInt64}(UInt64(0),loop_dim-1)
+    for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
         basis_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
         basis_1 = basis_0 + mask
 
