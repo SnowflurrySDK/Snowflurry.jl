@@ -104,7 +104,8 @@ mesolve
 
 ### Visualization
 
-Snowflake provides multiple tools for visualizing quantum computer calculations.
+The SnowflakePlots package provides multiple tools for visualizing quantum computer
+calculations.
 
 ```@docs
 plot_bloch_sphere(circuit::QuantumCircuit; qubit_id::Int = 1,
