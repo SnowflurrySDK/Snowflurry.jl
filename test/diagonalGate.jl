@@ -56,12 +56,6 @@ end
 
 @testset "Diagonal Gate: apply_operator to last qubit" begin
 
-    @test test_inverse(phase_gate)
-
-end
-
-@testset "Diagonal Gate: apply_operator to last qubit" begin
-
     ###############################################
     ### different code path in apply_operator when target is last qubit
     qubit_count=3

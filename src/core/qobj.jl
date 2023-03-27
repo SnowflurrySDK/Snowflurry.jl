@@ -1,7 +1,6 @@
 """
 A Ket represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
-# Fields
-- `data` -- the stored values.
+
 # Examples
 Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
@@ -48,8 +47,7 @@ Base.length(x::Ket) = Base.length(x.data)
 
 """
 A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
-# Fields
-- `data` -- the stored values.
+
 # Examples
 ```jldoctest
 julia> ψ = Snowflake.fock(1, 3)
@@ -71,10 +69,12 @@ julia> _ψ * ψ    # A Bra times a Ket is a scalar
 
 julia> ψ*_ψ     # A Ket times a Bra is an operator
 (3, 3)-element Snowflake.DenseOperator:
-Underlying data Matrix{ComplexF64}:
+Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
 struct Bra{T<:Complex}
@@ -96,14 +96,12 @@ abstract type AbstractOperator end
 
 """
 A structure representing a quantum operator (i.e. a complex matrix).
-# Fields
-- `data` -- the complex matrix.
 
 # Examples
 ```jldoctest
 julia> z = Snowflake.DenseOperator([1.0 0.0;0.0 -1.0])
 (2, 2)-element Snowflake.DenseOperator:
-Underlying data Matrix{ComplexF64}:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
@@ -301,11 +299,6 @@ Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
-Base.:isapprox(x::AntiDiagonalOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
-
-Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
@@ -327,6 +320,7 @@ Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
+Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 
 
 # generic cases
@@ -1190,10 +1184,12 @@ Returns the density matrix corresponding to the Fock base `i` defined in a Hilbe
 
 ```jldoctest
 julia> dm=Snowflake.fock_dm(0,2)
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))

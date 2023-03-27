@@ -51,7 +51,7 @@ julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target[1], -gate.param
 An instance of the X_45 gate can now be created:
 ```jldoctest gate_struct
 julia> x_45_gate = x_45(1)
-X45 Object:
+Gate Object: X45
 parameters: 0.7853981633974483
 targets: 1
 operator:
@@ -62,7 +62,7 @@ Underlying data ComplexF64:
 
 
 julia> get_inverse(x_45_gate)
-Snowflake.RotationX Object:
+Gate Object: Snowflake.RotationX
 parameters: -0.7853981633974483
 targets: 1
 operator:
@@ -92,7 +92,7 @@ end
 
 
 function Base.show(io::IO, gate::AbstractGate)
-    println(io, "$(typeof(gate)) Object:")
+    println(io, "Gate Object: $(typeof(gate))")
     if  :parameters in fieldnames(typeof(gate))
         parameters=gate.parameters
     elseif  :parameter in fieldnames(typeof(gate))
@@ -1232,25 +1232,23 @@ Return a `Gate` which is the inverse of the input `gate`.
 # Examples
 ```jldoctest
 julia> u = universal(1, -pi/2, pi/3, pi/4)
-Gate Object:
-instruction symbol: u
+Gate Object: Snowflake.Universal
 parameters: Real[-1.5707963267948966, 1.0471975511965976, 0.7853981633974483]
-targets: [1]
+targets: 1
 operator:
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    0.5 + 0.4999999999999999im
 -0.3535533905932738 - 0.6123724356957945im    -0.18301270189221924 + 0.6830127018922194im
 
 
 julia> get_inverse(u)
-Gate Object:
-instruction symbol: u
+Gate Object: Snowflake.Universal
 parameters: Real[1.5707963267948966, -0.7853981633974483, -1.0471975511965976]
-targets: [1]
+targets: 1
 operator:
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    -0.3535533905932738 + 0.6123724356957945im
 0.5 - 0.4999999999999999im    -0.18301270189221924 - 0.6830127018922194im
 
