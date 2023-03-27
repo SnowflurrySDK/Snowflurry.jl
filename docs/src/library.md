@@ -142,6 +142,9 @@ AnimatedBlochSphere
 style="height:825px;width:100%;">
 </iframe>
 ```
+```@docs
+plot_histogram
+```
 
 ```@meta
 DocTestSetup = nothing
