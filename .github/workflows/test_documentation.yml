@@ -15,7 +15,8 @@ jobs:
         run: >
           julia --project=docs/ -e 
           'using Pkg;
-          Pkg.Registry.rm("General");
+          Pkg.update();
+          Pkg.resolve();
           Pkg.develop(PackageSpec(path=pwd())); 
           Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
           Pkg.instantiate()'
