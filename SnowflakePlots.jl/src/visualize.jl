@@ -21,7 +21,7 @@ q[2]:──X──
 
 ```
 ```julia
-julia> plot = plot_bloch_sphere(circuit, qubit_id=2)
+julia> plot = plot_histogram(circuit, 100)
 
 ```
 ![Measurement histogram for circuit](assets/visualize/plot_histogram.png)
