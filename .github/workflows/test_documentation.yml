@@ -1,7 +1,6 @@
 name: Test Documentation
 on:
   - pull_request
-  - push
 
 jobs:
   build:
