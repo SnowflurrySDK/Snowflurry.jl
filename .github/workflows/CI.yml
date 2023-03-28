@@ -40,7 +40,6 @@ jobs:
         run: >
           julia --project=. -e 
           'using Pkg;
-          Pkg.develop(PackageSpec(path=pwd())); 
           Pkg.instantiate()'
       
       - name: Test Snowflake
@@ -50,7 +49,6 @@ jobs:
         run: >
           julia --project=SnowflakePlots.jl -e 
           'using Pkg;
-          Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
           Pkg.develop(PackageSpec(path=pwd())); 
           Pkg.instantiate()'
       
