@@ -95,7 +95,7 @@ end
 abstract type AbstractOperator end
 
 """
-A structure representing a quantum operator (i.e. a complex matrix).
+A structure representing a quantum operator with a full (dense) matrix representation.
 
 # Examples
 ```jldoctest
@@ -108,19 +108,12 @@ Underlying data ComplexF64:
 ```
 Alternatively:
 ```jldoctest
-julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
-(2,2)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64:
-1.0 + 0.0im    .
-.    -1.0 + 0.0im
+julia> z = Snowflake.rotation(π/2,-π/4)  
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+0.7071067811865476 + 0.0im    0.4999999999999999 - 0.5im
+-0.4999999999999999 - 0.5im    0.7071067811865476 + 0.0im
 
-julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
-(4,4)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64:
-1.0 + 1.0im    .    .    .
-.    1.0 + 0.0im    .    .
-.    .    1.0 + 0.0im    .
-.    .    .    0.0 - 1.0im
 
 ```
 """
@@ -146,7 +139,36 @@ DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 # so that an input of type DenseOperator is not copied
 DenseOperator(op::DenseOperator) = op
 
-Base.getindex(dense_op::DenseOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex} = dense_op.data[i,j]
+"""
+
+getindex(A::AbstractOperator, i::Integer, j::Integer)
+
+Access the element at row i and column j in the matrix corresponding to `AbstractOperator` `A`.
+
+# Examples
+```jldoctest
+julia> Y = sigma_y()
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    0.0 - 1.0im
+    0.0 + 1.0im    .
+
+
+julia> Y[1,1]
+0.0 + 0.0im
+
+julia> Y[1,2]
+0.0 - 1.0im
+
+julia> Y[2,1]
+0.0 + 1.0im
+
+julia> Y[2,2]
+0.0 + 0.0im
+
+```
+"""
+Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i,j]
 
 """
 A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
@@ -468,7 +490,8 @@ Base.iterate(x::Ket, state = 1) =
     """
     kron(x, y)
 
-Compute the Kronecker product of two [`Kets`](@ref Ket) or two [`Operators`](@ref Operator).
+Compute the Kronecker product of two [`Kets`](@ref Ket) or two 
+[`DenseOperator`](@ref) , [`DiagonalOperator`](@ref), [`AntiDiagonalOperator`](@ref).
 More details about the Kronecker product can be found
 [here](https://en.wikipedia.org/wiki/Kronecker_product). 
 

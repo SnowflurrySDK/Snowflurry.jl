@@ -1,18 +1,15 @@
 using Parameters
 
 """
-    Gate
+    AbstractGate
 
-A `Gate` can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
+A `AbstractGate` can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
 
-A `Gate` is an abstract type, which means that it cannot be instantiated.
+A `AbstractGate` is an abstract type, which means that it cannot be instantiated.
 Instead, each type of gate must have a struct which is a descendant of `Gate`.
-Each descendant of `Gate` must have at least the following fields:
-- `display_symbol::Vector{String}`: determines how the `Gate` is displayed in a `QuantumCircuit`.
-- `instruction_symbol::String`: used by the quantum compiler to identify the `Gate`.
-- `target::SVector{1,Int}`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
-- `parameters::Vector{Real}`: for parameterized gates, affect which operation is applied (e.g. rotation angles).
-- `type::Type{<:Complex}`: datatype used to construct underlying operator, default being ComplexF64.
+Each descendant of `AbstractGate` must have at least the following fields:
+- `target::Int`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
+- `parameter::Real`: for parameterized gates, affect which operation is applied (e.g. rotation angles).
 
 # Examples
 A struct must be defined for each new gate type, such as the following X_45 gate which

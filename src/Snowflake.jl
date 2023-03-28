@@ -23,7 +23,7 @@ export
     # Types
     Bra,
     Ket,
-    Operator,
+    AbstractOperator,
     DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
@@ -40,6 +40,8 @@ export
     anticommute, 
     get_embed_operator,
     get_matrix,
+    get_display_symbol,
+    get_instruction_symbol,
     fock,
     spin_up,
     spin_down,
@@ -71,7 +73,6 @@ export
     simulate_shots,
     get_gate_counts,
     get_num_gates,
-    get_logical_depth,
     plot_histogram,
     plot_bloch_sphere,
     plot_bloch_sphere_animation,
@@ -112,12 +113,12 @@ export
     
 
 include("core/qobj.jl")
-# include("core/dynamic_system.jl")
+include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
-# include("core/quantum_circuit.jl")
-# include("core/qpu.jl")
-# include("core/transpile.jl")
-# include("core/visualize.jl")
+include("core/quantum_circuit.jl")
+include("core/qpu.jl")
+include("core/transpile.jl")
+include("core/visualize.jl")
 
 
 

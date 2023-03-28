@@ -10,7 +10,8 @@ Note that using a quantum computer does not involve using these objects. But, _s
 # Basic Quantum Objects
 
 There are three basic quantum objects defined in Snowflake to simulate a Quantum system.
-These objects are [`Ket`](@ref), [`Bra`](@ref), and [`Operator`](@ref).
+These objects are [`Ket`](@ref), [`Bra`](@ref), and Operator, which inherit from `AbstractOperator`.
+Particular Operators are either [`DenseOperator`](@ref), [`DiagonalOperator`](@ref), or [`AntiDiagonalOperator`](@ref).
 
 # Multibody Systems
 [`MultiBodySystem`](@ref) structures are used to represent quantum multi-body systems.

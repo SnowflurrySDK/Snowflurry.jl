@@ -19,11 +19,9 @@ The initial state of each qubit is given on the left side of the figure. The lin
 You can define a quantum circuit with Snowflake as follows:
 
 ```jldoctest basics_quantum_circuit
-julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+julia> c = QuantumCircuit(qubit_count = 2)
 Quantum Circuit Object:
-   id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:
      
 q[2]:
@@ -46,9 +44,7 @@ Now, let's add a few gates to our circuit using the push_gate command:
 ```jldoctest basics_quantum_circuit
 julia> push_gate!(c, [hadamard(1)])
 Quantum Circuit Object:
-   id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H──
           
 q[2]:─────
@@ -58,9 +54,7 @@ The first command added a Hadamard gate to the quantum circuit object `c`. The g
 ```jldoctest basics_quantum_circuit
 julia> push_gate!(c, [control_x(1, 2)])
 Quantum Circuit Object:
-   id: 0b7e9004-7b2f-11ec-0f56-c91274d7066f 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H────*──
             |  
 q[2]:───────X──

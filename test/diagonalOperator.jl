@@ -27,7 +27,7 @@ test_operator_implementation(DiagonalOperator,dim=1,label="DiagonalOperator")
 
     # LinearAlgebra.eigen
 
-    vals, vecs = eigen(diag_op)
+    vals, vecs = Snowflake.eigen(diag_op)
     @test vals[1] ≈ 1.0
     @test vals[2] ≈ 2.0 
 

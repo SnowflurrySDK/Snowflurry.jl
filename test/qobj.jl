@@ -121,41 +121,39 @@ end
     #subtracting a photon
     @test a*fock(3,hspace_size) ≈ sqrt(3.0)*fock(2,hspace_size)
     @test expected_value(n,fock(3,hspace_size))==3
-
-    
 end
 
-# @testset "density_matrix" begin
-#     Ψ_0 = fock(1, 2)
-#     @test ket2dm(Ψ_0) ≈ (Ψ_0*Bra(Ψ_0))
-#     @test fock_dm(1,2) ≈ (Ψ_0*Bra(Ψ_0))
+@testset "density_matrix" begin
+    Ψ_0 = fock(1, 2)
+    @test ket2dm(Ψ_0) ≈ (Ψ_0*Bra(Ψ_0))
+    @test fock_dm(1,2) ≈ (Ψ_0*Bra(Ψ_0))
 
-#     plot_bloch_sphere(Ψ_0)
-#     plot_bloch_sphere(ket2dm(Ψ_0))
+    plot_bloch_sphere(Ψ_0)
+    plot_bloch_sphere(ket2dm(Ψ_0))
 
-#     Ψ_1 = Ket([1/sqrt(2), -0.5+0.5im])
-#     Ψ_2 = Ket([1/sqrt(2), -0.5-0.5im])
-#     plot_bloch_sphere_animation([Ψ_1, Ψ_2, Ψ_1])
-#     plot_bloch_sphere_animation([Ψ_2, Ψ_1, Ψ_2])
-#     plot_bloch_sphere_animation([ket2dm(Ψ_1), ket2dm(Ψ_0)])
-# end
+    Ψ_1 = Ket([1/sqrt(2), -0.5+0.5im])
+    Ψ_2 = Ket([1/sqrt(2), -0.5-0.5im])
+    plot_bloch_sphere_animation([Ψ_1, Ψ_2, Ψ_1])
+    plot_bloch_sphere_animation([Ψ_2, Ψ_1, Ψ_2])
+    plot_bloch_sphere_animation([ket2dm(Ψ_1), ket2dm(Ψ_0)])
+end
 
 @testset "coherent state" begin
     ψ = Snowflake.coherent(2.0,20)
     @test expected_value(number_op(20),ψ) ≈ 4.0 atol=1.0e-4
 end
 
-# @testset "cat states" begin
-#     alpha = 0.25
-#     hspace_size=8
-#     ψ_0 = normalize!(coherent(alpha, hspace_size)+coherent(-alpha,hspace_size))
-#     ψ_1 = normalize!(coherent(alpha, hspace_size)-coherent(-alpha,hspace_size))
+@testset "cat states" begin
+    alpha = 0.25
+    hspace_size=8
+    ψ_0 = normalize!(coherent(alpha, hspace_size)+coherent(-alpha,hspace_size))
+    ψ_1 = normalize!(coherent(alpha, hspace_size)-coherent(-alpha,hspace_size))
 
-#     @test Bra(ψ_0)*ψ_1 ≈ 0.0
-#     @test wigner(ket2dm(ψ_0),0.0,0.0) ≈ -0.636619772367581382432888403855 atol=1.0e-4
-#     p=q=-3.0:0.1:3
-#     viz_wigner(ket2dm(ψ_0),p,q)
-# end
+    @test Bra(ψ_0)*ψ_1 ≈ 0.0
+    @test wigner(ket2dm(ψ_0),0.0,0.0) ≈ -0.636619772367581382432888403855 atol=1.0e-4
+    p=q=-3.0:0.1:3
+    viz_wigner(ket2dm(ψ_0),p,q)
+end
 
 @testset "genlaguerre" begin
     @test Snowflake.genlaguerre(0, 0, 0) == 1

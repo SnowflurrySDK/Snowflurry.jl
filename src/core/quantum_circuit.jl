@@ -1,21 +1,17 @@
 
 """
-    QuantumCircuit(qubit_count = .., bit_count = ...)
+    QuantumCircuit(qubit_count)
 
 A data structure to represent a *quantum circuit*.  
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
-- `bit_count::Int` -- number of classical bits (i.e. classical register size).
-- `id::UUID` -- a universally unique identifier for the circuit. A UUID is automatically generated once an instance is created. 
 - `pipeline::Array{Array{Gate}}` -- the pipeline of gates to operate on qubits.
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2)
 Quantum Circuit Object:
-   id: b2d2be56-7af2-11ec-31a6-ed9e71cb3360 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:
      
 q[2]:
@@ -23,62 +19,143 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
-    bit_count::Int
-    id::UUID = UUIDs.uuid1()
-    pipeline::Array{Array{Gate}} = []
+    pipeline::Vector{AbstractGate} = []
 end
 
 """
-    push_gate!(circuit::QuantumCircuit, gate::Gate)
-    push_gate!(circuit::QuantumCircuit, gates::Array{Gate})
+    push_gate!(circuit::QuantumCircuit, gate::AbstractGate)
+    push_gate!(circuit::QuantumCircuit, gates::Array{AbstractGate})
 
 Pushes a single gate or an array of gates to the `circuit` pipeline. This function is mutable. 
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2);
 
 julia> push_gate!(c, [hadamard(1),sigma_x(2)])
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
-          
+q[1]:──H───────
+               
+q[2]:───────X──
+               
+
 
 
 julia> push_gate!(c, control_x(1,2))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H────*──
-            |  
-q[2]:──X────X──
+q[1]:──H─────────*──
+                 |  
+q[2]:───────X────X──
+                    
+
+
+
 ```
 """
-function push_gate!(circuit::QuantumCircuit, gate::Gate)
-    push_gate!(circuit, [gate])
+function push_gate!(circuit::QuantumCircuit, gate::AbstractGate)
+    ensure_gate_is_in_circuit(circuit, gate)
+    push!(circuit.pipeline, gate)
     return circuit
 end
 
-function push_gate!(circuit::QuantumCircuit, gates::Vector{<:Gate})
-    ensure_gates_are_in_circuit(circuit, gates)
-    push!(circuit.pipeline, gates)
-    return circuit
-end
-
-function ensure_gates_are_in_circuit(circuit::QuantumCircuit, gates::Vector{<:Gate})
+function push_gate!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
     for gate in gates
-        for target in gate.target
-            if target > circuit.qubit_count
-                throw(DomainError(target, "the gate does no fit in the circuit"))
-            end
+        push_gate!(circuit, gate)
+    end
+    return circuit
+end
+
+function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
+    for target in gate.target
+        if target > circuit.qubit_count
+            throw(DomainError(target, "the gate does no fit in the circuit"))
         end
     end
 end
+
+formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
+
+get_display_symbol(gate::AbstractGate)=gates_display_symbols[typeof(gate)]
+
+function get_display_symbol(
+        gate::Union{
+            Universal,
+            Rotation,
+            RotationX,
+            RotationY,
+            RotationZ,
+            PhaseShift
+        };
+        precision::Integer=4
+    )
+
+    if typeof(gate) in [RotationX,RotationY,RotationZ,PhaseShift]
+        params=gate.parameter
+    else
+        params=gate.parameters
+    end
+
+    symbol_gate=gates_display_symbols[typeof(gate)][1]
+    repetitions=gates_display_symbols[typeof(gate)][2]
+    precisionStr=string("%.",precision,"f")
+    precisionArray=[precisionStr for _ in 1:repetitions]
+
+    str_label_with_precision=formatter(
+        symbol_gate,
+        precisionArray...
+    )
+    return [formatter(str_label_with_precision,params...)]
+end
+
+gates_display_symbols=Dict(
+    SigmaX      =>["X"],
+    SigmaY      =>["Y"],
+    SigmaZ      =>["Z"],
+    Hadamard    =>["H"],
+    Phase       =>["S"],
+    PhaseDagger =>["S†"],
+    Pi8         =>["T"],
+    Pi8Dagger   =>["T†"],
+    X90         =>["X_90"],
+    Rotation    =>["R(θ=%s,ϕ=%s)",2],
+    RotationX   =>["Rx(%s)",1],
+    RotationY   =>["Ry(%s)",1],
+    RotationZ   =>["Rz(%s)",1],
+    PhaseShift  =>["P(%s)",1],
+    Universal   =>["U(θ=%s,ϕ=%s,λ=%s)",3],
+    ControlZ    =>["*", "Z"],
+    ControlX    =>["*", "X"],
+    ISwap       =>["x", "x"],
+    ISwapDagger =>["x†", "x†"],
+    Toffoli     =>["*", "*", "X"],
+)
+
+get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[typeof(gate)]
+
+gates_instruction_symbols=Dict(
+    SigmaX      =>"x",
+    SigmaY      =>"y",
+    SigmaZ      =>"z",
+    Hadamard    =>"h",
+    Phase       =>"s",
+    PhaseDagger =>"s_dag",
+    Pi8         =>"t",
+    Pi8Dagger   =>"t_dag",
+    X90         =>"x_90",
+    Rotation    =>"r",
+    RotationX   =>"rx",
+    RotationY   =>"ry",
+    RotationZ   =>"rz",
+    PhaseShift  =>"p",
+    Universal   =>"u",
+    ControlZ    =>"cz",
+    ControlX    =>"cx",
+    ISwap       =>"iswap",
+    ISwapDagger =>"iswap_dag",
+    Toffoli     =>"ccx",
+    )
 
 """
     pop_gate!(circuit::QuantumCircuit)
@@ -87,36 +164,38 @@ Removes the last gate from `circuit.pipeline`.
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2);
 
 julia> push_gate!(c, [hadamard(1),sigma_x(2)])
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
-          
+q[1]:──H───────
+               
+q[2]:───────X──
+               
+
 
 
 julia> push_gate!(c, control_x(1,2))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H────*──
-            |  
-q[2]:──X────X──
+q[1]:──H─────────*──
+                 |  
+q[2]:───────X────X──
+                    
+
+
 
 julia> pop_gate!(c)
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
+q[1]:──H───────
+               
+q[2]:───────X──
+               
+
+
+
 ```
 """
 function pop_gate!(circuit::QuantumCircuit)
@@ -126,9 +205,7 @@ end
 
 function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer=10)
     println(io, "Quantum Circuit Object:")
-    println(io, "   id: $(circuit.id) ")
     println(io, "   qubit_count: $(circuit.qubit_count) ")
-    println(io, "   bit_count: $(circuit.bit_count) ")
     print_circuit_diagram(io, circuit, padding_width)
 end
 
@@ -156,36 +233,30 @@ function get_circuit_layout(circuit::QuantumCircuit)
     circuit_layout = fill("", (wire_count, length(circuit.pipeline) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, circuit.qubit_count)
     
-    for (i_step, step) in enumerate(circuit.pipeline)
-        longest_symbol_length = get_longest_symbol_length(step)
-        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count,
-            longest_symbol_length)
-
-        for gate in step
-            add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,
-                longest_symbol_length)
-            add_target_to_circuit_layout!(circuit_layout, gate, i_step,
-                longest_symbol_length)
-        end
+    for (i_step, gate) in enumerate(circuit.pipeline)
+        longest_symbol_length=get_longest_symbol_length(gate)
+        add_wires_to_circuit_layout!(circuit_layout, i_step, circuit.qubit_count,longest_symbol_length)
+        add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
+        add_target_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
     end
     return circuit_layout
 end
 
-function get_longest_symbol_length(step::Array{Gate})
+function get_longest_symbol_length(gate::AbstractGate)
     largest_length = 0
-    for gate in step
-        for symbol in gate.display_symbol
-            symbol_length = length(symbol)
-            if symbol_length > largest_length
-                largest_length = symbol_length
-            end
+    for symbol in get_display_symbol(gate)
+        symbol_length = length(symbol)
+        if symbol_length > largest_length
+            largest_length = symbol_length
         end
     end
     return largest_length
 end
 
-function add_qubit_labels_to_circuit_layout!(circuit_layout::Array{String},
-    num_qubits::Integer)
+function add_qubit_labels_to_circuit_layout!(
+    circuit_layout::Array{String},
+    num_qubits::Integer
+    )
 
     max_num_digits = ndigits(num_qubits)
     for i_qubit in range(1, length = num_qubits)
@@ -197,8 +268,12 @@ function add_qubit_labels_to_circuit_layout!(circuit_layout::Array{String},
     end
 end
 
-function add_wires_to_circuit_layout!(circuit_layout::Array{String}, i_step::Integer,
-    num_qubits::Integer, longest_symbol_length::Integer)
+function add_wires_to_circuit_layout!(
+    circuit_layout::Array{String}, 
+    i_step::Integer,
+    num_qubits::Integer,
+    longest_symbol_length::Integer
+    )
 
     num_chars = 4+longest_symbol_length
     for i_qubit in range(1, length = num_qubits)
@@ -210,8 +285,12 @@ function add_wires_to_circuit_layout!(circuit_layout::Array{String}, i_step::Int
     end
 end
 
-function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
-    i_step::Integer, longest_symbol_length::Integer)
+function add_coupling_lines_to_circuit_layout!(
+    circuit_layout::Array{String}, 
+    gate::AbstractGate,
+    i_step::Integer,
+    longest_symbol_length::Integer
+    )
     
     length_difference = longest_symbol_length-1
     num_left_chars = 2 + floor(Int, length_difference/2)
@@ -229,19 +308,22 @@ function add_coupling_lines_to_circuit_layout!(circuit_layout::Array{String}, ga
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
+function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::AbstractGate,
     i_step::Integer, longest_symbol_length::Integer)
     
+    symbols_gate=get_display_symbol(gate)
+
     for (i_target, target) in enumerate(gate.target)
-        symbol_length = length(gate.display_symbol[i_target])
+        symbol_length = length(symbols_gate[i_target])
         length_difference = longest_symbol_length-symbol_length
         num_left_dashes = 2 + floor(Int, length_difference/2)
         num_right_dashes = 2 + ceil(Int, length_difference/2)
         id_wire = 2*(target-1)+1
         circuit_layout[id_wire, i_step+1] = '─'^num_left_dashes *
-            "$(gate.display_symbol[i_target])" * '─'^num_right_dashes
+            "$(symbols_gate[i_target])" * '─'^num_right_dashes
     end
 end
+
 
 function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
     padding_width::Integer)
@@ -284,13 +366,11 @@ Employs the approach described in Listing 5 of
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2);
 
 julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H──
           
 q[2]:─────
@@ -299,9 +379,7 @@ q[2]:─────
 
 julia> push_gate!(c, control_x(1,2))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H────*──
             |  
 q[2]:───────X──
@@ -322,108 +400,10 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^circuit.qubit_count
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for step in circuit.pipeline 
-        for gate in step
-            apply_gate_without_ket_size_check!(ψ, gate, circuit.qubit_count)
-        end
+    for gate in circuit.pipeline 
+        apply_gate!(ψ, gate)        
     end
     return ψ
-end
-
-function apply_gate_without_ket_size_check!(state::Ket, gate::Gate, qubit_count)
-    b0 = get_b0_bases_list(gate, qubit_count)
-    b1 = get_b1_bases_list(gate, qubit_count)
-    temp_state = zeros(eltype(state.data), length(b1))   
-    for x0 in b0
-        for (index, x1) in enumerate(b1)
-            temp_state[index] = state.data[x0+x1+1]
-        end
-        temp_state = get_operator(gate).data*temp_state
-        for (index, x1) in enumerate(b1)
-            state.data[x0+x1+1] = temp_state[index]
-        end
-    end
-end
-
-function get_b0_bases_list(gate::Gate, qubit_count)
-    num_targets = length(gate.target)
-    num_b0_bases = 2^(qubit_count-num_targets)
-    pattern = get_b0_pattern(gate, qubit_count)
-    b0_bitstrings = fill(pattern, num_b0_bases)
-    fill_bit_string_list!(b0_bitstrings, pattern)
-    b0 = get_int_list(b0_bitstrings)
-    return b0
-end
-
-function get_b0_pattern(gate::Gate, qubit_count)
-    pattern = ""
-    for i_qubit in 1:qubit_count
-        if i_qubit in gate.target
-            pattern = pattern * '0'
-        else
-            pattern = pattern * 'x'
-        end
-    end
-    return pattern
-end
-
-function fill_bit_string_list!(list, pattern)
-    fill_bit_string_list_and_return_counter!(list, pattern)
-end
-
-function fill_bit_string_list_and_return_counter!(list, pattern, counter=1)
-    if !('x' in pattern)
-        list[counter] = pattern
-        counter += 1
-        return counter
-    else
-        pattern_with_0 = replace(pattern, 'x'=>'0', count=1)
-        counter = fill_bit_string_list_and_return_counter!(list, pattern_with_0, counter)
-
-        pattern_with_1 = replace(pattern, 'x'=>'1', count=1)
-        counter = fill_bit_string_list_and_return_counter!(list, pattern_with_1, counter)
-        return counter
-    end
-end
-
-function get_int_list(bitstring_list)
-    int_list = Vector{Int}(undef, length(bitstring_list))
-    for (i_string, bitstring) in enumerate(bitstring_list)
-        int_list[i_string] = parse(Int, bitstring, base=2)
-    end
-    return int_list
-end
-
-function get_b1_bases_list(gate::Gate, qubit_count)
-    num_targets = length(gate.target)
-    target_space_bitstrings = get_bitstring_vector_for_target_space(num_targets)
-    b1_bitstrings = get_b1_bitstrings(gate, target_space_bitstrings, qubit_count)
-    b1 = get_int_list(b1_bitstrings)
-    return b1
-end
-
-function get_bitstring_vector_for_target_space(num_targets)
-    num_bases = 2^num_targets
-    bitstrings = fill('0'^num_targets, num_bases)
-    for i_basis = 0:num_bases-1
-        raw_bitsring = bitstring(i_basis)
-        formatted_bitstring = raw_bitsring[end-num_targets+1:end]
-        bitstrings[i_basis+1] = formatted_bitstring
-    end
-    return bitstrings
-end
-
-function get_b1_bitstrings(gate::Gate, target_space_bitstrings, qubit_count)
-    num_bases = length(target_space_bitstrings)
-    bitstring_list = fill('0'^qubit_count, num_bases)
-    for (i_basis, bitstring) in enumerate(bitstring_list)
-        bitstring_as_chars = collect(bitstring)
-        for (i_target, target) in enumerate(gate.target)
-            bitstring_as_chars[target] = target_space_bitstrings[i_basis][i_target]
-        end
-        bitstring_list[i_basis] = join(bitstring_as_chars)
-    end
-    return bitstring_list
 end
 
 """
@@ -433,13 +413,11 @@ Emulates a quantum computer by running a circuit for a given number of shots and
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = Snowflake.QuantumCircuit(qubit_count = 2);
 
 julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H──
           
 q[2]:─────
@@ -448,9 +426,7 @@ q[2]:─────
 
 julia> push_gate!(c, control_x(1,2))
 Quantum Circuit Object:
-   id: 57cf5de2-7ba7-11ec-0e10-05c6faaf91e9 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:──H────*──
             |  
 q[2]:───────X──
@@ -519,17 +495,15 @@ for 00, 01, 10, and 11.
 The following example constructs a `QuantumCircuit` where the probability of measuring 01
 is 50% and the probability of measuring 11 is also 50%.
 ```jldoctest get_circuit_measurement_probabilities
-julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0);
+julia> circuit = QuantumCircuit(qubit_count=2);
 
 julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
 Quantum Circuit Object:
-   id: 43eb23ac-8d4b-11ed-0419-f390b8ec7cef 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
-          
+q[1]:──H───────
+               
+q[2]:───────X──
+               
 
 
 
@@ -572,47 +546,39 @@ Return a `QuantumCircuit` which is the inverse of the input `circuit`.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+julia> c = QuantumCircuit(qubit_count=2);
 
 julia> push_gate!(c, rotation_y(1, pi/4));
 
 julia> push_gate!(c, control_x(1, 2))
 Quantum Circuit Object:
-   id: 47ddf072-7293-11ed-3d64-9f4fd1e69575 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──Ry(0.7853981633974483)────*──
-                                 |  
-q[2]:────────────────────────────X──
-                                    
+q[1]:──Ry(0.7854)────*──
+                     |  
+q[2]:────────────────X──
+                        
 
 
 
 julia> get_inverse(c)
 Quantum Circuit Object:
-   id: 6153cc20-7293-11ed-37d4-e14a7e7df842 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──*────Ry(-0.7853981633974483)──
-       |                             
-q[2]:──X─────────────────────────────
-                                     
+q[1]:──*────Ry(-0.7854)──
+       |                 
+q[2]:──X─────────────────
+                         
 
 
 
 ```
 """
 function get_inverse(circuit::QuantumCircuit)
-    reverse_pipeline = reverse(circuit.pipeline)
-    inverse_pipeline = Vector{Gate}[]
-    for step in reverse_pipeline
-        inverse_gate_list = Gate[]
-        for gate in step
-            push!(inverse_gate_list, get_inverse(gate))
-        end
-        push!(inverse_pipeline, inverse_gate_list)
-    end
-    return QuantumCircuit(qubit_count=circuit.qubit_count, bit_count=circuit.bit_count,
+
+    inverse_pipeline = Vector{AbstractGate}( 
+        [get_inverse(g) for g in reverse(circuit.pipeline)] 
+    )
+
+    return QuantumCircuit(qubit_count=circuit.qubit_count,
         pipeline=inverse_pipeline)
 end
 
@@ -625,7 +591,7 @@ The dictionary keys are the instruction_symbol of the gates while the values are
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+julia> c = QuantumCircuit(qubit_count=2);
 
 julia> push_gate!(c, [hadamard(1), hadamard(2)]);
 
@@ -633,13 +599,11 @@ julia> push_gate!(c, control_x(1, 2));
 
 julia> push_gate!(c, hadamard(2))
 Quantum Circuit Object:
-   id: cae04dc4-7bdc-11ed-2223-039a8d93f511 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H────*───────
-            |       
-q[2]:──H────X────H──
-                    
+q[1]:──H─────────*───────
+                 |       
+q[2]:───────H────X────H──
+                         
 
 
 
@@ -652,13 +616,12 @@ Dict{String, Int64} with 2 entries:
 """
 function get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
-    for step in circuit.pipeline
-        for gate in step
-            if haskey(gate_counts, gate.instruction_symbol)
-                gate_counts[gate.instruction_symbol] += 1
-            else
-                gate_counts[gate.instruction_symbol] = 1
-            end
+    for gate in circuit.pipeline
+        instruction_symbol=get_instruction_symbol(gate)
+        if haskey(gate_counts, instruction_symbol)
+            gate_counts[instruction_symbol] += 1
+        else
+            gate_counts[instruction_symbol] = 1
         end
     end
     return gate_counts
@@ -671,19 +634,17 @@ Returns the number of gates in the `circuit`.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2, bit_count=0);
+julia> c = QuantumCircuit(qubit_count=2);
 
 julia> push_gate!(c, [hadamard(1), hadamard(2)]);
 
 julia> push_gate!(c, control_x(1, 2))
 Quantum Circuit Object:
-   id: 2c899c5e-7bdf-11ed-0810-fbc3222f3890 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H────*──
-            |  
-q[2]:──H────X──
-               
+q[1]:──H─────────*──
+                 |  
+q[2]:───────H────X──
+                    
 
 
 
@@ -692,61 +653,4 @@ julia> get_num_gates(c)
 
 ```
 """
-function get_num_gates(circuit::QuantumCircuit)::Integer
-    num_gates = 0
-    for step in circuit.pipeline
-        num_gates += length(step)
-    end
-    return num_gates
-end
-
-"""
-    get_logical_depth(circuit::QuantumCircuit)::Integer
-
-Returns the logical depth of the `circuit`.
-
-Note that the function does not attempt to reduce the circuit depth by parallelizing gates.
-
-# Examples
-```jldoctest
-julia> c1 = QuantumCircuit(qubit_count=2, bit_count=0);
-
-julia> push_gate!(c1, hadamard(1));
-
-julia> push_gate!(c1, hadamard(2))
-Quantum Circuit Object:
-   id: 9902bb26-7be0-11ed-0df8-976e7a0d7b8d 
-   qubit_count: 2 
-   bit_count: 0 
-q[1]:──H───────
-               
-q[2]:───────H──
-               
-
-
-
-julia> get_logical_depth(c1)
-2
-
-julia> c2 = QuantumCircuit(qubit_count=2, bit_count=0);
-
-julia> push_gate!(c2,[hadamard(1),  hadamard(2)])
-Quantum Circuit Object:
-   id: b3b1c0e8-7be0-11ed-0b8b-835771f15fc1 
-   qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──H──
-          
-
-
-
-julia> get_logical_depth(c2)
-1
-
-```
-"""
-function get_logical_depth(circuit::QuantumCircuit)::Integer
-    return length(circuit.pipeline)
-end
+get_num_gates(circuit::QuantumCircuit)::Integer=length(circuit.pipeline)

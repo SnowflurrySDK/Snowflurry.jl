@@ -1,7 +1,7 @@
 using Snowflake
 
 #Build a two qubit circuit
-c = QuantumCircuit(qubit_count = 2, bit_count = 0)
+c = QuantumCircuit(qubit_count = 2)
 
 #testing iswap
 push_gate!(c, [x_90(2)]);

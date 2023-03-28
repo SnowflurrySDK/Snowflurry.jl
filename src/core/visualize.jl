@@ -82,11 +82,9 @@ modified by passing a [`BlochSphere`](@ref) struct.
     
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0)
+julia> circuit = QuantumCircuit(qubit_count=2)
 Quantum Circuit Object:
-   id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
    qubit_count: 2 
-   bit_count: 0 
 q[1]:
      
 q[2]:
@@ -94,12 +92,12 @@ q[2]:
 
 julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
 Quantum Circuit Object:
-   id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
+q[1]:──H───────
+               
+q[2]:───────X──
+               
+
 
 
 ```
@@ -158,15 +156,17 @@ julia> PlotlyJS.savefig(plot, "bloch_sphere.png", width=size(plot)[1],
 
 ```
 """
-function plot_bloch_sphere(ket::Ket;
+function plot_bloch_sphere(
+    ket::Ket;
     qubit_id::Int = 1,
-    bloch_sphere::BlochSphere = BlochSphere())
+    bloch_sphere::BlochSphere = BlochSphere()
+    )
     
     return plot_bloch_sphere(ket2dm(ket), qubit_id=qubit_id, bloch_sphere=bloch_sphere)
 end
 
 """
-    plot_bloch_sphere(density_matrix::Operator;
+    plot_bloch_sphere(density_matrix::AbstractOperator;
         qubit_id::Int = 1,
         bloch_sphere::BlochSphere = BlochSphere())
 
@@ -178,10 +178,10 @@ sphere can be modified by passing a [`BlochSphere`](@ref) struct.
     
 # Examples
 ```jldoctest
-julia> ρ = Operator([1.0 0.0;
+julia> ρ = DenseOperator([1.0 0.0;
                      0.0 0.0])
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im
 
@@ -199,9 +199,11 @@ julia> PlotlyJS.savefig(plot, "bloch_sphere.png", width=size(plot)[1],
 
 ```
 """
-function plot_bloch_sphere(density_matrix::Operator;
-        qubit_id::Int = 1,
-        bloch_sphere::BlochSphere = BlochSphere())
+function plot_bloch_sphere(
+    density_matrix::AbstractOperator;
+    qubit_id::Int = 1,
+    bloch_sphere::BlochSphere = BlochSphere()
+    )
 
     num_qubits = get_num_qubits(density_matrix)
     system = MultiBodySystem(num_qubits, 2)
@@ -211,8 +213,12 @@ function plot_bloch_sphere(density_matrix::Operator;
     return plot
 end
 
-function get_bloch_sphere_vector(density_matrix::Operator, system::MultiBodySystem,
-        qubit_id)
+function get_bloch_sphere_vector(
+    density_matrix::AbstractOperator, 
+    system::MultiBodySystem,
+    qubit_id
+    )
+
     pauli_x = get_embed_operator(sigma_x(), qubit_id, system)
     x = Float64(tr(density_matrix*pauli_x))
     pauli_y = get_embed_operator(sigma_y(), qubit_id, system)
@@ -455,7 +461,7 @@ function plot_bloch_sphere_animation(ket_list::Vector{Ket{T}} where {T<:Complex}
 end
 
 """
-    plot_bloch_sphere_animation(density_matrix_list::Vector{Operator{T}} where {T<:Complex};
+    plot_bloch_sphere_animation(density_matrix_list::Vector{T} where {T<:AbstractOperator};
         qubit_id::Int = 1,
         animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
 
@@ -469,9 +475,9 @@ settings and the appearance of the Bloch sphere can be modified by passing an
     
 # Examples
 ```
-julia> ψ_0 = Operator([0.5 0.5; 0.5 0.5]);
+julia> ψ_0 = DenseOperator([0.5 0.5; 0.5 0.5]);
 
-julia> ψ_1 = Operator([0.5 -0.5im; 0.5im 0.5]);
+julia> ψ_1 = DenseOperator([0.5 -0.5im; 0.5im 0.5]);
 
 julia> plot = plot_bloch_sphere_animation([ψ_0, ψ_1])
 
@@ -483,7 +489,7 @@ julia> PlotlyJS.savefig(plot, "bloch_sphere_animation.html")
 
 ```
 """
-function plot_bloch_sphere_animation(density_matrix_list::Vector{Operator{T}} where {T<:Complex};
+function plot_bloch_sphere_animation(density_matrix_list::Vector{T} where {T<:AbstractOperator};
     qubit_id::Int = 1,
     animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
     
