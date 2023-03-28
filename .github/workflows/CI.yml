@@ -37,15 +37,22 @@ jobs:
             ${{ runner.os }}-
       
       - name: Build Snowflake
-        uses: julia-actions/julia-buildpkg@v1
+        run: >
+          julia --project=. -e 
+          'using Pkg;
+          Pkg.develop(PackageSpec(path=pwd())); 
+          Pkg.instantiate()'
       
       - name: Test Snowflake
         uses: julia-actions/julia-runtest@v1
 
       - name: Build SnowflakePlots
-        uses: julia-actions/julia-buildpkg@v1
-        with:
-          project: 'SnowflakePlots.jl'
+        run: >
+          julia --project=SnowflakePlots.jl -e 
+          'using Pkg;
+          Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
+          Pkg.develop(PackageSpec(path=pwd())); 
+          Pkg.instantiate()'
       
       - name: Test SnowflakePlots
         uses: julia-actions/julia-runtest@v1
