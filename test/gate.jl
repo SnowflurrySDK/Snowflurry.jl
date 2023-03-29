@@ -119,66 +119,75 @@ end
     cnot = control_x(1, 2)
     @test test_inverse(cnot)
     inverse_cnot = get_inverse(cnot)
+    @test get_connected_qubits(cnot)==get_connected_qubits(inverse_cnot)
 
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
     inverse_rx = get_inverse(rx)
-    @test rx.parameter ≈ -inverse_rx.parameter
+    @test get_connected_qubits(rx)==get_connected_qubits(inverse_rx)
 
     ry = rotation_y(1, pi/3)
     @test test_inverse(ry)
     inverse_ry = get_inverse(ry)
-    @test ry.parameter ≈ -inverse_ry.parameter
+    @test get_connected_qubits(ry)==get_connected_qubits(inverse_ry)
 
     rz = rotation_z(1, pi/3)
     @test test_inverse(rz)
     inverse_rz = get_inverse(rz)
-    @test rz.parameter ≈ -inverse_rz.parameter
-
+    @test get_connected_qubits(rz)==get_connected_qubits(inverse_rz)
+   
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
     inverse_p = get_inverse(p)
-    @test p.parameter[1] ≈ -inverse_p.parameter[1]
+    @test get_connected_qubits(p)==get_connected_qubits(inverse_p)
 
     x_90_gate = x_90(1)
     @test test_inverse(x_90_gate)
     inverse_x_90 = get_inverse(x_90_gate)
-    @test inverse_x_90.parameter ≈ -pi/2
+    @test get_connected_qubits(x_90_gate)==get_connected_qubits(inverse_x_90)
 
     s = phase(1)
     @test test_inverse(s)
     inverse_s = get_inverse(s)
+    @test get_connected_qubits(s)==get_connected_qubits(inverse_s)
     @test eye() ≈ get_operator(s)*get_operator(inverse_s)
 
     s_dag = phase_dagger(1)
     @test test_inverse(s_dag)
+    inverse_s_dag = get_inverse(s)
+    @test get_connected_qubits(s_dag)==get_connected_qubits(inverse_s_dag)
 
     t = pi_8(1)
     @test test_inverse(t)
+    inverse_t = get_inverse(t)
+    @test get_connected_qubits(t)==get_connected_qubits(inverse_t)
+
     
     t_dag = pi_8_dagger(1)
     @test test_inverse(t_dag)
+    inverse_t_dag = get_inverse(t_dag)
+    @test get_connected_qubits(t_dag)==get_connected_qubits(inverse_t_dag)
 
     iswap_gate = iswap(1, 2)
     @test test_inverse(iswap_gate) 
     inverse_iswap = get_inverse(iswap_gate)
+    @test get_connected_qubits(iswap_gate)==get_connected_qubits(inverse_iswap)
 
     iswap_dag = iswap_dagger(1, 2)
     @test test_inverse(iswap_dag)
     inverse_iswap_dag = get_inverse(iswap_dag)
+    @test get_connected_qubits(iswap_dag)==get_connected_qubits(inverse_iswap_dag)
 
     r = rotation(1, pi/2, -pi/3)
     @test test_inverse(r)
     inverse_r = get_inverse(r)
-    @test inverse_r.parameters[1] ≈ -r.parameters[1]
-    @test inverse_r.parameters[2] ≈ r.parameters[2]
+    @test get_connected_qubits(r)==get_connected_qubits(inverse_r)
+
 
     u = universal(1, pi/2, -pi/3, pi/4)
     @test test_inverse(u)
     inverse_u = get_inverse(u)
-    @test inverse_u.parameters[1] ≈ -u.parameters[1]
-    @test inverse_u.parameters[2] ≈ -u.parameters[3]
-    @test inverse_u.parameters[3] ≈ -u.parameters[2]
+    @test get_connected_qubits(u)==get_connected_qubits(inverse_u)
 
     struct UnknownGate <: AbstractGate
         instruction_symbol::String
@@ -232,16 +241,6 @@ end
     U = kron(sigma_x(), sigma_x())
     @test U * ψ_init ≈ kron(Ψ1_1, Ψ2_1)
 
-end
-
-@testset "show_gate_without_operator" begin
-    struct UnknownGateWithoutOperator <: AbstractGate
-        target::Int
-        parameter::Int
-    end
-
-    unknown_gate = UnknownGateWithoutOperator(1, 1)
-    println(unknown_gate)
 end
 
 @testset "std_gates" begin

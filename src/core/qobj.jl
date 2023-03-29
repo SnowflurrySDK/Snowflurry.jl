@@ -284,7 +284,7 @@ false
 
 ```
 """
-is_hermitian(A::AbstractOperator) = LinearAlgebra.ishermitian(DenseOperator(A).data)
+is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
@@ -363,7 +363,6 @@ Underlying data ComplexF64:
 
 ```
 """
-# generic case
 Base.exp(A::AbstractOperator) = DenseOperator(exp(DenseOperator(A).data))
 
 # specializations
@@ -399,11 +398,10 @@ julia> eigenvector_1 = F.vectors[:, 1]
   0.7071067811865475 + 0.0im
 ```
 """
-# generic case
-eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A).data)
+eigen(A::AbstractOperator) = eigen(DenseOperator(A))
 
 # specializations
-eigen(A::DenseOperator) = LinearAlgebra.eigen(A.data)
+eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
 
 """
     tr(A::AbstractOperator)
