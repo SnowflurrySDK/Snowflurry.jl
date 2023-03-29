@@ -121,6 +121,11 @@ end
     inverse_cnot = get_inverse(cnot)
     @test get_connected_qubits(cnot)==get_connected_qubits(inverse_cnot)
 
+    cz = control_z(1, 2)
+    @test test_inverse(cz)
+    inverse_cz = get_inverse(cz)
+    @test get_connected_qubits(cz)==get_connected_qubits(inverse_cz)
+
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
     inverse_rx = get_inverse(rx)
