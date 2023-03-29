@@ -79,17 +79,7 @@ formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
 
 get_display_symbol(gate::AbstractGate)=gates_display_symbols[typeof(gate)]
 
-function get_display_symbol(
-        gate::Union{
-            Universal,
-            Rotation,
-            RotationX,
-            RotationY,
-            RotationZ,
-            PhaseShift
-        };
-        precision::Integer=4
-    )
+function get_display_symbol(gate::ParameterizedGate;precision::Integer=4)
 
     params=Vector{Real}([])
 
