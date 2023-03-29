@@ -91,10 +91,12 @@ function get_display_symbol(
         precision::Integer=4
     )
 
-    if typeof(gate) in [RotationX,RotationY,RotationZ,PhaseShift]
-        params=gate.parameter
-    else
-        params=gate.parameters
+    params=Vector{Real}([])
+
+    for key in ["theta","phi","lambda"]
+        if key in keys(gate_params)
+            push!(gate_params,gate_params[key])
+        end
     end
 
     symbol_gate=gates_display_symbols[typeof(gate)][1]
