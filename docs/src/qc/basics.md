@@ -10,7 +10,7 @@ Snowflake is a Julia-based SDK for performing quantum computations. Quantum comp
 
 # Quantum Circuits
 
-Algorithms and applications that utilize quantum mechanical resources use a concept known as a _quantum circuit_ to represent quantum operations. A quantum circuit is a computational pipeline consisting of a quantum register and a classical register. The following figure shows an example of a 3-qubit quantum circuit:
+Algorithms and applications that utilize quantum mechanical resources use a concept known as a _quantum circuit_ to represent quantum operations. A quantum circuit is a computational pipeline consisting of a quantum register. The following figure shows an example of a 3-qubit quantum circuit:
 
 ![Bell State generator circuit](https://i.stack.imgur.com/NkYrk.png)
 
@@ -42,7 +42,7 @@ Unlike their classic counterparts, quantum gates are reversible. Quantum gates a
 Now, let's add a few gates to our circuit using the push_gate command:
 
 ```jldoctest basics_quantum_circuit
-julia> push_gate!(c, [hadamard(1)])
+julia> push!(c, [hadamard(1)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H──
@@ -52,7 +52,7 @@ q[2]:─────
 The first command added a Hadamard gate to the quantum circuit object `c`. The gate will operate on qubit 1.
 
 ```jldoctest basics_quantum_circuit
-julia> push_gate!(c, [control_x(1, 2)])
+julia> push!(c, [control_x(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H────*──

@@ -4,8 +4,8 @@ using Snowflake
 c = QuantumCircuit(qubit_count = 2)
 
 #testing iswap
-push_gate!(c, [x_90(2)]);
-push_gate!(c, [iswap(1, 2)]);
+push!(c, [x_90(2)]);
+push!(c, [iswap(1, 2)]);
 
 #User credentials issued by Anyon Systems from envirnoment variables. Change according to your setting.
 owner = ENV["SNOWFLAKE_ID"]

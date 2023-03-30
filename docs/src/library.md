@@ -8,8 +8,8 @@ DocTestSetup = :(using Snowflake)
 ## Quantum Circuit
 ```@docs
 QuantumCircuit
-push_gate!
-pop_gate!
+push!
+pop!
 simulate
 simulate_shots
 get_measurement_probabilities(circuit::QuantumCircuit)
