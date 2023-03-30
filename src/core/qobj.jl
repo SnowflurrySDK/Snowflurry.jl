@@ -598,8 +598,43 @@ function fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
     return Ket(d)
 end
 
-spin_up() = fock(0,2)
-spin_down() = fock(1,2)
+"""
+    spin_up(T::Type{<:Complex}=ComplexF64)
+
+Returns the `Ket` representation of the spin-up state.
+
+The `Ket` stores values of type `T`, which is `ComplexF64` by default.
+
+# Examples
+```jldoctest
+julia> ψ = spin_up()
+2-element Ket{ComplexF64}:
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+```
+"""
+spin_up(T::Type{<:Complex}=ComplexF64) = fock(0,2,T)
+
+"""
+    spin_down(T::Type{<:Complex}=ComplexF64)
+
+Returns the `Ket` representation of the spin-down state.
+
+The `Ket` stores values of type `T`, which is `ComplexF64` by default.
+
+# Examples
+```jldoctest
+julia> ψ = spin_down()
+2-element Ket{ComplexF64}:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+```
+"""
+spin_down(T::Type{<:Complex}=ComplexF64) = fock(1,2,T)
 
 """
     Snowflake.create(hspace_size,T::Type{<:Complex}=ComplexF64)
