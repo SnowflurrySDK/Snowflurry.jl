@@ -144,6 +144,7 @@ style="height:825px;width:100%;">
 ```
 ```@docs
 plot_histogram
+viz_wigner
 ```
 
 ```@meta

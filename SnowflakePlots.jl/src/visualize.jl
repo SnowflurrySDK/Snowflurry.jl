@@ -43,6 +43,29 @@ function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
     )
 end
 
-function viz_wigner(ρ, x, y)
+"""
+    viz_wigner(ρ::Operator, x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
+        y::Union{AbstractRange{<:Real},AbstractVector{<:Real}})
+
+Generates a contour plot of the Wigner function of the density matrix `ρ`.
+    
+The range of the plot is specified by the phase-space coordinates `x` and `y`.
+    
+# Examples
+```jldoctest
+julia> ρ = ket2dm(coherent(0.25, 8));
+
+julia> x = y = -3.0:0.1:3.0;
+
+```
+```julia
+julia> viz_wigner(ρ, x, y)
+
+```
+![Wigner function contour plot](assets/visualize/viz_wigner.png)
+"""
+function viz_wigner(ρ::Operator, x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
+    y::Union{AbstractRange{<:Real},AbstractVector{<:Real}})
+
     return Plots.contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
 end
