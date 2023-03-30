@@ -94,7 +94,6 @@ export
     rotation,
     rotation_x,
     rotation_y,
-    rotation_z,
     phase_shift,
     universal,
     iswap,

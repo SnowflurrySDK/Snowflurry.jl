@@ -96,11 +96,6 @@ end
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test get_parameters(ry)==Dict("theta"=>-pi/2)
 
-    rz = rotation_z(1, pi/2)
-    @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
-    @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
-    @test get_parameters(rz)==Dict("theta"=>pi/2)
-
     p = phase_shift(1, pi/4)
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
     @test get_parameters(p)==Dict("phi"=>pi/4)
@@ -148,11 +143,6 @@ end
     inverse_ry = get_inverse(ry)
     @test get_connected_qubits(ry)==get_connected_qubits(inverse_ry)
 
-    rz = rotation_z(1, pi/3)
-    @test test_inverse(rz)
-    inverse_rz = get_inverse(rz)
-    @test get_connected_qubits(rz)==get_connected_qubits(inverse_rz)
-   
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
     inverse_p = get_inverse(p)

@@ -623,24 +623,6 @@ R_y(\\theta) = \\begin{bmatrix}
 rotation_y(theta::Real,T::Type{<:Complex}=ComplexF64) = rotation(theta, pi/2,T)
 
 """
-    rotation_z(theta)
-
-Return the `Operator` that applies a rotation `theta` about the Z axis.
-
-The `Operator` is defined as:
-```math
-R_z(\\theta) = \\begin{bmatrix}
-\\mathrm{exp}\\left(-i\\frac{\\theta}{2}\\right) & 0 \\\\[0.5em]      
-0 & \\mathrm{exp}\\left(i\\frac{\\theta}{2}\\right)
-\\end{bmatrix}.
-```
-""" 
-rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[exp(-im*theta/2) 0;
-     0 exp(im*theta/2)]
-)
-
-"""
     phase_shift(phi)
 
 Return the `DiagonalOperator` that applies a phase shift `phi`.
@@ -654,7 +636,8 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """ 
 
-phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
+phase_shift(phi::Real,T::Type{<:Complex}=ComplexF64) = 
+    DiagonalOperator(T[1.,exp(im*phi)])
 
 """
     universal(theta, phi, lambda)
@@ -997,26 +980,6 @@ get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.t
 get_inverse(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
 
 get_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
-
-    """
-    rotation_z(target, theta)
-
-Return a `Gate` that applies a rotation `theta` about the Z axis of the `target` qubit.
-
-The corresponding `Operator` is [`rotation_z(theta)`](@ref).
-""" 
-rotation_z(target::Integer, theta::Real) = RotationZ(target, theta)
-
-struct RotationZ <: AbstractGate
-    target::Int
-    theta::Real
-end
-
-get_operator(gate::RotationZ, T::Type{<:Complex}=ComplexF64) = rotation_z(gate.theta,T)
-
-get_inverse(gate::RotationZ) = rotation_z(gate.target, -gate.theta)  
-
-get_parameters(gate::RotationZ)=Dict("theta" =>gate.theta)
 
 """
     phase_shift(target, phi)
