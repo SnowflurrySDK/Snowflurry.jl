@@ -12,6 +12,6 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 
 # Alpha Disclaimer
 
-SnowflakePlots is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
+SnowflakePlots is currently in alpha. We may change or remove parts of SnowflakePlots' API when making new releases.
 
-Copyright (c) 2023 by Snowflake Developers and Anyon Systems, Inc.
+Copyright (c) 2022 by Snowflake Developers and Anyon Systems, Inc.
