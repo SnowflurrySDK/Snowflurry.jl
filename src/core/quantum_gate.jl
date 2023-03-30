@@ -74,9 +74,9 @@ Underlying data ComplexF64:
 """
 abstract type AbstractGate end
 
-abstract type ParameterizedGate <: AbstractGate end
-
 get_connected_qubits(gate::AbstractGate)=[gate.target]
+
+get_parameters(gate::AbstractGate)=Dict()
 
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
@@ -940,7 +940,7 @@ The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
 rotation(target::Integer, theta::Real, phi::Real) = Rotation(target, theta, phi)
 
-struct Rotation <: ParameterizedGate
+struct Rotation <: AbstractGate
     target::Int
     theta::Real
     phi::Real
@@ -950,6 +950,10 @@ get_operator(gate::Rotation, T::Type{<:Complex}=ComplexF64) = rotation(gate.thet
 
 get_inverse(gate::Rotation) = rotation(gate.target, -gate.theta, gate.phi)
 
+get_parameters(gate::Rotation)=Dict(
+    "theta" =>gate.theta,
+    "phi"   =>gate.phi,
+)
 
 ########################################################################
 
@@ -963,7 +967,7 @@ The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
 rotation_x(target::Integer, theta::Real) = RotationX(target, theta)
 
-struct RotationX <: ParameterizedGate
+struct RotationX <: AbstractGate
     target::Int
     theta::Real
 end
@@ -972,6 +976,7 @@ get_operator(gate::RotationX, T::Type{<:Complex}=ComplexF64) = rotation_x(gate.t
 
 get_inverse(gate::RotationX) = rotation_x(gate.target, -gate.theta)
 
+get_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
     """
     rotation_y(target, theta)
@@ -982,7 +987,7 @@ The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
 rotation_y(target::Integer, theta::Real) = RotationY(target, theta)
 
-struct RotationY <: ParameterizedGate
+struct RotationY <: AbstractGate
     target::Int
     theta::Real
 end
@@ -990,6 +995,8 @@ end
 get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.theta,T)
 
 get_inverse(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
+
+get_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
     """
     rotation_z(target, theta)
@@ -1000,7 +1007,7 @@ The corresponding `Operator` is [`rotation_z(theta)`](@ref).
 """ 
 rotation_z(target::Integer, theta::Real) = RotationZ(target, theta)
 
-struct RotationZ <: ParameterizedGate
+struct RotationZ <: AbstractGate
     target::Int
     theta::Real
 end
@@ -1009,6 +1016,8 @@ get_operator(gate::RotationZ, T::Type{<:Complex}=ComplexF64) = rotation_z(gate.t
 
 get_inverse(gate::RotationZ) = rotation_z(gate.target, -gate.theta)  
 
+get_parameters(gate::RotationZ)=Dict("theta" =>gate.theta)
+
 """
     phase_shift(target, phi)
 
@@ -1016,7 +1025,7 @@ Return a `Gate` that applies a phase shift `phi` to the `target` qubit as define
 """ 
 phase_shift(target::Integer, phi::Real) = PhaseShift(target, phi)
 
-struct PhaseShift <: ParameterizedGate
+struct PhaseShift <: AbstractGate
     target::Integer
     phi::Real
 end
@@ -1024,6 +1033,8 @@ end
 get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.phi,T)
 
 get_inverse(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
+
+get_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
 
 """
     universal(target, theta, phi, lambda)
@@ -1034,7 +1045,7 @@ The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
 universal(target::Integer, theta::Real, phi::Real, lambda::Real) = Universal(target, theta, phi, lambda)
 
-struct Universal <: ParameterizedGate
+struct Universal <: AbstractGate
     target::Int
     theta::Real
     phi::Real
@@ -1046,6 +1057,11 @@ get_operator(gate::Universal, T::Type{<:Complex}=ComplexF64) = universal(gate.th
 get_inverse(gate::Universal) = universal(gate.target, -gate.theta,
     -gate.lambda, -gate.phi)
 
+get_parameters(gate::Universal)=Dict(
+    "theta" =>gate.theta,
+    "phi"   =>gate.phi,
+    "lambda"=>gate.lambda
+)
 
 # two qubit gates
 
@@ -1296,7 +1312,7 @@ function show_gate(
     gate_name::DataType, 
     targets::Vector{Int},
     op::AbstractOperator, 
-    parameters::Dict{String, Real}
+    parameters::Dict{String, <:Real}
     )
     println(io, "Gate Object: $(gate_name)")
 
@@ -1313,24 +1329,15 @@ function show_gate(
 end
 
 function Base.show(io::IO, gate::AbstractGate)
-    targets = get_connected_qubits(gate)
-    show_gate(io, typeof(gate), targets, get_operator(gate))
-end
 
-# parameterized gates
-function Base.show(
-    io::IO, 
-    gate::ParameterizedGate
-    )
     targets = get_connected_qubits(gate)
 
-    parameters=Dict{String,Real}()
-    for field in [:theta,:phi,:lambda]
-        if field in fieldnames(typeof(gate))
-            parameters[string(field)]=getfield(gate,field)
-        end
+    parameters = get_parameters(gate)
+
+    if isempty(parameters)
+        show_gate(io, typeof(gate), targets, get_operator(gate))
+    else
+        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
     end
-
-    show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
 end
 

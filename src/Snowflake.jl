@@ -55,6 +55,7 @@ export
     get_num_qubits,
     get_num_bodies,
     get_connected_qubits,
+    get_parameters,
     normalize!,
     get_measurement_probabilities,
     wigner, 

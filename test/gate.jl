@@ -82,27 +82,39 @@ end
     r = rotation(1, pi/2, pi/2)
     @test r*ψ_0 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test r*ψ_1 ≈ 1/2^.5*(-ψ_0+ψ_1)
+    @test get_parameters(r)==Dict("theta"=>pi/2,"phi"=>pi/2)
 
     println(r)
 
     rx = rotation_x(1, pi/2)
     @test rx*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test rx*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
+    @test get_parameters(rx)==Dict("theta"=>pi/2)
 
     ry = rotation_y(1, -pi/2)
     @test ry*ψ_0 ≈ 1/2^.5*(ψ_0-ψ_1)
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
+    @test get_parameters(ry)==Dict("theta"=>-pi/2)
 
     rz = rotation_z(1, pi/2)
     @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
     @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
+    @test get_parameters(rz)==Dict("theta"=>pi/2)
 
     p = phase_shift(1, pi/4)
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
+    @test get_parameters(p)==Dict("phi"=>pi/4)
+
 
     u = universal(1, pi/2, -pi/2, pi/2)
     @test u*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
+    @test get_parameters(u)==Dict(
+        "theta" =>pi/2,
+        "phi"   =>-pi/2,
+        "lambda"=>pi/2
+        )
+
 end
 
 @testset "adjoint_gates" begin
