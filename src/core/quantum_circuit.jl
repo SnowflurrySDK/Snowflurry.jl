@@ -11,7 +11,7 @@ A data structure to represent a *quantum circuit*.
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0)
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0)
 Quantum Circuit Object:
    id: b2d2be56-7af2-11ec-31a6-ed9e71cb3360 
    qubit_count: 2 
@@ -36,7 +36,7 @@ Pushes a single gate or an array of gates to the `circuit` pipeline. This functi
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0);
 
 julia> push_gate!(c, [hadamard(1),sigma_x(2)])
 Quantum Circuit Object:
@@ -87,7 +87,7 @@ Removes the last gate from `circuit.pipeline`.
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0);
 
 julia> push_gate!(c, [hadamard(1),sigma_x(2)])
 Quantum Circuit Object:
@@ -284,7 +284,7 @@ Employs the approach described in Listing 5 of
 
 # Examples
 ```jldoctest
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0);
 
 julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
@@ -433,7 +433,7 @@ Emulates a quantum computer by running a circuit for a given number of shots and
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
-julia> c = Snowflake.QuantumCircuit(qubit_count = 2, bit_count = 0);
+julia> c = QuantumCircuit(qubit_count = 2, bit_count = 0);
 
 julia> push_gate!(c, hadamard(1))
 Quantum Circuit Object:
