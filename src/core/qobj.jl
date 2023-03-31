@@ -976,7 +976,26 @@ Underlying data Matrix{ComplexF64}:
 """
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
 
+"""
+    wigner(ρ::Operator, p::Real, q::Real)
 
+Computes the Wigner function of the density matrix `ρ` at the point (`p`,`q`).
+
+```jldoctest
+julia> using Printf
+
+julia> alpha = 0.25;
+
+julia> hspace_size = 8;
+
+julia> Ψ = coherent(alpha, hspace_size);
+
+julia> prob = wigner(ket2dm(Ψ), 0, 0);
+
+julia> @printf "prob: %.6f" prob
+prob: -0.561815
+```
+"""
 function wigner(ρ::Operator, p::Real, q::Real)
     hilbert_size, _ = size(ρ.data)
     eta = q + p*im

@@ -82,6 +82,7 @@ normalize!
 get_measurement_probabilities(x::Ket{Complex{T}}) where T<:Real
 ket2dm
 fock_dm
+wigner
 get_embed_operator
 get_num_qubits(x::Operator)
 get_num_qubits(x::Union{Ket, Bra})
