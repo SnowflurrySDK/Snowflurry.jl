@@ -143,7 +143,7 @@ DenseOperator(op::DenseOperator) = op
 
 getindex(A::AbstractOperator, i::Integer, j::Integer)
 
-Access the element at row i and column j in the matrix corresponding to `AbstractOperator` `A`.
+Access the element at row i and column j in the matrix corresponding to `Operator` `A`.
 
 # Examples
 ```jldoctest
@@ -171,7 +171,7 @@ julia> Y[2,2]
 Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i,j]
 
 """
-A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
+A structure representing a diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
 
 # Examples
 ```jldoctest
@@ -214,7 +214,7 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
-A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
+A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
 # Examples
 ```jldoctest
@@ -365,7 +365,7 @@ Base.length(x::Union{Ket, Bra}) = length(x.data)
 """
     exp(A::AbstractOperator)
 
-Compute the matrix exponential of `AbstractOperator` `A`.
+Compute the matrix exponential of `Operator` `A`.
 
 # Examples
 ```jldoctest
@@ -713,7 +713,7 @@ end
 """
     get_num_qubits(x::AbstractOperator)
 
-Returns the number of qubits associated with an `AbstractOperator`.
+Returns the number of qubits associated with an `Operator`.
 # Examples
 ```jldoctest
 julia> ρ = DenseOperator([1. 0.

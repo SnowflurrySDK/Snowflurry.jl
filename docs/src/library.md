@@ -13,8 +13,8 @@ pop!
 simulate
 simulate_shots
 get_measurement_probabilities(circuit::QuantumCircuit)
-get_inverse(circuit::QuantumCircuit)
-get_gate_counts
+inv(circuit::QuantumCircuit)
+get_num_gates_per_type
 get_num_gates
 ```
 
@@ -47,7 +47,7 @@ iswap_dagger
 Base.:*(M::AbstractGate, x::Ket)
 apply_gate!
 get_operator
-get_inverse(gate::AbstractGate)
+inv(gate::AbstractGate)
 ```
 
 ## Quantum Processing Unit

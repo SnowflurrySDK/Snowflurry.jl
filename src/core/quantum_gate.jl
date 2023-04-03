@@ -3,13 +3,15 @@ using Parameters
 """
     AbstractGate
 
-A `AbstractGate` can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
+A `Gate` is an instantiation of an `AbstractGate`, which can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
+`AbstractGate` is useful to dispatch all `Gates` to default implementation of functions such as get_connected_qubits(). 
+Those functions are then specialized for `Gates` requiring a different implementation. 
 
-A `AbstractGate` is an abstract type, which means that it cannot be instantiated.
-Instead, each type of gate must have a struct which is a descendant of `Gate`.
+`AbstractGate` is an abstract type, which means that it cannot be instantiated. 
+Instead, each concrete type of `Gate` is a struct which is a subtype of `AbstractGate`.
 Each descendant of `AbstractGate` must have at least the following fields:
 - `target::Int`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
-- `parameter::Real`: for parameterized gates, affect which operation is applied (e.g. rotation angles).
+- `parameter::Real`: for parameterized gates, determines which operation is applied (e.g. rotation angles), i.e., is used in the construction of the matrix used in the application of its `Operator`.
 
 # Examples
 A struct must be defined for each new gate type, such as the following X_45 gate which
@@ -35,9 +37,9 @@ julia> Snowflake.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotati
 
 ```
 
-The gate inverse can also be specified by extending the `get_inverse` function.
+The gate inverse can also be specified by extending the `inv` function.
 ```jldoctest gate_struct
-julia> Snowflake.get_inverse(gate::X45) = rotation_x(gate.target, -π/4);
+julia> inv(gate::X45) = rotation_x(gate.target, -π/4);
 
 ```
 
@@ -53,7 +55,7 @@ Underlying data ComplexF64:
 0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
-julia> get_inverse(x_45_gate)
+julia> inv(x_45_gate)
 Gate Object: Snowflake.RotationX
 Parameters: 
 theta	: -0.7853981633974483
@@ -73,7 +75,7 @@ abstract type AbstractGate end
 
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
-get_parameters(gate::AbstractGate)=Dict()
+get_gate_parameters(gate::AbstractGate)=Dict()
 
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
@@ -120,12 +122,13 @@ function apply_gate!(state::Ket, gate::AbstractGate)
 end
 
 # specialization for single target dense gate (size N=2, for N=2^target_count)
+# adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()
 function apply_operator!(
     state::Ket,
     operator::DenseOperator{2},
     connected_qubit::Vector{<:Integer})
 
-    qubit_count = Int(log2(length(state)))
+    qubit_count = get_num_qubits(state)
 
     dim=2^qubit_count
 
@@ -154,14 +157,13 @@ function apply_operator!(
 end
 
 # specialization for multiple target dense gate (size N>=4, for N=2^target_count)
+# adapted from https://github.com/qulacs/qulacs, method multi_qubit_dense_matrix_gate_parallel()
 function apply_operator!(
     state::Ket,
     operator::DenseOperator{N},
     connected_qubit::Vector{<:Integer}) where N 
 
-    # this is from multi_qubit_dense_matrix_gate_parallel
-
-    qubit_count = Int(log2(length(state)))
+    qubit_count = get_num_qubits(state)
 
     dim=2^qubit_count
     
@@ -223,12 +225,13 @@ end
 
 
 # specialization for single target diagonal gate (size N=2, for N=2^target_count)
+# adapted from https://github.com/qulacs/qulacs, method single_qubit_diagonal_matrix_gate_parallel_unroll()
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{2},
     connected_qubit::Vector{<:Integer})
 
-    qubit_count = Int(log2(length(state)))
+    qubit_count = get_num_qubits(state)
 
     dim=2^qubit_count
 
@@ -254,12 +257,13 @@ function apply_operator!(
 end
 
 #specialization for N target diagonal gates (size N>2, for N=2^target_count)
+# adapted from https://github.com/qulacs/qulacs, method multi_qubit_diagonal_matrix_gate
 function apply_operator!(
     state::Ket,
     operator::DiagonalOperator{N},
     connected_qubits::Vector{<:Integer}) where {N} 
 
-    qubit_count = Int(log2(length(state)))
+    qubit_count = get_num_qubits(state)
 
     dim=2^qubit_count
     
@@ -303,14 +307,13 @@ function apply_operator!(
 end
 
 # specialization for single target anti-diagonal gate (size N=2^target_count=2)
+# adapted from https://github.com/qulacs/qulacs, method Y_gate_parallel_unroll
 function apply_operator!(
     state::Ket,
     operator::AntiDiagonalOperator{2},
     connected_qubit::Vector{<:Integer})
 
-    # see qulacs::Y_gate_parallel_unroll
-
-    qubit_count = Int(log2(length(state)))
+    qubit_count = get_num_qubits(state)
 
     dim=2^qubit_count
 
@@ -657,6 +660,7 @@ phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*ph
     universal(theta, phi, lambda)
 
 Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
+See: https://qiskit.org/textbook/ch-states/single-qubit-gates.html#generalU
 
 The `Operator` is defined as:
 ```math
@@ -863,7 +867,7 @@ end
 
 get_operator(gate::Phase,T::Type{<:Complex}=ComplexF64) = phase(T)
 
-get_inverse(gate::Phase) = phase_dagger(gate.target)
+Base.inv(gate::Phase) = phase_dagger(gate.target)
 
 """
     phase_dagger(target)
@@ -878,7 +882,7 @@ end
 
 get_operator(gate::PhaseDagger,T::Type{<:Complex}=ComplexF64) = phase_dagger(T)
 
-get_inverse(gate::PhaseDagger) = phase(gate.target)
+Base.inv(gate::PhaseDagger) = phase(gate.target)
 
 
 """
@@ -894,7 +898,7 @@ end
 
 get_operator(gate::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
 
-get_inverse(gate::Pi8) =  pi_8_dagger(gate.target)
+Base.inv(gate::Pi8) =  pi_8_dagger(gate.target)
 
 
 """
@@ -910,7 +914,7 @@ end
 
 get_operator(gate::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
 
-get_inverse(gate::Pi8Dagger) = pi_8(gate.target)
+Base.inv(gate::Pi8Dagger) = pi_8(gate.target)
 
 
 """
@@ -926,7 +930,7 @@ end
 
 get_operator(gate::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
 
-get_inverse(gate::X90) = rotation_x(gate.target, -pi/2)
+Base.inv(gate::X90) = rotation_x(gate.target, -pi/2)
 
 """
     rotation(target, theta, phi)
@@ -945,9 +949,9 @@ end
 
 get_operator(gate::Rotation, T::Type{<:Complex}=ComplexF64) = rotation(gate.theta,gate.phi,T)
 
-get_inverse(gate::Rotation) = rotation(gate.target, -gate.theta, gate.phi)
+Base.inv(gate::Rotation) = rotation(gate.target, -gate.theta, gate.phi)
 
-get_parameters(gate::Rotation)=Dict(
+get_gate_parameters(gate::Rotation)=Dict(
     "theta" =>gate.theta,
     "phi"   =>gate.phi,
 )
@@ -971,9 +975,9 @@ end
 
 get_operator(gate::RotationX, T::Type{<:Complex}=ComplexF64) = rotation_x(gate.theta,T)
 
-get_inverse(gate::RotationX) = rotation_x(gate.target, -gate.theta)
+Base.inv(gate::RotationX) = rotation_x(gate.target, -gate.theta)
 
-get_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
+get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
     """
     rotation_y(target, theta)
@@ -991,9 +995,9 @@ end
 
 get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.theta,T)
 
-get_inverse(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
+Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
 
-get_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
+get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
     """
     rotation_z(target, theta)
@@ -1011,9 +1015,9 @@ end
 
 get_operator(gate::RotationZ, T::Type{<:Complex}=ComplexF64) = rotation_z(gate.theta,T)
 
-get_inverse(gate::RotationZ) = rotation_z(gate.target, -gate.theta)  
+Base.inv(gate::RotationZ) = rotation_z(gate.target, -gate.theta)  
 
-get_parameters(gate::RotationZ)=Dict("theta" =>gate.theta)
+get_gate_parameters(gate::RotationZ)=Dict("theta" =>gate.theta)
 
 """
     phase_shift(target, phi)
@@ -1029,14 +1033,15 @@ end
 
 get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.phi,T)
 
-get_inverse(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
+Base.inv(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
 
-get_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
+get_gate_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
 
 """
     universal(target, theta, phi, lambda)
 
 Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
+See: https://qiskit.org/textbook/ch-states/single-qubit-gates.html#generalU
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
@@ -1051,10 +1056,10 @@ end
 
 get_operator(gate::Universal, T::Type{<:Complex}=ComplexF64) = universal(gate.theta, gate.phi, gate.lambda,T)
 
-get_inverse(gate::Universal) = universal(gate.target, -gate.theta,
+Base.inv(gate::Universal) = universal(gate.target, -gate.theta,
     -gate.lambda, -gate.phi)
 
-get_parameters(gate::Universal)=Dict(
+get_gate_parameters(gate::Universal)=Dict(
     "theta" =>gate.theta,
     "phi"   =>gate.phi,
     "lambda"=>gate.lambda
@@ -1137,7 +1142,7 @@ end
 
 get_operator(gate::ISwap, T::Type{<:Complex}=ComplexF64) = iswap(T)
 
-get_inverse(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
+Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
 
@@ -1188,7 +1193,7 @@ end
 
 get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 
-get_inverse(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
+Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
 
@@ -1222,7 +1227,7 @@ function get_transformed_state(state::Ket, gate::AbstractGate)
 end
 
 """
-    get_inverse(gate::AbstractGate)
+    inv(gate::AbstractGate)
 
 Return a `Gate` which is the inverse of the input `gate`.
 
@@ -1243,7 +1248,7 @@ Underlying data ComplexF64:
 -0.3535533905932738 - 0.6123724356957945im    -0.18301270189221924 + 0.6830127018922194im
 
 
-julia> get_inverse(u)
+julia> inv(u)
 Gate Object: Snowflake.Universal
 Parameters: 
 theta	: 1.5707963267948966
@@ -1260,11 +1265,11 @@ Underlying data ComplexF64:
 
 ```
 """
-function get_inverse(gate::AbstractGate)
+function Base.inv(gate::AbstractGate)
     if is_hermitian(get_operator(gate))
         return gate
     end
-    throw(NotImplementedError(:get_inverse, gate))
+    throw(NotImplementedError(:inv, gate))
 end
 
 STD_GATES = Dict(
@@ -1329,7 +1334,7 @@ function Base.show(io::IO, gate::AbstractGate)
 
     targets = get_connected_qubits(gate)
 
-    parameters = get_parameters(gate)
+    parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
         show_gate(io, typeof(gate), targets, get_operator(gate))

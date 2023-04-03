@@ -5,16 +5,16 @@ using Test
     c = QuantumCircuit(qubit_count = 2)
     print(c)
     push!(c, [hadamard(1)])
-    @test length(get_gates(c)) == 1
+    @test length(get_gates_in_circuit(c)) == 1
 
 
     push!(c, [control_x(1, 2)])
-    @test length(get_gates(c)) == 2
+    @test length(get_gates_in_circuit(c)) == 2
     pop!(c)
-    @test length(get_gates(c)) == 1
+    @test length(get_gates_in_circuit(c)) == 1
 
     push!(c, control_x(1, 2))
-    @test length(get_gates(c)) == 2
+    @test length(get_gates_in_circuit(c)) == 2
 
     plot_histogram(c,100)
     plot_bloch_sphere(c)
@@ -84,25 +84,25 @@ end
     @test_throws DomainError push!(c, control_x(1, 3))
 end
 
-@testset "get_inverse" begin
+@testset "inv" begin
     c = QuantumCircuit(qubit_count=2)
     push!(c, rotation_x(1, pi/2))
     push!(c, control_x(1, 2))
-    inverse_c = get_inverse(c)
+    inverse_c = inv(c)
 
-    @test get_instruction_symbol(get_gates(inverse_c)[1])   == "cx"
-    @test get_connected_qubits(get_gates(inverse_c)[1])     == [1, 2]
-    @test get_instruction_symbol(get_gates(inverse_c)[2])   == "rx"
-    @test get_connected_qubits(get_gates(inverse_c)[2])     == [1]
-    @test get_parameters(get_gates(inverse_c)[2])["theta"]  ≈ -pi/2
+    @test get_instruction_symbol(get_gates_in_circuit(inverse_c)[1])   == "cx"
+    @test get_connected_qubits(get_gates_in_circuit(inverse_c)[1])     == [1, 2]
+    @test get_instruction_symbol(get_gates_in_circuit(inverse_c)[2])   == "rx"
+    @test get_connected_qubits(get_gates_in_circuit(inverse_c)[2])     == [1]
+    @test get_gate_parameters(get_gates_in_circuit(inverse_c)[2])["theta"]  ≈ -pi/2
 end
 
-@testset "get_gate_counts" begin
+@testset "get_num_gates_per_type" begin
     c = QuantumCircuit(qubit_count = 2)
     push!(c, [sigma_x(1), sigma_x(2)])
     push!(c, control_x(1, 2))
     push!(c, sigma_x(2))
-    gate_counts = get_gate_counts(c)
+    gate_counts = get_num_gates_per_type(c)
     @test gate_counts == Dict("cx"=>1, "x"=>3)
 end
 

@@ -22,8 +22,8 @@ Base.@kwdef struct QuantumCircuit
     gates::Vector{AbstractGate} = []
 end
 
-get_qubit_count(circuit::QuantumCircuit)=circuit.qubit_count
-get_gates(circuit::QuantumCircuit)=circuit.gates
+get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
+get_gates_in_circuit(circuit::QuantumCircuit)=circuit.gates
 
 """
     push!(circuit::QuantumCircuit, gate::AbstractGate)
@@ -59,7 +59,7 @@ q[2]:───────X────X──
 """
 function Base.push!(circuit::QuantumCircuit, gate::AbstractGate)
     ensure_gate_is_in_circuit(circuit, gate)
-    push!(get_gates(circuit), gate)
+    push!(get_gates_in_circuit(circuit), gate)
     return circuit
 end
 
@@ -72,7 +72,7 @@ end
 
 function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
     for target in get_connected_qubits(gate)
-        if target > get_qubit_count(circuit)
+        if target > get_num_qubits(circuit)
             throw(DomainError(target, "the gate does no fit in the circuit"))
         end
     end
@@ -82,7 +82,7 @@ formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
 
 function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
-    gate_params=get_parameters(gate)
+    gate_params=get_gate_parameters(gate)
 
     if isempty(gate_params)
         return gates_display_symbols[typeof(gate)]
@@ -201,13 +201,13 @@ q[2]:───────X──
 ```
 """
 function Base.pop!(circuit::QuantumCircuit)
-    pop!(get_gates(circuit))
+    pop!(get_gates_in_circuit(circuit))
     return circuit
 end
 
 function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer=10)
     println(io, "Quantum Circuit Object:")
-    println(io, "   qubit_count: $(get_qubit_count(circuit)) ")
+    println(io, "   qubit_count: $(get_num_qubits(circuit)) ")
     print_circuit_diagram(io, circuit, padding_width)
 end
 
@@ -231,13 +231,13 @@ function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::I
 end
 
 function get_circuit_layout(circuit::QuantumCircuit)
-    wire_count = 2 * get_qubit_count(circuit)
-    circuit_layout = fill("", (wire_count, length(get_gates(circuit)) + 1))
-    add_qubit_labels_to_circuit_layout!(circuit_layout, get_qubit_count(circuit))
+    wire_count = 2 * get_num_qubits(circuit)
+    circuit_layout = fill("", (wire_count, length(get_gates_in_circuit(circuit)) + 1))
+    add_qubit_labels_to_circuit_layout!(circuit_layout, get_num_qubits(circuit))
     
-    for (i_step, gate) in enumerate(get_gates(circuit))
+    for (i_step, gate) in enumerate(get_gates_in_circuit(circuit))
         longest_symbol_length=get_longest_symbol_length(gate)
-        add_wires_to_circuit_layout!(circuit_layout, i_step, get_qubit_count(circuit),longest_symbol_length)
+        add_wires_to_circuit_layout!(circuit_layout, i_step, get_num_qubits(circuit),longest_symbol_length)
         add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
         add_target_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
     end
@@ -399,10 +399,10 @@ julia> ket = simulate(c)
 ```
 """
 function simulate(circuit::QuantumCircuit)
-    hilbert_space_size = 2^get_qubit_count(circuit)
+    hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for gate in get_gates(circuit) 
+    for gate in get_gates_in_circuit(circuit) 
         apply_gate!(ψ, gate)        
     end
     return ψ
@@ -542,7 +542,7 @@ function get_measurement_probabilities(circuit::QuantumCircuit,
 end
 
 """
-    get_inverse(circuit::QuantumCircuit)
+    inv(circuit::QuantumCircuit)
 
 Return a `QuantumCircuit` which is the inverse of the input `circuit`.
 
@@ -562,7 +562,7 @@ q[2]:────────────────X──
 
 
 
-julia> get_inverse(c)
+julia> inv(c)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──*────Ry(-0.7854)──
@@ -574,18 +574,18 @@ q[2]:──X─────────────────
 
 ```
 """
-function get_inverse(circuit::QuantumCircuit)
+function Base.inv(circuit::QuantumCircuit)
 
     inverse_gates = Vector{AbstractGate}( 
-        [get_inverse(g) for g in reverse(get_gates(circuit))] 
+        [Base.inv(g) for g in reverse(get_gates_in_circuit(circuit))] 
     )
 
-    return QuantumCircuit(qubit_count=get_qubit_count(circuit),
+    return QuantumCircuit(qubit_count=get_num_qubits(circuit),
         gates=inverse_gates)
 end
 
 """
-    get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
 
 Returns a dictionary listing the number of gates of each type found in the `circuit`.
 
@@ -609,16 +609,16 @@ q[2]:───────H────X────H──
 
 
 
-julia> get_gate_counts(c)
+julia> get_num_gates_per_type(c)
 Dict{String, Int64} with 2 entries:
   "h"  => 3
   "cx" => 1
 
 ```
 """
-function get_gate_counts(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
-    for gate in get_gates(circuit)
+    for gate in get_gates_in_circuit(circuit)
         instruction_symbol=get_instruction_symbol(gate)
         if haskey(gate_counts, instruction_symbol)
             gate_counts[instruction_symbol] += 1
@@ -655,4 +655,4 @@ julia> get_num_gates(c)
 
 ```
 """
-get_num_gates(circuit::QuantumCircuit)::Integer=length(get_gates(circuit))
+get_num_gates(circuit::QuantumCircuit)::Integer=length(get_gates_in_circuit(circuit))

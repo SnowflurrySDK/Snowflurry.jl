@@ -2,7 +2,7 @@ using Snowflake
 using LinearAlgebra
 
 function test_inverse(gate::Snowflake.AbstractGate)
-    inverse_gate=get_inverse(gate)
+    inverse_gate=inv(gate)
     target_count=length(Snowflake.get_connected_qubits(gate))
 
     return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
