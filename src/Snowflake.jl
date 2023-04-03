@@ -31,6 +31,7 @@ export
     QuantumCircuit,
     AbstractGate,
     QPU,
+    QPUService,
     BlochSphere,
     AnimatedBlochSphere,
     NotImplementedError,

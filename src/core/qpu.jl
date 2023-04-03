@@ -20,6 +20,8 @@ Base.@kwdef struct QPU
     native_gates::Vector{String}
 end
 
+get_host(qpu::QPU)=qpu.host
+
 function Base.show(io::IO, qpu::QPU)
     println(io, "Quantum Processing Unit:")
     println(io, "   manufacturer: $(qpu.manufacturer)")
