@@ -16,5 +16,6 @@ makedocs(
         "Library" => "library.md",
     ],
     doctestfilters = [uuid_regex],
-    strict = true
+    strict = true,
+    checkdocs = :exports
 )

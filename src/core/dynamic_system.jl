@@ -1,6 +1,6 @@
 """
-    Snowflake.sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
-    Snowflake.sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
 
 Solves the Shrodinger equation:
 
@@ -44,8 +44,8 @@ function sesolve(
 end
 
 """
-    Snowflake.mesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
-    Snowflake.mesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    mesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    mesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
 
 Solves the Lindblad Master equation:
 

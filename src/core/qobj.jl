@@ -7,7 +7,7 @@ Although NOT the preferred way, one can directly build a Ket object by passing a
 ```jldoctest
 julia> using Snowflake
 
-julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
+julia> ψ = Ket([1.0; 0.0; 0.0])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
@@ -17,7 +17,7 @@ julia> ψ = Snowflake.Ket([1.0; 0.0; 0.0])
 ```
 A better way to initialize a Ket is to use a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
 ```jldoctest
-julia> ψ = Snowflake.fock(2, 3)
+julia> ψ = fock(2, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 0.0 + 0.0im
@@ -52,14 +52,14 @@ A structure representing a Bra (i.e. a row vector of complex values). A Bra is c
 - `data` -- the stored values.
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(1, 3)
+julia> ψ = fock(1, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> _ψ = Snowflake.Bra(ψ)
+julia> _ψ = Bra(ψ)
 3-element Bra{ComplexF64}:
 0.0 - 0.0im
 1.0 - 0.0im
@@ -99,7 +99,7 @@ A structure representing a quantum operator (i.e. a complex matrix).
 
 # Examples
 ```jldoctest
-julia> z = Snowflake.Operator([1.0 0.0;0.0 -1.0])
+julia> z = Operator([1.0 0.0;0.0 -1.0])
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}:
 1.0 + 0.0im    0.0 + 0.0im
@@ -108,7 +108,7 @@ Underlying data Matrix{ComplexF64}:
 ```
 Alternatively:
 ```jldoctest
-julia> z = Snowflake.sigma_z()  #sigma_z is a defined function in Snowflake
+julia> z = sigma_z()  #sigma_z is a defined function in Snowflake
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}:
 1.0 + 0.0im    0.0 + 0.0im
@@ -369,18 +369,18 @@ end
 Uses a local operator (`op`), which is defined for a particular body (e.g. qubit) with index `target_body_index`, to build the corresponding operator for the Hilbert space of the multi-body system given by `system`. 
 # Examples
 ```jldoctest
-julia> system = Snowflake.MultiBodySystem(3,2)
+julia> system = MultiBodySystem(3,2)
 Snowflake.Multibody system with 3 bodies
    Hilbert space structure:
    [2, 2, 2]
 
-julia> x = Snowflake.sigma_x()
+julia> x = sigma_x()
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}: 
 0.0 + 0.0im    1.0 + 0.0im
 1.0 + 0.0im    0.0 + 0.0im
 
-julia> X_1=Snowflake.get_embed_operator(x,1,system)
+julia> X_1 = get_embed_operator(x,1,system)
 (8, 8)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}: 
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -566,26 +566,28 @@ function get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
 end
 
 """
-    Snowflake.fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
+    fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
 
-Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as Snowflake.Ket, of default type ComplexF64.
+Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as a Ket.
+
+The Ket contains values of type `T`, which by default is ComplexF64.
 # Examples
 ```jldoctest
-julia> ψ = Snowflake.fock(0, 3)
+julia> ψ = fock(0, 3)
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ = Snowflake.fock(1, 3)
+julia> ψ = fock(1, 3)
 3-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 0.0 + 0.0im
 
 
-julia> ψ = Snowflake.fock(1, 3,ComplexF32) # specifying a type other than ComplexF64
+julia> ψ = fock(1, 3,ComplexF32) # specifying a type other than ComplexF64
 3-element Ket{ComplexF32}:
 0.0f0 + 0.0f0im
 1.0f0 + 0.0f0im
@@ -598,11 +600,46 @@ function fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
     return Ket(d)
 end
 
-spin_up() = fock(0,2)
-spin_down() = fock(1,2)
+"""
+    spin_up(T::Type{<:Complex}=ComplexF64)
+
+Returns the `Ket` representation of the spin-up state.
+
+The `Ket` stores values of type `T`, which is `ComplexF64` by default.
+
+# Examples
+```jldoctest
+julia> ψ = spin_up()
+2-element Ket{ComplexF64}:
+1.0 + 0.0im
+0.0 + 0.0im
+
+
+```
+"""
+spin_up(T::Type{<:Complex}=ComplexF64) = fock(0,2,T)
 
 """
-    Snowflake.create(hspace_size,T::Type{<:Complex}=ComplexF64)
+    spin_down(T::Type{<:Complex}=ComplexF64)
+
+Returns the `Ket` representation of the spin-down state.
+
+The `Ket` stores values of type `T`, which is `ComplexF64` by default.
+
+# Examples
+```jldoctest
+julia> ψ = spin_down()
+2-element Ket{ComplexF64}:
+0.0 + 0.0im
+1.0 + 0.0im
+
+
+```
+"""
+spin_down(T::Type{<:Complex}=ComplexF64) = fock(1,2,T)
+
+"""
+    create(hspace_size,T::Type{<:Complex}=ComplexF64)
 
 Returns the bosonic creation operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
@@ -615,7 +652,7 @@ function create(hspace_size,T::Type{<:Complex}=ComplexF64)
 end
 
 """
-    Snowflake.destroy(hspace_size,T::Type{<:Complex}=ComplexF64)
+    destroy(hspace_size,T::Type{<:Complex}=ComplexF64)
 
 Returns the bosonic annhilation operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
@@ -628,7 +665,7 @@ function destroy(hspace_size,T::Type{<:Complex}=ComplexF64)
 end
 
 """
-    Snowflake.number_op(hspace_size,T::Type{<:Complex}=ComplexF64)
+    number_op(hspace_size,T::Type{<:Complex}=ComplexF64)
 
 Returns the number operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
@@ -641,14 +678,14 @@ function number_op(hspace_size,T::Type{<:Complex}=ComplexF64)
 end
 
 """
-    Snowflake.coherent(alpha, hspace_size)
+    coherent(alpha, hspace_size)
 
-Returns a coherent state for the parameter `alpha` in a Fock space of size `hspace_size`. Note that |alpha|^2 is equal to the 
-    photon number of the coherent state. 
+Returns a coherent state for the parameter `alpha` in a Fock space of size `hspace_size`.
+Note that |alpha|^2 is equal to the photon number of the coherent state. 
 
     # Examples
 ```jldoctest
-julia> ψ = Snowflake.coherent(2.0,20)
+julia> ψ = coherent(2.0,20)
 20-element Ket{ComplexF64}:
 0.1353352832366127 + 0.0im
 0.2706705664732254 + 0.0im
@@ -672,7 +709,7 @@ julia> ψ = Snowflake.coherent(2.0,20)
 0.00020343873336404819 + 0.0im
 
 
-julia> Snowflake.expected_value(Snowflake.number_op(20),ψ)
+julia> expected_value(number_op(20),ψ)
 3.99999979364864 + 0.0im
 ```
 """
@@ -686,7 +723,7 @@ function coherent(alpha, hspace_size)
 end
 
 """
-    Snowflake.normalize!(x::Ket)
+    normalize!(x::Ket)
 
 Normalizes Ket `x` such that its magnitude becomes unity.
 
@@ -865,7 +902,7 @@ function increment_bitstring!(bitstring::Vector{T},
 end
 
 """
-    Snowflake.commute(A::Operator, B::Operator)
+    commute(A::Operator, B::Operator)
 
 Returns the commutation of `A` and `B`.
 ```jldoctest
@@ -883,7 +920,7 @@ Underlying data Matrix{ComplexF64}:
 0.0 + 1.0im    0.0 + 0.0im
 
 
-julia> Snowflake.commute(σ_x,σ_y)
+julia> commute(σ_x,σ_y)
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}: 
 0.0 + 2.0im    0.0 + 0.0im
@@ -895,18 +932,18 @@ function commute(A::Operator, B::Operator)
 end
 
 """
-    Snowflake.anticommute(A::Operator, B::Operator)
+    anticommute(A::Operator, B::Operator)
 
 Returns the anticommutation of `A` and `B`.
 ```jldoctest
-julia> σ_x = Snowflake.sigma_x()
+julia> σ_x = sigma_x()
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}: 
 0.0 + 0.0im    1.0 + 0.0im
 1.0 + 0.0im    0.0 + 0.0im
 
 
-julia> Snowflake.anticommute(σ_x,σ_x)
+julia> anticommute(σ_x,σ_x)
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}: 
 2.0 + 0.0im    0.0 + 0.0im
@@ -918,7 +955,7 @@ function anticommute(A::Operator, B::Operator)
 end
 
 """
-    Snowflake.ket2dm(ψ)
+    ket2dm(ψ::Ket)
 
 Returns the density matrix corresponding to the pure state ψ.
 """
@@ -927,12 +964,13 @@ function ket2dm(ψ::Ket)
 end
 
 """
-    Snowflake.fock_dm(i, hspace_size)
+    fock_dm(i::Int64, hspace_size::Int64)
 
-Returns the density matrix corresponding to the Fock base `i` defined in a Hilbert space of size `hspace_size`.
+Returns the density matrix corresponding to the Fock base `i` defined in a Hilbert space of
+size `hspace_size`.
 
 ```jldoctest
-julia> dm=Snowflake.fock_dm(0,2)
+julia> dm = fock_dm(0,2)
 (2, 2)-element Snowflake.Operator:
 Underlying data Matrix{ComplexF64}:
 1.0 + 0.0im    0.0 + 0.0im
@@ -941,7 +979,26 @@ Underlying data Matrix{ComplexF64}:
 """
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
 
+"""
+    wigner(ρ::Operator, p::Real, q::Real)
 
+Computes the Wigner function of the density matrix `ρ` at the point (`p`,`q`).
+
+```jldoctest
+julia> using Printf
+
+julia> alpha = 0.25;
+
+julia> hspace_size = 8;
+
+julia> Ψ = coherent(alpha, hspace_size);
+
+julia> prob = wigner(ket2dm(Ψ), 0, 0);
+
+julia> @printf "prob: %.6f" prob
+prob: -0.561815
+```
+"""
 function wigner(ρ::Operator, p::Real, q::Real)
     hilbert_size, _ = size(ρ.data)
     eta = q + p*im
