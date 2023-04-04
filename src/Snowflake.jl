@@ -32,6 +32,7 @@ export
     AbstractGate,
     QPU,
     QPUService,
+    Client,
     BlochSphere,
     AnimatedBlochSphere,
     NotImplementedError,
@@ -83,6 +84,10 @@ export
     does_circuit_satisfy_qpu_connectivity,
     transpile,
     serialize_circuit,
+    submit_circuit,
+    get_host,
+    get_status,
+    run,
 
     apply_gate!,
 

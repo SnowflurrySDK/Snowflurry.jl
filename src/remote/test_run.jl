@@ -1,13 +1,11 @@
 using Snowflake
 
-include("run_jobs.jl")
-
 qubit_count_circuit=3
 
 circuit = QuantumCircuit(qubit_count = qubit_count_circuit)
 
 # push!(circuit, [control_x(1, 3),rotation(2,π,-π/4),control_z(2,1)])
-push!(circuit, [sigma_x(3),control_z(2,1)])
+push!(circuit, [sigma_x(2),control_z(2,1)])
 # push!(circuit, [sigma_x(1)])
 
 user="user_test"
@@ -24,23 +22,21 @@ native_gates=["x" , "y" , "z" , "i", "cz"]
 
 num_repetitions=100
 
-verbose=true
-
-# create_virtual_qpu(qubit_count_qpu, connectivity, native_gates, host = "localhost:5600")
+verbose=false
 
 qpu=QPU(
-    "Anyon Systems Inc.",
-    "TBD",
-    "0000-0000-0001",
-    host,
-    qubit_count_qpu,
-    connectivity,
-    native_gates
+    "Anyon Systems Inc.",   # manufacturer
+    "Yukon",                # generation
+    "0000-0000-0001",       # serial_number
+    host,                   # host
+    qubit_count_qpu,        # qubit_count
+    connectivity,           # connectivity
+    native_gates            # native_gates
 )
 
 qpu_service=QPUService(test_client,qpu)
 
-println("run with qpu_service: $qpu_service and circuit: $circuit")
+println("run with qpu_service: $qpu_service \n\n using circuit: $circuit")
 
 histogram=run(qpu_service, circuit ,num_repetitions,verbose=verbose)
 
@@ -50,6 +46,6 @@ else
     println("Result of circuit computation:")
     println("State\t|\tPopulation")
     for (key,val) in histogram
-        println("$key \t \t$val")
+        println("$key \t|\t$val")
     end
 end
