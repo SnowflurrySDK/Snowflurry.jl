@@ -3,7 +3,7 @@ using Test
 
 @testset "AbstractOperator: NotImplemented" begin
 
-    struct NonExistentOperator{T<:ComplexF64} <: Snowflake.AbstractOperator
+    struct NonExistentOperator{T<:ComplexF64} <: AbstractOperator
         data::Matrix{T}
     end
 

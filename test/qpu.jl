@@ -10,7 +10,7 @@ using Test
     show(qpu)
     
     c = QuantumCircuit(qubit_count = 3)
-    # push!(c, sigma_x(1))
+    push!(c, sigma_x(1))
     push!(c, control_z(2,1))
 
     is_circuit_ok,  = is_circuit_native_on_qpu(c, qpu)

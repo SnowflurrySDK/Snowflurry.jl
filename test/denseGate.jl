@@ -31,7 +31,7 @@ test_operator_implementation(DenseOperator,dim=2,label="DenseOperator")
 
     # LinearAlgebra.eigen
 
-    vals, vecs = Snowflake.eigen(dense_op)
+    vals, vecs = eigen(dense_op)
     @test vals[1] ≈  -0.37228132326901453 + 0.0im
     @test vals[2] ≈   5.372281323269014 + 0.0im
 

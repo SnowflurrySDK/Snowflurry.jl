@@ -1,9 +1,9 @@
 using Snowflake
 using LinearAlgebra
 
-function test_inverse(gate::Snowflake.AbstractGate)
+function test_inverse(gate::AbstractGate)
     inverse_gate=inv(gate)
-    target_count=length(Snowflake.get_connected_qubits(gate))
+    target_count=length(get_connected_qubits(gate))
 
     return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
 end
@@ -25,7 +25,7 @@ end
 
 
 function test_operator_implementation(
-    op_type::Type{<:Snowflake.AbstractOperator};
+    op_type::Type{<:AbstractOperator};
     dim::Integer=2,
     label="",
     values::Vector{<:Number}=[1.,2.,3.,4.])
@@ -57,7 +57,7 @@ function test_operator_implementation(
         # Constructor from Integer-valued Array
         op=op_type(input_array_int)
 
-        @test Snowflake.tr(op)==LinearAlgebra.tr(get_matrix(op))
+        @test tr(op)==LinearAlgebra.tr(get_matrix(op))
 
         @test (matrix_size,matrix_size)==size(op)
 
