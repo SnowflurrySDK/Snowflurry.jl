@@ -6,6 +6,8 @@ using Test
     Ψ_1 = spin_down()
     print(Ψ_0)
 
+    @test Snowflake.normalize!(2*Ψ_0)≈ Ψ_0
+
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_0 - Ψ_1)
     _Ψ = Bra(Ψ_p)
@@ -93,14 +95,10 @@ end
 end
 
 @testset "operator_exceptions" begin
-    not_square = Operator(zeros(1, 2))
-    @test_throws ErrorException get_num_qubits(not_square)
-    @test_throws ErrorException get_num_bodies(not_square)
-
-    non_integer_qubits = Operator(zeros(3, 3))
+    non_integer_qubits = DenseOperator(zeros(3, 3))
     @test_throws DomainError get_num_qubits(non_integer_qubits)
 
-    non_integer_qutrit = Operator(zeros(2, 2))
+    non_integer_qutrit = DenseOperator(zeros(2, 2))
     @test_throws DomainError get_num_bodies(non_integer_qutrit, 3)
 end
 
@@ -114,7 +112,7 @@ end
 
 
 @testset "fock_space" begin
-   hspace_size = 8
+    hspace_size = 8
     a_dag = create(hspace_size)
     a = destroy(hspace_size)
     n = number_op(hspace_size)
@@ -123,8 +121,6 @@ end
     #subtracting a photon
     @test a*fock(3,hspace_size) ≈ sqrt(3.0)*fock(2,hspace_size)
     @test expected_value(n,fock(3,hspace_size))==3
-
-    
 end
 
 @testset "density_matrix" begin
@@ -165,7 +161,7 @@ end
 
 @testset "qutrit_operators" begin
     hilbert_space_size_per_qutrit = 3
-    qutrit_operator = Operator([1 0 0;
+    qutrit_operator = DenseOperator([1 0 0;
                                 0 1 0
                                 0 0 1])
     @test get_num_bodies(kron(qutrit_operator, qutrit_operator),

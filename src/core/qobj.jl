@@ -1,7 +1,6 @@
 """
 A Ket represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
-# Fields
-- `data` -- the stored values.
+
 # Examples
 Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
@@ -48,8 +47,7 @@ Base.length(x::Ket) = Base.length(x.data)
 
 """
 A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
-# Fields
-- `data` -- the stored values.
+
 # Examples
 ```jldoctest
 julia> ψ = fock(1, 3)
@@ -70,19 +68,21 @@ julia> _ψ * ψ    # A Bra times a Ket is a scalar
 1.0 + 0.0im
 
 julia> ψ*_ψ     # A Ket times a Bra is an operator
-(3, 3)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(3, 3)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
 struct Bra{T<:Complex}
     data::LinearAlgebra.Adjoint{T,Vector{T}}
     # constructor overload from Ket{Complex{T}}
     Bra(x::Ket{T}) where {T<:Complex} = new{T}(adjoint(x.data))
-    # This constructor is used when a Bra is multiplied by an Operator
-    Bra(x::LinearAlgebra.Adjoint{T,Vector{T}}) where {T<:Complex} = new{T}(x) 
+    # This constructor is used when a Bra is multiplied by an AbstractOperator
+    Bra(x::LinearAlgebra.Adjoint{T, SVector{N,T}}) where {N,T<:Complex} = new{T}(x) 
 end
 
 function Base.show(io::IO, x::Bra)
@@ -92,59 +92,87 @@ function Base.show(io::IO, x::Bra)
     end
 end
 
+abstract type AbstractOperator end
+
 """
-A structure representing a quantum operator (i.e. a complex matrix).
-# Fields
-- `data` -- the complex matrix.
+A structure representing a quantum operator with a full (dense) matrix representation.
 
 # Examples
 ```jldoctest
-julia> z = Operator([1.0 0.0;0.0 -1.0])
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+julia> z = DenseOperator([1.0 0.0;0.0 -1.0])
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
 
 ```
 Alternatively:
 ```jldoctest
-julia> z = sigma_z()  #sigma_z is a defined function in Snowflake
-(2,2)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64:
-1.0 + 0.0im    .
-.    -1.0 + 0.0im
 
-julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
-(4,4)-element Snowflake.DiagonalOperator:
-Underlying data type: ComplexF64:
-1.0 + 1.0im    .    .    .
-.    1.0 + 0.0im    .    .
-.    .    1.0 + 0.0im    .
-.    .    .    0.0 - 1.0im
+julia> z = rotation(π/2,-π/4)  
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+0.7071067811865476 + 0.0im    0.4999999999999999 - 0.5im
+-0.4999999999999999 - 0.5im    0.7071067811865476 + 0.0im
 
 
 ```
 """
-struct Operator{T<:Complex}
-    data::Matrix{T}
+struct DenseOperator{N,T<:Complex}<:AbstractOperator
+    data::SMatrix{N,N,T}
 end
 
 # Constructor from Real-valued Matrix
-Operator(x::Matrix{T}) where {T<:Real} = Operator(convert(Matrix{Complex{T}},x) )
+DenseOperator(x::Matrix{T}) where {T<:Real} = DenseOperator(convert(SMatrix{size(x)...,Complex{T}},x) )
+
+# Constructor from Complex-valued Matrix
+DenseOperator(x::Matrix{T}) where {T<:Complex} = DenseOperator(convert(SMatrix{size(x)...,T},x) )
 
 # Constructor from Integer-valued Matrix
 # default output is Operator{ComplexF64}
-Operator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = Operator(Matrix{S}(x))
+DenseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DenseOperator(Matrix{S}(x))
 
-# Constructor from adjoint(Operator{T})
-Operator(x::LinearAlgebra.Adjoint{T,Matrix{T}}) where {T<:Complex} = Operator{T}(x) 
+# Construction of DenseOperator using AbstractOperator
+DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 
-get_matrix(op::Operator) = op.data
-
-abstract type AbstractOperator end
+# Move Constructor: used to simplify operations such as 
+# Base.:+(A::AbstractOperator,B::AbstractOperator)=DenseOperator(A)+DenseOperator(B)
+# so that an input of type DenseOperator is not copied
+DenseOperator(op::DenseOperator) = op
 
 """
-A structure representing a diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
+
+getindex(A::AbstractOperator, i::Integer, j::Integer)
+
+Access the element at row i and column j in the matrix corresponding to `Operator` `A`.
+
+# Examples
+```jldoctest
+julia> Y = sigma_y()
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    0.0 - 1.0im
+    0.0 + 1.0im    .
+
+
+julia> Y[1,1]
+0.0 + 0.0im
+
+julia> Y[1,2]
+0.0 - 1.0im
+
+julia> Y[2,1]
+0.0 + 1.0im
+
+julia> Y[2,2]
+0.0 + 0.0im
+
+```
+"""
+Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i,j]
+
+"""
+A structure representing a diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
 
 # Examples
 ```jldoctest
@@ -175,20 +203,8 @@ DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVecto
 DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVector{length(x),T},x) )
 
 # Constructor from Integer-valued Vector
-# default output is Operator{ComplexF64}
+# default output is DiagonalOperator{ComplexF64}
 DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
-
-# Construction of Operator using DiagonalOperator{N,T}
-function Operator{T}(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex} 
-    op_matrix=  zeros(T,N,N)
-
-    for i in 1:N
-        op_matrix[i,i]=diag_op.data[i]
-    end
-    return Operator{T}(op_matrix) 
-end
-
-Operator(diag_op::DiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(diag_op)
 
 function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
     if j == i
@@ -199,7 +215,7 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
-A structure representing a anti-diagonal quantum operator (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
+A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
 
 # Examples
 ```jldoctest
@@ -240,29 +256,6 @@ AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(conver
 # Constructor from Complex-valued Vector
 AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
 
-# # Constructor from adjoint()
-# AntiDiagonalOperator(x::LinearAlgebra.Adjoint{T, StaticArraysCore.SVector{N, T}}) where {N,T<:Complex} =
-#     AntiDiagonalOperator(reverse(SVector{N,T}(x)))
-
-
-# Construction of Operator from AntiDiagonalOperator{N,T}
-function Operator{T}(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex} 
-    op_matrix=  zeros(T,N,N)
-
-    nrow=N
-    ncol=nrow
-    for i in range(1, stop = nrow)
-        for j in range(1, stop = ncol)
-            if ncol-j+1 == i
-                op_matrix[i,j]=anti_diag_op.data[i]
-            end
-        end
-    end
-    return Operator{T}(op_matrix) 
-end
-
-Operator(anti_diag_op::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=  Operator{T}(anti_diag_op)
-
 function Base.getindex(anti_diag_op::AntiDiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
     if N-j+1 == i
         return anti_diag_op.data[i]
@@ -271,7 +264,6 @@ function Base.getindex(anti_diag_op::AntiDiagonalOperator{N,T}, i::Integer, j::I
     end
 end
 
-
 """
     Base.adjoint(x)
 
@@ -279,7 +271,7 @@ Compute the adjoint (a.k.a. conjugate transpose) of a Ket, a Bra, or an Operator
 """
 Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
-Base.adjoint(A::Operator) = Operator(adjoint(A.data))
+
 Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
 
 Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
@@ -287,7 +279,7 @@ Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
 
 
 """
-    is_hermitian(A::Operator)
+    is_hermitian(A::AbstractOperator)
 
 Determine if Operator `A` is Hermitian (i.e. self-adjoint).
 
@@ -315,21 +307,18 @@ false
 
 ```
 """
-is_hermitian(A::Operator) = LinearAlgebra.ishermitian(A.data)
-
-is_hermitian(A::AbstractOperator)    = LinearAlgebra.ishermitian(Operator(A).data)
+is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
+is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Operator{T}, y::Operator{T}; atol::Real=1.0e-6) where {T<:Complex}= isapprox(x.data, y.data, atol=atol)
 
 # generic cases
-Base.:isapprox(x::AbstractOperator, y::Operator; atol::Real=1.0e-6) = isapprox(Operator(x), y, atol=atol)
-Base.:isapprox(x::Operator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(x, Operator(y), atol=atol)
-Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(Operator(x), Operator(y), atol=atol)
+Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), DenseOperator(y), atol=atol)
 
 # specializations
+Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
@@ -337,56 +326,45 @@ Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
 Base.:*(x::Bra, y::Ket) = x.data * y.data
 Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
-Base.:*(x::Ket, y::Bra) = Operator(x.data * y.data)
-Base.:*(M::Operator, x::Ket) = Ket(M.data * x.data)
-Base.:*(x::Bra, M::Operator) = Bra(x.data * M.data)
+Base.:*(x::Ket, y::Bra) = DenseOperator(x.data * y.data)
 
-Base.:*(M::AbstractOperator, x::Ket) = Ket(Operator(M).data * x.data)
-Base.:*(x::Bra, M::AbstractOperator) = Bra(x.data * Operator(M).data)
-
-Base.:*(A::Operator, B::Operator) = Operator(A.data * B.data)
+Base.:*(M::AbstractOperator, x::Ket) = Ket(Vector(DenseOperator(M).data * x.data))
+Base.:*(x::Bra, M::AbstractOperator) = Bra(x.data * DenseOperator(M).data)
 
 # generic cases
-Base.:*(A::AbstractOperator, B::Operator) = Operator(A) * B
-Base.:*(A::Operator, B::AbstractOperator) = A * Operator(B)
-Base.:*(A::AbstractOperator, B::AbstractOperator) = Operator(A) * Operator(B)
+Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOperator(B)
 
 # specializations
+Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,T}) where {N,T<:Complex} =
+    DenseOperator(A.data*B.data)
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(s::Number, A::Operator) = Operator(s*A.data)
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
-
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 
 
-Base.:+(A::Operator, B::Operator) = Operator(A.data+ B.data)
-Base.:-(A::Operator, B::Operator) = Operator(A.data- B.data)
-
 # generic cases
-Base.:+(A::AbstractOperator, B::Operator) = Operator(A) + B
-Base.:+(A::Operator, B::AbstractOperator) = A + Operator(B)
-Base.:+(A::AbstractOperator, B::AbstractOperator) = Operator(A) + Operator(B)
-
-Base.:-(A::AbstractOperator, B::Operator) = Operator(A) - B
-Base.:-(A::Operator, B::AbstractOperator) = A - Operator(B)
-Base.:-(A::AbstractOperator, B::AbstractOperator) = Operator(A) - Operator(B)
+Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
+Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOperator(B)
 
 # specializations
-Base.:+(A::DiagonalOperator, B::DiagonalOperator) = DiagonalOperator(A.data+B.data)
-Base.:-(A::DiagonalOperator, B::DiagonalOperator) = DiagonalOperator(A.data-B.data)
+Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
 
-Base.:+(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = AntiDiagonalOperator(A.data+B.data)
-Base.:-(A::AntiDiagonalOperator, B::AntiDiagonalOperator) = AntiDiagonalOperator(A.data-B.data)
 
+# specializations
+Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
 
 Base.length(x::Union{Ket, Bra}) = length(x.data)
 
 """
-    exp(A::Operator)
+    exp(A::AbstractOperator)
 
 Compute the matrix exponential of `Operator` `A`.
 
@@ -400,29 +378,22 @@ Underlying data type: ComplexF64:
 
 
 julia> x_rotation_90_deg = exp(-im*π/4*X)
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
-0.7071067811865477 + 0.0im    0.0 - 0.7071067811865475im
-0.0 - 0.7071067811865475im    0.7071067811865477 + 0.0im
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+0.7071067811865475 + 0.0im    0.0 - 0.7071067811865475im
+0.0 - 0.7071067811865475im    0.7071067811865475 + 0.0im
 
 
 ```
 """
-Base.exp(A::Operator) = Operator(exp(A.data))
+Base.exp(A::AbstractOperator) = DenseOperator(exp(DenseOperator(A).data))
 
-Base.exp(A::AbstractOperator) = exp(Operator(A))
-
+# specializations
+Base.exp(A::DenseOperator) = DenseOperator(exp(A.data))
 Base.exp(A::DiagonalOperator) = DiagonalOperator([exp(a) for a in Vector(A.data)])
 
 """
-    Base.getindex(A::Operator, m::Int64, n::Int64)
-
-Return the element at row `m` and column `n` of Operator `A`.
-"""
-Base.getindex(A::Operator, m::Int64, n::Int64) = Base.getindex(A.data, m, n)
-
-"""
-    eigen(A::Operator)
+    eigen(A::AbstractOperator)
 
 Compute the eigenvalue decomposition of Operator `A` and return an `Eigen`
 factorization object `F`. Eigenvalues are found in `F.values` while eigenvectors are
@@ -450,20 +421,21 @@ julia> eigenvector_1 = F.vectors[:, 1]
   0.7071067811865475 + 0.0im
 ```
 """
-eigen(A::Operator) = LinearAlgebra.eigen(A.data)
+eigen(A::AbstractOperator) = eigen(DenseOperator(A))
 
-eigen(A::AbstractOperator) = LinearAlgebra.eigen(Operator(A).data)
+# specializations
+eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
 
 """
-    tr(A::Operator)
+    tr(A::AbstractOperator)
 
 Compute the trace of Operator `A`.
 
 # Examples
 ```jldoctest
 julia> I = eye()
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im
 
@@ -473,10 +445,12 @@ julia> trace = tr(I)
 
 ```
 """
-tr(A::Operator)=LinearAlgebra.tr(A.data)
+tr(A::AbstractOperator)=tr(DenseOperator(A))
+
+tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
 
 """
-    expected_value(A::Operator, psi::Ket)
+    expected_value(A::AbstractOperator, psi::Ket)
 
 Compute the expectation value ⟨`ψ`|`A`|`ψ`⟩ given Operator `A` and Ket |`ψ`⟩.
 
@@ -499,12 +473,16 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-expected_value(A::Operator, psi::Ket) = (Bra(psi)*(A*psi))
+expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*(DenseOperator(A)*psi))
+expected_value(A::DenseOperator, psi::Ket) = (Bra(psi)*(A*psi))
 
-expected_value(A::DiagonalOperator, psi::Ket) = (Bra(psi)*(Operator(A)*psi))
+# generic case
+Base.:size(M::AbstractOperator) = size(M.data)
 
+# specializations
+Base.:size(M::DiagonalOperator)     = (length(M.data),length(M.data))
+Base.:size(M::AntiDiagonalOperator) = (length(M.data),length(M.data))
 
-Base.:size(M::Operator) = size(M.data)
 
 # iterator for Ket object
 Base.iterate(x::Ket, state = 1) =
@@ -513,7 +491,8 @@ Base.iterate(x::Ket, state = 1) =
     """
     kron(x, y)
 
-Compute the Kronecker product of two [`Kets`](@ref Ket) or two [`Operators`](@ref Operator).
+Compute the Kronecker product of two [`Kets`](@ref Ket) or two 
+[`DenseOperator`](@ref) , [`DiagonalOperator`](@ref), [`AntiDiagonalOperator`](@ref).
 More details about the Kronecker product can be found
 [here](https://en.wikipedia.org/wiki/Kronecker_product). 
 
@@ -540,20 +519,21 @@ julia> ψ_0_1 = kron(ψ_0, ψ_1)
 
 
 julia> kron(sigma_x(), sigma_y())
-(4, 4)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(4, 4)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 - 1.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
-Base.kron(x::Operator, y::Operator) = Operator(kron(x.data, y.data))
 
-Base.kron(x::AbstractOperator, y::Operator) = kron(Operator(x), y)
-Base.kron(x::Operator, y::AbstractOperator) = kron(x, Operator(y))
-Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(Operator(x), Operator(y))
+Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(DenseOperator(x), DenseOperator(y))
+
+Base.kron(x::DenseOperator, y::DenseOperator) = DenseOperator(kron(x.data, y.data))
 
 
 """
@@ -579,7 +559,7 @@ function Base.show(io::IO, system::MultiBodySystem)
 end
 
 """
-    get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
+    get_embed_operator(op::DenseOperator, target_body_index::Int, system::MultiBodySystem)
 
 Uses a local operator (`op`), which is defined for a particular body (e.g. qubit) with index `target_body_index`, to build the corresponding operator for the Hilbert space of the multi-body system given by `system`. 
 # Examples
@@ -595,9 +575,9 @@ Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
-julia> X_1 = get_embed_operator(x,1,system)
-(8, 8)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}: 
+julia> X_1=get_embed_operator(x,1,system)
+(8, 8)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
@@ -606,13 +586,15 @@ Underlying data Matrix{ComplexF64}:
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
-function get_embed_operator(op::Operator, target_body_index::Int, system::MultiBodySystem)
+function get_embed_operator(op::DenseOperator, target_body_index::Int, system::MultiBodySystem)
     n_body = length(system.hilbert_space_structure)
     @assert target_body_index <= n_body
 
-    result = Operator(
+    result = DenseOperator(
         Matrix{eltype(op.data)}(
             I,
             system.hilbert_space_structure[1],
@@ -629,21 +611,23 @@ function get_embed_operator(op::Operator, target_body_index::Int, system::MultiB
             result = kron(result, op)
         else
             n_hilbert = system.hilbert_space_structure[i_body]
-            result = kron(result, Operator(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
+            result = kron(result, DenseOperator(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
         end
     end
     return result
 end
 
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
-    get_embed_operator(Operator(op), target_body_index, system)
+    get_embed_operator(DenseOperator(op), target_body_index, system)
 
 get_matrix(op::AbstractOperator) = 
     throw(NotImplementedError(:get_matrix,op))
 
-function Base.show(io::IO, x::Operator)
-    println(io, "$(size(x.data))-element Snowflake.Operator:")
-    println(io, "Underlying data $(typeof(x.data)):")
+get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+
+function Base.show(io::IO, x::DenseOperator)
+    println(io, "$(size(x.data))-element Snowflake.DenseOperator:")
+    println(io, "Underlying data $(eltype(x.data)):")
     (nrow, ncol) = size(x.data)
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
@@ -701,8 +685,8 @@ function Base.show(io::IO, x::AntiDiagonalOperator)
     println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=nrow
-    for i in range(1, stop = nrow)
-        for j in range(1, stop = ncol)
+    for i in 1:nrow
+        for j in 1:ncol
             if ncol-j+1 == i
                 print(io, "    $(x.data[i])")
             else
@@ -728,15 +712,15 @@ function get_matrix(op::AntiDiagonalOperator{N,T}) where {N,T<:Complex}
 end
 
 """
-    get_num_qubits(x::Operator)
+    get_num_qubits(x::AbstractOperator)
 
 Returns the number of qubits associated with an `Operator`.
 # Examples
 ```jldoctest
-julia> ρ = Operator([1. 0.
+julia> ρ = DenseOperator([1. 0.
                      0. 0.])
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im
 
@@ -745,15 +729,15 @@ julia> get_num_qubits(ρ)
 
 ```
 """
-function get_num_qubits(x::Operator)
+function get_num_qubits(x::AbstractOperator)
     (num_rows, num_columns) = size(x)
     if num_rows != num_columns
-        throw(ErrorException("Operator is not square"))
+        throw(ErrorException("$(typeof(x)) is not square"))
     end
     qubit_count = log2(num_rows)
     if mod(qubit_count, 1) != 0
         throw(DomainError(qubit_count,
-            "Operator does not correspond to an integer number of qubits"))
+            "$(typeof(x)) does not correspond to an integer number of qubits"))
     end
     return Int(qubit_count)
 end
@@ -787,17 +771,17 @@ function get_num_qubits(x::Union{Ket, Bra})
 end
 
 """
-    get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+    get_num_bodies(x::AbstractOperator, hilbert_space_size_per_body=2)
 
 Returns the number of bodies associated with an `Operator` given the
 `hilbert_space_size_per_body`.
 # Examples
 ```jldoctest
-julia> ρ = Operator([1. 0. 0.
+julia> ρ = DenseOperator([1. 0. 0.
                      0. 0. 0.
                      0. 0. 0.])
-(3, 3)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+(3, 3)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -807,15 +791,15 @@ julia> get_num_bodies(ρ, 3)
 
 ```
 """
-function get_num_bodies(x::Operator, hilbert_space_size_per_body=2)
+function get_num_bodies(x::AbstractOperator, hilbert_space_size_per_body=2)
     (num_rows, num_columns) = size(x)
     if num_rows != num_columns
-        throw(ErrorException("Operator is not square"))
+        throw(ErrorException("$(typeof(x)) is not square"))
     end
     num_bodies = log(hilbert_space_size_per_body, num_rows)
     if mod(num_bodies, 1) != 0
         throw(DomainError(num_bodies,
-            "Operator does not correspond to an integer number of bodies"))
+            "$(typeof(x)) does not correspond to an integer number of bodies"))
     end
     return Int(num_bodies)
 end
@@ -937,7 +921,7 @@ function create(hspace_size,T::Type{<:Complex}=ComplexF64)
     for i in 2:hspace_size
         a_dag[i,i-1]=sqrt((i-1.0))
     end
-    return Operator(a_dag)
+    return DenseOperator(a_dag)
 end
 
 """
@@ -950,7 +934,7 @@ function destroy(hspace_size,T::Type{<:Complex}=ComplexF64)
     for i in 2:hspace_size
         a[i-1,i]=sqrt((i-1.0))
     end
-    return Operator(a)
+    return DenseOperator(a)
 end
 
 """
@@ -963,7 +947,7 @@ function number_op(hspace_size,T::Type{<:Complex}=ComplexF64)
     for i in 2:hspace_size
         n[i,i]=i-1.0
     end
-    return Operator(n)
+    return DenseOperator(n)
 end
 
 """
@@ -1191,7 +1175,7 @@ function increment_bitstring!(bitstring::Vector{T},
 end
 
 """
-    commute(A::Operator, B::Operator)
+    commute(A::AbstractOperator, B::AbstractOperator)
 
 Returns the commutation of `A` and `B`.
 ```jldoctest
@@ -1217,17 +1201,11 @@ Underlying data type: ComplexF64:
 
 ```
 """
-commute(A::Operator, B::Operator) = A*B-B*A
-
-# generic cases
-commute(A::AbstractOperator, B::Operator)= commute(Operator(A),B)
-commute(A::Operator, B::AbstractOperator)= commute(A,Operator(B))
-
 commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
 
 
 """
-    anticommute(A::Operator, B::Operator)
+    anticommute(A::AbstractOperator, B::AbstractOperator)
 
 Returns the anticommutation of `A` and `B`.
 ```jldoctest
@@ -1246,12 +1224,6 @@ Underlying data type: ComplexF64:
 
 ```
 """
-anticommute(A::Operator, B::Operator)= A*B+B*A
-
-# generic cases
-anticommute(A::AbstractOperator, B::Operator)=anticommute(Operator(A),B)
-anticommute(A::Operator, B::AbstractOperator)=anticommute(A,Operator(B))
-
 anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
 
 
@@ -1271,17 +1243,19 @@ Returns the density matrix corresponding to the Fock base `i` defined in a Hilbe
 size `hspace_size`.
 
 ```jldoctest
-julia> dm = fock_dm(0,2)
-(2, 2)-element Snowflake.Operator:
-Underlying data Matrix{ComplexF64}:
+julia> dm=fock_dm(0,2)
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im
+
+
 ```
 """
 fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
 
 """
-    wigner(ρ::Operator, p::Real, q::Real)
+    wigner(ρ::AbstractOperator, p::Real, q::Real)
 
 Computes the Wigner function of the density matrix `ρ` at the point (`p`,`q`).
 
@@ -1300,8 +1274,8 @@ julia> @printf "prob: %.6f" prob
 prob: -0.561815
 ```
 """
-function wigner(ρ::Operator, p::Real, q::Real)
-    hilbert_size, _ = size(ρ.data)
+function wigner(ρ::AbstractOperator, p::Real, q::Real)
+    hilbert_size, _ = size(ρ)
     eta = q + p*im
     w = 0.0
     for m in 1:hilbert_size
