@@ -82,6 +82,7 @@ export
     is_circuit_native_on_qpu,
     does_circuit_satisfy_qpu_connectivity,
     transpile,
+    serialize_circuit,
 
     apply_gate!,
 
@@ -121,6 +122,7 @@ include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
 
+include("remote/run_jobs.jl")
 
 
 

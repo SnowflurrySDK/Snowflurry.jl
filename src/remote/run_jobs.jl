@@ -13,18 +13,23 @@ function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer;indentat
         "num_repititions"=>repetitions
     )
 
-    for gate in get_gates(circuit)
+    for gate in get_circuit_gates(circuit)
         push!(
             circuit_description["circuit"]["operations"],
             Dict{String,Any}(
                 "type"=> get_instruction_symbol(gate),
-                "qubits"=> get_connected_qubits(gate),
-                "parameters"=> get_parameters(gate)  
+                #server-side qubit numbering starts at 0
+                "qubits"=> [n-1 for n in get_connected_qubits(gate)],
+                "parameters"=> get_gate_parameters(gate)  
             )
         )
     end
 
-    circuit_json=JSON.json(circuit_description,indentation)
+    if indentation>0
+        circuit_json=JSON.json(circuit_description,indentation)
+    else
+        circuit_json=JSON.json(circuit_description)
+    end
 
     write(
         joinpath(commonpath,"test_circuit.json"), 
@@ -103,7 +108,7 @@ function get_status(client::Client,circuitID::String;verbose=false)
         printout_response(:get_status,formatted_response,typeof(response))
     end
 
-    return body["status"]["type"]
+    return body["status"]
 end
 
 function get_result(client::Client,circuitID::String;verbose=false)
@@ -178,21 +183,26 @@ function run(qpu_service::QPUService, circuit::QuantumCircuit,num_repetitions::I
         println("Circuit submitted: circuitID returned: $circuitID")
     end
 
-    while true
-        status=get_status(client,circuitID;)
+    status=get_status(client,circuitID;)
 
+    while true
+        
         if verbose
-            println("status: $(status)")
+            println("status: $(status["type"])")
         end
         
-        if !(status in ["queued","running"])
+        if !(status["type"] in ["queued","running"])
             break
         end
 
         sleep(0.2) #wait 200ms to minimize printout counts
+        status=get_status(client,circuitID;)
     end
     
-    histogram=get_result(client,circuitID;verbose=verbose)
-
+    if status["type"] == "failed"       
+        return Dict("error_msg"=>status["message"])
+    else
+        histogram=get_result(client,circuitID;verbose=verbose)
+    end
 end
 

@@ -7,8 +7,8 @@ qubit_count_circuit=3
 circuit = QuantumCircuit(qubit_count = qubit_count_circuit)
 
 # push!(circuit, [control_x(1, 3),rotation(2,π,-π/4),control_z(2,1)])
-# push!(circuit, [sigma_x(3),control_z(2,1)])
-push!(circuit, [sigma_x(1)])
+push!(circuit, [sigma_x(3),control_z(2,1)])
+# push!(circuit, [sigma_x(1)])
 
 user="user_test"
 
@@ -44,9 +44,12 @@ println("run with qpu_service: $qpu_service and circuit: $circuit")
 
 histogram=run(qpu_service, circuit ,num_repetitions,verbose=verbose)
 
-println("Result of circuit computation:")
-println("State\t|\tPopulation")
-for (key,val) in histogram
-    println("$key \t \t$val")
+if haskey(histogram,"error_msg")
+    println("Job failed: \n\t$(histogram["error_msg"]) \n")
+else
+    println("Result of circuit computation:")
+    println("State\t|\tPopulation")
+    for (key,val) in histogram
+        println("$key \t \t$val")
+    end
 end
-
