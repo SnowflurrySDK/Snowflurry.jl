@@ -10,18 +10,10 @@ circuit = QuantumCircuit(qubit_count = qubit_count_circuit)
 # push!(circuit, [sigma_x(3),control_z(2,1)])
 push!(circuit, [sigma_x(1)])
 
-# circuit_json=serialize_circuit(c,55)
-
 user="user_test"
-
-# host="https://httpbin.org/post"
-# access_token="test-access-token"
 
 host        =ENV["ANYON_QUANTUM_HOST"]
 access_token=ENV["ANYON_QUANTUM_TOKEN"]
-
-# host        ="https://en.wikipedia.org/wiki/Main_Page"
-# access_token="12345"
 
 test_client=Client(host,user,access_token)
 
