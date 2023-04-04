@@ -101,27 +101,25 @@ function create_virtual_qpu(qubit_count::Int, connectivity::SparseArrays.SparseM
 end
 
 
-function is_circuit_native_on_qpu(c::QuantumCircuit, qpu::QPU)
-    for step in c.pipeline
-        for gate in step
-            if !(gate.instruction_symbol in qpu.native_gates)
-                return false, gate.instruction_symbol
-            end
+function is_circuit_native_on_qpu(circuit::QuantumCircuit, qpu::QPU)
+    for gate in get_circuit_gates(circuit)
+        instruction_symbol=get_instruction_symbol(gate)
+        if !(instruction_symbol in qpu.native_gates)
+            return false, instruction_symbol
         end
     end
     return true, nothing
 end
 
-function does_circuit_satisfy_qpu_connectivity(c::QuantumCircuit, qpu::QPU)
+function does_circuit_satisfy_qpu_connectivity(circuit::QuantumCircuit, qpu::QPU)
     #this function makes sure all gates satisfy the qpu connectivity
     connectivity_dense = Array(qpu.connectivity)# TODO: all operations should be done in Sparse matrix format.
-    for step in c.pipeline
-        for gate in step
-            i_row = gate.target[1]
-            for target_qubit in gate.target
-                if (connectivity_dense[i_row,target_qubit]==0)
-                    return false, gate
-                end
+    for gate in get_circuit_gates(circuit)
+        connected_qubits=get_connected_qubits(gate)
+        i_row = connected_qubits[1]
+        for target_qubit in connected_qubits
+            if (connectivity_dense[i_row,target_qubit]==0)
+                return false, gate
             end
         end
     end        

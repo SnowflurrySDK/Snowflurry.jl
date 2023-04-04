@@ -73,7 +73,7 @@ end
     @test op[2,2] === exp(im*ϕ)
     @test op[2,1] === ComplexF64(0.)
 
-    @test get_operator(get_inverse(phase_gate))==get_operator(phase_shift(target,-ϕ))
+    @test get_operator(inv(phase_gate))==get_operator(phase_shift(target,-ϕ))
   
     apply_gate!(ψ, phase_gate)
 
@@ -153,4 +153,5 @@ end
     @test_throws DomainError apply_gate!(ψ, T_gate_error)
    
 end
+
 

@@ -1,6 +1,6 @@
 """
-    sesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
-    sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    sesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
+    sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[])
 
 Solves the Shrodinger equation:
 
@@ -13,22 +13,20 @@ Solves the Shrodinger equation:
 - `e_ops` -- list of operators for which the expected value will be returned as a function of time. 
 """
 function sesolve(
-        H::Operator, 
+        H::AbstractOperator, 
         ψ_0::Ket, 
         t_range::StepRangeLen; 
-        e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], 
-        kwargs...
+        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     )
     Hamiltonian(t)=H
-    sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops, kwargs=kwargs)
+    sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops)
 end
 
 function sesolve(
         H::Function, 
         ψ_0::Ket, 
         t_range::StepRangeLen; 
-        e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], 
-        kwargs...
+        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     )
     dpsi_dt(t,ψ) = -im*H(t)*ψ
     y=rungekutta2(dpsi_dt, ψ_0, t_range)
@@ -44,8 +42,8 @@ function sesolve(
 end
 
 """
-    mesolve(H::Operator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
-    mesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[], kwargs...)
+    mesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
+    mesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
 
 Solves the Lindblad Master equation:
 
@@ -59,11 +57,11 @@ Solves the Lindblad Master equation:
 - `c_ops` -- list of collapse operators ``L_i``'s.
 """
 function mesolve(
-    H::Operator, 
-    ρ_0::Operator, 
+    H::AbstractOperator, 
+    ρ_0::AbstractOperator, 
     t::StepRangeLen; 
-    c_ops::Vector{Operator{T}} where {T<:Complex}=[], 
-    e_ops::Vector{Operator{T}} where {T<:Complex}=(Operator)[], kwargs...
+    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     )
     drho_dt(t,ρ) = -im*commute(H,ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
     n_t = length(t)

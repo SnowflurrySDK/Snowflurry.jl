@@ -74,8 +74,8 @@ Note that the circuit object has been given a Universally Unique Identifier (UUI
 Now, let's build the circuit using the following commands:
 
 ```julia
-push_gate!(c, [hadamard(1)])
-push_gate!(c, [control_x(1, 2)])
+push!(c, [hadamard(1)])
+push!(c, [control_x(1, 2)])
 ```
 
 The first line adds a Hadamard gate to circuit object `c` which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with qubit 1 as the control qubit and qubit 2 as the target qubit. The output in Julia REPL would look like:
@@ -115,9 +115,9 @@ The script below puts all the steps above together:
 ```julia
 using Snowflake
 
-c = QuantumCircuit(qubit_count=2, bit_count=0)
-push_gate!(c, [hadamard(1)])
-push_gate!(c, [control_x(1, 2)])
+c = QuantumCircuit(qubit_count=2)
+push!(c, [hadamard(1)])
+push!(c, [control_x(1, 2)])
 ψ = simulate(c)
 ```
 

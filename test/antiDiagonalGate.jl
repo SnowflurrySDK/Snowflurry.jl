@@ -47,8 +47,8 @@ test_operator_implementation(
         ])
 
     @test anti_diag_op*anti_diag_op≈ result
-    @test Operator(anti_diag_op)*anti_diag_op≈ result
-    @test anti_diag_op*Operator(anti_diag_op)≈ result
+    @test DenseOperator(anti_diag_op)*anti_diag_op≈ result
+    @test anti_diag_op*DenseOperator(anti_diag_op)≈ result
     
     # Exponentiation
 
@@ -60,8 +60,24 @@ test_operator_implementation(
     @test op[2,1] ≈ -im
     @test isapprox(op[2,2],ComplexF64(0.),atol=1e-12)
 
+    composite_op=kron(anti_diag_op,eye())
+
+    @test composite_op[1,3]==anti_diag_op[1,2]
+    @test composite_op[2,4]==anti_diag_op[1,2]
+    @test composite_op[1,1]==ComplexF64(0.)
+    @test composite_op[3,1]≈ anti_diag_op[2,1]
+    @test composite_op[4,2]≈ anti_diag_op[2,1]
+
+    composite_op=kron(eye(),anti_diag_op)
+
+    @test composite_op[1,2]==anti_diag_op[1,2]
+    @test composite_op[2,1]==anti_diag_op[2,1]
+    @test composite_op[1,1]==ComplexF64(0.)
+    @test composite_op[3,4]≈ anti_diag_op[1,2]
+    @test composite_op[4,3]≈ anti_diag_op[2,1]
+    
     # LinearAlgebra.eigen
-    vals, vecs = eigen(anti_diag_op)
+    vals, vecs = Snowflake.eigen(anti_diag_op)
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ 1.0 
 
@@ -96,5 +112,12 @@ end
     @test ψ ≈ ψ_result
 
     @test adjoint(y_operator) ≈ y_operator
+
+end
+
+@testset "AntiDiagonal Gate: sigma_p, sigma_m" begin
+
+    @test typeof(sigma_p())==AntiDiagonalOperator{2,ComplexF64}
+    @test typeof(sigma_m())==AntiDiagonalOperator{2,ComplexF64}
 
 end
