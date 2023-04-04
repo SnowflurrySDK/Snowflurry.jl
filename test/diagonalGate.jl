@@ -48,7 +48,7 @@ using StaticArrays
     @test ψ≈ψ_z
 
     # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
-    @test adjoint(phase_gate_operator)≈get_operator(Snowflake.phase_shift(target,-ϕ))
+    @test adjoint(phase_gate_operator)≈get_operator(phase_shift(target,-ϕ))
 
     @test test_inverse(phase_gate)
 

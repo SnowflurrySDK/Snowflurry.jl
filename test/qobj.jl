@@ -6,7 +6,7 @@ using Test
     Ψ_1 = spin_down()
     print(Ψ_0)
 
-    @test Snowflake.normalize!(2*Ψ_0)≈ Ψ_0
+    @test normalize!(2*Ψ_0)≈ Ψ_0
 
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_0 + Ψ_1)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_0 - Ψ_1)
@@ -30,7 +30,7 @@ using Test
     Y = sigma_y(1)
     Z = sigma_z(1)
 
-    vals, vecs = Snowflake.eigen(hadamard())
+    vals, vecs = eigen(hadamard())
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ 1.0 
 
@@ -139,7 +139,7 @@ end
 end
 
 @testset "coherent state" begin
-    ψ = Snowflake.coherent(2.0,20)
+    ψ = coherent(2.0,20)
     @test expected_value(number_op(20),ψ) ≈ 4.0 atol=1.0e-4
 end
 
@@ -156,7 +156,7 @@ end
 end
 
 @testset "genlaguerre" begin
-    @test Snowflake.genlaguerre(0, 0, 0) == 1
+    @test genlaguerre(0, 0, 0) == 1
 end
 
 @testset "qutrit_operators" begin

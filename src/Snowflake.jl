@@ -60,6 +60,8 @@ export
     get_gate_parameters,
     normalize!,
     get_measurement_probabilities,
+    genlaguerre,
+    moyal,
     wigner, 
     viz_wigner, 
     sesolve,

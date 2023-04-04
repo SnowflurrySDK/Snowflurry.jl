@@ -108,7 +108,6 @@ Underlying data ComplexF64:
 ```
 Alternatively:
 ```jldoctest
-
 julia> z = rotation(π/2,-π/4)  
 (2, 2)-element Snowflake.DenseOperator:
 Underlying data ComplexF64:
@@ -176,13 +175,13 @@ A structure representing a diagonal quantum `Operator` (i.e. a complex matrix, w
 
 # Examples
 ```jldoctest
-julia> z = Snowflake.DiagonalOperator([1.0,-1.0])
+julia> z = DiagonalOperator([1.0,-1.0])
 (2,2)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 0.0im    .
 .    -1.0 + 0.0im
 
-julia> z = Snowflake.DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
+julia> z = DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
 (4,4)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 1.0im    .    .    .
@@ -219,7 +218,7 @@ A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matr
 
 # Examples
 ```jldoctest
-julia> Snowflake.AntiDiagonalOperator([1,2])
+julia> AntiDiagonalOperator([1,2])
 (2,2)-element Snowflake.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
@@ -421,10 +420,10 @@ julia> eigenvector_1 = F.vectors[:, 1]
   0.7071067811865475 + 0.0im
 ```
 """
-eigen(A::AbstractOperator) = eigen(DenseOperator(A))
+LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
 
 # specializations
-eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
+LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
 
 """
     tr(A::AbstractOperator)
@@ -445,9 +444,9 @@ julia> trace = tr(I)
 
 ```
 """
-tr(A::AbstractOperator)=tr(DenseOperator(A))
+LinearAlgebra.tr(A::AbstractOperator)=LinearAlgebra.tr(DenseOperator(A))
 
-tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
+LinearAlgebra.tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
 
 """
     expected_value(A::AbstractOperator, psi::Ket)
@@ -1015,7 +1014,7 @@ julia> normalize!(ψ)
 ```
 
 """
-function normalize!(x::Ket)
+function LinearAlgebra.normalize!(x::Ket)
     a = LinearAlgebra.norm(x.data,2)
     x = 1.0/a*x
     return x
@@ -1216,7 +1215,7 @@ Underlying data type: ComplexF64:
     1.0 + 0.0im    .
 
 
-julia> Snowflake.anticommute(σ_x,σ_x)
+julia> anticommute(σ_x,σ_x)
 (2,2)-element Snowflake.DiagonalOperator:
 Underlying data type: ComplexF64:
 2.0 + 0.0im    .
@@ -1291,7 +1290,7 @@ function wigner(ρ::AbstractOperator, p::Real, q::Real)
 end
 
 """
-    Snowflake.moyal(m, n)
+    moyal(m, n)
 
 Returns the Moyal function `w_mn(eta)` for Fock states `m` and `n`.
 
@@ -1305,7 +1304,7 @@ end
 
 
 """
-    Snowflake.genlaguerre(x, alpha, n)
+    genlaguerre(x, alpha, n)
 
 Returns the generalized Laguerre polynomial of degree `n` for `x` using a recursive
 method. See [https://en.wikipedia.org/wiki/Laguerre_polynomials](https://en.wikipedia.org/wiki/Laguerre_polynomials).

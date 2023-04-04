@@ -77,7 +77,7 @@ test_operator_implementation(
     @test composite_op[4,3]≈ anti_diag_op[2,1]
     
     # LinearAlgebra.eigen
-    vals, vecs = Snowflake.eigen(anti_diag_op)
+    vals, vecs = eigen(anti_diag_op)
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ 1.0 
 
@@ -90,7 +90,7 @@ end
     
     ψ = Ket([v for v in 1:2^qubit_count])
 
-    Y_gate=Snowflake.sigma_y(target)
+    Y_gate=sigma_y(target)
 
     y_operator=get_operator(Y_gate)
 
