@@ -70,7 +70,7 @@ export
     simulate_shots,
     get_num_gates,
     get_num_gates_per_type,
-    get_gates_in_circuit,
+    get_circuit_gates,
     plot_histogram,
     plot_bloch_sphere,
     plot_bloch_sphere_animation,

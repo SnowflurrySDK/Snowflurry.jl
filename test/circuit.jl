@@ -5,16 +5,16 @@ using Test
     c = QuantumCircuit(qubit_count = 2)
     print(c)
     push!(c, [hadamard(1)])
-    @test length(get_gates_in_circuit(c)) == 1
+    @test length(get_circuit_gates(c)) == 1
 
 
     push!(c, [control_x(1, 2)])
-    @test length(get_gates_in_circuit(c)) == 2
+    @test length(get_circuit_gates(c)) == 2
     pop!(c)
-    @test length(get_gates_in_circuit(c)) == 1
+    @test length(get_circuit_gates(c)) == 1
 
     push!(c, control_x(1, 2))
-    @test length(get_gates_in_circuit(c)) == 2
+    @test length(get_circuit_gates(c)) == 2
 
     plot_histogram(c,100)
     plot_bloch_sphere(c)
@@ -90,11 +90,11 @@ end
     push!(c, control_x(1, 2))
     inverse_c = inv(c)
 
-    @test get_instruction_symbol(get_gates_in_circuit(inverse_c)[1])   == "cx"
-    @test get_connected_qubits(get_gates_in_circuit(inverse_c)[1])     == [1, 2]
-    @test get_instruction_symbol(get_gates_in_circuit(inverse_c)[2])   == "rx"
-    @test get_connected_qubits(get_gates_in_circuit(inverse_c)[2])     == [1]
-    @test get_gate_parameters(get_gates_in_circuit(inverse_c)[2])["theta"]  ≈ -pi/2
+    @test get_instruction_symbol(get_circuit_gates(inverse_c)[1])   == "cx"
+    @test get_connected_qubits(get_circuit_gates(inverse_c)[1])     == [1, 2]
+    @test get_instruction_symbol(get_circuit_gates(inverse_c)[2])   == "rx"
+    @test get_connected_qubits(get_circuit_gates(inverse_c)[2])     == [1]
+    @test get_gate_parameters(get_circuit_gates(inverse_c)[2])["theta"]  ≈ -pi/2
 end
 
 @testset "get_num_gates_per_type" begin

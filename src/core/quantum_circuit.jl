@@ -23,7 +23,7 @@ Base.@kwdef struct QuantumCircuit
 end
 
 get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
-get_gates_in_circuit(circuit::QuantumCircuit)=circuit.gates
+get_circuit_gates(circuit::QuantumCircuit)=circuit.gates
 
 """
     push!(circuit::QuantumCircuit, gate::AbstractGate)
@@ -59,7 +59,7 @@ q[2]:───────X────X──
 """
 function Base.push!(circuit::QuantumCircuit, gate::AbstractGate)
     ensure_gate_is_in_circuit(circuit, gate)
-    push!(get_gates_in_circuit(circuit), gate)
+    push!(get_circuit_gates(circuit), gate)
     return circuit
 end
 
@@ -201,7 +201,7 @@ q[2]:───────X──
 ```
 """
 function Base.pop!(circuit::QuantumCircuit)
-    pop!(get_gates_in_circuit(circuit))
+    pop!(get_circuit_gates(circuit))
     return circuit
 end
 
@@ -232,10 +232,10 @@ end
 
 function get_circuit_layout(circuit::QuantumCircuit)
     wire_count = 2 * get_num_qubits(circuit)
-    circuit_layout = fill("", (wire_count, length(get_gates_in_circuit(circuit)) + 1))
+    circuit_layout = fill("", (wire_count, length(get_circuit_gates(circuit)) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, get_num_qubits(circuit))
     
-    for (i_step, gate) in enumerate(get_gates_in_circuit(circuit))
+    for (i_step, gate) in enumerate(get_circuit_gates(circuit))
         longest_symbol_length=get_longest_symbol_length(gate)
         add_wires_to_circuit_layout!(circuit_layout, i_step, get_num_qubits(circuit),longest_symbol_length)
         add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
@@ -402,7 +402,7 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for gate in get_gates_in_circuit(circuit) 
+    for gate in get_circuit_gates(circuit) 
         apply_gate!(ψ, gate)        
     end
     return ψ
@@ -577,7 +577,7 @@ q[2]:──X─────────────────
 function Base.inv(circuit::QuantumCircuit)
 
     inverse_gates = Vector{AbstractGate}( 
-        [Base.inv(g) for g in reverse(get_gates_in_circuit(circuit))] 
+        [Base.inv(g) for g in reverse(get_circuit_gates(circuit))] 
     )
 
     return QuantumCircuit(qubit_count=get_num_qubits(circuit),
@@ -618,7 +618,7 @@ Dict{String, Int64} with 2 entries:
 """
 function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
-    for gate in get_gates_in_circuit(circuit)
+    for gate in get_circuit_gates(circuit)
         instruction_symbol=get_instruction_symbol(gate)
         if haskey(gate_counts, instruction_symbol)
             gate_counts[instruction_symbol] += 1
@@ -655,4 +655,4 @@ julia> get_num_gates(c)
 
 ```
 """
-get_num_gates(circuit::QuantumCircuit)::Integer=length(get_gates_in_circuit(circuit))
+get_num_gates(circuit::QuantumCircuit)::Integer=length(get_circuit_gates(circuit))
