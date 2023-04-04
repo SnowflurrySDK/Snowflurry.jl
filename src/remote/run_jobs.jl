@@ -24,21 +24,12 @@ function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer;indentat
         )
     end
 
-    circuit_json=JSON.json(circuit_description)
-    # circuit_json=JSON3.write(circuit_description)
+    circuit_json=JSON.json(circuit_description,indentation)
 
-    # # circuit_dict=JSON.parsefile(joinpath(commonpath,"test_send_cirq.json"))
-
-    # # println("circuit_dict: $circuit_dict")
-
-    # # circuit_json="{'circuit': {'operations': [{'type': 'x', 'qubits': [0], 'parameters': {}}, {'type': 'i', 'qubits': [1], 'parameters': {}}, {'type': 'iswap', 'qubits': [0, 1], 'parameters': {}}]}, 'num_repititions': 200}"
-
-    # # circuit_json=JSON.json(circuit_dict)
-
-    # write(
-    #     joinpath(commonpath,"test_circuit.json"), 
-    #     circuit_json
-    # )
+    write(
+        joinpath(commonpath,"test_circuit.json"), 
+        circuit_json
+    )
 
     return circuit_json
 end
@@ -48,47 +39,96 @@ struct Client
     host::String
     user::String
     access_token::String
-    session::Any
-
-    function Client(host::String, user::String,access_token::String)
-        if occursin("8080",host)
-            path_url=joinpath(host,"circuits/")
-        else
-            path_url=host
-        end
-
-        println("path_url: ",path_url)
-        println("access_token: ",access_token)
-
-        # session = HTTP.get(
-        #     path_url,
-        #     headers=Dict("Authorization"=>"Bearer $access_token"),
-        #     cookies = true,
-        # )
-        session="none"
-
-        println("session: ",session)
-
-        new(host,user,access_token,session)
-    end
 end
 
 get_host(client::Client)= client.host
 
-function submit_circuit(client::Client,circuit_json::String) 
-    if occursin("8080",host)
-        path_url=joinpath(get_host(client),"circuits/")
-    else
-        path_url=host
-    end
-    
-    HTTP.post(
-        path_url, 
-        headers=Dict("Authorization"=>"Bearer $(client.access_token)"),
-        body=circuit_json
-    )
+# submits circuit to host and returns circuitID
+function submit_circuit(client::Client,circuit_json::String;verbose=false) 
 
+    path_url=joinpath(get_host(client),"circuits")
+    
+    response=HTTP.post(
+        path_url, 
+        headers=Dict(
+            "Authorization"=>"Bearer $(client.access_token)",
+            "Content-Type"=>"application/json"
+            ),
+        body=circuit_json,
+    )
+    
+    formatted_response=Dict(response)
+
+    body=JSON.parse(formatted_response["body"])
+    
+    if verbose
+        printout_response(:submit_circuit,formatted_response,typeof(response))
+    end
+
+    return body["circuitID"]
 end
+
+function printout_response(fname::Symbol,formatted_response::Dict{String,Any},type_response::Type)
+    println("\n#############################################")
+    println("\n\t$fname() returns: \n")
+
+    println("Response type: $type_response")
+
+    for (key,val) in formatted_response
+        println("")
+        println("$key :\t$val")
+    end
+
+    println("")
+end
+
+
+function get_status(client::Client,circuitID::String;verbose=false)
+
+    path_url=joinpath(get_host(client),"circuits/$circuitID")
+    
+    response=HTTP.get(
+        path_url, 
+        headers=Dict(
+            "Authorization"=>"Bearer $(client.access_token)",
+            "Content-Type"=>"application/json"
+            )
+        )
+
+    formatted_response=Dict(response)
+
+    body=JSON.parse(formatted_response["body"])
+    
+    if verbose
+        printout_response(:get_status,formatted_response,typeof(response))
+    end
+
+    return body["status"]["type"]
+end
+
+function get_result(client::Client,circuitID::String;verbose=false)
+
+    path_url=joinpath(get_host(client),"circuits/$circuitID/result")
+    
+    response=HTTP.get(
+        path_url, 
+        headers=Dict(
+            "Authorization"=>"Bearer $(client.access_token)",
+            "Content-Type"=>"application/json"
+            )
+        )
+
+    formatted_response=Dict(response)
+
+    body=JSON.parse(formatted_response["body"])
+    
+    if verbose
+        printout_response(:get_result,formatted_response,typeof(response))
+    end
+
+    return body["histogram"]
+end
+
 
 abstract type Service end
 
@@ -112,11 +152,47 @@ end
 get_client(qpu_service::QPUService)=qpu_service.client
 get_qpu(qpu_service::QPUService)=qpu_service.qpu
 
-function run(qpu_service::QPUService, circuit::QuantumCircuit,num_repetitions::Integer)
-    circuit_json=serialize_circuit(circuit,num_repetitions)
-        
-    response=submit_circuit(get_client(qpu_service),circuit_json)
+function Base.Dict(response::HTTP.Messages.Response)
+    formatted_response=Dict(
+        "version"   =>response.version, 
+        "status"    =>response.status, 
+        "headers"   =>response.headers, 
+        "request"   =>response.request
+    )
 
-    println(response)
+    # convert response body from binary to ASCII
+    read_buffer=IOBuffer(reinterpret(UInt8, response.body))
+    formatted_response["body"]=String(readuntil(read_buffer, 0x00))
+
+    return formatted_response
+end
+
+function run(qpu_service::QPUService, circuit::QuantumCircuit,num_repetitions::Integer;verbose=false)
+    circuit_json=serialize_circuit(circuit,num_repetitions)
+    
+    client=get_client(qpu_service)
+
+    circuitID=submit_circuit(client,circuit_json;verbose=verbose)
+
+    if verbose
+        println("Circuit submitted: circuitID returned: $circuitID")
+    end
+
+    while true
+        status=get_status(client,circuitID;)
+
+        if verbose
+            println("status: $(status)")
+        end
+        
+        if !(status in ["queued","running"])
+            break
+        end
+
+        sleep(0.2) #wait 200ms to minimize printout counts
+    end
+    
+    histogram=get_result(client,circuitID;verbose=verbose)
+
 end
 

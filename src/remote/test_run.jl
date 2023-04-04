@@ -30,7 +30,9 @@ connectivity=Matrix([1 1 0; 1 1 1 ; 0 1 1])
 
 native_gates=["x" , "y" , "z" , "i", "cz"]
 
-num_repetitions=10
+num_repetitions=100
+
+verbose=true
 
 # create_virtual_qpu(qubit_count_qpu, connectivity, native_gates, host = "localhost:5600")
 
@@ -48,8 +50,11 @@ qpu_service=QPUService(test_client,qpu)
 
 println("run with qpu_service: $qpu_service and circuit: $circuit")
 
-run(qpu_service, circuit ,num_repetitions)
+histogram=run(qpu_service, circuit ,num_repetitions,verbose=verbose)
 
-# qpu = create_virtual_qpu(3,connectivity, )
-
+println("Result of circuit computation:")
+println("State\t|\tPopulation")
+for (key,val) in histogram
+    println("$key \t \t$val")
+end
 
