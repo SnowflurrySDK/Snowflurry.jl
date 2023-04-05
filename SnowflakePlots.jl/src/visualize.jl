@@ -7,16 +7,14 @@ The number of shots taken is specified by `shots_count`.
     
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count=2, bit_count=0);
+julia> circuit = QuantumCircuit(qubit_count=2);
 
-julia> push_gate!(circuit, [hadamard(1), sigma_x(2)])
+julia> push!(circuit, [hadamard(1), sigma_x(2)])
 Quantum Circuit Object:
-   id: c9ebdf08-f0ba-11ec-0c5e-8ff2bf2f3825 
    qubit_count: 2 
-   bit_count: 0 
-q[1]:──H──
-          
-q[2]:──X──
+q[1]:──H───────
+               
+q[2]:───────X──
 
 
 ```
@@ -44,7 +42,8 @@ function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
 end
 
 """
-    viz_wigner(ρ::Operator, x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
+    viz_wigner(ρ::AbstractOperator,
+        x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
         y::Union{AbstractRange{<:Real},AbstractVector{<:Real}})
 
 Generates a contour plot of the Wigner function of the density matrix `ρ`.
@@ -64,7 +63,8 @@ julia> viz_wigner(ρ, x, y)
 ```
 ![Wigner function contour plot](assets/visualize/viz_wigner.png)
 """
-function viz_wigner(ρ::Operator, x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
+function viz_wigner(ρ::AbstractOperator,
+    x::Union{AbstractRange{<:Real},AbstractVector{<:Real}},
     y::Union{AbstractRange{<:Real},AbstractVector{<:Real}})
 
     return Plots.contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
