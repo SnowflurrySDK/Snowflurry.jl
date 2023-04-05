@@ -4,7 +4,7 @@ using HTTP
 
 commonpath="benchmarking/data"
 
-function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer;indentation::Integer=4)
+function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
   
     circuit_description=Dict(
         "circuit"=>Dict{String,Any}(
@@ -25,16 +25,7 @@ function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer;indentat
         )
     end
 
-    if indentation>0
-        circuit_json=JSON.json(circuit_description,indentation)
-    else
-        circuit_json=JSON.json(circuit_description)
-    end
-
-    write(
-        joinpath(commonpath,"test_circuit.json"), 
-        circuit_json
-    )
+    circuit_json=JSON.json(circuit_description)
 
     return circuit_json
 end
@@ -49,8 +40,10 @@ end
 get_host(client::Client)= client.host
 
 # submits circuit to host and returns circuitID
-function submit_circuit(client::Client,circuit_json::String;verbose=false) 
+function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer) 
 
+    circuit_json=serialize_circuit(circuit,num_repetitions)
+  
     path_url=joinpath(get_host(client),"circuits")
     
     response=HTTP.post(
@@ -62,33 +55,14 @@ function submit_circuit(client::Client,circuit_json::String;verbose=false)
         body=circuit_json,
     )
     
-    formatted_response=Dict(response)
+    formatted_response=format_response(response)
 
     body=JSON.parse(formatted_response["body"])
-    
-    if verbose
-        printout_response(:submit_circuit,formatted_response,typeof(response))
-    end
 
     return body["circuitID"]
 end
 
-function printout_response(fname::Symbol,formatted_response::Dict{String,Any},type_response::Type)
-    println("\n#############################################")
-    println("\n\t$fname() returns: \n")
-
-    println("Response type: $type_response")
-
-    for (key,val) in formatted_response
-        println("")
-        println("$key :\t$val")
-    end
-
-    println("")
-end
-
-
-function get_status(client::Client,circuitID::String;verbose=false)
+function get_status(client::Client,circuitID::String)
 
     path_url=joinpath(get_host(client),"circuits/$circuitID")
     
@@ -100,18 +74,14 @@ function get_status(client::Client,circuitID::String;verbose=false)
             )
         )
 
-    formatted_response=Dict(response)
+    formatted_response=format_response(response)
 
     body=JSON.parse(formatted_response["body"])
-    
-    if verbose
-        printout_response(:get_status,formatted_response,typeof(response))
-    end
 
     return body["status"]
 end
 
-function get_result(client::Client,circuitID::String;verbose=false)
+function get_result(client::Client,circuitID::String)
 
     path_url=joinpath(get_host(client),"circuits/$circuitID/result")
     
@@ -123,41 +93,35 @@ function get_result(client::Client,circuitID::String;verbose=false)
             )
         )
 
-    formatted_response=Dict(response)
+    formatted_response=format_response(response)
 
     body=JSON.parse(formatted_response["body"])
-    
-    if verbose
-        printout_response(:get_result,formatted_response,typeof(response))
-    end
 
     return body["histogram"]
 end
 
 
-abstract type Service end
+abstract type AbstractQPU end
 
-struct QPUService <: Service
+Base.@kwdef struct AnyonQPU <: AbstractQPU
     client::Client
-    qpu::QPU
-
-    function QPUService(client::Client,qpu::QPU)
-        if client.host!=qpu.host
-            throw(
-                ArgumentError(
-                    "Client host $(get_host(client)) and qpu host $(get_host(qpu)) do not match."
-                    )
-                )
-        end
-
-        new(client,qpu)
-    end
+    manufacturer ::String="Anyon Systems Inc."
+    generation   ::String="Yukon"
+    serial_number::String="ANYK202201"
+    printout_delay::Real=200. # milliseconds between get_status printouts
 end
 
-get_client(qpu_service::QPUService)=qpu_service.client
-get_qpu(qpu_service::QPUService)=qpu_service.qpu
+get_client(qpu_service::AnyonQPU)=qpu_service.client
+get_printout_delay(qpu_service::AnyonQPU)=qpu_service.printout_delay
 
-function Base.Dict(response::HTTP.Messages.Response)
+function Base.show(io::IO, qpu::AnyonQPU)
+    println(io, "Quantum Processing Unit:")
+    println(io, "   manufacturer:  $(qpu.manufacturer)")
+    println(io, "   generation:    $(qpu.generation) ")
+    println(io, "   serial_number: $(qpu.serial_number) ")
+end
+
+function format_response(response::HTTP.Messages.Response)
     formatted_response=Dict(
         "version"   =>response.version, 
         "status"    =>response.status, 
@@ -172,37 +136,32 @@ function Base.Dict(response::HTTP.Messages.Response)
     return formatted_response
 end
 
-function run(qpu_service::QPUService, circuit::QuantumCircuit,num_repetitions::Integer;verbose=false)
-    circuit_json=serialize_circuit(circuit,num_repetitions)
+function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
     
-    client=get_client(qpu_service)
+    client=get_client(qpu)
 
-    circuitID=submit_circuit(client,circuit_json;verbose=verbose)
+    circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    if verbose
-        println("Circuit submitted: circuitID returned: $circuitID")
-    end
+    println("Circuit submitted: circuitID returned: $circuitID\n")
 
     status=get_status(client,circuitID;)
 
     while true
         
-        if verbose
-            println("status: $(status["type"])")
-        end
+        println("status: $(status["type"])")
         
         if !(status["type"] in ["queued","running"])
             break
         end
 
-        sleep(0.2) #wait 200ms to minimize printout counts
+        sleep(get_printout_delay(qpu)/1000) 
         status=get_status(client,circuitID;)
     end
     
     if status["type"] == "failed"       
         return Dict("error_msg"=>status["message"])
     else
-        histogram=get_result(client,circuitID;verbose=verbose)
+        histogram=get_result(client,circuitID)
     end
 end
 

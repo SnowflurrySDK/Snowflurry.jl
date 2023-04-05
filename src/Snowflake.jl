@@ -31,7 +31,7 @@ export
     QuantumCircuit,
     AbstractGate,
     QPU,
-    QPUService,
+    AnyonQPU,
     Client,
     BlochSphere,
     AnimatedBlochSphere,
@@ -85,9 +85,10 @@ export
     transpile,
     serialize_circuit,
     submit_circuit,
+    get_client,
     get_host,
     get_status,
-    run,
+    run_job,
 
     apply_gate!,
 
@@ -127,7 +128,7 @@ include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
 
-include("remote/run_jobs.jl")
+include("anyon/run_jobs.jl")
 
 
 
