@@ -409,6 +409,9 @@ function Base.show(io::IO, qpu::VirtualQPU)
     println(io, "   package:     $(metadata["package"])")
 end
 
+read_response_body(body::Base.CodeUnits{UInt8, String})=
+    read_response_body(convert(Vector{UInt8},body))
+
 function read_response_body(body::Vector{UInt8})::String
     # convert response body from binary to ASCII
     read_buffer=IOBuffer(reinterpret(UInt8, body))

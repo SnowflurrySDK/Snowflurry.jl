@@ -1,27 +1,6 @@
 using Interpolations
 using PlotlyJS
 
-function plot_histogram(circuit::QuantumCircuit, shots_count::Int)
-    data = simulate_shots(circuit, shots_count)
-    datamap = proportionmap(data)
-
-    labels = String[]
-    for (key, value) in datamap
-        push!(labels, key)
-    end
-
-    Plots.bar(
-        (x -> datamap[x]).(labels),
-        xticks = (1:length(data), labels),
-        legends = false,
-        ylabel = "probabilities",
-    )
-end
-
-function viz_wigner(ρ, x, y)
-    return Plots.contour(x, y, (x,y) -> wigner(ρ, x, y), fill = true)
-end
-
 """
     BlochSphere
 
@@ -179,7 +158,7 @@ sphere can be modified by passing a [`BlochSphere`](@ref) struct.
 # Examples
 ```jldoctest
 julia> ρ = DenseOperator([1.0 0.0;
-                     0.0 0.0])
+                          0.0 0.0])
 (2, 2)-element Snowflake.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im

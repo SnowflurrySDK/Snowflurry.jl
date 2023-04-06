@@ -27,6 +27,17 @@ Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="BRANCH_NAME")
 
 **Note:** Replace the `BRANCH_NAME` with the name of the branch you want to use. The stable release is `main` and the most up-to-date one is `next`.
 
+Multiple visualization tools are available in the SnowflakePlots package. After installing
+Snowflake, the SnowflakePlots package can be installed by entering the following in the
+Julia REPL:
+```julia
+import Pkg
+Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", subdir="SnowflakePlots.jl",
+    rev="BRANCH_NAME")
+```
+
+**Note:** `BRANCH_NAME` should be the same as the one used to add Snowflake.
+
 
 # Get Started
 Like other Julia Packages, you can use Snowflake in a [Julia REPL](https://docs.julialang.org/en/v1/stdlib/REPL/), in a [Julia script](https://docs.julialang.org/en/v1/manual/getting-started/), or in a [notebook](https://docs.julialang.org/en/v1/manual/getting-started/).
@@ -41,7 +52,7 @@ A typical workflow to use a quantum computer consists of the following four step
 
 - Postprocess: Compute summary statistics and visualize the results of the experiments.
 
-Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see https://en.wikipedia.org/wiki/Quantum_logic_gate for an introduction to quantum logic gates). This circuit is shown below:
+Now, let's try Snowflake and SnowflakePlots by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see https://en.wikipedia.org/wiki/Quantum_logic_gate for an introduction to quantum logic gates). This circuit is shown below:
 
 ![Bell State generator circuit](https://upload.wikimedia.org/wikipedia/commons/f/fc/The_Hadamard-CNOT_transform_on_the_zero-state.png)
 
@@ -92,7 +103,7 @@ q[2]:───────X──
 
 **Note:** Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
-Finally, you can simulate this circuit and obtain the final quantum state of this two-qubit register:
+You can also simulate this circuit and obtain the final quantum state of this two-qubit register:
 
 ```julia
 ψ = simulate(c)
@@ -101,7 +112,7 @@ Finally, you can simulate this circuit and obtain the final quantum state of thi
 which would give:
 
 ```julia
-4-element Ket:
+4-element Ket{ComplexF64}:
 0.7071067811865475 + 0.0im
 0.0 + 0.0im
 0.0 + 0.0im
@@ -110,15 +121,27 @@ which would give:
 
 **Note:** Snowflake always assumes a qubit is initialized in state 0.
 
+Finally, you can use SnowflakePlots to generate a histogram which shows the measurement
+output distribution after taking a certain number of shots, in this case 100, on a quantum
+computer simulator:
+
+```julia
+using SnowflakePlots
+
+plot_histogram(c, 100)
+```
+![Measurement results histogram](assets/index/index_histogram.png)
+
 The script below puts all the steps above together:
 
 ```julia
-using Snowflake
+using Snowflake, SnowflakePlots
 
 c = QuantumCircuit(qubit_count=2)
 push!(c, [hadamard(1)])
 push!(c, [control_x(1, 2)])
 ψ = simulate(c)
+plot_histogram(c, 100)
 ```
 
 ```@meta

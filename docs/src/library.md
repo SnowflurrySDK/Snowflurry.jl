@@ -1,7 +1,7 @@
 # Library
 
 ```@meta
-DocTestSetup = :(using Snowflake)
+DocTestSetup = :(using Snowflake, SnowflakePlots)
 ```
 
 
@@ -111,7 +111,8 @@ mesolve
 
 ### Visualization
 
-Snowflake provides multiple tools for visualizing quantum computer calculations.
+The SnowflakePlots package provides multiple tools for visualizing quantum computer
+calculations.
 
 ```@docs
 plot_bloch_sphere(circuit::QuantumCircuit; qubit_id::Int = 1,
@@ -147,6 +148,10 @@ AnimatedBlochSphere
 <iframe src="assets/visualize/plot_bloch_sphere_animation_without_interpolation.html"
 style="height:825px;width:100%;">
 </iframe>
+```
+```@docs
+plot_histogram
+viz_wigner
 ```
 
 ```@meta

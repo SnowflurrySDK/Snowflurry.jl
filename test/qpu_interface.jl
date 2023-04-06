@@ -83,6 +83,10 @@ end
 
     @test_throws ArgumentError read_response_body(body)
     
+    body=codeunits(my_string)
+
+    @test read_response_body(body)==my_string
+
 end
 
 @testset "Status" begin

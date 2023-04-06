@@ -6,13 +6,11 @@ Snowflakes allows one to easily design quantum circuits, experiments and applica
 
 module Snowflake
 using Base: String
-using Plots: size
 using LinearAlgebra
 using StatsBase
 using UUIDs
 using Parameters
 using Printf
-using Plots
 using StaticArrays
 import SparseArrays
 
@@ -66,7 +64,6 @@ export
     genlaguerre,
     moyal,
     wigner, 
-    viz_wigner, 
     sesolve,
     mesolve,
     tr,
@@ -76,9 +73,6 @@ export
     get_num_gates,
     get_num_gates_per_type,
     get_circuit_gates,
-    plot_histogram,
-    plot_bloch_sphere,
-    plot_bloch_sphere_animation,
    
     create_virtual_qpu,
     is_circuit_native_on_qpu,
@@ -135,7 +129,6 @@ include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/transpile.jl")
-include("core/visualize.jl")
 
 include("anyon/run_jobs.jl")
 
