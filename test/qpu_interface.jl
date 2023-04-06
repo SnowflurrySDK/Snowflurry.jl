@@ -47,7 +47,7 @@ end
 
     status=get_status(test_client,circuitID)
 
-    @test status["type"] in ["queued","running","failed","succeeded"]
+    @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
 @testset "run on AnyonQPU" begin
@@ -63,8 +63,8 @@ end
 
     num_repetitions=100
         
-    qpu=AnyonQPU(client=test_client)
-    
+    qpu=AnyonQPU(client=test_client,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201")
+
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
     @test Snowflake.get_printout_delay(qpu)>=0.
 

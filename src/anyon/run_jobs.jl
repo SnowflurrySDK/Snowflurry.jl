@@ -2,6 +2,23 @@ using Snowflake
 using JSON
 using HTTP
 
+Base.@kwdef struct Status
+    type::String
+    message::String=""
+end
+
+get_status_type(s::Status)=s.type
+get_status_message(s::Status)=s.message
+
+function Base.show(io::IO, status::Status)
+    if status.message ==""
+        println(io, "Status: $(status.type)")
+    else
+        println(io, "Status: $(status.type)")
+        println(io, "Message: $(status.type)")
+    end
+end
+
 abstract type Requestor end
 
 get_request(requestor::Requestor,::String,::String,::String) = 
@@ -12,16 +29,29 @@ post_request(requestor::Requestor,::String,::String,::String) =
 struct HTTPRequestor<:Requestor end
 struct MockRequestor<:Requestor end
 
-path_circuits="circuits"
-path_results="result"
-length_circuitID=37
+const path_circuits="circuits"
+const path_results="result"
+
+const failed_status ="failed"
+const succeeded_status="succeeded"
+const running_status="running"
+const queued_status ="queued"
+const cancelled_status ="cancelled"
+
+const possible_status_list=[
+    failed_status,
+    succeeded_status,
+    running_status,
+    queued_status,
+    cancelled_status,
+]
 
 function post_request(
     ::HTTPRequestor,
     url::String,
     access_token::String,
     body::String
-    )
+    )::HTTP.Response
 
     return HTTP.post(
         url, 
@@ -73,19 +103,30 @@ function get_request(
     ::MockRequestor,
     url::String,
     access_token::String
-    )
+    )::HTTP.Response
 
-    if endswith(url[1:end-length_circuitID],path_circuits)
-        return HTTP.Response(200, [], 
-            body="{\"status\":{\"type\":\"succeeded\"}}"
-        )
-    elseif endswith(url,path_results)
-        return HTTP.Response(200, [], 
-            body="{\"histogram\":{\"001\":\"100\"}}"
-        ) 
-    else
-        throw(NotImplementedError(:get_request,url))
+    myregex=Regex("(.*)(/$path_circuits/)(.*)")
+    match_obj=match(myregex,url)
+
+    if !isnothing(match_obj)
+
+        myregex=Regex("(.*)(/$path_circuits/)(.*)(/$path_results)")   
+        match_obj=match(myregex,url)
+                
+        if !isnothing(match_obj)
+            # caller is :get_result
+            return HTTP.Response(200, [], 
+                body="{\"histogram\":{\"001\":\"100\"}}"
+            ) 
+        else
+            # caller is :get_status
+            return HTTP.Response(200, [], 
+                body="{\"status\":{\"type\":\"succeeded\"}}"
+            )
+        end
     end
+
+    throw(NotImplementedError(:get_request,url))
 end
 
 
@@ -112,7 +153,7 @@ julia> serialize_circuit(c,10)
 
 ```
 """
-function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
+function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)::String
   
     circuit_description=Dict(
         "circuit"=>Dict{String,Any}(
@@ -245,12 +286,11 @@ julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client,circuitID)
-Dict{String, String} with 1 entry:
-  "type" => "succeeded"
+Status: succeeded
 
 ```
 """
-function get_status(client::Client,circuitID::String)::Dict{String, String}
+function get_status(client::Client,circuitID::String)::Status
 
     path_url=joinpath(get_host(client),path_circuits,"$circuitID")
     
@@ -264,7 +304,13 @@ function get_status(client::Client,circuitID::String)::Dict{String, String}
 
     body=JSON.parse(formatted_response["body"])
 
-    return body["status"]
+    @assert body["status"]["type"] in possible_status_list
+
+    if body["status"]["type"]==failed_status
+        return Status(type=body["status"]["type"],message=body["message"])
+    else
+        return Status(type=body["status"]["type"])
+    end
 end
 
 """
@@ -331,7 +377,7 @@ A data structure to represent a Anyon System's QPU.
 ```jldoctest
 julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
   
-julia> qpu=AnyonQPU(client=c)
+julia> qpu=AnyonQPU(client=c,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon 
@@ -342,9 +388,9 @@ Quantum Processing Unit:
 """
 Base.@kwdef struct AnyonQPU <: AbstractQPU
     client        ::Client
-    manufacturer  ::String  ="Anyon Systems Inc."
-    generation    ::String  ="Yukon"
-    serial_number ::String  ="ANYK202201"
+    manufacturer  ::String
+    generation    ::String
+    serial_number ::String
     printout_delay::Real    =200. # milliseconds between get_status() printouts
 end
 
@@ -413,12 +459,13 @@ completed circuit calculations, or an error message.
 ```jldoctest
 julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
   
-julia> qpu=AnyonQPU(client=c);
+julia> qpu=AnyonQPU(client=c,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201");
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Circuit submitted: circuitID returned: 8050e1ed-5e4c-4089-ab53-cccda1658cd0
 
-status: succeeded
+Status: succeeded
+
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -434,21 +481,31 @@ function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer
 
     status=get_status(client,circuitID;)
 
-    while true
-        
-        println("status: $(status["type"])")
-        
-        if !(status["type"] in ["queued","running"])
+    ref_time=Base.time_ns()
+    delay=get_printout_delay(qpu)/1e6 #convert ms to ns
+ 
+    while true        
+        current_time=Base.time_ns()
+
+        if (current_time-ref_time)>delay
+            println(status)
+            ref_time=current_time
+        end
+           
+        if !(get_status_type(status) in [queued_status,running_status])
             break
         end
 
-        sleep(get_printout_delay(qpu)/1000) 
         status=get_status(client,circuitID;)
     end
     
-    if status["type"] == "failed"       
-        return Dict("error_msg"=>status["message"])
-    else
+    if get_status_type(status) == failed_status       
+        return Dict("error_msg"=>get_status_message(status))
+
+    elseif get_status_type(status) == cancelled_status       
+        return Dict("error_msg"=>cancelled_status)
+    
+    else # computation succeeded
         return get_result(client,circuitID)
     end
 end
