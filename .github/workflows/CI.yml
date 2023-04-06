@@ -35,8 +35,27 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      
+      - name: Build Snowflake
+        run: >
+          julia --project=. -e 
+          'using Pkg;
+          Pkg.instantiate()'
+      
+      - name: Test Snowflake
+        uses: julia-actions/julia-runtest@v1
+
+      - name: Build SnowflakePlots
+        run: >
+          julia --project=SnowflakePlots.jl -e 
+          'using Pkg;
+          Pkg.develop(PackageSpec(path=pwd())); 
+          Pkg.instantiate()'
+      
+      - name: Test SnowflakePlots
+        uses: julia-actions/julia-runtest@v1
+        with:
+          project: 'SnowflakePlots.jl'
         env:
           SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
           SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
@@ -44,7 +63,7 @@ jobs:
 
       - uses: julia-actions/julia-processcoverage@v1
         with:
-          directories: src/core
+          directories: src/core,SnowflakePlots.jl/src
       - uses: codecov/codecov-action@v2
         with:
-          file: lcov.info
+          files: lcov.info

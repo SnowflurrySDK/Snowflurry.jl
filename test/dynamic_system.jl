@@ -1,6 +1,5 @@
 using Snowflake
 using Test
-using Plots
 
 @testset "Rabi Flip Shrodinger" begin
     ψ_0 = spin_up()

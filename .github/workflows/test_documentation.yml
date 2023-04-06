@@ -1,6 +1,6 @@
-name: Documentation
+name: Test Documentation
 on:
-  pull_request:
+  - pull_request
 
 jobs:
   build:
@@ -11,6 +11,11 @@ jobs:
         with:
           version: '1.6.7'
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: >
+          julia --project=docs/ -e 
+          'using Pkg;
+          Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
+          Pkg.develop(PackageSpec(path=pwd())); 
+          Pkg.instantiate()'
       - name: Build
         run: julia --project=docs/ docs/make.jl
