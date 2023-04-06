@@ -2,38 +2,50 @@ using Snowflake
 using Test
 using HTTP
 
+@testset "requestor" begin
+    struct NonImplementedRequestor<:Snowflake.Requestor end
+
+    host="http://example.anyonsys.com"
+    access_token="not_a_real_access_token"
+    requestor=NonImplementedRequestor()
+    body=""
+    
+    @test_throws NotImplementedError get_request(requestor,host,access_token,body) 
+    @test_throws NotImplementedError post_request(requestor,host,access_token,body) 
+    
+    @test_throws NotImplementedError get_request(
+        MockRequestor(),
+        "erroneous_url",
+        "not_a_real_access_token"
+    )
+end
+
 @testset "basic submission" begin
 
     qubit_count=3
     circuit = QuantumCircuit(qubit_count = qubit_count)
     push!(circuit, [sigma_x(3),control_z(2,1)])
 
-    repetitions=10
+    num_repetitions=100
 
-    circuit_json=serialize_circuit(circuit,repetitions)
+    circuit_json=serialize_circuit(circuit,num_repetitions)
 
-    expected_json="{\"num_repititions\":10,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
     
     @test circuit_json==expected_json
 
-    user="user_test"
+    host="http://example.anyonsys.com"
+    user="test_user"
+    access_token="not_a_real_access_token"
+    requestor=MockRequestor()
     
-    host        =ENV["ANYON_QUANTUM_HOST"]
-    access_token=ENV["ANYON_QUANTUM_TOKEN"]
-    
-    wrong_client=Client("wrong_url",user,access_token)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
 
-    @test_throws ArgumentError submit_circuit(wrong_client,circuit,repetitions)
+    println(test_client) #coverage for Base.show(::IO,::Client)
 
-    wrong_client=Client("http://wrong_url",user,access_token)
-
-    @test_throws HTTP.Exceptions.ConnectError submit_circuit(wrong_client,circuit,repetitions)
-
-    test_client=Client(host,user,access_token)
-    
     @test get_host(test_client)==host
     
-    circuitID=submit_circuit(test_client,circuit,repetitions)
+    circuitID=submit_circuit(test_client,circuit,num_repetitions)
 
     status=get_status(test_client,circuitID)
 
@@ -46,32 +58,26 @@ end
 
     circuit = QuantumCircuit(qubit_count = qubit_count)
     
-    push!(circuit, [sigma_x(2),control_z(2,1)])
+    push!(circuit, [sigma_x(3),control_z(2,1)])
     
-    user="user_test"
+    host="http://example.anyonsys.com"
+    user="test_user"
+    access_token="not_a_real_access_token"
+    requestor=MockRequestor()
     
-    host        =ENV["ANYON_QUANTUM_HOST"]
-    access_token=ENV["ANYON_QUANTUM_TOKEN"]
-    
-    test_client=Client(host,user,access_token)
-    
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+
     num_repetitions=100
         
     qpu=AnyonQPU(client=test_client)
     
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
+    @test Snowflake.get_printout_delay(qpu)>=0.
 
     @test get_client(qpu)==test_client
     
     histogram=run_job(qpu, circuit ,num_repetitions)
     
     @test !haskey(histogram,"error_msg")
-
-    # rotation gate is not native on qpu, returns error
-    push!(circuit, [rotation(2,π,-π/4)])
-
-    histogram=run_job(qpu, circuit ,num_repetitions)
-
-    @test haskey(histogram,"error_msg")
 
 end

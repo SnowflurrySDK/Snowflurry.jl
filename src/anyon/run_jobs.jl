@@ -2,8 +2,116 @@ using Snowflake
 using JSON
 using HTTP
 
-commonpath="benchmarking/data"
+abstract type Requestor end
 
+get_request(requestor::Requestor,::String,::String,::String) = 
+    throw(NotImplementedError(:get_request,requestor))
+post_request(requestor::Requestor,::String,::String,::String) = 
+    throw(NotImplementedError(:post_request,requestor))
+
+struct HTTPRequestor<:Requestor end
+struct MockRequestor<:Requestor end
+
+path_circuits="circuits"
+path_results="result"
+length_circuitID=37
+
+function post_request(
+    ::HTTPRequestor,
+    url::String,
+    access_token::String,
+    body::String
+    )
+
+    return HTTP.post(
+        url, 
+        headers=Dict(
+            "Authorization"=>"Bearer $access_token",
+            "Content-Type"=>"application/json"
+            ),
+        body=body,
+    )
+end
+
+function post_request(
+    ::MockRequestor,
+    url::String,
+    access_token::String,
+    body::String
+    )::HTTP.Response
+
+    expected_url=joinpath("http://example.anyonsys.com",path_circuits)
+    expected_access_token="not_a_real_access_token"
+    expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+
+    @assert url==expected_url ("received: \n$url, \nexpected: \n$expected_url")
+    @assert access_token==expected_access_token  ("received: \n$access_token, expected: \n$expected_access_token")
+    @assert body==expected_json  ("received: \n$body, expected: \n$expected_json")
+
+    return HTTP.Response(200, [], 
+        body="{\"circuitID\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\"}";
+    )
+end
+
+
+function get_request(
+    ::HTTPRequestor,
+    url::String,
+    access_token::String,
+    )::HTTP.Response
+
+    return HTTP.get(
+        url, 
+        headers=Dict(
+            "Authorization"=>"Bearer $access_token",
+            "Content-Type"=>"application/json"
+            ),
+    )
+end
+
+function get_request(
+    ::MockRequestor,
+    url::String,
+    access_token::String
+    )
+
+    if endswith(url[1:end-length_circuitID],path_circuits)
+        return HTTP.Response(200, [], 
+            body="{\"status\":{\"type\":\"succeeded\"}}"
+        )
+    elseif endswith(url,path_results)
+        return HTTP.Response(200, [], 
+            body="{\"histogram\":{\"000\":\"64\"}}"
+        ) 
+    else
+        throw(NotImplementedError(:get_request,url))
+    end
+end
+
+
+"""
+    serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
+
+Creates a JSON-formatted String containing the circuit configuration to be sent 
+to a `QPU` service, along with the number of repetitions requested.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> serialize_circuit(c,10)
+"{\\\"num_repititions\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+
+```
+"""
 function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
   
     circuit_description=Dict(
@@ -30,31 +138,86 @@ function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
     return circuit_json
 end
 
+"""
+    Client
 
-struct Client 
+A data structure to represent a *Client* to a QPU service.  
+# Fields
+- `host::String` -- URL of the QPU server.
+- `user::String` -- Username.
+- `access_token::String` -- User access token.
+
+# Example
+```jldoctest
+julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+Client for QPU service:
+   host:         http://example.anyonsys.com
+   user:         test_user 
+   access_token: not_a_real_access_token 
+ 
+  
+```
+"""
+Base.@kwdef struct Client 
     host::String
     user::String
     access_token::String
+    requestor::Requestor=HTTPRequestor()
 end
 
-get_host(client::Client)= client.host
+function Base.show(io::IO, client::Client)
+    println(io, "Client for QPU service:")
+    println(io, "   host:         $(client.host)")
+    println(io, "   user:         $(client.user) ")
+    println(io, "   access_token: $(client.access_token) ")
+end
 
-# submits circuit to host and returns circuitID
-function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer) 
+"""
+    get_host(Client)
+
+Returns host URL of a `Client` to a `QPU` service.  
+
+# Example
+```jldoctest
+julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
+
+julia> get_host(c)
+"http://example.anyonsys.com"
+
+```
+"""
+get_host(client::Client)        =client.host
+get_access_token(client::Client)=client.access_token
+get_requestor(client::Client)   =client.requestor
+
+
+"""
+    submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer)
+
+Submit a circuit to a `Client` of `QPU` service, requesting a number of 
+repetitions (num_repetitions). Returns circuitID.  
+
+# Example
+```jldoctest
+julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
+  
+julia> submit_circuit(c,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+"8050e1ed-5e4c-4089-ab53-cccda1658cd0"
+
+```
+"""
+function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer)::String
 
     circuit_json=serialize_circuit(circuit,num_repetitions)
   
-    path_url=joinpath(get_host(client),"circuits")
+    path_url=joinpath(get_host(client),path_circuits)
     
-    response=HTTP.post(
-        path_url, 
-        headers=Dict(
-            "Authorization"=>"Bearer $(client.access_token)",
-            "Content-Type"=>"application/json"
-            ),
-        body=circuit_json,
-    )
-    
+    response=post_request(
+        get_requestor(client),
+        path_url,
+        get_access_token(client),
+        circuit_json)
+
     formatted_response=format_response(response)
 
     body=JSON.parse(formatted_response["body"])
@@ -62,16 +225,39 @@ function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::
     return body["circuitID"]
 end
 
-function get_status(client::Client,circuitID::String)
+"""
+    get_status(client::Client,circuitID::String)::Dict{String, String}
 
-    path_url=joinpath(get_host(client),"circuits/$circuitID")
+Obtain the status of a circuit computation through a `Client` of a `QPU` service.
+Returns status::Dict containing status["type"]: 
+    -"queued"   : Computation in queue.
+    -"running"  : Computation being processed.
+    -"failed"   : QPU service has returned an error message.
+    -"succeeded": Computation is completed, result is available.
+
+In the case of status["type"]=="failed", the server error is contained in status["message"].
+
+# Example
+```jldoctest
+julia> client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
+  
+julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+"8050e1ed-5e4c-4089-ab53-cccda1658cd0"
+
+julia> get_status(client,circuitID)
+Dict{String, String} with 1 entry:
+  "type" => "succeeded"
+
+```
+"""
+function get_status(client::Client,circuitID::String)::Dict{String, String}
+
+    path_url=joinpath(get_host(client),path_circuits,"$circuitID")
     
-    response=HTTP.get(
-        path_url, 
-        headers=Dict(
-            "Authorization"=>"Bearer $(client.access_token)",
-            "Content-Type"=>"application/json"
-            )
+    response=get_request(
+        get_requestor(client),
+        path_url,
+        get_access_token(client)
         )
 
     formatted_response=format_response(response)
@@ -81,16 +267,35 @@ function get_status(client::Client,circuitID::String)
     return body["status"]
 end
 
-function get_result(client::Client,circuitID::String)
+"""
+    get_result(client::Client,circuit::String)
 
-    path_url=joinpath(get_host(client),"circuits/$circuitID/result")
+Get the histogram of a completed circuit calculation, through a `Client` of a `QPU` service, 
+by circuit identifier circuitID.
+
+# Example
+```jldoctest
+julia> client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
+  
+julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+"8050e1ed-5e4c-4089-ab53-cccda1658cd0"
+
+julia> get_status(client,circuitID);
+
+julia> get_result(client,circuitID)
+Dict{String, String} with 1 entry:
+  "000" => "64"
+
+```
+"""
+function get_result(client::Client,circuitID::String)::Dict{String, String}
+
+    path_url=joinpath(get_host(client),path_circuits,"$circuitID",path_results)
     
-    response=HTTP.get(
-        path_url, 
-        headers=Dict(
-            "Authorization"=>"Bearer $(client.access_token)",
-            "Content-Type"=>"application/json"
-            )
+    response=get_request(
+        get_requestor(client),
+        path_url,
+        get_access_token(client)
         )
 
     formatted_response=format_response(response)
@@ -103,12 +308,37 @@ end
 
 abstract type AbstractQPU end
 
+"""
+    AnyonQPU
+
+A data structure to represent a Anyon System's QPU.  
+# Fields
+- `client       ::Client` -- Client to the QPU server.
+- `manufacturer ::String` -- QPU manufacturer.
+- `generation   ::String` -- QPU generation.
+- `serial_number::String` -- QPU serial number.
+- `printout_delay::Real` -- milliseconds between get_status() printouts
+
+
+# Example
+```jldoctest
+julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
+  
+julia> qpu=AnyonQPU(client=c)
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon 
+   serial_number: ANYK202201 
+
+
+```
+"""
 Base.@kwdef struct AnyonQPU <: AbstractQPU
-    client::Client
-    manufacturer ::String="Anyon Systems Inc."
-    generation   ::String="Yukon"
-    serial_number::String="ANYK202201"
-    printout_delay::Real=200. # milliseconds between get_status printouts
+    client        ::Client
+    manufacturer  ::String  ="Anyon Systems Inc."
+    generation    ::String  ="Yukon"
+    serial_number ::String  ="ANYK202201"
+    printout_delay::Real    =200. # milliseconds between get_status() printouts
 end
 
 get_client(qpu_service::AnyonQPU)=qpu_service.client
@@ -136,7 +366,29 @@ function format_response(response::HTTP.Messages.Response)
     return formatted_response
 end
 
-function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+"""
+    run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+
+Run a circuit computation on a `QPU` service, repeatedly for the specified 
+number of repetitions (num_repetitions). Returns the histogram of the 
+completed circuit calculations, or an error message.
+
+# Example
+```jldoctest
+julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
+  
+julia> qpu=AnyonQPU(client=c);
+
+julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+Circuit submitted: circuitID returned: 8050e1ed-5e4c-4089-ab53-cccda1658cd0
+
+status: succeeded
+Dict{String, String} with 1 entry:
+  "000" => "64"
+
+```
+"""
+function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,String}
     
     client=get_client(qpu)
 

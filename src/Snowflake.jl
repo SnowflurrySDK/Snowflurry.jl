@@ -88,7 +88,12 @@ export
     get_client,
     get_host,
     get_status,
+    get_result,
     run_job,
+    MockRequestor,
+    HTTPRequestor,
+    get_request,
+    post_request,
 
     apply_gate!,
 
