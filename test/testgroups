@@ -5,8 +5,7 @@ gate
 transpile
 circuit
 submit_circuit
-qpu
-qpu-interface
+qpu_interface
 abstractOperator
 denseGate
 diagonalOperator

@@ -30,8 +30,8 @@ export
     MultiBodySystem,
     QuantumCircuit,
     AbstractGate,
-    QPU,
     AnyonQPU,
+    VirtualQPU,
     Client,
     BlochSphere,
     AnimatedBlochSphere,
@@ -129,7 +129,6 @@ include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
-include("core/qpu.jl")
 include("core/transpile.jl")
 include("core/visualize.jl")
 

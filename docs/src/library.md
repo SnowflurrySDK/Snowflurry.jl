@@ -53,9 +53,8 @@ inv(gate::AbstractGate)
 
 ## Quantum Processing Unit
 ```@docs
-QPU
 AnyonQPU
-create_virtual_qpu
+VirtualQPU
 Client
 get_host
 submit_circuit

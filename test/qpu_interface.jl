@@ -22,9 +22,7 @@ end
 
 @testset "basic submission" begin
 
-    qubit_count=3
-    circuit = QuantumCircuit(qubit_count = qubit_count)
-    push!(circuit, [sigma_x(3),control_z(2,1)])
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
 
     num_repetitions=100
 
@@ -52,13 +50,9 @@ end
     @test status["type"] in ["queued","running","failed","succeeded"]
 end
 
-@testset "run on qpu" begin
+@testset "run on AnyonQPU" begin
 
-    qubit_count=3
-
-    circuit = QuantumCircuit(qubit_count = qubit_count)
-    
-    push!(circuit, [sigma_x(3),control_z(2,1)])
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
     
     host="http://example.anyonsys.com"
     user="test_user"
@@ -78,6 +72,24 @@ end
     
     histogram=run_job(qpu, circuit ,num_repetitions)
     
+    @test histogram==Dict("001"=>num_repetitions)
+
     @test !haskey(histogram,"error_msg")
+
+end
+
+@testset "run on VirtualQPU" begin
+
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
+    
+    num_repetitions=100
+        
+    qpu=VirtualQPU()
+    
+    println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
+       
+    histogram=run_job(qpu, circuit ,num_repetitions)
+   
+    @test histogram==Dict("001"=>num_repetitions)
 
 end

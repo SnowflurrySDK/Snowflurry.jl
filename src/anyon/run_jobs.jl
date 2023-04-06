@@ -81,7 +81,7 @@ function get_request(
         )
     elseif endswith(url,path_results)
         return HTTP.Response(200, [], 
-            body="{\"histogram\":{\"000\":\"64\"}}"
+            body="{\"histogram\":{\"001\":\"100\"}}"
         ) 
     else
         throw(NotImplementedError(:get_request,url))
@@ -268,7 +268,7 @@ function get_status(client::Client,circuitID::String)::Dict{String, String}
 end
 
 """
-    get_result(client::Client,circuit::String)
+    get_result(client::Client,circuit::String)::Dict{String, Int}
 
 Get the histogram of a completed circuit calculation, through a `Client` of a `QPU` service, 
 by circuit identifier circuitID.
@@ -283,12 +283,12 @@ julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma
 julia> get_status(client,circuitID);
 
 julia> get_result(client,circuitID)
-Dict{String, String} with 1 entry:
-  "000" => "64"
+Dict{String, Int64} with 1 entry:
+  "001" => 100
 
 ```
 """
-function get_result(client::Client,circuitID::String)::Dict{String, String}
+function get_result(client::Client,circuitID::String)::Dict{String, Int}
 
     path_url=joinpath(get_host(client),path_circuits,"$circuitID",path_results)
     
@@ -302,7 +302,14 @@ function get_result(client::Client,circuitID::String)::Dict{String, String}
 
     body=JSON.parse(formatted_response["body"])
 
-    return body["histogram"]
+    histogram=Dict{String,Int}()
+    
+    # convert from Dict{String,String} to Dict{String,Int}
+    for (key,val) in body["histogram"]
+        histogram[key]=parse(Int, val)
+    end
+
+    return histogram
 end
 
 
@@ -351,6 +358,36 @@ function Base.show(io::IO, qpu::AnyonQPU)
     println(io, "   serial_number: $(qpu.serial_number) ")
 end
 
+"""
+    VirtualQPU
+
+A data structure to represent a Quantum Simulator.  
+# Fields
+- `developers   ::String`   -- Simulator developers.
+- `package      ::String`   -- name of the underlying library package.
+
+# Example
+```jldoctest
+julia> qpu=VirtualQPU()
+Quantum Simulator:
+   developers:  Anyon Systems Inc.
+   package:     Snowflake.jl
+
+
+```
+"""
+Base.@kwdef struct VirtualQPU <: AbstractQPU
+    developers  ::String  ="Anyon Systems Inc."
+    package     ::String  ="Snowflake.jl"
+end
+
+function Base.show(io::IO, qpu::VirtualQPU)
+    println(io, "Quantum Simulator:")
+    println(io, "   developers:  $(qpu.developers)")
+    println(io, "   package:     $(qpu.package)")
+end
+
+
 function format_response(response::HTTP.Messages.Response)
     formatted_response=Dict(
         "version"   =>response.version, 
@@ -382,12 +419,12 @@ julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)
 Circuit submitted: circuitID returned: 8050e1ed-5e4c-4089-ab53-cccda1658cd0
 
 status: succeeded
-Dict{String, String} with 1 entry:
-  "000" => "64"
+Dict{String, Int64} with 1 entry:
+  "001" => 100
 
 ```
 """
-function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,String}
+function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,Int}
     
     client=get_client(qpu)
 
@@ -412,7 +449,42 @@ function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer
     if status["type"] == "failed"       
         return Dict("error_msg"=>status["message"])
     else
-        histogram=get_result(client,circuitID)
+        return get_result(client,circuitID)
     end
 end
+
+"""
+    run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+
+Run a circuit computation on a `QPU` simulator, repeatedly for the specified 
+number of repetitions (num_repetitions). Returns the histogram of the 
+completed circuit calculations.
+
+# Example
+```jldoctest 
+julia> qpu=VirtualQPU();
+
+julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+Dict{String, Int64} with 1 entry:
+  "001" => 100
+
+```
+"""
+function run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,Int}
+    
+    data=simulate_shots(circuit, num_repetitions)
+    
+    histogram=Dict{String,Int}()
+
+    for label in data
+        if haskey(histogram,label)
+            histogram[label]+=1
+        else
+            histogram[label]=1
+        end
+    end
+
+    return histogram
+end
+
 
