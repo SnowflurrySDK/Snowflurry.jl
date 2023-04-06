@@ -356,7 +356,6 @@ function format_response(response::HTTP.Messages.Response)
         "version"   =>response.version, 
         "status"    =>response.status, 
         "headers"   =>response.headers, 
-        "request"   =>response.request
     )
 
     # convert response body from binary to ASCII
