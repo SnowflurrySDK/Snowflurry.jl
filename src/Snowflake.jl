@@ -87,7 +87,7 @@ export
     get_status_type,
     get_status_message,
     read_response_body,
-    serialize_circuit,
+    serialize_job,
     submit_circuit,
     get_client,
     get_host,

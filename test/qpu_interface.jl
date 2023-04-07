@@ -13,11 +13,58 @@ using HTTP
     @test_throws NotImplementedError get_request(requestor,host,access_token,body) 
     @test_throws NotImplementedError post_request(requestor,host,access_token,body) 
     
+    #### request from :get_status
+   
     @test_throws NotImplementedError get_request(
         MockRequestor(),
         "erroneous_url",
-        "not_a_real_access_token"
+        access_token
     )
+
+    expected_response=HTTP.Response(200, [], body="{\"status\":{\"type\":\"succeeded\"}}")
+
+    circuitID="1234-abcd"
+
+    response=get_request(
+        MockRequestor(),
+        joinpath(host,Snowflake.path_circuits,circuitID),
+        access_token
+    )
+
+    for f in fieldnames(typeof(response))
+        if isdefined(response,f) # response.request is undefined in Julia 1.6.7
+            @test getfield(response,f)==getfield(expected_response,f)
+        end
+    end
+
+    @test_throws NotImplementedError get_request(
+        MockRequestor(),
+        joinpath(host,string(Snowflake.path_circuits,"wrong_ending")),
+        access_token
+    )
+
+    #### request from :get_result
+
+    expected_response=HTTP.Response(200, [],body="{\"histogram\":{\"001\":\"100\"}}") 
+
+    response=get_request(
+        MockRequestor(),
+        joinpath(host,Snowflake.path_circuits,circuitID,Snowflake.path_results),
+        access_token
+    )
+
+    for f in fieldnames(typeof(response))
+        if isdefined(response,f) # response.request is undefined in Julia 1.6.7
+            @test getfield(response,f)==getfield(expected_response,f)
+        end
+    end
+
+    @test_throws NotImplementedError get_request(
+        MockRequestor(),
+        joinpath(host,Snowflake.path_circuits,circuitID,string(Snowflake.path_results,"wrong_ending")),
+        access_token
+    )
+
 end
 
 @testset "read_response_body" begin
@@ -52,7 +99,7 @@ end
 
     num_repetitions=100
 
-    circuit_json=serialize_circuit(circuit,num_repetitions)
+    circuit_json=serialize_job(circuit,num_repetitions)
 
     expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
     

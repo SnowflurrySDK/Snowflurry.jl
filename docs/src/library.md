@@ -16,7 +16,7 @@ get_measurement_probabilities(circuit::QuantumCircuit)
 inv(circuit::QuantumCircuit)
 get_num_gates_per_type
 get_num_gates
-serialize_circuit
+serialize_job
 ```
 
 ## Quantum Gates

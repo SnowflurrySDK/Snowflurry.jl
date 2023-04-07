@@ -110,7 +110,7 @@ function get_request(
 
     if !isnothing(match_obj)
 
-        myregex=Regex("(.*)(/$path_circuits/)(.*)(/$path_results)")   
+        myregex=Regex("(.*)(/$path_circuits/)(.*)(/$path_results)\$")   
         match_obj=match(myregex,url)
                 
         if !isnothing(match_obj)
@@ -119,10 +119,15 @@ function get_request(
                 body="{\"histogram\":{\"001\":\"100\"}}"
             ) 
         else
-            # caller is :get_status
-            return HTTP.Response(200, [], 
-                body="{\"status\":{\"type\":\"succeeded\"}}"
-            )
+            myregex=Regex("(.*)(/$(Snowflake.path_circuits)/)([^/]*)\$")
+            match_obj=match(myregex,url)
+
+            if !isnothing(match_obj)
+                # caller is :get_status
+                return HTTP.Response(200, [], 
+                    body="{\"status\":{\"type\":\"succeeded\"}}"
+                )
+            end
         end
     end
 
@@ -131,7 +136,7 @@ end
 
 
 """
-    serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)
+    serialize_job(circuit::QuantumCircuit,repetitions::Integer)
 
 Creates a JSON-formatted String containing the circuit configuration to be sent 
 to a `QPU` service, along with the number of repetitions requested.
@@ -148,12 +153,12 @@ q[2]:─────
 
 
 
-julia> serialize_circuit(c,10)
+julia> serialize_job(c,10)
 "{\\\"num_repititions\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
-function serialize_circuit(circuit::QuantumCircuit,repetitions::Integer)::String
+function serialize_job(circuit::QuantumCircuit,repetitions::Integer)::String
   
     circuit_description=Dict(
         "circuit"=>Dict{String,Any}(
@@ -194,7 +199,6 @@ julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_tok
 Client for QPU service:
    host:         http://example.anyonsys.com
    user:         test_user 
-   access_token: not_a_real_access_token 
  
   
 ```
@@ -210,7 +214,6 @@ function Base.show(io::IO, client::Client)
     println(io, "Client for QPU service:")
     println(io, "   host:         $(client.host)")
     println(io, "   user:         $(client.user) ")
-    println(io, "   access_token: $(client.access_token) ")
 end
 
 """
@@ -228,7 +231,6 @@ julia> get_host(c)
 ```
 """
 get_host(client::Client)        =client.host
-get_access_token(client::Client)=client.access_token
 get_requestor(client::Client)   =client.requestor
 
 
@@ -249,17 +251,21 @@ julia> submit_circuit(c,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z
 """
 function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer)::String
 
-    circuit_json=serialize_circuit(circuit,num_repetitions)
+    circuit_json=serialize_job(circuit,num_repetitions)
   
     path_url=joinpath(get_host(client),path_circuits)
     
     response=post_request(
         get_requestor(client),
         path_url,
-        get_access_token(client),
+        client.access_token,
         circuit_json)
 
     body=JSON.parse(read_response_body(response.body))
+
+    if !haskey(body,"circuitID")
+        throw(ArgumentError("Server returned an invalid response, without a circuitID field."))
+    end
 
     return body["circuitID"]
 end
@@ -295,12 +301,14 @@ function get_status(client::Client,circuitID::String)::Status
     response=get_request(
         get_requestor(client),
         path_url,
-        get_access_token(client)
+        client.access_token
         )
 
     body=JSON.parse(read_response_body(response.body))
 
-    @assert body["status"]["type"] in possible_status_list
+    if !(body["status"]["type"] in possible_status_list)
+        throw(ArgumentError("Server returned unrecognized status type: $(body["status"]["type"])"))
+    end
 
     if body["status"]["type"]==failed_status
         return Status(type=body["status"]["type"],message=body["message"])
@@ -337,7 +345,7 @@ function get_result(client::Client,circuitID::String)::Dict{String, Int}
     response=get_request(
         get_requestor(client),
         path_url,
-        get_access_token(client)
+        client.access_token
         )
 
     body=JSON.parse(read_response_body(response.body))
