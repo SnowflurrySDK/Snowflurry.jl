@@ -86,6 +86,7 @@ export
     transpile,
     get_status_type,
     get_status_message,
+    read_response_body,
     serialize_circuit,
     submit_circuit,
     get_client,

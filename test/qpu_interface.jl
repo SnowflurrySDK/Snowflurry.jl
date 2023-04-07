@@ -20,6 +20,32 @@ using HTTP
     )
 end
 
+@testset "read_response_body" begin
+    my_string="abcdefghijlkmnopqrstuvwxyz"
+
+    body=UInt8.([c for c in my_string])
+
+    @test read_response_body(body)==my_string
+
+    body[10]=0x00
+
+    @test_throws ArgumentError read_response_body(body)
+    
+end
+
+@testset "Status" begin
+    type="failed"
+    message="Server error"
+
+    status=Status(type=type,message=message)
+
+    @test type==get_status_type(status)
+    @test message==get_status_message(status)
+
+    println(status)
+end
+
+
 @testset "basic submission" begin
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
@@ -84,7 +110,7 @@ end
     
     num_repetitions=100
         
-    qpu=VirtualQPU()
+    qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl")
     
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
        

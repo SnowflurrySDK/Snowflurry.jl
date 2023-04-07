@@ -15,7 +15,7 @@ function Base.show(io::IO, status::Status)
         println(io, "Status: $(status.type)")
     else
         println(io, "Status: $(status.type)")
-        println(io, "Message: $(status.type)")
+        println(io, "Message: $(status.message)")
     end
 end
 
@@ -29,14 +29,14 @@ post_request(requestor::Requestor,::String,::String,::String) =
 struct HTTPRequestor<:Requestor end
 struct MockRequestor<:Requestor end
 
-const path_circuits="circuits"
-const path_results="result"
+const path_circuits ="circuits"
+const path_results  ="result"
 
-const failed_status ="failed"
-const succeeded_status="succeeded"
-const running_status="running"
-const queued_status ="queued"
-const cancelled_status ="cancelled"
+const queued_status     ="queued"
+const running_status    ="running"
+const succeeded_status  ="succeeded"
+const failed_status     ="failed"
+const cancelled_status  ="cancelled"
 
 const possible_status_list=[
     failed_status,
@@ -259,9 +259,7 @@ function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::
         get_access_token(client),
         circuit_json)
 
-    formatted_response=format_response(response)
-
-    body=JSON.parse(formatted_response["body"])
+    body=JSON.parse(read_response_body(response.body))
 
     return body["circuitID"]
 end
@@ -300,9 +298,7 @@ function get_status(client::Client,circuitID::String)::Status
         get_access_token(client)
         )
 
-    formatted_response=format_response(response)
-
-    body=JSON.parse(formatted_response["body"])
+    body=JSON.parse(read_response_body(response.body))
 
     @assert body["status"]["type"] in possible_status_list
 
@@ -344,9 +340,7 @@ function get_result(client::Client,circuitID::String)::Dict{String, Int}
         get_access_token(client)
         )
 
-    formatted_response=format_response(response)
-
-    body=JSON.parse(formatted_response["body"])
+    body=JSON.parse(read_response_body(response.body))
 
     histogram=Dict{String,Int}()
     
@@ -414,7 +408,7 @@ A data structure to represent a Quantum Simulator.
 
 # Example
 ```jldoctest
-julia> qpu=VirtualQPU()
+julia> qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl")
 Quantum Simulator:
    developers:  Anyon Systems Inc.
    package:     Snowflake.jl
@@ -422,9 +416,9 @@ Quantum Simulator:
 
 ```
 """
-Base.@kwdef struct VirtualQPU <: AbstractQPU
-    developers  ::String  ="Anyon Systems Inc."
-    package     ::String  ="Snowflake.jl"
+struct VirtualQPU <: AbstractQPU
+    developers  ::String
+    package     ::String
 end
 
 function Base.show(io::IO, qpu::VirtualQPU)
@@ -433,19 +427,16 @@ function Base.show(io::IO, qpu::VirtualQPU)
     println(io, "   package:     $(qpu.package)")
 end
 
-
-function format_response(response::HTTP.Messages.Response)
-    formatted_response=Dict(
-        "version"   =>response.version, 
-        "status"    =>response.status, 
-        "headers"   =>response.headers, 
-    )
-
+function read_response_body(body::Vector{UInt8})::String
     # convert response body from binary to ASCII
-    read_buffer=IOBuffer(reinterpret(UInt8, response.body))
-    formatted_response["body"]=String(readuntil(read_buffer, 0x00))
+    read_buffer=IOBuffer(reinterpret(UInt8, body))
+    body_string=String(readuntil(read_buffer, 0x00))
 
-    return formatted_response
+    if length(body_string)!=length(body)
+        throw(ArgumentError("Server returned an erroneous message, with nul terminator before end of string."))
+    end
+
+    return body_string
 end
 
 """
@@ -462,8 +453,6 @@ julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_tok
 julia> qpu=AnyonQPU(client=c,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201");
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
-Circuit submitted: circuitID returned: 8050e1ed-5e4c-4089-ab53-cccda1658cd0
-
 Status: succeeded
 
 Dict{String, Int64} with 1 entry:
@@ -477,26 +466,31 @@ function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer
 
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    println("Circuit submitted: circuitID returned: $circuitID\n")
-
     status=get_status(client,circuitID;)
 
-    ref_time=Base.time_ns()
-    delay=get_printout_delay(qpu)/1e6 #convert ms to ns
+    ref_time_print=Base.time_ns()
+    printout_delay=get_printout_delay(qpu)/1e6 #convert ms to ns
  
+    ref_time_query=Base.time_ns()
+    query_delay=100/1e6 #100 ms between queries to host
+
     while true        
         current_time=Base.time_ns()
 
-        if (current_time-ref_time)>delay
+        if (current_time-ref_time_print)>printout_delay
             println(status)
-            ref_time=current_time
+            ref_time_print=current_time
+        end
+
+        if (current_time-ref_time_query)>query_delay
+            status=get_status(client,circuitID;)
+            ref_time_query=current_time
         end
            
         if !(get_status_type(status) in [queued_status,running_status])
             break
         end
 
-        status=get_status(client,circuitID;)
     end
     
     if get_status_type(status) == failed_status       
@@ -519,7 +513,7 @@ completed circuit calculations.
 
 # Example
 ```jldoctest 
-julia> qpu=VirtualQPU();
+julia> qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl");
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
