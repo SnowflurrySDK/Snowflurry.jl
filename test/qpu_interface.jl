@@ -2,21 +2,34 @@ using Snowflake
 using Test
 using HTTP
 
+include("mock_functions.jl")
+
+requestor=MockRequestor(request_checker,post_checker)
+
+function compare_responses(expected::HTTP.Response,received::HTTP.Response)
+
+    for f in fieldnames(typeof(received))
+        if isdefined(received,f) # response.request is undefined in Julia 1.6.7
+            @test getfield(received,f)==getfield(expected,f)
+        end
+    end
+
+end
+
 @testset "requestor" begin
     struct NonImplementedRequestor<:Snowflake.Requestor end
 
-    host="http://example.anyonsys.com"
-    access_token="not_a_real_access_token"
-    requestor=NonImplementedRequestor()
+
+    non_impl_requestor=NonImplementedRequestor()
     body=""
     
-    @test_throws NotImplementedError get_request(requestor,host,access_token,body) 
-    @test_throws NotImplementedError post_request(requestor,host,access_token,body) 
+    @test_throws NotImplementedError get_request(non_impl_requestor,host,access_token,body) 
+    @test_throws NotImplementedError post_request(non_impl_requestor,host,access_token,body) 
     
     #### request from :get_status
    
     @test_throws NotImplementedError get_request(
-        MockRequestor(),
+        requestor,
         "erroneous_url",
         access_token
     )
@@ -26,19 +39,15 @@ using HTTP
     circuitID="1234-abcd"
 
     response=get_request(
-        MockRequestor(),
+        requestor,
         joinpath(host,Snowflake.path_circuits,circuitID),
         access_token
     )
 
-    for f in fieldnames(typeof(response))
-        if isdefined(response,f) # response.request is undefined in Julia 1.6.7
-            @test getfield(response,f)==getfield(expected_response,f)
-        end
-    end
+    compare_responses(expected_response,response)
 
     @test_throws NotImplementedError get_request(
-        MockRequestor(),
+        requestor,
         joinpath(host,string(Snowflake.path_circuits,"wrong_ending")),
         access_token
     )
@@ -48,19 +57,15 @@ using HTTP
     expected_response=HTTP.Response(200, [],body="{\"histogram\":{\"001\":\"100\"}}") 
 
     response=get_request(
-        MockRequestor(),
+        requestor,
         joinpath(host,Snowflake.path_circuits,circuitID,Snowflake.path_results),
         access_token
     )
 
-    for f in fieldnames(typeof(response))
-        if isdefined(response,f) # response.request is undefined in Julia 1.6.7
-            @test getfield(response,f)==getfield(expected_response,f)
-        end
-    end
+    compare_responses(expected_response,response)
 
     @test_throws NotImplementedError get_request(
-        MockRequestor(),
+        requestor,
         joinpath(host,Snowflake.path_circuits,circuitID,string(Snowflake.path_results,"wrong_ending")),
         access_token
     )
@@ -90,6 +95,16 @@ end
     @test message==get_status_message(status)
 
     println(status)
+
+    ###
+
+    type="succeeded"
+
+    status=Status(type=type)
+
+    @test type==get_status_type(status)
+
+    println(status)
 end
 
 
@@ -104,12 +119,7 @@ end
     expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
     
     @test circuit_json==expected_json
-
-    host="http://example.anyonsys.com"
-    user="test_user"
-    access_token="not_a_real_access_token"
-    requestor=MockRequestor()
-    
+       
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
 
     println(test_client) #coverage for Base.show(::IO,::Client)
@@ -126,20 +136,14 @@ end
 @testset "run on AnyonQPU" begin
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    
-    host="http://example.anyonsys.com"
-    user="test_user"
-    access_token="not_a_real_access_token"
-    requestor=MockRequestor()
-    
+        
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
 
     num_repetitions=100
         
-    qpu=AnyonQPU(client=test_client,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201")
+    qpu=AnyonQPU(test_client)
 
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
-    @test Snowflake.get_printout_delay(qpu)>=0.
 
     @test get_client(qpu)==test_client
     
@@ -157,7 +161,7 @@ end
     
     num_repetitions=100
         
-    qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl")
+    qpu=VirtualQPU()
     
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
        

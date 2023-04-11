@@ -98,6 +98,7 @@ export
     HTTPRequestor,
     get_request,
     post_request,
+    get_metadata,
 
     apply_gate!,
 

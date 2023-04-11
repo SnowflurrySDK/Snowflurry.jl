@@ -27,7 +27,10 @@ post_request(requestor::Requestor,::String,::String,::String) =
     throw(NotImplementedError(:post_request,requestor))
 
 struct HTTPRequestor<:Requestor end
-struct MockRequestor<:Requestor end
+struct MockRequestor<:Requestor 
+    request_checker::Function
+    post_checker::Function
+end
 
 const path_circuits ="circuits"
 const path_results  ="result"
@@ -64,23 +67,14 @@ function post_request(
 end
 
 function post_request(
-    ::MockRequestor,
+    mock_requester::MockRequestor,
     url::String,
     access_token::String,
     body::String
     )::HTTP.Response
 
-    expected_url=joinpath("http://example.anyonsys.com",path_circuits)
-    expected_access_token="not_a_real_access_token"
-    expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    return mock_requester.post_checker(url,access_token,body)
 
-    @assert url==expected_url ("received: \n$url, \nexpected: \n$expected_url")
-    @assert access_token==expected_access_token  ("received: \n$access_token, expected: \n$expected_access_token")
-    @assert body==expected_json  ("received: \n$body, expected: \n$expected_json")
-
-    return HTTP.Response(200, [], 
-        body="{\"circuitID\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\"}";
-    )
 end
 
 
@@ -100,38 +94,12 @@ function get_request(
 end
 
 function get_request(
-    ::MockRequestor,
+    mock_requester::MockRequestor,
     url::String,
     access_token::String
     )::HTTP.Response
 
-    myregex=Regex("(.*)(/$path_circuits/)(.*)")
-    match_obj=match(myregex,url)
-
-    if !isnothing(match_obj)
-
-        myregex=Regex("(.*)(/$path_circuits/)(.*)(/$path_results)\$")   
-        match_obj=match(myregex,url)
-                
-        if !isnothing(match_obj)
-            # caller is :get_result
-            return HTTP.Response(200, [], 
-                body="{\"histogram\":{\"001\":\"100\"}}"
-            ) 
-        else
-            myregex=Regex("(.*)(/$(Snowflake.path_circuits)/)([^/]*)\$")
-            match_obj=match(myregex,url)
-
-            if !isnothing(match_obj)
-                # caller is :get_status
-                return HTTP.Response(200, [], 
-                    body="{\"status\":{\"type\":\"succeeded\"}}"
-                )
-            end
-        end
-    end
-
-    throw(NotImplementedError(:get_request,url))
+    return mock_requester.request_checker(url,access_token)
 end
 
 
@@ -241,10 +209,20 @@ Submit a circuit to a `Client` of `QPU` service, requesting a number of
 repetitions (num_repetitions). Returns circuitID.  
 
 # Example
-```jldoctest
-julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
-  
-julia> submit_circuit(c,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+```@meta
+DocTestSetup = quote
+    using Snowflake
+
+    include("../test/mock_functions.jl")
+
+    requestor=MockRequestor(request_checker,post_checker)
+
+    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+end
+```
+
+```jldoctest mylabel
+julia> submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -263,9 +241,7 @@ function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::
 
     body=JSON.parse(read_response_body(response.body))
 
-    if !haskey(body,"circuitID")
-        throw(ArgumentError("Server returned an invalid response, without a circuitID field."))
-    end
+    @assert haskey(body,"circuitID") ("Server returned an invalid response, without a circuitID field.")
 
     return body["circuitID"]
 end
@@ -283,9 +259,19 @@ Returns status::Dict containing status["type"]:
 In the case of status["type"]=="failed", the server error is contained in status["message"].
 
 # Example
+```@meta
+DocTestSetup = quote
+    using Snowflake
+
+    include("../test/mock_functions.jl")
+
+    requestor=MockRequestor(request_checker,post_checker)
+
+    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+end
+```
+
 ```jldoctest
-julia> client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
-  
 julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
@@ -306,6 +292,9 @@ function get_status(client::Client,circuitID::String)::Status
 
     body=JSON.parse(read_response_body(response.body))
 
+    @assert haskey(body,"status")
+    @assert haskey(body["status"],"type")
+
     if !(body["status"]["type"] in possible_status_list)
         throw(ArgumentError("Server returned unrecognized status type: $(body["status"]["type"])"))
     end
@@ -324,9 +313,19 @@ Get the histogram of a completed circuit calculation, through a `Client` of a `Q
 by circuit identifier circuitID.
 
 # Example
-```jldoctest
-julia> client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
-  
+```@meta
+DocTestSetup = quote
+    using Snowflake
+
+    include("../test/mock_functions.jl")
+
+    requestor=MockRequestor(request_checker,post_checker)
+
+    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+end
+```
+
+```jldoctest 
 julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
@@ -352,6 +351,8 @@ function get_result(client::Client,circuitID::String)::Dict{String, Int}
 
     histogram=Dict{String,Int}()
     
+    @assert haskey(body,"histogram")
+
     # convert from Dict{String,String} to Dict{String,Int}
     for (key,val) in body["histogram"]
         histogram[key]=parse(Int, val)
@@ -363,23 +364,22 @@ end
 
 abstract type AbstractQPU end
 
+get_metadata(qpu::AbstractQPU) = 
+    throw(NotImplementedError(:get_metadata,qpu))
+
 """
     AnyonQPU
 
 A data structure to represent a Anyon System's QPU.  
 # Fields
 - `client       ::Client` -- Client to the QPU server.
-- `manufacturer ::String` -- QPU manufacturer.
-- `generation   ::String` -- QPU generation.
-- `serial_number::String` -- QPU serial number.
-- `printout_delay::Real` -- milliseconds between get_status() printouts
 
 
 # Example
 ```jldoctest
 julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
   
-julia> qpu=AnyonQPU(client=c,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201")
+julia> qpu=AnyonQPU(c)
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon 
@@ -388,35 +388,36 @@ Quantum Processing Unit:
 
 ```
 """
-Base.@kwdef struct AnyonQPU <: AbstractQPU
+struct AnyonQPU <: AbstractQPU
     client        ::Client
-    manufacturer  ::String
-    generation    ::String
-    serial_number ::String
-    printout_delay::Real    =200. # milliseconds between get_status() printouts
 end
 
+get_metadata(qpu::AnyonQPU) = Dict{String,String}(
+    "manufacturer"  =>"Anyon Systems Inc.",
+    "generation"    =>"Yukon",
+    "serial_number" =>"ANYK202201",
+)
+
+
 get_client(qpu_service::AnyonQPU)=qpu_service.client
-get_printout_delay(qpu_service::AnyonQPU)=qpu_service.printout_delay
 
 function Base.show(io::IO, qpu::AnyonQPU)
+    metadata=get_metadata(qpu)
+
     println(io, "Quantum Processing Unit:")
-    println(io, "   manufacturer:  $(qpu.manufacturer)")
-    println(io, "   generation:    $(qpu.generation) ")
-    println(io, "   serial_number: $(qpu.serial_number) ")
+    println(io, "   manufacturer:  $(metadata["manufacturer"])")
+    println(io, "   generation:    $(metadata["generation"])")
+    println(io, "   serial_number: $(metadata["serial_number"])")
 end
 
 """
     VirtualQPU
 
 A data structure to represent a Quantum Simulator.  
-# Fields
-- `developers   ::String`   -- Simulator developers.
-- `package      ::String`   -- name of the underlying library package.
 
 # Example
 ```jldoctest
-julia> qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl")
+julia> qpu=VirtualQPU()
 Quantum Simulator:
    developers:  Anyon Systems Inc.
    package:     Snowflake.jl
@@ -424,15 +425,19 @@ Quantum Simulator:
 
 ```
 """
-struct VirtualQPU <: AbstractQPU
-    developers  ::String
-    package     ::String
-end
+struct VirtualQPU <: AbstractQPU end
+
+get_metadata(qpu::VirtualQPU) = Dict{String,String}(
+    "developers"  =>"Anyon Systems Inc.",
+    "package"     =>"Snowflake.jl",
+)
 
 function Base.show(io::IO, qpu::VirtualQPU)
+    metadata=get_metadata(qpu)
+
     println(io, "Quantum Simulator:")
-    println(io, "   developers:  $(qpu.developers)")
-    println(io, "   package:     $(qpu.package)")
+    println(io, "   developers:  $(metadata["developers"])")
+    println(io, "   package:     $(metadata["package"])")
 end
 
 function read_response_body(body::Vector{UInt8})::String
@@ -455,14 +460,22 @@ number of repetitions (num_repetitions). Returns the histogram of the
 completed circuit calculations, or an error message.
 
 # Example
-```jldoctest
-julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=MockRequestor());
-  
-julia> qpu=AnyonQPU(client=c,manufacturer="Anyon Systems Inc.",generation="Yukon",serial_number="ANYK202201");
+```@meta
+DocTestSetup = quote
+    using Snowflake
+
+    include("../test/mock_functions.jl")
+
+    requestor=MockRequestor(request_checker,post_checker)
+
+    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+end
+```
+
+```jldoctest  
+julia> qpu=AnyonQPU(client);
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
-Status: succeeded
-
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -475,20 +488,12 @@ function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
     status=get_status(client,circuitID;)
-
-    ref_time_print=Base.time_ns()
-    printout_delay=get_printout_delay(qpu)/1e6 #convert ms to ns
  
     ref_time_query=Base.time_ns()
     query_delay=100/1e6 #100 ms between queries to host
 
     while true        
         current_time=Base.time_ns()
-
-        if (current_time-ref_time_print)>printout_delay
-            println(status)
-            ref_time_print=current_time
-        end
 
         if (current_time-ref_time_query)>query_delay
             status=get_status(client,circuitID;)
@@ -501,13 +506,16 @@ function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer
 
     end
     
-    if get_status_type(status) == failed_status       
+    status_type=get_status_type(status)
+
+    if status_type == failed_status       
         return Dict("error_msg"=>get_status_message(status))
 
-    elseif get_status_type(status) == cancelled_status       
+    elseif status_type == cancelled_status       
         return Dict("error_msg"=>cancelled_status)
     
-    else # computation succeeded
+    else 
+        @assert status_type == succeeded_status ("Server returned an unrecognized status type: $status_type")
         return get_result(client,circuitID)
     end
 end
@@ -521,7 +529,7 @@ completed circuit calculations.
 
 # Example
 ```jldoctest 
-julia> qpu=VirtualQPU("Anyon Systems Inc.","Snowflake.jl");
+julia> qpu=VirtualQPU();
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
@@ -545,5 +553,4 @@ function run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integ
 
     return histogram
 end
-
 
