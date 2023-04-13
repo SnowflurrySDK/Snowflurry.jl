@@ -101,6 +101,7 @@ export
     get_metadata,
     get_transpiler,
     apply_gate!,
+    get_universal,
 
     # Gates
     sigma_x,
