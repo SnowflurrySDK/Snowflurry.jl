@@ -209,17 +209,6 @@ Submit a circuit to a `Client` of `QPU` service, requesting a number of
 repetitions (num_repetitions). Returns circuitID.  
 
 # Example
-```@meta
-DocTestSetup = quote
-    using Snowflake
-
-    include("../test/mock_functions.jl")
-
-    requestor=MockRequestor(request_checker,post_checker)
-
-    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
-end
-```
 
 ```jldoctest mylabel
 julia> submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
@@ -259,17 +248,7 @@ Returns status::Dict containing status["type"]:
 In the case of status["type"]=="failed", the server error is contained in status["message"].
 
 # Example
-```@meta
-DocTestSetup = quote
-    using Snowflake
 
-    include("../test/mock_functions.jl")
-
-    requestor=MockRequestor(request_checker,post_checker)
-
-    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
-end
-```
 
 ```jldoctest
 julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
@@ -313,17 +292,7 @@ Get the histogram of a completed circuit calculation, through a `Client` of a `Q
 by circuit identifier circuitID.
 
 # Example
-```@meta
-DocTestSetup = quote
-    using Snowflake
 
-    include("../test/mock_functions.jl")
-
-    requestor=MockRequestor(request_checker,post_checker)
-
-    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
-end
-```
 
 ```jldoctest 
 julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
@@ -460,17 +429,6 @@ number of repetitions (num_repetitions). Returns the histogram of the
 completed circuit calculations, or an error message.
 
 # Example
-```@meta
-DocTestSetup = quote
-    using Snowflake
-
-    include("../test/mock_functions.jl")
-
-    requestor=MockRequestor(request_checker,post_checker)
-
-    client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
-end
-```
 
 ```jldoctest  
 julia> qpu=AnyonQPU(client);
