@@ -35,6 +35,7 @@ export
     BlochSphere,
     AnimatedBlochSphere,
     NotImplementedError,
+    Transpiler,
 
     # Functions
     commute, 
@@ -93,8 +94,9 @@ export
     get_request,
     post_request,
     get_metadata,
-
+    get_transpiler,
     apply_gate!,
+    get_universal,
 
     # Gates
     sigma_x,
@@ -107,7 +109,6 @@ export
     rotation,
     rotation_x,
     rotation_y,
-    rotation_z,
     phase_shift,
     universal,
     iswap,
