@@ -125,10 +125,9 @@ end
 
 end
 
-
 @testset "transpilation of single and multiple target gates" begin
     
-    qubit_count=3
+    qubit_count=4
 
     qpu = create_virtual_qpu(qubit_count,Matrix([1 1 0; 1 1 1 ; 0 1 1]), ["x"])
     
@@ -137,28 +136,30 @@ end
     input_gates=[
         sigma_x(1),
         sigma_y(1),
-        sigma_x(3),
-        hadamard(2),
-        sigma_x(1),
-        control_x(1,2),
-        sigma_x(2),
-        sigma_x(1),
-        sigma_y(1),
         hadamard(2),
         control_x(1,3),
-        sigma_z(3),    
-        phase_shift(1,π/10),
-        sigma_x(1),
+        sigma_x(2),
+        sigma_y(2),
+        control_x(1,4),
+        hadamard(2),
+        sigma_z(1),
+        sigma_x(4),
+        sigma_y(4),
+        toffoli(1,2,3),
+        hadamard(4),
+        sigma_z(2)
     ]
     
-    #compressing single input gate does nothing
-    circuit = QuantumCircuit(qubit_count = qubit_count, gates=input_gates)
-    
-    transpiled_circuit=transpile(transpiler,circuit)
+    for end_pos in 1:length(input_gates)
 
-    println("input circuit: $circuit")
-    println("transpiled circuit: $transpiled_circuit")
+        truncated_input=input_gates[1:end_pos]
 
-    @test compare_circuits(circuit,transpiled_circuit)
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+        
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)
+
+    end
 
 end
