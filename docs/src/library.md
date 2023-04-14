@@ -16,6 +16,7 @@ get_measurement_probabilities(circuit::QuantumCircuit)
 inv(circuit::QuantumCircuit)
 get_num_gates_per_type
 get_num_gates
+serialize_job
 ```
 
 ## Quantum Gates
@@ -52,8 +53,14 @@ inv(gate::AbstractGate)
 
 ## Quantum Processing Unit
 ```@docs
-QPU
-create_virtual_qpu
+AnyonQPU
+VirtualQPU
+Client
+get_host
+submit_circuit
+get_status
+get_result
+run_job
 ```
 
 ## Quantum Toolkit

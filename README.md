@@ -39,7 +39,7 @@ using Snowflake
 Then lets define a two qubit circuit:
 
 ```julia
-c = QuantumCircuit(qubit_count=2, bit_count=0)
+c = QuantumCircuit(qubit_count=2)
 ```
 
 If you are using Julia REPL you should see an output similar to:
@@ -100,7 +100,7 @@ The script below puts all the steps above together:
 ```julia
 using Snowflake
 
-c = QuantumCircuit(qubit_count=2, bit_count=0)
+c = QuantumCircuit(qubit_count=2)
 push!(c, [hadamard(1)])
 push!(c, [control_x(1, 2)])
 ψ = simulate(c)

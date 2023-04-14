@@ -28,7 +28,12 @@ export
     MultiBodySystem,
     QuantumCircuit,
     AbstractGate,
-    QPU,
+    AnyonQPU,
+    VirtualQPU,
+    Client,
+    Status,
+    BlochSphere,
+    AnimatedBlochSphere,
     NotImplementedError,
 
     # Functions
@@ -73,6 +78,21 @@ export
     is_circuit_native_on_qpu,
     does_circuit_satisfy_qpu_connectivity,
     transpile,
+    get_status_type,
+    get_status_message,
+    read_response_body,
+    serialize_job,
+    submit_circuit,
+    get_client,
+    get_host,
+    get_status,
+    get_result,
+    run_job,
+    MockRequestor,
+    HTTPRequestor,
+    get_request,
+    post_request,
+    get_metadata,
 
     apply_gate!,
 
@@ -108,9 +128,9 @@ include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
-include("core/qpu.jl")
 include("core/transpile.jl")
 
+include("anyon/run_jobs.jl")
 
 
 

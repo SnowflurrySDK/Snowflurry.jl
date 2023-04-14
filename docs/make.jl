@@ -5,7 +5,17 @@ using Documenter
 using Snowflake
 using SnowflakePlots
 
-DocMeta.setdocmeta!(Snowflake, :DocTestSetup, :(using Snowflake); recursive = true)
+DocMeta.setdocmeta!(
+    Snowflake, 
+    :DocTestSetup, 
+    quote
+        using Snowflake
+        include("../test/mock_functions.jl")
+        requestor=MockRequestor(request_checker,post_checker)
+        client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+    end; 
+    recursive = true
+)
 DocMeta.setdocmeta!(SnowflakePlots, :DocTestSetup, :(using Snowflake, SnowflakePlots);
     recursive = true)
 uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
