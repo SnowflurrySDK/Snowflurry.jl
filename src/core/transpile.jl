@@ -48,8 +48,6 @@ end
 
 function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-    num_qubits=get_num_qubits(circuit)
-
     gates=get_circuit_gates(circuit)
     if length(gates)==1
         return circuit
@@ -192,8 +190,65 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     return output_circuit
 end
 
+struct CastToNativeGatesTranspiler<:Transpiler end
+
+function cast_to_native(gate::Universal)
+    params=get_gate_parameters(gate)
+   
+    target=get_connected_qubits(gate)[1]
+
+    theta   =params["theta"]
+    phi     =params["phi"]
+    lambda  =params["lambda"]
+
+    gate_array=Vector{AbstractGate}([])
+
+    if !(isapprox(lambda,0.,atol=1e-6))
+        push!(gate_array,phase_shift(target,lambda))
+    end
+
+    if !(isapprox(theta,0.,atol=1e-6))
+        push!(gate_array,rotation_x( target,pi/2))
+        push!(gate_array,phase_shift(target,theta))
+        push!(gate_array,rotation_x( target,-pi/2))
+    end
+
+    if !(isapprox(phi,0.,atol=1e-6))
+        push!(gate_array,phase_shift(target,phi))
+    end
+
+    return gate_array
+end
+
+function transpile(::CastToNativeGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+    gates=get_circuit_gates(circuit)
+    
+    qubit_count=get_num_qubits(circuit)
+    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in gates
+
+        targets=get_connected_qubits(gate)
+
+        if length(targets)>1
+            push!(output_circuit,gate)
+        else
+            if !(gate isa Snowflake.Universal)
+                gate=get_universal(targets[1],get_operator(gate))
+            end
+
+            gate_array=cast_to_native(gate)
+            push!(output_circuit,gate_array)
+        end
+    end
+
+    return output_circuit
+end
+
 function get_transpiler(qpu::QPU)::Transpiler
     return SequentialTranspiler([
         CompressSingleQubitGatesTranspiler(),
+        CastToNativeGatesTranspiler()
     ])
 end

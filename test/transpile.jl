@@ -2,9 +2,9 @@ using Snowflake
 using Test
 
 target=1
-theta=π
-phi=π/4
-lambda=π/8
+theta=π/5
+phi=π/7
+lambda=π/9
 
 single_qubit_gates=[
     hadamard(target),
@@ -22,6 +22,25 @@ single_qubit_gates=[
     universal(target, theta, phi, lambda),
     x_90(target)
 ]
+
+#test circuit
+input_gates=[
+    sigma_x(1),
+    sigma_y(1),
+    hadamard(2),
+    control_x(1,3),
+    sigma_x(2),
+    sigma_y(2),
+    control_x(1,4),
+    hadamard(2),
+    sigma_z(1),
+    sigma_x(4),
+    sigma_y(4),
+    toffoli(1,2,3),
+    hadamard(4),
+    sigma_z(2)
+]
+
 
 # circuits are equivalent if they both yield the same output for any input.
 # circuits with different ordering of gates that apply on different targets
@@ -96,9 +115,7 @@ end
 
 @testset "basic transpilation" begin
 
-    qpu = create_virtual_qpu(3,Matrix([1 1 0; 1 1 1 ; 0 1 1]), ["x"])
-
-    transpiler=get_transpiler(qpu)
+    transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
 
     input_gate=sigma_x(1)
 
@@ -128,28 +145,82 @@ end
 @testset "transpilation of single and multiple target gates" begin
     
     qubit_count=4
+    transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
+        
+    for end_pos in 1:length(input_gates)
 
-    qpu = create_virtual_qpu(qubit_count,Matrix([1 1 0; 1 1 1 ; 0 1 1]), ["x"])
-    
-    transpiler=get_transpiler(qpu)
-    
-    input_gates=[
-        sigma_x(1),
-        sigma_y(1),
-        hadamard(2),
-        control_x(1,3),
-        sigma_x(2),
-        sigma_y(2),
-        control_x(1,4),
-        hadamard(2),
-        sigma_z(1),
-        sigma_x(4),
-        sigma_y(4),
-        toffoli(1,2,3),
-        hadamard(4),
-        sigma_z(2)
+        truncated_input=input_gates[1:end_pos]
+
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+        
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)
+
+    end
+
+end
+
+@testset "cast_to_native: from universal" begin
+
+    qubit_count=2
+    target=1
+    transpiler=Snowflake.CastToNativeGatesTranspiler()
+
+    list_params=[
+        #theta,     phi,    lambda, gates_in_output
+        (pi/13,     pi/3,   pi/5,   5),
+        (pi/13,     pi/3,   0,      4), 
+        (pi/13,     0,      pi/5,   4), 
+        (pi/13,     0,      0,      3), 
+        (0,         pi/3,   pi/5,   2),
+        (0,         pi/3,   0,      1), 
+        (0,         0,      pi/5,   1),
+        (0,         0,      0,      0),
     ]
+
+    for (theta,phi,lambda,gates_in_output) in list_params
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count, 
+            gates=[universal(target,theta,phi,lambda)])
     
+        transpiled_circuit=transpile(transpiler,circuit)
+    
+        gates=get_circuit_gates(transpiled_circuit)
+        
+        @test length(gates)==gates_in_output
+    
+        @test compare_circuits(circuit,transpiled_circuit)  
+    end
+
+end
+
+@testset "cast_to_native: from any single_qubit_gates" begin
+
+    qubit_count=2
+    target=1
+    transpiler=Snowflake.CastToNativeGatesTranspiler()
+
+    for gate in single_qubit_gates
+
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=[gate])
+
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)  
+    end
+
+end
+
+@testset "SequentialTranspiler: compress and cast_to_native" begin
+    qpu = create_virtual_qpu(3,Matrix([1 1 0; 1 1 1 ; 0 1 1]), ["x"])
+    
+    transpiler=get_transpiler(qpu) 
+
+    @test typeof(transpiler)==Snowflake.SequentialTranspiler
+
+    qubit_count=4
+        
     for end_pos in 1:length(input_gates)
 
         truncated_input=input_gates[1:end_pos]
