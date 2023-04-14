@@ -739,6 +739,23 @@ iswap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
 )
 
 """
+    swap()
+
+Return the swap `Operator`, which is defined as:
+```math
+iSWAP = \\begin{bmatrix}
+    1 & 0 & 0 & 0 \\\\
+    0 & 0 & 1 & 0 \\\\
+    0 & 1 & 0 & 0 \\\\
+    0 & 0 & 0 & 1
+    \\end{bmatrix}.
+```
+"""
+swap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
+    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+)
+
+"""
     toffoli()
 
 Return the Toffoli `Operator`, which is defined as:
@@ -1145,6 +1162,29 @@ get_operator(gate::ISwap, T::Type{<:Complex}=ComplexF64) = iswap(T)
 Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
+
+"""
+    swap(qubit_1, qubit_2)
+
+Return the swap `Gate` which applies the swap `Operator` to `qubit_1` and `qubit_2.`
+
+The corresponding `Operator` is [`swap()`](@ref).
+""" 
+function swap(qubit_1, qubit_2)
+    ensure_target_qubits_are_different([qubit_1, qubit_2])
+    return Swap(qubit_1, qubit_2)
+end
+
+struct Swap <: AbstractGate
+    target_1::Int
+    target_2::Int
+end
+
+get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
+
+Base.inv(gate::Swap) = swap(gate.target_1,gate.target_2)
+
+get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
 
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
