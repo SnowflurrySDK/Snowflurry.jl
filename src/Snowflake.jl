@@ -108,6 +108,7 @@ export
     rotation_y,
     phase_shift,
     universal,
+    swap,
     iswap,
     iswap_dagger,
     pi_8,

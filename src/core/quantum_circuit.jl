@@ -131,6 +131,7 @@ gates_display_symbols=Dict(
     ISwap       =>["x", "x"],
     ISwapDagger =>["x†", "x†"],
     Toffoli     =>["*", "*", "X"],
+    Swap       =>["☒", "☒"],
 )
 
 get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[typeof(gate)]
@@ -155,6 +156,7 @@ gates_instruction_symbols=Dict(
     ISwap       =>"iswap",
     ISwapDagger =>"iswap_dag",
     Toffoli     =>"ccx",
+    Swap        =>"swap",
     )
 
 """
