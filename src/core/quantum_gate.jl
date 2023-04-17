@@ -1195,34 +1195,6 @@ get_gate_parameters(gate::Universal)=Dict(
     "lambda"=>gate.lambda
 )
 
-function get_universal(target::Integer,op::AbstractOperator)
-    @assert size(op)==(2,2)
-    
-    matrix=get_matrix(op)
-
-    #find global phase offset angle
-    alpha=atan(imag(matrix[1,1]),real(matrix[1,1]) )
-    
-    #remove global offset
-    matrix*=exp(-im*alpha)
-    
-    theta=(2*acos(real(matrix[1,1])))
-
-    if (isapprox(theta,0.,atol=1e-6))||(isapprox(theta,2*π,atol=1e-6))
-        lambda=0
-        phi   =real(exp(-im*π/2)log( matrix[2,2]/cos(theta/2)))
-    else
-        lambda=real(exp(-im*π/2)*log(-matrix[1,2]/sin(theta/2)))
-        phi   =real(exp(-im*π/2)*log( matrix[2,1]/sin(theta/2)))
-    end
-
-    # test if universal gate can be constructed from this operator
-    @assert isapprox(real(matrix[2,2]),real(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
-    @assert isapprox(imag(matrix[2,2]),imag(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
-
-    return universal(target, theta, phi, lambda)
-end
-
 # two qubit gates
 
 """
