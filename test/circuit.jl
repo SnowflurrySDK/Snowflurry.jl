@@ -85,13 +85,17 @@ end
     c = QuantumCircuit(qubit_count=2)
     push!(c, rotation_x(1, pi/2))
     push!(c, control_x(1, 2))
+    push!(c, swap(1, 2))
     inverse_c = inv(c)
 
-    @test get_instruction_symbol(get_circuit_gates(inverse_c)[1])   == "cx"
+    @test get_instruction_symbol(get_circuit_gates(inverse_c)[1])   == "swap"
     @test get_connected_qubits(get_circuit_gates(inverse_c)[1])     == [1, 2]
-    @test get_instruction_symbol(get_circuit_gates(inverse_c)[2])   == "rx"
-    @test get_connected_qubits(get_circuit_gates(inverse_c)[2])     == [1]
-    @test get_gate_parameters(get_circuit_gates(inverse_c)[2])["theta"]  ≈ -pi/2
+
+    @test get_instruction_symbol(get_circuit_gates(inverse_c)[2])   == "cx"
+    @test get_connected_qubits(get_circuit_gates(inverse_c)[2])     == [1, 2]
+    @test get_instruction_symbol(get_circuit_gates(inverse_c)[3])   == "rx"
+    @test get_connected_qubits(get_circuit_gates(inverse_c)[3])     == [1]
+    @test get_gate_parameters(get_circuit_gates(inverse_c)[3])["theta"]  ≈ -pi/2
 end
 
 @testset "get_num_gates_per_type" begin

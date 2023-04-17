@@ -43,6 +43,7 @@ universal
 control_z
 control_x
 iswap
+swap
 toffoli
 iswap_dagger
 Base.:*(M::AbstractGate, x::Ket)

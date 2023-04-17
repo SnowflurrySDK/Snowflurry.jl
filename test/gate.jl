@@ -71,6 +71,12 @@ end
     @test get_operator(CZ) ≈ control_z()
     @test inv(CZ) == CZ
 
+    SWAP = swap(1, 2)
+    @test get_instruction_symbol(SWAP) == "swap"
+    @test get_display_symbol(SWAP) == ["☒", "☒"]
+    @test get_operator(SWAP) ≈ swap()
+    @test inv(SWAP) == SWAP
+
     CCX = toffoli(1, 2, 3)
     @test get_instruction_symbol(CCX) == "ccx"
     @test get_display_symbol(CCX) ==["*", "*", "X"]
