@@ -34,6 +34,11 @@ phase_dagger
 pi_8
 pi_8_dagger
 x_90
+x_minus_90
+y_90
+y_minus_90
+z_90
+z_minus_90
 rotation
 rotation_x
 rotation_y
