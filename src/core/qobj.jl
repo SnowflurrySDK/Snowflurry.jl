@@ -46,6 +46,60 @@ end
 Base.length(x::Ket) = Base.length(x.data)
 
 """
+
+    compare_kets(ψ_0::Ket,ψ_1::Ket)
+
+Checks for equivalence allowing for a global phase difference between two input kets.
+
+# Examples
+```jldoctest
+julia> ψ_0 = Ket([1.,2.,3.,4.])
+4-element Ket{ComplexF64}:
+1.0 + 0.0im
+2.0 + 0.0im
+3.0 + 0.0im
+4.0 + 0.0im
+
+
+julia> δ=π/3 # phase offset
+1.0471975511965976
+
+julia> ψ_1 = exp(im*δ)*ψ_0
+4-element Ket{ComplexF64}:
+0.5000000000000001 + 0.8660254037844386im
+1.0000000000000002 + 1.7320508075688772im
+1.5000000000000004 + 2.598076211353316im
+2.0000000000000004 + 3.4641016151377544im
+
+
+julia> compare_kets(ψ_0,ψ_1)
+true
+
+julia> apply_gate!(ψ_1,sigma_x(1))
+
+julia> compare_kets(ψ_0,ψ_1) # no longer equivalent after SigmaX gate
+false
+
+```
+"""
+function compare_kets(ψ_0::Ket,ψ_1::Ket)
+    
+    @assert length(ψ_0)==length(ψ_1) ("Input Kets must be of same dimension")
+
+    # calculate possible global phase offset angle
+    # from first component 
+    θ_0=atan(imag(ψ_0.data[1]),real(ψ_0.data[1]) )
+    θ_1=atan(imag(ψ_1.data[1]),real(ψ_1.data[1]) )
+
+    δ=θ_0-θ_1
+
+    #apply phase offset
+    ψ_1_prime=exp(im*δ)*ψ_1
+
+    return ψ_0≈ψ_1_prime
+end
+
+"""
 A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
 
 # Examples

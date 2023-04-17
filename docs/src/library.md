@@ -17,6 +17,8 @@ inv(circuit::QuantumCircuit)
 get_num_gates_per_type
 get_num_gates
 serialize_job
+transpile
+compare_circuits
 ```
 
 ## Quantum Gates
@@ -61,6 +63,8 @@ submit_circuit
 get_status
 get_result
 run_job
+get_transpiler
+SequentialTranspiler
 ```
 
 ## Quantum Toolkit
@@ -107,6 +111,7 @@ number_op
 coherent
 sesolve
 mesolve
+compare_kets
 ```
 
 ### Visualization

@@ -5,6 +5,73 @@ abstract type Transpiler end
 transpile(t::Transpiler,::QuantumCircuit)= 
     throw(NotImplementedError(:transpile,t))
 
+"""
+    SequentialTranspiler(Vector{<:Transpiler})
+    
+Composite transpiler object which is constructed from an array 
+of Transpiler stages. Calling 
+    `transpile(::SequentialTranspiler,::QuantumCircuit)``
+will apply each stage in sequence to the input circuit, and return
+a transpiled output circuit. The result of the input and output 
+circuit on any arbitrary state Ket is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.SequentialTranspiler([Snowflake.CompressSingleQubitGatesTranspiler(),Snowflake.CastToPhaseShiftAndHalfRotationX()]);
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1),hadamard(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X────H──
+               
+q[2]:──────────
+               
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+Part 1 of 2
+q[1]:──P(-3.1416)────Rx(1.5708)────P(1.5708)────Rx(-1.5708)──
+
+q[2]:────────────────────────────────────────────────────────
+
+
+Part 2 of 2
+q[1]:──P(3.1416)──
+
+q[2]:─────────────
+               
+
+
+
+julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──X────Y─────────P(1.0472)──  
+
+q[2]:────────────*───────────────
+                 |               
+q[3]:────────────X───────────────
+                                 
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──P(-2.0944)───────
+                        
+q[2]:────────────────*──
+                     |  
+q[3]:────────────────X──
+                        
+
+
+
+```
+"""  
 struct SequentialTranspiler<:Transpiler
     stages::Vector{<:Transpiler}
 
@@ -24,6 +91,35 @@ function transpile(transpiler::SequentialTranspiler, circuit::QuantumCircuit)::Q
 end
 
 struct CompressSingleQubitGatesTranspiler<:Transpiler end
+
+# convert a single-target gate to a Universal gate
+function as_universal_gate(target::Integer,op::AbstractOperator)
+    @assert size(op)==(2,2)
+    
+    matrix=get_matrix(op)
+
+    #find global phase offset angle
+    alpha=atan(imag(matrix[1,1]),real(matrix[1,1]) )
+    
+    #remove global offset
+    matrix*=exp(-im*alpha)
+    
+    theta=(2*acos(real(matrix[1,1])))
+
+    if (isapprox(theta,0.,atol=1e-6))||(isapprox(theta,2*π,atol=1e-6))
+        lambda=0
+        phi   =real(exp(-im*π/2)log( matrix[2,2]/cos(theta/2)))
+    else
+        lambda=real(exp(-im*π/2)*log(-matrix[1,2]/sin(theta/2)))
+        phi   =real(exp(-im*π/2)*log( matrix[2,1]/sin(theta/2)))
+    end
+
+    # test if universal gate can be constructed from this operator
+    @assert isapprox(real(matrix[2,2]),real(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
+    @assert isapprox(imag(matrix[2,2]),imag(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
+
+    return universal(target, theta, phi, lambda)
+end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
 function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
@@ -46,6 +142,67 @@ function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
     return as_universal_gate(common_target,combined_op)
 end
 
+"""
+    transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CompressSingleQubitGatesTranspiler` transpiler stage 
+which gathers all single-qubit gates sharing a common target in an input 
+circuit and combines them into single universal gates in a new circuit.
+Gates ordering may differ when gates are applied to different qubits, 
+but the result of the input and output circuit on any arbitrary state Ket 
+is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CompressSingleQubitGatesTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1),sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X────Y──
+               
+q[2]:──────────
+               
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+
+
+julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──X────Y─────────P(1.0472)──
+                                 
+q[2]:────────────*───────────────
+                 |               
+q[3]:────────────X───────────────
+                                 
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──U(θ=0.0000,ϕ=-2.0944,λ=0.0000)───────
+                                            
+q[2]:────────────────────────────────────*──
+                                         |  
+q[3]:────────────────────────────────────X──
+                                            
+
+
+
+
+```
+"""
 function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
@@ -190,9 +347,9 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     return output_circuit
 end
 
-struct CastToNativeGatesTranspiler<:Transpiler end
+struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
 
-function cast_to_native(gate::Universal)
+function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
     params=get_gate_parameters(gate)
    
     target=get_connected_qubits(gate)[1]
@@ -220,7 +377,84 @@ function cast_to_native(gate::Universal)
     return gate_array
 end
 
-function transpile(::CastToNativeGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+"""
+    transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastToPhaseShiftAndHalfRotationX` transpiler stage 
+which converts all single-qubit gates in an input circuit and converts them 
+into combinations of PhaseShift and RotationX with angle π/2 in an output 
+circuit. For any gate in the input circuit, the number of gates in the 
+output varies between zero and 5. The result of the input and output 
+circuit on any arbitrary state Ket is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(-3.1416)────Rx(1.5708)────P(3.1416)────Rx(-1.5708)──
+                                                             
+q[2]:────────────────────────────────────────────────────────
+                                                             
+
+
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_z(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z──
+          
+q[2]:─────
+          
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(3.1416)──
+                  
+q[2]:─────────────
+                  
+
+
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,0.,0.,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:
+     
+
+
+
+```
+"""
+function transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     
@@ -238,17 +472,10 @@ function transpile(::CastToNativeGatesTranspiler, circuit::QuantumCircuit)::Quan
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
-            gate_array=cast_to_native(gate)
+            gate_array=cast_to_phase_shift_and_half_rotation_x(gate)
             push!(output_circuit,gate_array)
         end
     end
 
     return output_circuit
-end
-
-function get_transpiler(qpu::AnyonQPU)::Transpiler
-    return SequentialTranspiler([
-        CompressSingleQubitGatesTranspiler(),
-        CastToNativeGatesTranspiler()
-    ])
 end

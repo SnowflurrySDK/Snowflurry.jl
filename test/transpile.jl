@@ -51,53 +51,9 @@ test_circuits=[
     ]
 ]
 
-
-
-# circuits are equivalent if they both yield the same output for any input.
-# circuits with different ordering of gates that apply on different targets
-# can also be equivalent
-function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)
-
-    num_qubits=get_num_qubits(c0)
-
-    @test num_qubits==get_num_qubits(c1)
-
-    #non-normalized ket with different scalar at each position
-    ψ_0=Ket([v for v in 1:2^num_qubits])
-        
-    for gate in get_circuit_gates(c0) 
-        apply_gate!(ψ_0, gate)
-    end
-
-    ψ_1=Ket([v for v in 1:2^num_qubits])
-
-    for gate in get_circuit_gates(c1) 
-        apply_gate!(ψ_1, gate)        
-    end
-
-    # check equality allowing a global phase offset
-    return compare_kets(ψ_0,ψ_1)
-end
-
-# check for equality allowing for a global phase difference
-function compare_kets(ψ_0::Ket,ψ_1::Ket)
-    
-    # calculate possible global phase offset angle
-    # from first component 
-    θ_0=atan(imag(ψ_0.data[1]),real(ψ_0.data[1]) )
-    θ_1=atan(imag(ψ_1.data[1]),real(ψ_1.data[1]) )
-
-    δ=θ_0-θ_1
-
-    #apply phase offset
-    ψ_1_prime=exp(im*δ)*ψ_1
-
-    return ψ_0≈ψ_1_prime
-end
-
 @testset "as_universal_gate" begin
     for gate in single_qubit_gates    
-        universal_equivalent=as_universal_gate(target,get_operator(gate))
+        universal_equivalent=Snowflake.as_universal_gate(target,get_operator(gate))
         @test get_operator(gate)≈get_operator(universal_equivalent)
     end
 end
@@ -172,11 +128,11 @@ end
     end
 end
 
-@testset "cast_to_native: from universal" begin
+@testset "cast_to_phase_shift_and_half_rotation_x: from universal" begin
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToNativeGatesTranspiler()
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX()
 
     list_params=[
         #theta,     phi,    lambda, gates_in_output
@@ -205,11 +161,11 @@ end
     end
 end
 
-@testset "cast_to_native: from any single_qubit_gates" begin
+@testset "cast_to_phase_shift_and_half_rotation_x: from any single_qubit_gates" begin
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToNativeGatesTranspiler()
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX()
 
     for gate in single_qubit_gates
 
@@ -222,7 +178,7 @@ end
 
 end
 
-@testset "SequentialTranspiler: compress and cast_to_native" begin    
+@testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
 
     num_repetitions=100

@@ -1,7 +1,7 @@
 using Snowflake
 using Test
 
-include("testFunctions.jl")
+include("test_functions.jl")
 
 @testset "apply_gate" begin
     ψ_0 = fock(0,2)

@@ -1,7 +1,7 @@
 using Snowflake
 using Test
 
-include("testFunctions.jl")
+include("test_functions.jl")
 
 test_operator_implementation(
     AntiDiagonalOperator,

@@ -70,6 +70,90 @@ function Base.push!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
     return circuit
 end
 
+
+"""
+    compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
+
+Tests for equivalence of two circuits based on their effect on an 
+arbitrary input state (a Ket). Circuits are equivalent if they both 
+yield the same output for any input, up to a global phase.
+Circuits with different ordering of gates that apply on different 
+targets can also be equivalent.
+
+
+# Examples
+```jldoctest
+julia> c0 = QuantumCircuit(qubit_count = 1, gates=[sigma_x(1),sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──X────Y──
+               
+
+
+
+julia> c1 = QuantumCircuit(qubit_count = 1, gates=[phase_shift(1,π)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──P(3.1416)──
+                  
+
+
+
+julia> compare_circuits(c0,c1)
+true            
+
+julia> c0 = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3)])
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──X────Y───────
+                    
+q[2]:────────────*──
+                 |  
+q[3]:────────────X──
+                    
+
+
+
+julia> c1 = QuantumCircuit(qubit_count = 3, gates=[control_x(2,3),sigma_x(1),sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:───────X────Y──
+                    
+q[2]:──*────────────
+       |            
+q[3]:──X────────────
+                    
+
+
+
+julia> compare_circuits(c0,c1)
+true    
+
+```
+"""
+function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
+
+    num_qubits=get_num_qubits(c0)
+
+    @assert num_qubits==get_num_qubits(c1) ("Input circuits have diffent number of qubits")
+
+    #non-normalized ket with different scalar at each position
+    ψ_0=Ket([v for v in 1:2^num_qubits])
+        
+    for gate in get_circuit_gates(c0) 
+        apply_gate!(ψ_0, gate)
+    end
+
+    ψ_1=Ket([v for v in 1:2^num_qubits])
+
+    for gate in get_circuit_gates(c1) 
+        apply_gate!(ψ_1, gate)        
+    end
+
+    # check equality allowing a global phase offset
+    return compare_kets(ψ_0,ψ_1)
+end
+
 function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
     for target in get_connected_qubits(gate)
         if target > get_num_qubits(circuit)

@@ -36,6 +36,7 @@ export
     AnimatedBlochSphere,
     NotImplementedError,
     Transpiler,
+    SequentialTranspiler,
 
     # Functions
     commute, 
@@ -74,6 +75,8 @@ export
     get_num_gates,
     get_num_gates_per_type,
     get_circuit_gates,
+    compare_circuits,
+    compare_kets,
    
     transpile,
     get_status_type,
@@ -93,7 +96,6 @@ export
     get_metadata,
     get_transpiler,
     apply_gate!,
-    as_universal_gate,
 
     # Gates
     sigma_x,
@@ -125,7 +127,8 @@ include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
-include("anyon/run_jobs.jl")
+include("anyon/qpu_interface.jl")
+include("anyon/anyon.jl")
 include("core/transpile.jl")
 
 

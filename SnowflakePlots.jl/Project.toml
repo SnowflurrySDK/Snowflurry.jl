@@ -1,6 +1,10 @@
 name = "SnowflakePlots"
 uuid = "fa4a7b36-de81-424e-b6b4-6a78b5e46525"
-authors = ["Alireza Yazdi <alireza@anyonsys.com>"]
+authors = [
+    "Alireza Yazdi <alireza@anyonsys.com>",
+    "Paul Le Roux <pleroux@anyonsys.com>", 
+    "Facundo Sosa-Rey <facundo@anyonsys.com>",
+    "Nicolas Poirier <nicolas.poirier2@mail.mcgill.ca>"]
 version = "0.1.0"
 
 [deps]

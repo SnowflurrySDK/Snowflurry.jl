@@ -7,7 +7,6 @@ using Test
     push!(c, [hadamard(1)])
     @test length(get_circuit_gates(c)) == 1
 
-
     push!(c, [control_x(1, 2)])
     @test length(get_circuit_gates(c)) == 2
     pop!(c)
@@ -17,6 +16,8 @@ using Test
     @test length(get_circuit_gates(c)) == 2
 
     print(c)
+
+    @test_throws DomainError push!(c,sigma_x(5))
 end
 
 @testset "print_circuit" begin

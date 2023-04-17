@@ -6,8 +6,8 @@ transpile
 circuit
 submit_circuit
 qpu_interface
-abstractOperator
-denseGate
-diagonalOperator
-diagonalGate
-antiDiagonalGate
+abstract_operator
+dense_gate
+diagonal_operator
+diagonal_gate
+anti_diagonal_gate
