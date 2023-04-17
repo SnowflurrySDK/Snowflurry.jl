@@ -1182,8 +1182,6 @@ end
 
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
 
-Base.inv(gate::Swap) = swap(gate.target_1,gate.target_2)
-
 get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
 
 """
