@@ -246,7 +246,7 @@ function transpile(::CastToNativeGatesTranspiler, circuit::QuantumCircuit)::Quan
     return output_circuit
 end
 
-function get_transpiler(qpu::QPU)::Transpiler
+function get_transpiler(qpu::AnyonQPU)::Transpiler
     return SequentialTranspiler([
         CompressSingleQubitGatesTranspiler(),
         CastToNativeGatesTranspiler()

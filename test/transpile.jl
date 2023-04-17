@@ -1,6 +1,9 @@
 using Snowflake
 using Test
 
+include("mock_functions.jl")
+requestor=MockRequestor(request_checker,post_checker)
+
 target=1
 theta=π/5
 phi=π/7
@@ -219,9 +222,13 @@ end
 
 end
 
-@testset "SequentialTranspiler: compress and cast_to_native" begin
-    qpu = create_virtual_qpu(3,Matrix([1 1 0; 1 1 1 ; 0 1 1]), ["x"])
-    
+@testset "SequentialTranspiler: compress and cast_to_native" begin    
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+
+    num_repetitions=100
+        
+    qpu=AnyonQPU(test_client)
+
     transpiler=get_transpiler(qpu) 
 
     @test typeof(transpiler)==Snowflake.SequentialTranspiler
