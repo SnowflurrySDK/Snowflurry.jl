@@ -75,9 +75,6 @@ export
     get_num_gates_per_type,
     get_circuit_gates,
    
-    create_virtual_qpu,
-    is_circuit_native_on_qpu,
-    does_circuit_satisfy_qpu_connectivity,
     transpile,
     get_status_type,
     get_status_message,
