@@ -1027,7 +1027,7 @@ get_gate_parameters(gate::Universal)=Dict(
     "lambda"=>gate.lambda
 )
 
-function get_universal(target::Integer,op::AbstractOperator)
+function as_universal_gate(target::Integer,op::AbstractOperator)
     @assert size(op)==(2,2)
     
     matrix=get_matrix(op)
@@ -1261,28 +1261,6 @@ function Base.inv(gate::AbstractGate)
     end
     throw(NotImplementedError(:inv, gate))
 end
-
-STD_GATES = Dict(
-    "x" => sigma_x,
-    "y" => sigma_y,
-    "z" => sigma_z,
-    "s" => phase, 
-    "t" => pi_8, 
-    "i" => eye,
-    "h" => hadamard,
-    "cx" => control_x,
-    "cz" => control_z,
-    "iswap" => iswap,
-    "ccx" => toffoli,
-)
-
-PAULI_GATES = Dict(
-    "x" => sigma_x,
-    "y" => sigma_y,
-    "z" => sigma_z, 
-    "i" => eye
-)
-
 
 function show_gate(
     io::IO, 

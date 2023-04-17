@@ -23,23 +23,31 @@ single_qubit_gates=[
     x_90(target)
 ]
 
-#test circuit
-input_gates=[
-    sigma_x(1),
-    sigma_y(1),
-    hadamard(2),
-    control_x(1,3),
-    sigma_x(2),
-    sigma_y(2),
-    control_x(1,4),
-    hadamard(2),
-    sigma_z(1),
-    sigma_x(4),
-    sigma_y(4),
-    toffoli(1,2,3),
-    hadamard(4),
-    sigma_z(2)
+test_circuits=[
+    [
+        sigma_x(1),
+        sigma_y(1),
+        hadamard(2),
+        control_x(1,3),
+        sigma_x(2),
+        sigma_y(2),
+        control_x(1,4),
+        hadamard(2),
+        sigma_z(1),
+        sigma_x(4),
+        sigma_y(4),
+        toffoli(1,2,3),
+        hadamard(4),
+        sigma_z(2)
+    ],
+    [   # all gates are boundaries
+        control_x(1,3),
+        control_x(4,2),
+        control_x(1,4),
+        toffoli(1,4,3)
+    ]
 ]
+
 
 
 # circuits are equivalent if they both yield the same output for any input.
@@ -84,9 +92,9 @@ function compare_kets(ψ_0::Ket,ψ_1::Ket)
     return ψ_0≈ψ_1_prime
 end
 
-@testset "get_universal" begin
+@testset "as_universal_gate" begin
     for gate in single_qubit_gates    
-        universal_equivalent=get_universal(target,get_operator(gate))
+        universal_equivalent=as_universal_gate(target,get_operator(gate))
         @test get_operator(gate)≈get_operator(universal_equivalent)
     end
 end
@@ -146,19 +154,19 @@ end
     
     qubit_count=4
     transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
-        
-    for end_pos in 1:length(input_gates)
+    
+    for gates_list in test_circuits
+        for end_pos in 1:length(gates_list)
 
-        truncated_input=input_gates[1:end_pos]
+            truncated_input=gates_list[1:end_pos]
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
-        
-        transpiled_circuit=transpile(transpiler,circuit)
+            circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+            
+            transpiled_circuit=transpile(transpiler,circuit)
 
-        @test compare_circuits(circuit,transpiled_circuit)
-
+            @test compare_circuits(circuit,transpiled_circuit)
+        end
     end
-
 end
 
 @testset "cast_to_native: from universal" begin
@@ -192,7 +200,6 @@ end
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
-
 end
 
 @testset "cast_to_native: from any single_qubit_gates" begin
@@ -221,16 +228,16 @@ end
 
     qubit_count=4
         
-    for end_pos in 1:length(input_gates)
+    for gates_list in test_circuits
+        for end_pos in 1:length(gates_list)
 
-        truncated_input=input_gates[1:end_pos]
+            truncated_input=gates_list[1:end_pos]
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
-        
-        transpiled_circuit=transpile(transpiler,circuit)
+            circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+            
+            transpiled_circuit=transpile(transpiler,circuit)
 
-        @test compare_circuits(circuit,transpiled_circuit)
-
+            @test compare_circuits(circuit,transpiled_circuit)
+        end
     end
-
 end

@@ -43,7 +43,7 @@ function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
         combined_op=get_operator(gate)*combined_op
     end
 
-    return get_universal(common_target,combined_op)
+    return as_universal_gate(common_target,combined_op)
 end
 
 function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -68,7 +68,7 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     #  blocks_per_target is a Dict
     #   where:
     #       - keys    : the target numbers of qubits in circuit
-    #       - values  : Vector{Vector{i_gate}}
+    #       - values  : Vector{Vector{i_gate::Int}}
     #                   
     #           where:   - i_gate  : the gate's index in 'gates'
     #                    
@@ -77,7 +77,7 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     #
     #                    - Vector{Vector{i_gate}} : list of 
     #                       consecutive blocks, each separated by 
-    #                       an entry in 'boundary'   
+    #                       an entry in 'boundaries'   
     #     
     blocks_per_target=Dict{Int,Vector{Vector{Int}}}(Dict())
 
@@ -88,12 +88,12 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
 
     ######################################################
     #
-    #  boudaries is a Vector of Tuple{i_gate,targets}
+    #  boudaries is a Vector of Tuple{i_gate::Int,targets::Int}
     #  where:
     #       i_gate  : the gate's index in 'gates'
     #       targets : the targets of gate[i_gate]
     #               
-    boundaries=Vector{Tuple{Int,         Vector{Int}}}([]) 
+    boundaries=Vector{Tuple{Int,Vector{Int}}}([]) 
 
     current_block=[1 for _ in 1:qubit_count]
 
@@ -235,7 +235,7 @@ function transpile(::CastToNativeGatesTranspiler, circuit::QuantumCircuit)::Quan
             push!(output_circuit,gate)
         else
             if !(gate isa Snowflake.Universal)
-                gate=get_universal(targets[1],get_operator(gate))
+                gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
             gate_array=cast_to_native(gate)

@@ -96,7 +96,7 @@ export
     get_metadata,
     get_transpiler,
     apply_gate!,
-    get_universal,
+    as_universal_gate,
 
     # Gates
     sigma_x,
@@ -120,9 +120,7 @@ export
     eye,
     control_z,
     control_x,
-    toffoli,
-    STD_GATES,
-    PAULI_GATES
+    toffoli
     
 
 include("core/qobj.jl")

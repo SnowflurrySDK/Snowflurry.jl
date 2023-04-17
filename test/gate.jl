@@ -308,16 +308,3 @@ end
 
 end
 
-@testset "std_gates" begin
-    std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap", "ccx"]
-    for gate in std_gates
-        @test gate in keys(STD_GATES)
-    end
-end
-
-@testset "pauli_gates" begin
-    pauli_gates = ["x", "y", "z", "i"]
-    for gate in pauli_gates
-        @test gate in keys(STD_GATES)
-    end
-end

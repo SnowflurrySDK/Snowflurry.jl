@@ -41,6 +41,7 @@ phase_shift
 universal
 control_z
 control_x
+swap
 iswap
 toffoli
 iswap_dagger
