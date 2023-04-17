@@ -623,24 +623,6 @@ R_y(\\theta) = \\begin{bmatrix}
 rotation_y(theta::Real,T::Type{<:Complex}=ComplexF64) = rotation(theta, pi/2,T)
 
 """
-    rotation_z(theta)
-
-Return the `Operator` that applies a rotation `theta` about the Z axis.
-
-The `Operator` is defined as:
-```math
-R_z(\\theta) = \\begin{bmatrix}
-\\mathrm{exp}\\left(-i\\frac{\\theta}{2}\\right) & 0 \\\\[0.5em]      
-0 & \\mathrm{exp}\\left(i\\frac{\\theta}{2}\\right)
-\\end{bmatrix}.
-```
-""" 
-rotation_z(theta::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[exp(-im*theta/2) 0;
-     0 exp(im*theta/2)]
-)
-
-"""
     phase_shift(phi)
 
 Return the `DiagonalOperator` that applies a phase shift `phi`.
@@ -672,7 +654,7 @@ U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """ 
-universal(theta::Real, phi::Real, lambda,T::Type{<:Complex}=ComplexF64) = DenseOperator(
+universal(theta::Real, phi::Real, lambda::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
     T[cos(theta/2) -exp(im*lambda)*sin(theta/2)
      exp(im*phi)*sin(theta/2) exp(im*(phi+lambda))*cos(theta/2)]
 )
@@ -1016,26 +998,6 @@ Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)
 
 get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
-    """
-    rotation_z(target, theta)
-
-Return a `Gate` that applies a rotation `theta` about the Z axis of the `target` qubit.
-
-The corresponding `Operator` is [`rotation_z(theta)`](@ref).
-""" 
-rotation_z(target::Integer, theta::Real) = RotationZ(target, theta)
-
-struct RotationZ <: AbstractGate
-    target::Int
-    theta::Real
-end
-
-get_operator(gate::RotationZ, T::Type{<:Complex}=ComplexF64) = rotation_z(gate.theta,T)
-
-Base.inv(gate::RotationZ) = rotation_z(gate.target, -gate.theta)  
-
-get_gate_parameters(gate::RotationZ)=Dict("theta" =>gate.theta)
-
 """
     phase_shift(target, phi)
 
@@ -1309,28 +1271,6 @@ function Base.inv(gate::AbstractGate)
     end
     throw(NotImplementedError(:inv, gate))
 end
-
-STD_GATES = Dict(
-    "x" => sigma_x,
-    "y" => sigma_y,
-    "z" => sigma_z,
-    "s" => phase, 
-    "t" => pi_8, 
-    "i" => eye,
-    "h" => hadamard,
-    "cx" => control_x,
-    "cz" => control_z,
-    "iswap" => iswap,
-    "ccx" => toffoli,
-)
-
-PAULI_GATES = Dict(
-    "x" => sigma_x,
-    "y" => sigma_y,
-    "z" => sigma_z, 
-    "i" => eye
-)
-
 
 function show_gate(
     io::IO, 

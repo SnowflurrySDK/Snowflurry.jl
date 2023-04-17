@@ -2,7 +2,7 @@ using Snowflake
 using Test
 using StaticArrays
 
-include("testFunctions.jl")
+include("test_functions.jl")
 
 test_operator_implementation(DiagonalOperator,dim=1,label="DiagonalOperator")
 

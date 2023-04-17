@@ -1,7 +1,7 @@
 using Snowflake
 using Test
 
-include("testFunctions.jl")
+include("test_functions.jl")
 
 @testset "apply_gate" begin
     ψ_0 = fock(0,2)
@@ -130,13 +130,6 @@ end
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test get_gate_parameters(ry)==Dict("theta"=>-pi/2)
 
-    rz = rotation_z(1, pi/2)
-    @test get_instruction_symbol(rz) == "rz"
-    @test get_display_symbol(rz) ==["Rz(1.5708)"]
-    @test rz*Ket([1/2^.5; 1/2^.5]) ≈ Ket([0.5-im*0.5; 0.5+im*0.5])
-    @test rz*ψ_0 ≈ Ket([1/2^.5-im/2^.5; 0])
-    @test get_gate_parameters(rz)==Dict("theta"=>pi/2)
-
     p = phase_shift(1, pi/4)
     @test get_instruction_symbol(p) == "p"
     @test get_display_symbol(p) ==["P(0.7854)"]
@@ -196,12 +189,7 @@ end
     @test test_inverse(ry)
     inverse_ry = inv(ry)
     @test get_connected_qubits(ry)==get_connected_qubits(inverse_ry)
-
-    rz = rotation_z(1, pi/3)
-    @test test_inverse(rz)
-    inverse_rz = inv(rz)
-    @test get_connected_qubits(rz)==get_connected_qubits(inverse_rz)
-   
+ 
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
     inverse_p = inv(p)
@@ -326,16 +314,3 @@ end
 
 end
 
-@testset "std_gates" begin
-    std_gates = ["x", "y", "z", "s", "t", "i", "h", "cx", "cz", "iswap", "ccx"]
-    for gate in std_gates
-        @test gate in keys(STD_GATES)
-    end
-end
-
-@testset "pauli_gates" begin
-    pauli_gates = ["x", "y", "z", "i"]
-    for gate in pauli_gates
-        @test gate in keys(STD_GATES)
-    end
-end

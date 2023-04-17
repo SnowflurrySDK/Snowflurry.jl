@@ -35,6 +35,8 @@ export
     BlochSphere,
     AnimatedBlochSphere,
     NotImplementedError,
+    Transpiler,
+    SequentialTranspiler,
 
     # Functions
     commute, 
@@ -73,10 +75,9 @@ export
     get_num_gates,
     get_num_gates_per_type,
     get_circuit_gates,
+    compare_circuits,
+    compare_kets,
    
-    create_virtual_qpu,
-    is_circuit_native_on_qpu,
-    does_circuit_satisfy_qpu_connectivity,
     transpile,
     get_status_type,
     get_status_message,
@@ -93,7 +94,7 @@ export
     get_request,
     post_request,
     get_metadata,
-
+    get_transpiler,
     apply_gate!,
 
     # Gates
@@ -107,7 +108,6 @@ export
     rotation,
     rotation_x,
     rotation_y,
-    rotation_z,
     phase_shift,
     universal,
     swap,
@@ -120,18 +120,17 @@ export
     eye,
     control_z,
     control_x,
-    toffoli,
-    STD_GATES,
-    PAULI_GATES
+    toffoli
     
 
 include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
+include("anyon/qpu_interface.jl")
+include("anyon/anyon.jl")
 include("core/transpile.jl")
 
-include("anyon/run_jobs.jl")
 
 
 

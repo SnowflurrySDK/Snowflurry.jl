@@ -174,3 +174,9 @@ end
     @test histogram==Dict("001"=>num_repetitions)
 
 end
+
+@testset "get_metadata" begin
+    struct NonExistentQPU<:Snowflake.AbstractQPU end
+
+    @test_throws NotImplementedError get_metadata(NonExistentQPU())
+end
