@@ -204,3 +204,20 @@ end
         end
     end
 end
+
+@testset "cast_to_cz: swap" begin
+    transpiler = Snowflake.CastSwapToCZGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count=2, gates=[swap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[swap(1,2), x_90(1), swap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[iswap(1,2), swap(1,2)]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test Snowflake.Swap ∉ transpiled_circuit
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end

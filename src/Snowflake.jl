@@ -37,6 +37,7 @@ export
     NotImplementedError,
     Transpiler,
     SequentialTranspiler,
+    CastSwapToCZGateTranspiler,
 
     # Functions
     commute, 
