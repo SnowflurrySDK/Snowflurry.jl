@@ -154,6 +154,35 @@ function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
     return compare_kets(ψ_0,ψ_1)
 end
 
+"""
+    Base.in(gate_type::Type{<:AbstractGate}, circuit::QuantumCircuit)::Bool
+
+Determined whether or not a type of gate is present in a circuit.
+
+# Examples
+```jldoctest
+julia> circuit = QuantumCircuit(qubit_count = 1, gates=[sigma_x(1),sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──X────Y──
+               
+julia> Snowflake.SigmaX in circuit
+true
+               
+julia> Snowflake.ControlZ in circuit
+false
+```
+"""
+function Base.in(gate_type::Type{<:AbstractGate}, circuit::QuantumCircuit)::Bool
+    for gate in get_circuit_gates(circuit)
+        if gate isa gate_type
+            return true
+        end
+    end
+
+    return false
+end
+
 function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
     for target in get_connected_qubits(gate)
         if target > get_num_qubits(circuit)
