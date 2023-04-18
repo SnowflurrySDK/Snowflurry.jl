@@ -104,8 +104,50 @@ end
     x90 = x_90(1)
     @test get_instruction_symbol(x90) == "x_90"
     @test get_display_symbol(x90) ==["X_90"]
-    @test x90*ψ_0 ≈  rotation_x(1, pi/2)*ψ_0
-    @test x90*ψ_1 ≈ rotation_x(1, pi/2)*ψ_1
+    @test get_matrix(get_operator(x90)) ≈ (1/sqrt(2.0)) .* [
+        1 -im;
+        -im 1
+    ]
+
+    xm90 = x_minus_90(1)
+    @test get_instruction_symbol(xm90) == "x_minus_90"
+    @test get_display_symbol(xm90) ==["X_m90"]
+    @test get_matrix(get_operator(xm90)) ≈ (1/sqrt(2.0)) .* [
+        1 im;
+        im 1
+    ]
+
+    y90 = y_90(1)
+    @test get_instruction_symbol(y90) == "y_90"
+    @test get_display_symbol(y90) ==["Y_90"]
+    @test get_matrix(get_operator(y90)) ≈ (1/sqrt(2.0)) .* [
+        1 -1;
+        1 1
+    ]
+
+    ym90 = y_minus_90(1)
+    @test get_instruction_symbol(ym90) == "y_minus_90"
+    @test get_display_symbol(ym90) ==["Y_m90"]
+    @test get_matrix(get_operator(ym90)) ≈ (1/sqrt(2.0)) .* [
+        1 1;
+        -1 1
+    ]
+
+    z90 = z_90(1)
+    @test get_instruction_symbol(z90) == "z_90"
+    @test get_display_symbol(z90) ==["Z_90"]
+    @test get_matrix(get_operator(z90)) ≈ [
+        1 0;
+        0 im
+    ]
+
+    zm90 = z_minus_90(1)
+    @test get_instruction_symbol(zm90) == "z_minus_90"
+    @test get_display_symbol(zm90) ==["Z_m90"]
+    @test get_matrix(get_operator(zm90)) ≈ [
+        1 0;
+        0 -im
+    ]
 
     r = rotation(1, pi/2, pi/2)
     @test get_instruction_symbol(r) == "r"
@@ -199,8 +241,43 @@ end
     @test test_inverse(x_90_gate)
     inverse_x_90 = inv(x_90_gate)
     @test get_connected_qubits(x_90_gate)==get_connected_qubits(inverse_x_90)
-    @test get_instruction_symbol(inverse_x_90) == "rx"
-    @test get_display_symbol(inverse_x_90) ==["Rx(-1.5708)"]
+    @test get_instruction_symbol(inverse_x_90) == "x_minus_90"
+    @test get_display_symbol(inverse_x_90) ==["X_m90"]
+
+    x_minus_90_gate = x_minus_90(1)
+    @test test_inverse(x_minus_90_gate)
+    inverse_x_minus_90 = inv(x_minus_90_gate)
+    @test get_connected_qubits(x_minus_90_gate)==get_connected_qubits(inverse_x_minus_90)
+    @test get_instruction_symbol(inverse_x_minus_90) == "x_90"
+    @test get_display_symbol(inverse_x_minus_90) ==["X_90"]
+
+    y_90_gate = y_90(1)
+    @test test_inverse(y_90_gate)
+    inverse_y_90 = inv(y_90_gate)
+    @test get_connected_qubits(y_90_gate)==get_connected_qubits(inverse_y_90)
+    @test get_instruction_symbol(inverse_y_90) == "y_minus_90"
+    @test get_display_symbol(inverse_y_90) ==["Y_m90"]
+
+    y_minus_90_gate = y_minus_90(1)
+    @test test_inverse(y_minus_90_gate)
+    inverse_y_minus_90 = inv(y_minus_90_gate)
+    @test get_connected_qubits(y_minus_90_gate)==get_connected_qubits(inverse_y_minus_90)
+    @test get_instruction_symbol(inverse_y_minus_90) == "y_90"
+    @test get_display_symbol(inverse_y_minus_90) ==["Y_90"]
+
+    z_90_gate = z_90(1)
+    @test test_inverse(z_90_gate)
+    inverse_z_90 = inv(z_90_gate)
+    @test get_connected_qubits(z_90_gate)==get_connected_qubits(inverse_z_90)
+    @test get_instruction_symbol(inverse_z_90) == "z_minus_90"
+    @test get_display_symbol(inverse_z_90) ==["Z_m90"]
+
+    z_minus_90_gate = z_minus_90(1)
+    @test test_inverse(z_minus_90_gate)
+    inverse_z_minus_90 = inv(z_minus_90_gate)
+    @test get_connected_qubits(z_minus_90_gate)==get_connected_qubits(inverse_z_minus_90)
+    @test get_instruction_symbol(inverse_z_minus_90) == "z_90"
+    @test get_display_symbol(inverse_z_minus_90) ==["Z_90"]
 
     s = phase(1)
     @test test_inverse(s)

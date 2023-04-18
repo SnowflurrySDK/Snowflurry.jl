@@ -569,6 +569,81 @@ R_x\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
 x_90(T::Type{<:Complex}=ComplexF64) = rotation(pi/2, 0,T)
 
 """
+    x_minus_90()
+
+Return the `Operator` which applies a -π/2 rotation about the X axis.
+
+The `Operator` is defined as:
+```math
+R_x\\left(-\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & i \\\\
+    i & 1
+    \\end{bmatrix}.
+```
+"""
+x_minus_90(T::Type{<:Complex}=ComplexF64) = rotation(-pi/2, 0,T)
+
+"""
+    y_90()
+
+Return the `Operator` which applies a π/2 rotation about the Y axis.
+
+The `Operator` is defined as:
+```math
+R_y\\left(\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & -1 \\\\
+    1 & 1
+    \\end{bmatrix}.
+```
+"""
+y_90(T::Type{<:Complex}=ComplexF64) = rotation(pi/2, pi/2,T)
+
+"""
+    y_minus_90()
+
+Return the `Operator` which applies a -π/2 rotation about the Y axis.
+
+The `Operator` is defined as:
+```math
+R_y\\left(-\\frac{\\pi}{2}\\right) = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
+    1 & 1 \\\\
+    -1 & 1
+    \\end{bmatrix}.
+```
+"""
+y_minus_90(T::Type{<:Complex}=ComplexF64) = rotation(-pi/2, pi/2,T)
+
+"""
+    z_90()
+
+Return the `Operator` which applies a π/2 rotation about the Z axis.
+
+The `Operator` is defined as:
+```math
+R_z\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & i
+    \\end{bmatrix}.
+```
+"""
+z_90(T::Type{<:Complex}=ComplexF64) = phase_shift(pi/2, T)
+
+"""
+    z_minus_90()
+
+Return the `Operator` which applies a -π/2 rotation about the Z axis.
+
+The `Operator` is defined as:
+```math
+R_z\\left(-\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
+    1 & 0 \\\\
+    0 & -i
+    \\end{bmatrix}.
+```
+"""
+z_minus_90(T::Type{<:Complex}=ComplexF64) = phase_shift(-pi/2, T)
+
+"""
     rotation(theta, phi)
 
 Return the `Operator` which applies a rotation `theta` about the cos(`phi`)X+sin(`phi`)Y axis.
@@ -927,9 +1002,85 @@ struct X90 <: AbstractGate
     target::Int
 end
 
-get_operator(gate::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
+get_operator(::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
 
-Base.inv(gate::X90) = rotation_x(gate.target, -pi/2)
+Base.inv(gate::X90) = x_minus_90(gate.target)
+
+"""
+    x_minus_90(target)
+
+Return a `Gate` that applies a -90° rotation about the X axis as defined by the [`x_minus_90()`](@ref) `Operator`.
+"""
+x_minus_90(target::Integer) = XM90(target)
+
+struct XM90 <: AbstractGate
+    target::Int
+end
+
+get_operator(::XM90, T::Type{<:Complex}=ComplexF64) = x_minus_90(T)
+
+Base.inv(gate::XM90) = x_90(gate.target)
+
+"""
+    y_90(target)
+
+Return a `Gate` that applies a 90° rotation about the Y axis as defined by the [`y_90()`](@ref) `Operator`.
+"""
+y_90(target::Integer) = Y90(target)
+
+struct Y90 <: AbstractGate
+    target::Int
+end
+
+get_operator(::Y90, T::Type{<:Complex}=ComplexF64) = y_90(T)
+
+Base.inv(gate::Y90) = y_minus_90(gate.target)
+
+"""
+    y_minus_90(target)
+
+Return a `Gate` that applies a -90° rotation about the Y axis as defined by the [`y_minus_90()`](@ref) `Operator`.
+"""
+y_minus_90(target::Integer) = YM90(target)
+
+struct YM90 <: AbstractGate
+    target::Int
+end
+
+get_operator(::YM90, T::Type{<:Complex}=ComplexF64) = y_minus_90(T)
+
+Base.inv(gate::YM90) = y_90(gate.target)
+
+"""
+    z_90(target)
+
+Return a `Gate` that applies a 90° rotation about the Z axis as defined by the [`z_90()`](@ref) `Operator`.
+"""
+z_90(target::Integer) = Z90(target)
+
+struct Z90 <: AbstractGate
+    target::Int
+end
+
+get_operator(::Z90, T::Type{<:Complex}=ComplexF64) = z_90(T)
+
+Base.inv(gate::Z90) = z_minus_90(gate.target)
+
+"""
+    z_minus_90(target)
+
+Return a `Gate` that applies a -90° rotation about the Z axis as defined by the [`z_minus_90()`](@ref) `Operator`.
+"""
+z_minus_90(target::Integer) = ZM90(target)
+
+struct ZM90 <: AbstractGate
+    target::Int
+end
+
+get_operator(::ZM90, T::Type{<:Complex}=ComplexF64) = z_minus_90(T)
+
+Base.inv(gate::ZM90) = z_90(gate.target)
+
 
 """
     rotation(target, theta, phi)
