@@ -425,6 +425,63 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     return output
 end
 
+function cast_to_cz(gate::Snowflake.ControlX)::AbstractVector{Snowflake.AbstractGate}
+    connected_qubits = get_connected_qubits(gate)
+    @assert length(connected_qubits) == 2
+    q1 = connected_qubits[1]
+    q2 = connected_qubits[2]
+
+    return Vector{AbstractGate}([
+        hadamard(q2),
+        control_z(q1, q2),
+        hadamard(q2),
+    ])
+end
+
+struct CastCXToCZGateTranspiler <: Transpiler end
+
+"""
+    transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastCZToCZGateTranspiler` transpiler stage which
+expands all CX gates into CZ gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state Ket is unchanged (up to a
+global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastCXToCZGateTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[control_x(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:──*──
+       |
+q[2]:──X──
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:───────*───────
+            |
+q[2]:──H────Z────H──
+```
+"""
+function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa Snowflake.ControlX
+            push!(output, cast_to_cz(gate))
+        else
+            push!(output, gate)
+        end
+    end
+
+    return output
+end
+
 struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
 
 function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
