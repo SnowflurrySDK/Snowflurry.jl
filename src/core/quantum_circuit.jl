@@ -465,7 +465,7 @@ end
 function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
     padding_width::Integer)
 
-    (display_height, display_width) = displaysize(io)
+    (display_height, display_width) = displaysize(stdout)
     useable_width = display_width-padding_width
     num_steps = size(circuit_layout, 2)
     num_qubit_label_chars = length(circuit_layout[1, 1])

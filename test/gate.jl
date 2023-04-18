@@ -216,26 +216,33 @@ end
     @test test_inverse(cnot)
     inverse_cnot = inv(cnot)
     @test get_connected_qubits(cnot)==get_connected_qubits(inverse_cnot)
+    @test get_targets(cnot)==[2]
 
     cz = control_z(1, 2)
     @test test_inverse(cz)
     inverse_cz = inv(cz)
     @test get_connected_qubits(cz)==get_connected_qubits(inverse_cz)
+    @test get_targets(cz)==[2]
 
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
     inverse_rx = inv(rx)
     @test get_connected_qubits(rx)==get_connected_qubits(inverse_rx)
+    @test get_targets(rx)==[1]
+
 
     ry = rotation_y(1, pi/3)
     @test test_inverse(ry)
     inverse_ry = inv(ry)
     @test get_connected_qubits(ry)==get_connected_qubits(inverse_ry)
+    @test get_targets(ry)==[1]
+
  
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
     inverse_p = inv(p)
     @test get_connected_qubits(p)==get_connected_qubits(inverse_p)
+    @test get_targets(p)==[1]
 
     x_90_gate = x_90(1)
     @test test_inverse(x_90_gate)
@@ -286,6 +293,7 @@ end
     @test eye() ≈ get_operator(s)*get_operator(inverse_s)
     @test get_instruction_symbol(inverse_s) == "s_dag"
     @test get_display_symbol(inverse_s) ==["S†"]
+    @test get_targets(s)==[1]
 
     s_dag = phase_dagger(1)
     @test test_inverse(s_dag)
@@ -293,6 +301,7 @@ end
     @test get_connected_qubits(s_dag)==get_connected_qubits(inverse_s_dag)
     @test get_instruction_symbol(s_dag) == "s_dag"
     @test get_display_symbol(s_dag) ==["S†"]
+    @test get_targets(s_dag)==[1]
 
 
     t = pi_8(1)
@@ -301,7 +310,7 @@ end
     @test get_connected_qubits(t)==get_connected_qubits(inverse_t)
     @test get_instruction_symbol(inverse_t) == "t_dag"
     @test get_display_symbol(inverse_t) ==["T†"]
-
+    @test get_targets(t)==[1]
     
     t_dag = pi_8_dagger(1)
     @test test_inverse(t_dag)
@@ -309,7 +318,7 @@ end
     @test get_connected_qubits(t_dag)==get_connected_qubits(inverse_t_dag)
     @test get_instruction_symbol(inverse_t_dag) == "t"
     @test get_display_symbol(inverse_t_dag) ==["T"]
-
+    @test get_targets(t_dag)==[1]
     
     iswap_gate = iswap(1, 2)
     @test test_inverse(iswap_gate) 
@@ -317,6 +326,7 @@ end
     @test get_connected_qubits(iswap_gate)==get_connected_qubits(inverse_iswap)
     @test get_instruction_symbol(inverse_iswap) == "iswap_dag"
     @test get_display_symbol(inverse_iswap) ==["x†", "x†"]
+    @test get_targets(iswap_gate)==[1,2]
 
     iswap_dag = iswap_dagger(1, 2)
     @test test_inverse(iswap_dag)
@@ -324,27 +334,37 @@ end
     @test get_connected_qubits(iswap_dag)==get_connected_qubits(inverse_iswap_dag)
     @test get_instruction_symbol(inverse_iswap_dag) == "iswap"
     @test get_display_symbol(inverse_iswap_dag) ==["x", "x"]
+    @test get_targets(iswap_dag)==[1,2]
 
 
     r = rotation(1, pi/2, -pi/3)
     @test test_inverse(r)
     inverse_r = inv(r)
     @test get_connected_qubits(r)==get_connected_qubits(inverse_r)
+    @test get_targets(r)==[1]
 
 
     u = universal(1, pi/2, -pi/3, pi/4)
     @test test_inverse(u)
     inverse_u = inv(u)
     @test get_connected_qubits(u)==get_connected_qubits(inverse_u)
+    @test get_targets(u)==[1]
 
     struct UnknownGate <: AbstractGate
         instruction_symbol::String
+        target1::Int
+        target2::Int
     end
     
     Snowflake.get_operator(gate::UnknownGate) = DenseOperator([1 2; 3 4])
 
-    unknown_gate=UnknownGate("na")
+    Snowflake.get_connected_qubits(gate::UnknownGate) = [gate.target1,gate.target2]
+
+    unknown_gate=UnknownGate("na",1,2)
     @test_throws NotImplementedError inv(unknown_gate)
+
+    @test_throws NotImplementedError get_targets(unknown_gate)
+
 
     struct UnknownHermitianGate <: AbstractGate
         instruction_symbol::String

@@ -31,18 +31,11 @@ q[2]:──────────
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
-   qubit_count: 2
-Part 1 of 2
-q[1]:──P(-3.1416)────Rx(1.5708)────P(1.5708)────Rx(-1.5708)──
-
-q[2]:────────────────────────────────────────────────────────
-
-
-Part 2 of 2
-q[1]:──P(3.1416)──
-
-q[2]:─────────────
-               
+   qubit_count: 2 
+q[1]:──P(-3.1416)────Rx(1.5708)────P(1.5708)────Rx(-1.5708)────P(3.1416)──
+                                                                          
+q[2]:─────────────────────────────────────────────────────────────────────
+                                                                          
 
 
 
@@ -166,7 +159,7 @@ q[2]:──────────
 
 
 
-julia> transpile(transpiler,circuit)
+julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
@@ -175,6 +168,9 @@ q[2]:─────────────────────────
                                       
 
 
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
 
 julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
 Quantum Circuit Object:
@@ -188,7 +184,7 @@ q[3]:────────────X────────────�
 
 
 
-julia> transpile(transpiler,circuit)
+julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
 q[1]:──U(θ=0.0000,ϕ=-2.0944,λ=0.0000)───────
@@ -200,6 +196,9 @@ q[3]:─────────────────────────
 
 
 
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
 
 ```
 """
@@ -698,7 +697,7 @@ q[2]:─────
 
 
 
-julia> transpile(transpiler,circuit)
+julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──P(-3.1416)────Rx(1.5708)────P(3.1416)────Rx(-1.5708)──
@@ -718,7 +717,7 @@ q[2]:─────
 
 
 
-julia> transpile(transpiler,circuit)
+julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──P(3.1416)──
@@ -727,6 +726,9 @@ q[2]:─────────────
                   
 
 
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,0.,0.,0.)])
 Quantum Circuit Object:
@@ -738,7 +740,7 @@ q[2]:─────────────────────────
 
 
 
-julia> transpile(transpiler,circuit)
+julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:
@@ -747,6 +749,9 @@ q[2]:
      
 
 
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
 
 ```
 """
@@ -775,3 +780,126 @@ function transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit):
 
     return output_circuit
 end
+
+struct PlaceOperationsOnLine<:Transpiler end
+
+"""
+    transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `PlaceOperationsOnLine` transpiler stage 
+which adds Swap gates around multi-qubit gates so that the 
+final operator acts on adjacent qubits. The result of the input 
+and output circuit on any arbitrary state Ket is unchanged 
+(up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.PlaceOperationsOnLine();
+
+julia> circuit = QuantumCircuit(qubit_count = 6, gates=[toffoli(4,6,1)])
+Quantum Circuit Object:
+   qubit_count: 6 
+q[1]:──X──
+       |  
+q[2]:──|──
+       |  
+q[3]:──|──
+       |  
+q[4]:──*──
+       |  
+q[5]:──|──
+       |  
+q[6]:──*──
+          
+
+
+
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 6 
+q[1]:───────────────────────────X───────────────────────────
+                                |                           
+q[2]:───────☒───────────────────*───────────────────☒───────
+            |                   |                   |       
+q[3]:──☒────☒──────────────☒────*────☒──────────────☒────☒──
+       |                   |         |                   |  
+q[4]:──☒──────────────☒────☒─────────☒────☒──────────────☒──
+                      |                   |                 
+q[5]:────────────☒────☒───────────────────☒────☒────────────
+                 |                             |            
+q[6]:────────────☒─────────────────────────────☒────────────
+                                                            
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCircuit
+
+    gates=get_circuit_gates(circuit)
+    
+    qubit_count=get_num_qubits(circuit)
+    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in gates
+
+        connected_qubits=sort(get_connected_qubits(gate))
+
+        if length(connected_qubits)>1
+
+            targets=get_targets(gate)
+    
+            # in controlled gates, length(target_indices)<length(connected_qubits)
+            targets_indices=findall(x->x in targets,connected_qubits)
+    
+            # left untouched
+            min_target=connected_qubits[1] 
+
+            compressed_targets=[min_target+i for i in 0:(length(connected_qubits)-1)]
+
+            previous_min_target=min_target
+
+            # for controlled gates, target qubit is last argument
+            connected_qubits_output=vcat(
+                [p for (i,p) in enumerate(compressed_targets) if !(i in targets_indices)],
+                compressed_targets[targets_indices] )
+                
+            gates_block=[typeof(gate)(connected_qubits_output...,)]
+
+            @assert get_targets(gates_block[1])==compressed_targets[targets_indices] (
+                "Failed to construct gate: $(typeof((gates_block[1])))")
+
+            compressed_targets=reverse(compressed_targets)
+
+            for (i,next_target) in enumerate(reverse(connected_qubits[2:end]))
+                nearest_target=compressed_targets[i]
+
+                while !isequal(next_target,nearest_target)
+                    # surround current gates_block with swap gates 
+                    # to bring one step closer
+                    gates_block=vcat(
+                        swap(nearest_target,nearest_target+1),
+                        gates_block,
+                        swap(nearest_target,nearest_target+1)
+                    )
+
+                    nearest_target+=1
+                end
+                previous_min_target+=1
+            end
+
+            push!(output_circuit,gates_block)
+        else
+            # no effect for single-target gate
+            push!(output_circuit,gate)
+        end
+    end
+
+    return output_circuit
+
+end
+

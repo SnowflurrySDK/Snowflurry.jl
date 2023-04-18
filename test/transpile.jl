@@ -43,7 +43,7 @@ test_circuits=[
         hadamard(4),
         sigma_z(2)
     ],
-    [   # all gates are boundaries
+    [   # all gates are `boundaries`
         control_x(1,3),
         control_x(4,2),
         control_x(1,4),
@@ -178,7 +178,46 @@ end
 
 end
 
-@testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
+@testset "PlaceOperationsOnLine" begin
+    
+    transpiler=Snowflake.PlaceOperationsOnLine()
+
+    qubit_count=10
+
+    test_specs=[
+        # (gates list       gates_in_output)
+        ([control_z(5,6)],  1)      # no effect
+        ([control_z(5,10)], 9)      # target at bottom
+        ([control_z(10,1)], 17)     # target on top
+
+        ([toffoli(4,5,6)],  1)      # no effect
+        ([toffoli(4,6,5)],  1)      # no effect
+        # ([toffoli(6,5,4)],  1)      # no effect # fails, related to issue #132
+        ([toffoli(4,6,2)],  7)      # target on top
+        ([toffoli(2,6,4)],  7)      # target in middle
+        ([toffoli(1,3,6)],  9)      # target at bottom
+        ([toffoli(5,10,2)], 17)     # larger distance
+
+        ([control_z(10,1),toffoli(2,4,8)], 28) # sequence of gates
+    ]
+
+    for (input_gates,gates_in_output) in test_specs
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=input_gates) 
+    
+        
+        transpiled_circuit=transpile(transpiler,circuit)
+        
+        gates=get_circuit_gates(transpiled_circuit)
+        
+        @test length(gates)==gates_in_output
+        
+        @test compare_circuits(circuit,transpiled_circuit)
+
+    end
+
+end
+
+@testset "get_transpiler" begin    
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
 
     num_repetitions=100
@@ -188,6 +227,15 @@ end
     transpiler=get_transpiler(qpu) 
 
     @test typeof(transpiler)==Snowflake.SequentialTranspiler
+end
+
+
+@testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
+
+    transpiler=Snowflake.SequentialTranspiler([   
+            Snowflake.CompressSingleQubitGatesTranspiler(),
+            Snowflake.CastToPhaseShiftAndHalfRotationX()
+        ])
 
     qubit_count=4
         
@@ -277,5 +325,38 @@ end
 
         @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Toffoli)
         @test compare_circuits(circuit, transpiled_circuit)
+    
+end
+
+@testset "SequentialTranspiler: compress, cast_to_Rz_and_half_Rx and Place" begin    
+    
+    transpiler=Snowflake.SequentialTranspiler([
+        Snowflake.CompressSingleQubitGatesTranspiler(),
+        Snowflake.CastToPhaseShiftAndHalfRotationX(),
+        Snowflake.PlaceOperationsOnLine(),
+    ])
+
+    qubit_count=6
+
+    test_inputs=[
+                toffoli(4,6,2),
+                sigma_x(1),
+                sigma_y(1),
+                sigma_y(4),
+                control_z(5,1),
+                hadamard(1),
+                sigma_x(4)
+            ]
+
+
+    for end_pos in 1:length(test_inputs)
+
+        truncated_input=test_inputs[1:end_pos]
+
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+        
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)
     end
 end

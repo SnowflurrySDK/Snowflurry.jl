@@ -75,6 +75,16 @@ abstract type AbstractGate end
 
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
+function get_targets(gate::AbstractGate)
+    connected_qubits=get_connected_qubits(gate::AbstractGate)  
+    if length(connected_qubits)!=1
+        # controlled gates or multi-target get require specialization
+        throw(NotImplementedError(:get_targets, gate))
+    else
+        return connected_qubits
+    end
+end
+
 get_gate_parameters(gate::AbstractGate)=Dict()
 
 struct NotImplementedError{ArgsT} <: Exception
@@ -177,7 +187,7 @@ function apply_operator!(
     sort_array=Vector{UInt64}(undef, target_qubit_index_count)
     mask_array=Vector{UInt64}(undef, target_qubit_index_count)
 
-    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sort_array, mask_array); # 2 allocations, 128 bytes
+    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sort_array, mask_array);
 
     # matrix dim, mask, buffer
     matrix_dim = UInt64(1) << target_qubit_index_count;
@@ -1232,6 +1242,8 @@ get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
 
+get_targets(gate::ControlZ)=[gate.target]
+
 """
     control_x(control_qubit, target_qubit)
 
@@ -1252,6 +1264,8 @@ end
 get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
+
+get_targets(gate::ControlX)=[gate.target]
 
 """
     iswap(qubit_1, qubit_2)
@@ -1276,6 +1290,8 @@ Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
 
+get_targets(gate::ISwap)=get_connected_qubits(gate)
+
 """
     swap(qubit_1, qubit_2)
 
@@ -1296,6 +1312,8 @@ end
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
 
 get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
+
+get_targets(gate::Swap)=get_connected_qubits(gate)
 
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
@@ -1325,6 +1343,8 @@ get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
 
+get_targets(gate::Toffoli)=[gate.target]
+
 """
     iswap_dagger(qubit_1, qubit_2)
 
@@ -1347,6 +1367,8 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
+
+get_targets(gate::ISwapDagger)=get_connected_qubits(gate)
 
 """
     Base.:*(M::AbstractGate, x::Ket)

@@ -122,6 +122,7 @@ function get_transpiler(::AnyonQPU)::Transpiler
         Snowflake.CastCXToCZGateTranspiler(),
         Snowflake.CastISwapToCZGateTranspiler(),
         Snowflake.CompressSingleQubitGatesTranspiler(),
-        Snowflake.CastToPhaseShiftAndHalfRotationX()
+        Snowflake.CastToPhaseShiftAndHalfRotationX(),
+        Snowflake.PlaceOperationsOnLine(),
     ])
 end
