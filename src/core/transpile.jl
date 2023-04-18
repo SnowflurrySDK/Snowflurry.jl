@@ -2,7 +2,7 @@ using Snowflake
 
 abstract type Transpiler end
 
-transpile(t::Transpiler,::QuantumCircuit)= 
+transpile(t::Transpiler,::QuantumCircuit)::QuantumCircuit= 
     throw(NotImplementedError(:transpile,t))
 
 """
