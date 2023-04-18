@@ -314,3 +314,38 @@ end
 
 end
 
+@testset "invariance to permutation of controls (or targets for swap)" begin
+    c0 = QuantumCircuit(qubit_count = 4, gates=[toffoli(3,4,2)])
+    c1 = QuantumCircuit(qubit_count = 4, gates=[toffoli(4,3,2)])
+
+    @test compare_circuits(c0,c1)
+
+    c0 = QuantumCircuit(qubit_count = 3, gates=[toffoli(2,3,1)])
+    c1 = QuantumCircuit(qubit_count = 3, gates=[toffoli(3,2,1)])
+
+    @test compare_circuits(c0,c1)
+
+    c0 = QuantumCircuit(qubit_count = 3, gates=[swap(2,3)])
+    c1 = QuantumCircuit(qubit_count = 3, gates=[swap(3,2)])
+
+    @test compare_circuits(c0,c1)
+
+end
+
+@testset "regression test: cnot inverse identity" begin 
+    q1 = 2 
+    q2 = 4 
+    qubit_count = 5 
+    cnot_circuit = QuantumCircuit(qubit_count=qubit_count, gates=[ control_x(q1, q2)] ) 
+    inverted_cnot_circuit = QuantumCircuit(
+        qubit_count=qubit_count,
+        gates=[ 
+            hadamard(q1), 
+            hadamard(q2), 
+            control_x(q2, q1), 
+            hadamard(q1), 
+            hadamard(q2), 
+        ])
+        
+    @test compare_circuits(cnot_circuit, inverted_cnot_circuit) 
+end

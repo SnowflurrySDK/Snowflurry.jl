@@ -385,7 +385,7 @@ function create_shift_mask_list_from_list_buf!(
     #sort the copy, so the initial array can be used in the original order
     sort!(dst_array)
 
-    for (i,target) in enumerate(target_qubit_index_list)
+    for (i,target) in enumerate(dst_array)
         dst_mask[i]=(1<<target)-1 
     end
 
