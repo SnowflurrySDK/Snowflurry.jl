@@ -39,6 +39,7 @@ export
     SequentialTranspiler,
     CastSwapToCZGateTranspiler,
     CastCXToCZGateTranspiler,
+    CastISwapToCZGateTranspiler,
 
     # Functions
     commute, 

@@ -482,6 +482,80 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     return output
 end
 
+function cast_to_cz(gate::Snowflake.ISwap)::AbstractVector{Snowflake.AbstractGate}
+    connected_qubits = get_connected_qubits(gate)
+    @assert length(connected_qubits) == 2
+    q1 = connected_qubits[1]
+    q2 = connected_qubits[2]
+
+    y90(q) = rotation_y(q, pi/2)
+    ym90(q) = rotation_y(q, -pi/2)
+    x90(q) = rotation_x(q, pi/2)
+    xm90(q) = rotation_x(q, -pi/2)
+
+    return Vector{AbstractGate}([
+        ym90(q1),
+        xm90(q2),
+        control_z(q1, q2),
+        y90(q1),
+        xm90(q2),
+        control_z(q1, q2),
+        y90(q1),
+        x90(q2),
+    ])
+end
+
+struct CastISwapToCZGateTranspiler <: Transpiler end
+
+"""
+    transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastISwapToCZGateTranspiler` transpiler stage which
+expands all ISwap gates into CZ gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state Ket is unchanged (up to a
+global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastISwapToCZGateTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[iswap(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:──x──
+       |
+q[2]:──x──
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+Part 1 of 2
+q[1]:──Ry(-1.5708)───────────────────*────Ry(1.5708)─────────────────
+                                     |
+q[2]:─────────────────Rx(-1.5708)────Z──────────────────Rx(-1.5708)──
+
+
+Part 2 of 2
+q[1]:──*────Ry(1.5708)────────────────
+       |
+q[2]:──Z──────────────────Rx(1.5708)──
+```
+"""
+function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa Snowflake.ISwap
+            push!(output, cast_to_cz(gate))
+        else
+            push!(output, gate)
+        end
+    end
+
+    return output
+end
+
 struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
 
 function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
