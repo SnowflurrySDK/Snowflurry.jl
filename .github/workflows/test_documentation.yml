@@ -18,4 +18,6 @@ jobs:
           Pkg.develop(PackageSpec(path=pwd())); 
           Pkg.instantiate()'
       - name: Build
+        env:
+          COLUMNS: 200
         run: julia --project=docs/ docs/make.jl

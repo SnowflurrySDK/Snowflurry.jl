@@ -23,4 +23,5 @@ jobs:
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
+          COLUMNS: 200
         run: julia --project=docs/ docs/make_and_deploy.jl
