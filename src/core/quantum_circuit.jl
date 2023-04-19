@@ -155,7 +155,7 @@ function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
 end
 
 """
-    Base.in(gate_type::Type{<:AbstractGate}, circuit::QuantumCircuit)::Bool
+    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
 
 Determined whether or not a type of gate is present in a circuit.
 
@@ -166,14 +166,14 @@ Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──X────Y──
                
-julia> Snowflake.SigmaX in circuit
+julia> circuit_contains_gate_type(circuit, Snowflake.SigmaX)
 true
                
-julia> Snowflake.ControlZ in circuit
+julia> circuit_contains_gate_type(circuit, Snowflake.ControlZ)
 false
 ```
 """
-function Base.in(gate_type::Type{<:AbstractGate}, circuit::QuantumCircuit)::Bool
+function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
     for gate in get_circuit_gates(circuit)
         if gate isa gate_type
             return true

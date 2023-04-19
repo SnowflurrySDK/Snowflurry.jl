@@ -226,7 +226,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test Snowflake.Swap ∉ transpiled_circuit
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
@@ -243,7 +243,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test Snowflake.ControlX ∉ transpiled_circuit
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ControlX)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
@@ -260,7 +260,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test Snowflake.ISwap ∉ transpiled_circuit
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ISwap)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end

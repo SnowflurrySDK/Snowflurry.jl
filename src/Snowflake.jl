@@ -79,6 +79,7 @@ export
     get_num_gates_per_type,
     get_circuit_gates,
     compare_circuits,
+    circuit_contains_gate_type,
     compare_kets,
    
     transpile,
