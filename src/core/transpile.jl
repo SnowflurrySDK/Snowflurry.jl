@@ -32,10 +32,10 @@ q[2]:──────────
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-3.1416)────Rx(1.5708)────P(1.5708)────Rx(-1.5708)────P(3.1416)──
-                                                                          
-q[2]:─────────────────────────────────────────────────────────────────────
-                                                                          
+q[1]:──P(-3.1416)────X_90────P(1.5708)────X_m90────P(3.1416)──
+                                                              
+q[2]:─────────────────────────────────────────────────────────
+                                                              
 
 
 
@@ -356,20 +356,16 @@ function cast_to_cz(gate::Snowflake.Swap)::AbstractVector{Snowflake.AbstractGate
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    y90(q) = rotation_y(q, pi/2)
-    ym90(q) = rotation_y(q, -pi/2)
-
-
     return Vector{AbstractGate}([
-        ym90(q2),
+        y_minus_90(q2),
         control_z(q1, q2),
-        ym90(q1),
-        y90(q2),
+        y_minus_90(q1),
+        y_90(q2),
         control_z(q1, q2),
-        y90(q1),
-        ym90(q2),
+        y_90(q1),
+        y_minus_90(q2),
         control_z(q1, q2),
-        y90(q2),
+        y_90(q2),
     ])
 end
 
@@ -396,17 +392,12 @@ q[2]:──☒──
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
-   qubit_count: 2
-Part 1 of 2
-q[1]:─────────────────*────Ry(-1.5708)──────────────────*──
-                      |                                 |
-q[2]:──Ry(-1.5708)────Z───────────────────Ry(1.5708)────Z──
+   qubit_count: 2 
+q[1]:───────────*────Y_m90────────────*────Y_90─────────────*──────────
+                |                     |                     |          
+q[2]:──Y_m90────Z─────────────Y_90────Z────────────Y_m90────Z────Y_90──
+                                              
 
-
-Part 2 of 2
-q[1]:──Ry(1.5708)───────────────────*────────────────
-                                    |
-q[2]:────────────────Ry(-1.5708)────Z────Ry(1.5708)──
 ```
 """
 function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -487,20 +478,15 @@ function cast_to_cz(gate::Snowflake.ISwap)::AbstractVector{Snowflake.AbstractGat
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    y90(q) = rotation_y(q, pi/2)
-    ym90(q) = rotation_y(q, -pi/2)
-    x90(q) = rotation_x(q, pi/2)
-    xm90(q) = rotation_x(q, -pi/2)
-
     return Vector{AbstractGate}([
-        ym90(q1),
-        xm90(q2),
+        y_minus_90(q1),
+        x_minus_90(q2),
         control_z(q1, q2),
-        y90(q1),
-        xm90(q2),
+        y_90(q1),
+        x_minus_90(q2),
         control_z(q1, q2),
-        y90(q1),
-        x90(q2),
+        y_90(q1),
+        x_90(q2),
     ])
 end
 
@@ -527,17 +513,12 @@ q[2]:──x──
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
-   qubit_count: 2
-Part 1 of 2
-q[1]:──Ry(-1.5708)───────────────────*────Ry(1.5708)─────────────────
-                                     |
-q[2]:─────────────────Rx(-1.5708)────Z──────────────────Rx(-1.5708)──
+   qubit_count: 2 
+q[1]:──Y_m90─────────────*────Y_90─────────────*────Y_90──────────
+                         |                     |                  
+q[2]:───────────X_m90────Z────────────X_m90────Z────────────X_90──
+                                                                  
 
-
-Part 2 of 2
-q[1]:──*────Ry(1.5708)────────────────
-       |
-q[2]:──Z──────────────────Rx(1.5708)──
 ```
 """
 function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -660,9 +641,9 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
     end
 
     if !(isapprox(theta,0.,atol=1e-6))
-        push!(gate_array,rotation_x( target,pi/2))
+        push!(gate_array,x_90(target))
         push!(gate_array,phase_shift(target,theta))
-        push!(gate_array,rotation_x( target,-pi/2))
+        push!(gate_array,x_minus_90(target))
     end
 
     if !(isapprox(phi,0.,atol=1e-6))
@@ -700,10 +681,10 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-3.1416)────Rx(1.5708)────P(3.1416)────Rx(-1.5708)──
-                                                             
-q[2]:────────────────────────────────────────────────────────
-                                                             
+q[1]:──P(-3.1416)────X_90────P(3.1416)────X_m90──
+                                                 
+q[2]:────────────────────────────────────────────
+                                                 
 
 
 
@@ -896,7 +877,8 @@ function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCir
             @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
                 "Failed to construct gate: $(typeof((gates_block[1])))")
 
-            # add swaps starting from the farthest qubit, leaving the first unchanged
+            # leaving first (minimum) qubit unchanged,
+            # add swaps starting from the farthest qubit
             connected_qubits    =connected_qubits[   reverse(sorting_order[2:end])]
             consecutive_mapping =consecutive_mapping[reverse(sorting_order[2:end])]
 
