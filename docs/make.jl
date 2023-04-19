@@ -10,6 +10,7 @@ DocMeta.setdocmeta!(
     :DocTestSetup, 
     quote
         using Snowflake
+        ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
         requestor=MockRequestor(request_checker,post_checker)
         client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
