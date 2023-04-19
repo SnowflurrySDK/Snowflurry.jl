@@ -204,3 +204,61 @@ end
         end
     end
 end
+
+@testset "cast_to_cz: unkown gate" begin
+    struct UnknownCastToCZGate <: AbstractGate end
+    gate = UnknownCastToCZGate()
+
+    @test_throws NotImplementedError Snowflake.cast_to_cz(gate)
+end
+
+@testset "cast_to_cz: swap" begin
+    transpiler = Snowflake.CastSwapToCZGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count=2, gates=[swap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[swap(1,2), x_90(1), swap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[iswap(1,2), swap(1,2)]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end
+
+@testset "cast_to_cz: cx" begin
+    transpiler = Snowflake.CastCXToCZGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count=2, gates=[control_x(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[control_x(1,2), x_90(1), control_x(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[iswap(1,2), control_x(1,2)]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ControlX)
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end
+
+@testset "cast_to_cz: iswap" begin
+    transpiler = Snowflake.CastISwapToCZGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count=2, gates=[iswap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[iswap(1,2), x_90(1), iswap(1,2)]),
+        QuantumCircuit(qubit_count=2, gates=[control_x(1,2), iswap(1,2)]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ISwap)
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end

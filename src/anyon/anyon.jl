@@ -111,12 +111,15 @@ Returns the transpiler associated with this QPU.
 julia> qpu=AnyonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[Snowflake.CompressSingleQubitGatesTranspiler(), Snowflake.CastToPhaseShiftAndHalfRotationX()])
+SequentialTranspiler(Transpiler[CastSwapToCZGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), Snowflake.CompressSingleQubitGatesTranspiler(), Snowflake.CastToPhaseShiftAndHalfRotationX()])
 
 ```
 """
-function get_transpiler(qpu::AnyonQPU)::Transpiler
+function get_transpiler(::AnyonQPU)::Transpiler
     return SequentialTranspiler([
+        Snowflake.CastSwapToCZGateTranspiler(),
+        Snowflake.CastCXToCZGateTranspiler(),
+        Snowflake.CastISwapToCZGateTranspiler(),
         Snowflake.CompressSingleQubitGatesTranspiler(),
         Snowflake.CastToPhaseShiftAndHalfRotationX()
     ])

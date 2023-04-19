@@ -37,6 +37,19 @@ end
 end
 
 
+@testset "gate type in circuit" begin
+    circuit = QuantumCircuit(qubit_count = 2)
+    push!(circuit, [hadamard(1)])
+    push!(circuit, [control_x(1, 2)])   
+
+    @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
+    @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
+    @test !circuit_contains_gate_type(circuit, Snowflake.ControlZ)
+    @test !circuit_contains_gate_type(circuit, Snowflake.Swap)
+    @test !circuit_contains_gate_type(circuit, Snowflake.SigmaX)
+end
+
+
 @testset "bellstate" begin
 
     Ψ_up = spin_up()
