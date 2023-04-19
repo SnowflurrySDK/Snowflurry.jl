@@ -32,9 +32,9 @@ q[2]:──────────
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-3.1416)────X_90────P(1.5708)────X_m90────P(3.1416)──
+q[1]:──Z────X_90────Z_90────X_m90────Z──
                                                               
-q[2]:─────────────────────────────────────────────────────────
+q[2]:───────────────────────────────────
                                                               
 
 
@@ -625,7 +625,23 @@ end
 
 struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
 
-function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
+function rightangle_or_arbitrary_phase_shift(target::Int,phase_angle::Real; atol=1e-6)
+    if isapprox(phase_angle,π/2,atol=atol) 
+        return z_90(target)
+
+    elseif isapprox(abs(phase_angle),π,atol=atol) 
+        return sigma_z(target)
+
+    elseif isapprox(phase_angle,-π/2,atol=atol) 
+        return z_minus_90(target)
+    
+    else
+        return phase_shift(target,phase_angle)
+    
+    end
+end
+
+function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     params=get_gate_parameters(gate)
    
     target=get_connected_qubits(gate)[1]
@@ -636,18 +652,27 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
 
     gate_array=Vector{AbstractGate}([])
 
-    if !(isapprox(lambda,0.,atol=1e-6))
-        push!(gate_array,phase_shift(target,lambda))
+    if !(isapprox(lambda,0.,atol=atol))
+        push!(
+            gate_array,
+            rightangle_or_arbitrary_phase_shift(target,lambda;atol=atol)
+        )
     end
 
-    if !(isapprox(theta,0.,atol=1e-6))
+    if !(isapprox(theta,0.,atol=atol))
         push!(gate_array,x_90(target))
-        push!(gate_array,phase_shift(target,theta))
+        push!(
+            gate_array,
+            rightangle_or_arbitrary_phase_shift(target,theta;atol=atol)
+        )
         push!(gate_array,x_minus_90(target))
     end
 
-    if !(isapprox(phi,0.,atol=1e-6))
-        push!(gate_array,phase_shift(target,phi))
+    if !(isapprox(phi,0.,atol=atol))
+        push!(
+            gate_array,
+            rightangle_or_arbitrary_phase_shift(target,phi;atol=atol)
+        )
     end
 
     return gate_array
@@ -681,17 +706,17 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-3.1416)────X_90────P(3.1416)────X_m90──
+q[1]:──Z────X_90────Z────X_m90──
                                                  
-q[2]:────────────────────────────────────────────
+q[2]:───────────────────────────
                                                  
 
 
 
-julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_z(1)])
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──Z──
+q[1]:──Y──
           
 q[2]:─────
           
@@ -701,10 +726,10 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(3.1416)──
-                  
-q[2]:─────────────
-                  
+q[1]:──Z_90────X_90────Z────X_m90────Z_90──
+                                           
+q[2]:──────────────────────────────────────
+                                           
 
 
 
