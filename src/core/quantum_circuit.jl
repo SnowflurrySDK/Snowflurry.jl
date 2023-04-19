@@ -19,14 +19,7 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
-    gates::Vector{AbstractGate} = []
-
-    #Constructor without any gates, for instance: QuantumCircuit(qubit_count=3);
-    function QuantumCircuit(qubit_count::Int,gates::Vector{Any}=[])         
-        @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
-
-        new(qubit_count,gates)
-    end
+    gates::Vector{AbstractGate} = Vector{AbstractGate}([])
     
     function QuantumCircuit(qubit_count::Int,gates::Vector{<:AbstractGate})    
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
