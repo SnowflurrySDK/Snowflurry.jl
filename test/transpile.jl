@@ -206,10 +206,8 @@ end
 end
 
 @testset "cast_to_cz: unkown gate" begin
-    transpiler = Snowflake.CastSwapToCZGateTranspiler()
-
-    struct UnknownGate <: AbstractGate end
-    gate = UnknownGate()
+    struct UnknownCastToCZGate <: AbstractGate end
+    gate = UnknownCastToCZGate()
 
     @test_throws NotImplementedError Snowflake.cast_to_cz(gate)
 end
