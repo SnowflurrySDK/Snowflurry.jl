@@ -262,3 +262,20 @@ end
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
+
+@testset "cast_to_cx: toffoli" begin
+    transpiler = Snowflake.CastToffoliToCXGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count=3, gates=[toffoli(1,2,3), iswap(1,2), toffoli(2,1,3)]),
+        QuantumCircuit(qubit_count=3, gates=[toffoli(1,3,2), x_90(1), toffoli(2,3,1)]),
+        QuantumCircuit(qubit_count=3, gates=[toffoli(3,1,2), control_x(1,2), toffoli(3,2,1)]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Toffoli)
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end

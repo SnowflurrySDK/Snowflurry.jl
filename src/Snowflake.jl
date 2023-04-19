@@ -40,6 +40,7 @@ export
     CastSwapToCZGateTranspiler,
     CastCXToCZGateTranspiler,
     CastISwapToCZGateTranspiler,
+    CastToffoliToCXGateTranspiler,
 
     # Functions
     commute, 

@@ -556,6 +556,93 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     return output
 end
 
+function cast_to_cx(gate::Toffoli)::AbstractVector{Snowflake.AbstractGate}
+    connected_qubits = get_connected_qubits(gate)
+    @assert length(connected_qubits) == 3
+    q1 = connected_qubits[1]
+    q2 = connected_qubits[2]
+    q3 = connected_qubits[3]
+
+    h(q) = hadamard(q)
+    cnot(q1, q2) = control_x(q1, q2)
+    t(q) = pi_8(q)
+    t_dag(q) = pi_8_dagger(q)
+
+    return Vector{Snowflake.AbstractGate}([
+        h(q3),
+        cnot(q2,q3),
+        t_dag(q3),
+        cnot(q1, q3),
+        t(q3),
+        cnot(q2, q3),
+        t_dag(q3),
+        cnot(q1, q3),
+        t(q2),
+        t(q3),
+        cnot(q1, q2),
+        hadamard(q3),
+        t(q1),
+        t_dag(q2),
+        cnot(q1, q2),
+    ])
+end
+
+struct CastToffoliToCXGateTranspiler <: Transpiler end
+
+"""
+    transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastToffoliToCXGateTranspiler` transpiler stage which
+expands all Toffoli gates into CX gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state Ket is unchanged (up to a
+global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastToffoliToCXGateTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1, 2, 3)])
+Quantum Circuit Object:
+   qubit_count: 3
+q[1]:──*──
+       |
+q[2]:──*──
+       |
+q[3]:──X──
+
+julia> transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 3
+Part 1 of 2
+q[1]:──────────────────*────────────────────*──────────────*───────
+                       |                    |              |
+q[2]:───────*──────────|─────────*──────────|────T─────────X───────
+            |          |         |          |
+q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──
+
+
+Part 2 of 2
+q[1]:──T──────────*──
+                  |
+q[2]:───────T†────X──
+
+q[3]:────────────────```
+"""
+function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa Snowflake.Toffoli
+            push!(output, cast_to_cx(gate))
+        else
+            push!(output, gate)
+        end
+    end
+
+    return output
+end
+
 struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
 
 function cast_to_phase_shift_and_half_rotation_x(gate::Universal)
