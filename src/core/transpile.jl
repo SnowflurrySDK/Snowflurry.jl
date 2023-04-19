@@ -783,6 +783,45 @@ end
 
 struct PlaceOperationsOnLine<:Transpiler end
 
+function remap_qubits_to_consecutive(connected_qubits::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
+    min_qubit=minimum(connected_qubits)
+
+    sorting_order=sortperm(connected_qubits)
+
+    # this contains an array of consecutive elements,
+    # in the same unsorted order as the input,
+    # meaning: sortperm(connected_qubits)==sortperm(mapped_indices)
+    mapped_indices=sortperm(sorting_order)
+    
+    consecutive_mapping=[min_qubit+offset for offset in ([v-1 for v in mapped_indices])]
+
+    return (consecutive_mapping,sorting_order)
+end
+
+function remap_connections_using_swaps(
+    gates_block::Vector{<:AbstractGate},
+    connected_qubits::Vector{Int},
+    consecutive_mapping::Vector{Int}
+    )::Vector{AbstractGate}
+
+    for (previous_qubit_num,current_qubit_num) in zip(connected_qubits,consecutive_mapping)
+
+        while !isequal(previous_qubit_num,current_qubit_num)
+            # surround current gates_block with swap gates 
+            # to bring one step closer
+            gates_block=vcat(
+                swap(current_qubit_num,current_qubit_num+1),
+                gates_block,
+                swap(current_qubit_num,current_qubit_num+1)
+            )
+            current_qubit_num+=1
+        end
+    end
+
+    return gates_block
+end
+
+
 """
     transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCircuit
 
@@ -847,50 +886,25 @@ function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCir
 
     for gate in gates
 
-        connected_qubits=sort(get_connected_qubits(gate))
+        connected_qubits=get_connected_qubits(gate)
+        (consecutive_mapping,sorting_order)=remap_qubits_to_consecutive(connected_qubits)
 
-        if length(connected_qubits)>1
-
-            targets=get_targets(gate)
+        if length(consecutive_mapping)>1
     
-            # in controlled gates, length(target_indices)<length(connected_qubits)
-            targets_indices=findall(x->x in targets,connected_qubits)
-    
-            # left untouched
-            min_target=connected_qubits[1] 
+            gates_block=[typeof(gate)(consecutive_mapping...)]
 
-            compressed_targets=[min_target+i for i in 0:(length(connected_qubits)-1)]
-
-            previous_min_target=min_target
-
-            # for controlled gates, target qubit is last argument
-            connected_qubits_output=vcat(
-                [p for (i,p) in enumerate(compressed_targets) if !(i in targets_indices)],
-                compressed_targets[targets_indices] )
-                
-            gates_block=[typeof(gate)(connected_qubits_output...,)]
-
-            @assert get_targets(gates_block[1])==compressed_targets[targets_indices] (
+            @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
                 "Failed to construct gate: $(typeof((gates_block[1])))")
 
-            compressed_targets=reverse(compressed_targets)
+            # add swaps starting from the farthest qubit, leaving the first unchanged
+            connected_qubits    =connected_qubits[   reverse(sorting_order[2:end])]
+            consecutive_mapping =consecutive_mapping[reverse(sorting_order[2:end])]
 
-            for (i,next_target) in enumerate(reverse(connected_qubits[2:end]))
-                nearest_target=compressed_targets[i]
-
-                while !isequal(next_target,nearest_target)
-                    # surround current gates_block with swap gates 
-                    # to bring one step closer
-                    gates_block=vcat(
-                        swap(nearest_target,nearest_target+1),
-                        gates_block,
-                        swap(nearest_target,nearest_target+1)
-                    )
-
-                    nearest_target+=1
-                end
-                previous_min_target+=1
-            end
+            gates_block=remap_connections_using_swaps(
+                gates_block,
+                connected_qubits,
+                consecutive_mapping
+            )
 
             push!(output_circuit,gates_block)
         else

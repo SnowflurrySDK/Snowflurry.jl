@@ -186,13 +186,21 @@ end
 
     test_specs=[
         # (gates list       gates_in_output)
+        ([swap(2,3)],       1)      # no effect
+        ([swap(2,8)],       11)
+        ([swap(8,2)],       11)
+
+        ([iswap(2,3)],       1)      # no effect
+        ([iswap(2,8)],       11)
+        ([iswap(8,2)],       11)
+
         ([control_z(5,6)],  1)      # no effect
         ([control_z(5,10)], 9)      # target at bottom
         ([control_z(10,1)], 17)     # target on top
 
         ([toffoli(4,5,6)],  1)      # no effect
         ([toffoli(4,6,5)],  1)      # no effect
-        # ([toffoli(6,5,4)],  1)      # no effect # fails, related to issue #132
+        ([toffoli(6,5,4)],  1)      # no effect
         ([toffoli(4,6,2)],  7)      # target on top
         ([toffoli(2,6,4)],  7)      # target in middle
         ([toffoli(1,3,6)],  9)      # target at bottom
@@ -211,6 +219,10 @@ end
         
         @test length(gates)==gates_in_output
         
+        if !(compare_circuits(circuit,transpiled_circuit))
+            println("gates in input: $(get_circuit_gates(circuit))")
+        end
+
         @test compare_circuits(circuit,transpiled_circuit)
 
     end
@@ -348,15 +360,18 @@ end
                 sigma_x(4)
             ]
 
+    test_inputs=vcat(test_circuits,[test_inputs])
 
-    for end_pos in 1:length(test_inputs)
+    for input_gates in test_inputs
+        for end_pos in 1:length(input_gates)
 
-        truncated_input=test_inputs[1:end_pos]
+            truncated_input=input_gates[1:end_pos]
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
-        
-        transpiled_circuit=transpile(transpiler,circuit)
+            circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+            
+            transpiled_circuit=transpile(transpiler,circuit)
 
-        @test compare_circuits(circuit,transpiled_circuit)
+            @test compare_circuits(circuit,transpiled_circuit)
+        end
     end
 end
