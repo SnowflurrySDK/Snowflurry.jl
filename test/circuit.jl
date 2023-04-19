@@ -42,11 +42,11 @@ end
     push!(circuit, [hadamard(1)])
     push!(circuit, [control_x(1, 2)])   
 
-    @test Snowflake.Hadamard ∈ circuit
-    @test Snowflake.ControlX ∈ circuit
-    @test Snowflake.ControlZ ∉ circuit
-    @test Snowflake.Swap ∉ circuit
-    @test Snowflake.SigmaX ∉ circuit
+    @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
+    @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
+    @test !circuit_contains_gate_type(circuit, Snowflake.ControlZ)
+    @test !circuit_contains_gate_type(circuit, Snowflake.Swap)
+    @test !circuit_contains_gate_type(circuit, Snowflake.SigmaX)
 end
 
 
