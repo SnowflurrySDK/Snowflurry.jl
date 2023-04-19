@@ -1,6 +1,20 @@
 using Snowflake
 using Test
 
+@testset "Constructor: QuantumCircuit" begin
+
+    c=QuantumCircuit(qubit_count = 1)
+
+    @test length(get_circuit_gates(c))==0
+
+    @test_throws DomainError QuantumCircuit(qubit_count = 1, gates=[sigma_x(5)]);
+
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0, gates=[sigma_x(5)]);
+
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0);
+
+end
+
 @testset "push_pop_gate" begin
     c = QuantumCircuit(qubit_count = 2)
     print(c)
