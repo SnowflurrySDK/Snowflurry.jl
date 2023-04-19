@@ -19,6 +19,7 @@ get_num_gates
 serialize_job
 transpile
 compare_circuits
+circuit_contains_gate_type
 ```
 
 ## Quantum Gates
