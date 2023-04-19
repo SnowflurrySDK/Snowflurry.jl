@@ -348,7 +348,7 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
 end
 
 function cast_to_cz(gate::Snowflake.AbstractGate)
-    throw(NotImplementedError(:cast_to_cz_and_single_qubit_gates,gate))
+    throw(NotImplementedError(:cast_to_cz,gate))
 end
 
 function cast_to_cz(gate::Snowflake.Swap)::AbstractVector{Snowflake.AbstractGate}
