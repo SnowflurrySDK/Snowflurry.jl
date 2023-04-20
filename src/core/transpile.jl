@@ -592,21 +592,15 @@ q[3]:──X──
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
-   qubit_count: 3
-Part 1 of 2
-q[1]:──────────────────*────────────────────*──────────────*───────
-                       |                    |              |
-q[2]:───────*──────────|─────────*──────────|────T─────────X───────
-            |          |         |          |
-q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──
+   qubit_count: 3 
+q[1]:──────────────────*────────────────────*──────────────*─────────T──────────*──
+                       |                    |              |                    |  
+q[2]:───────*──────────|─────────*──────────|────T─────────X──────────────T†────X──
+            |          |         |          |                                      
+q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──────────────────
+                                                                                   
 
-
-Part 2 of 2
-q[1]:──T──────────*──
-                  |
-q[2]:───────T†────X──
-
-q[3]:────────────────```
+```
 """
 function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count=get_num_qubits(circuit)
@@ -1072,6 +1066,81 @@ end
 
 struct SimplifyRzGates<:Transpiler end
 
+"""
+    transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `SimplifyRzGates` transpiler stage 
+which finds PhaseShift gates in an input circuit and according to it's 
+phase angle phi, casts them to one of the right-angle RotationZ gates, 
+e.g. SigmaZ, Z90, or ZM90. In the case where phi≈0., the gate is removed.
+The result of the input and output circuit on any arbitrary state Ket is 
+unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.SimplifyRzGates();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi/2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(1.5708)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z_90──
+             
+q[2]:────────
+             
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(3.1416)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z──
+          
+q[2]:─────
+          
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(0.0000)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:
+     
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
 function transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
 
     qubit_count=get_num_qubits(circuit)
