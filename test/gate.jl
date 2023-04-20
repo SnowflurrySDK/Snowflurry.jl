@@ -331,6 +331,24 @@ end
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 end
 
+@testset "move_gate" begin
+    x_gate = sigma_x(2)
+    qubit_mapping = Dict(2=>3)
+    moved_x_gate = move_gate(x_gate, qubit_mapping)
+    @test moved_x_gate isa Snowflake.SigmaX
+    @test moved_x_gate.target == 3
+
+    qubit_mapping = Dict(1=>2)
+    untouched_x_gate = move_gate(x_gate, qubit_mapping)
+    @test untouched_x_gate isa Snowflake.SigmaX
+    @test untouched_x_gate.target == 2
+
+    struct UnknownTwoQubitGate <: AbstractGate
+        target::Int
+        
+    end
+end
+
 
 @testset "gate_set_exceptions" begin
     @test_throws DomainError control_x(1, 1)

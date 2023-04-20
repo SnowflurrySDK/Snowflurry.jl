@@ -75,6 +75,34 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
+function move_gate(gate::AbstractGate,
+    qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+
+    old_connected_qubits = get_connected_qubits(gate)
+    new_connected_qubits = Int[]
+    found_move = false
+    for (i_qubit, old_qubit) in enumerate(old_connected_qubits)
+        if haskey(qubit_mapping, old_qubit)
+            if !found_move
+                new_connected_qubits = deepcopy(old_connected_qubits)
+                found_move = true
+            end
+            new_connected_qubits[i_qubit] = qubit_mapping[old_qubit]
+        end
+    end
+    if found_move
+        return move_gate(gate, new_connected_qubits)
+    else
+        return gate
+    end
+end
+
+function move_gate(gate::AbstractGate,
+    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+
+    return typeof(gate)(new_connected_qubits[1])
+end
+
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
     args::ArgsT

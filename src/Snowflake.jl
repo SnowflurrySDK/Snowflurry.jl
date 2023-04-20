@@ -69,6 +69,7 @@ export
     get_num_bodies,
     get_connected_qubits,
     get_gate_parameters,
+    move_gate,
     normalize!,
     get_measurement_probabilities,
     genlaguerre,
