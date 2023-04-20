@@ -195,6 +195,39 @@ end
 
 end
 
+@testset "rightangle_or_arbitrary_phase_shift" begin
+
+    list_params=[
+        ( pi/2, Snowflake.Z90),
+        (-pi/2, Snowflake.ZM90),
+        ( pi,   Snowflake.SigmaZ),
+        ( pi/3, Snowflake.PhaseShift)
+    ]
+
+    target=1
+
+
+    for (angle,type_result) in list_params
+
+        result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,angle)
+
+        @test typeof(result_gate)==type_result
+    end
+
+    # returns empty array
+    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,0.)
+
+    @test isnothing(result_gate)
+
+    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,1e-3)
+
+    @test typeof(result_gate)==Snowflake.PhaseShift
+
+    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,1e-3,atol=1e-1)
+
+    @test isnothing(result_gate)
+end
+
 @testset "PlaceOperationsOnLine" begin
     
     transpiler=Snowflake.PlaceOperationsOnLine()

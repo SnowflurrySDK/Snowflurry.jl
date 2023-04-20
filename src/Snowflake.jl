@@ -45,6 +45,7 @@ export
     CastToPhaseShiftAndHalfRotationX,
     PlaceOperationsOnLine,
     SimplifyRxGates,
+    SimplifyRzGates,
 
     # Functions
     commute, 
