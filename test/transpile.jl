@@ -354,7 +354,8 @@ end
 
         @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Toffoli)
         @test compare_circuits(circuit, transpiled_circuit)
-    
+    end
+end
 
 @testset "SequentialTranspiler: compress, cast_to_Rz_and_half_Rx and Place" begin    
     
