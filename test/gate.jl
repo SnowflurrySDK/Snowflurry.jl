@@ -227,10 +227,12 @@ end
     inverse_rx = inv(rx)
     @test get_connected_qubits(rx)==get_connected_qubits(inverse_rx)
 
+
     ry = rotation_y(1, pi/3)
     @test test_inverse(ry)
     inverse_ry = inv(ry)
     @test get_connected_qubits(ry)==get_connected_qubits(inverse_ry)
+
  
     p = phase_shift(1, pi/3)
     @test test_inverse(p)
@@ -294,14 +296,12 @@ end
     @test get_instruction_symbol(s_dag) == "s_dag"
     @test get_display_symbol(s_dag) ==["S†"]
 
-
     t = pi_8(1)
     @test test_inverse(t)
     inverse_t = inv(t)
     @test get_connected_qubits(t)==get_connected_qubits(inverse_t)
     @test get_instruction_symbol(inverse_t) == "t_dag"
     @test get_display_symbol(inverse_t) ==["T†"]
-
     
     t_dag = pi_8_dagger(1)
     @test test_inverse(t_dag)
@@ -309,7 +309,6 @@ end
     @test get_connected_qubits(t_dag)==get_connected_qubits(inverse_t_dag)
     @test get_instruction_symbol(inverse_t_dag) == "t"
     @test get_display_symbol(inverse_t_dag) ==["T"]
-
     
     iswap_gate = iswap(1, 2)
     @test test_inverse(iswap_gate) 
@@ -325,12 +324,10 @@ end
     @test get_instruction_symbol(inverse_iswap_dag) == "iswap"
     @test get_display_symbol(inverse_iswap_dag) ==["x", "x"]
 
-
     r = rotation(1, pi/2, -pi/3)
     @test test_inverse(r)
     inverse_r = inv(r)
     @test get_connected_qubits(r)==get_connected_qubits(inverse_r)
-
 
     u = universal(1, pi/2, -pi/3, pi/4)
     @test test_inverse(u)
@@ -353,6 +350,8 @@ end
     Snowflake.get_operator(gate::UnknownHermitianGate) = DenseOperator([1 im; -im 1])
 
     unknown_hermitian_gate = UnknownHermitianGate("na")
+
+    # test fallback implementation of inv(::AbstractGate)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 end
 

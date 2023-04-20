@@ -177,7 +177,7 @@ function apply_operator!(
     sort_array=Vector{UInt64}(undef, target_qubit_index_count)
     mask_array=Vector{UInt64}(undef, target_qubit_index_count)
 
-    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sort_array, mask_array); # 2 allocations, 128 bytes
+    create_shift_mask_list_from_list_buf!(target_qubit_index_list, sort_array, mask_array);
 
     # matrix dim, mask, buffer
     matrix_dim = UInt64(1) << target_qubit_index_count;

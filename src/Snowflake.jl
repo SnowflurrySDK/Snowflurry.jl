@@ -41,6 +41,9 @@ export
     CastCXToCZGateTranspiler,
     CastISwapToCZGateTranspiler,
     CastToffoliToCXGateTranspiler,
+    CompressSingleQubitGatesTranspiler,
+    CastToPhaseShiftAndHalfRotationX,
+    PlaceOperationsOnLine,
 
     # Functions
     commute, 
