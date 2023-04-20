@@ -645,6 +645,30 @@ function rightangle_or_arbitrary_phase_shift(target::Int,phase_angle::Real; atol
     end
 end
 
+function simplify_rx_gate(
+    target::Int,
+    theta::Real; 
+    atol=1e-6)::Union{AbstractGate,Nothing}
+    
+    if isapprox(theta,π/2,atol=atol) 
+        return x_90(target)
+
+    elseif isapprox(abs(theta),π,atol=atol) 
+        return sigma_x(target)
+
+    elseif isapprox(theta,-π/2,atol=atol) 
+        return x_minus_90(target)
+    
+    elseif isapprox(theta,0.,atol=atol) 
+        return nothing
+
+    else
+        return rotation_x(target,theta)
+    
+    end
+end
+
+
 function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     params=get_gate_parameters(gate)
    
@@ -791,6 +815,115 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationX, circuit::
     end
 
     return output_circuit
+end
+
+struct SimplifyRxGates<:Transpiler 
+    atol::Real
+end
+
+SimplifyRxGates()=SimplifyRxGates(1e-6)
+
+"""
+    transpile(::SimplifyRxGates, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `SimplifyRxGates` transpiler stage 
+which finds RotationX gates in an input circuit and according to it's 
+angle theta, casts them to one of the right-angle RotationX gates, 
+e.g. SigmaX, X90, or XM90. In the case where theta≈0., the gate is removed.
+The result of the input and output circuit on any arbitrary state Ket is 
+unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.SimplifyRxGates();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,pi/2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Rx(1.5708)──
+                   
+q[2]:──────────────
+                   
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X_90──
+             
+q[2]:────────
+             
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,pi)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Rx(3.1416)──
+                   
+q[2]:──────────────
+                   
+
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Rx(0.0000)──
+                   
+q[2]:──────────────
+                   
+
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:
+     
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(transpiler_stage::SimplifyRxGates, circuit::QuantumCircuit)::QuantumCircuit
+
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    atol=transpiler_stage.atol
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa Snowflake.RotationX
+            new_gate=simplify_rx_gate(
+                get_connected_qubits(gate)[1],
+                get_gate_parameters(gate)["theta"];
+                atol=atol
+            )
+
+            if !isnothing(new_gate)
+                push!(output,new_gate)
+            end
+        else
+            push!(output, gate)
+        end
+    end
+
+    return output
 end
 
 struct PlaceOperationsOnLine<:Transpiler end
