@@ -623,7 +623,11 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
-struct CastToPhaseShiftAndHalfRotationX<:Transpiler end
+struct CastToPhaseShiftAndHalfRotationX<:Transpiler 
+    atol::Real
+end
+
+CastToPhaseShiftAndHalfRotationX()=CastToPhaseShiftAndHalfRotationX(1e-6)
 
 function rightangle_or_arbitrary_phase_shift(target::Int,phase_angle::Real; atol=1e-6)
     if isapprox(phase_angle,π/2,atol=atol) 
@@ -761,12 +765,14 @@ true
 
 ```
 """
-function transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     
     qubit_count=get_num_qubits(circuit)
     output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    atol=transpiler_stage.atol
 
     for gate in gates
 
@@ -779,7 +785,7 @@ function transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit):
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
-            gate_array=cast_to_phase_shift_and_half_rotation_x(gate)
+            gate_array=cast_to_phase_shift_and_half_rotation_x(gate;atol=atol)
             push!(output_circuit,gate_array)
         end
     end

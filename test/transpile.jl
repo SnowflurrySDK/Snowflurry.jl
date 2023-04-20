@@ -176,6 +176,23 @@ end
         @test compare_circuits(circuit,transpiled_circuit)  
     end
 
+    circuit = QuantumCircuit(
+        qubit_count = 2, 
+        gates=[universal(1,1e-3,1e-3,1e-3)]
+        )
+    
+    # with default tolerance        
+    transpiled_circuit_default_tol=transpile(transpiler,circuit)
+        
+    @test length(get_circuit_gates(transpiled_circuit_default_tol))==5
+
+    # with user-defined tolerance
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX(1e-1)
+
+    transpiled_circuit_high_tol=transpile(transpiler,circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit_high_tol))==0
+
 end
 
 @testset "PlaceOperationsOnLine" begin
