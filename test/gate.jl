@@ -332,21 +332,25 @@ end
 end
 
 @testset "move_gate" begin
-    x_gate = sigma_x(2)
+    target = 2
+    x_gate = sigma_x(target)
+    qubit_mapping = Dict(1=>2)
+    untouched_x_gate = move_gate(x_gate, qubit_mapping)
+    @test untouched_x_gate isa Snowflake.SigmaX
+    @test untouched_x_gate.target == target
+
     qubit_mapping = Dict(2=>3)
     moved_x_gate = move_gate(x_gate, qubit_mapping)
     @test moved_x_gate isa Snowflake.SigmaX
     @test moved_x_gate.target == 3
 
-    qubit_mapping = Dict(1=>2)
-    untouched_x_gate = move_gate(x_gate, qubit_mapping)
-    @test untouched_x_gate isa Snowflake.SigmaX
-    @test untouched_x_gate.target == 2
-
-    struct UnknownTwoQubitGate <: AbstractGate
-        target::Int
-        
-    end
+    theta = pi/2
+    phi = -pi/4
+    rotation_gate = rotation(target, theta, phi)
+    moved_rotation = move_gate(rotation_gate, qubit_mapping)
+    @test moved_rotation.target == 3
+    @test moved_rotation.theta ≈ theta
+    @test moved_rotation.phi ≈ phi
 end
 
 

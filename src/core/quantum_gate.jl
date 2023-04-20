@@ -1061,6 +1061,12 @@ get_gate_parameters(gate::Rotation)=Dict(
     "phi"   =>gate.phi,
 )
 
+function move_gate(gate::Rotation,
+    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+
+    return Rotation(new_connected_qubits[1], gate.theta, gate.phi)
+end
+
 ########################################################################
 
 
