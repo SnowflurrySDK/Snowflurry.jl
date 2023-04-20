@@ -472,32 +472,6 @@ H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
 hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(1.0 / sqrt(2.0) * T[[1.0, 1.0] [1.0, -1.0]])
 
 """
-    phase()
-
-Return the phase gate `Operator`, which is defined as:
-```math
-S = \\begin{bmatrix}
-    1 & 0 \\\\
-    0 & i
-    \\end{bmatrix}.
-```
-"""
-phase(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, im])
-
-"""
-    phase_dagger()
-
-Return the adjoint phase gate `Operator`, which is defined as:
-```math
-S^\\dagger = \\begin{bmatrix}
-    1 & 0 \\\\
-    0 & -i
-    \\end{bmatrix}.
-```
-"""
-phase_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, -im])
-
-"""
     pi_8()
 
 Return the `Operator` for the π/8 gate, which is defined as:
@@ -927,37 +901,6 @@ struct Hadamard <: AbstractGate
 end
 
 get_operator(gate::Hadamard,T::Type{<:Complex}=ComplexF64) = hadamard(T)
-
-"""
-    phase(target)
-
-Return a phase `Gate` (also known as an ``S`` `Gate`), which applies the [`phase()`](@ref) `DiagonalOperator` to the target qubit.
-"""
-phase(target::Integer, T::Type{<:Complex}=ComplexF64) = Phase(target)
-
-struct Phase <: AbstractGate
-    target::Int
-end
-
-get_operator(gate::Phase,T::Type{<:Complex}=ComplexF64) = phase(T)
-
-Base.inv(gate::Phase) = phase_dagger(gate.target)
-
-"""
-    phase_dagger(target)
-
-Return an adjoint phase `Gate` (also known as an ``S^\\dagger`` `Gate`), which applies the [`phase_dagger()`](@ref) `DiagonalOperator` to the target qubit.
-"""
-phase_dagger(target::Integer, T::Type{<:Complex}=ComplexF64) = PhaseDagger(target)
-
-struct PhaseDagger <: AbstractGate
-    target::Integer
-end
-
-get_operator(gate::PhaseDagger,T::Type{<:Complex}=ComplexF64) = phase_dagger(T)
-
-Base.inv(gate::PhaseDagger) = phase(gate.target)
-
 
 """
     pi_8(target)

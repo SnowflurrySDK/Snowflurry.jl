@@ -623,7 +623,7 @@ end
 
 CastToPhaseShiftAndHalfRotationX()=CastToPhaseShiftAndHalfRotationX(1e-6)
 
-function rightangle_or_arbitrary_phase_shift(
+function simplify_rz_gate(
     target::Int,
     phase_angle::Real; 
     atol=1e-6)::Union{AbstractGate,Nothing}
@@ -636,7 +636,13 @@ function rightangle_or_arbitrary_phase_shift(
 
     elseif isapprox(phase_angle,-π/2,atol=atol) 
         return z_minus_90(target)
-    
+
+    elseif isapprox(phase_angle,π/4,atol=atol) 
+        return pi_8(target)
+        
+    elseif isapprox(phase_angle,-π/4,atol=atol) 
+        return pi_8_dagger(target)
+
     elseif isapprox(phase_angle,0.,atol=atol) 
         return nothing
 
@@ -684,7 +690,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     if !(isapprox(lambda,0.,atol=atol))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,lambda;atol=atol)
+            simplify_rz_gate(target,lambda;atol=atol)
         )
     end
 
@@ -692,7 +698,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
         push!(gate_array,x_90(target))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,theta;atol=atol)
+            simplify_rz_gate(target,theta;atol=atol)
         )
         push!(gate_array,x_minus_90(target))
     end
@@ -700,7 +706,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     if !(isapprox(phi,0.,atol=atol))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,phi;atol=atol)
+            simplify_rz_gate(target,phi;atol=atol)
         )
     end
 
@@ -1064,7 +1070,11 @@ function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCir
 
 end
 
-struct SimplifyRzGates<:Transpiler end
+struct SimplifyRzGates<:Transpiler 
+    atol::Real
+end
+
+SimplifyRzGates()=SimplifyRzGates(1e-6)
 
 """
     transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
@@ -1072,9 +1082,12 @@ struct SimplifyRzGates<:Transpiler end
 Implementation of the `SimplifyRzGates` transpiler stage 
 which finds PhaseShift gates in an input circuit and according to it's 
 phase angle phi, casts them to one of the right-angle RotationZ gates, 
-e.g. SigmaZ, Z90, or ZM90. In the case where phi≈0., the gate is removed.
-The result of the input and output circuit on any arbitrary state Ket is 
-unchanged (up to a global phase).
+e.g. SigmaZ, Z90, ZM90, Pi8 or Pi8Dagger. In the case where phi≈0., the 
+gate is removed. The result of the input and output circuit on any 
+arbitrary state Ket is unchanged (up to a global phase). The tolerance 
+used for Base.isapprox() in each case can be set by passing an optional 
+argument to the Transpiler, e.g:
+transpiler=SimplifyRzGates(1.0e-10)
 
 # Examples
 ```jldoctest
@@ -1141,16 +1154,22 @@ true
 
 ```
 """
-function transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    transpiler_stage::SimplifyRzGates, 
+    circuit::QuantumCircuit
+    )::QuantumCircuit
 
     qubit_count=get_num_qubits(circuit)
     output=QuantumCircuit(qubit_count=qubit_count)
 
+    atol=transpiler_stage.atol
+
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflake.PhaseShift
-            new_gate=rightangle_or_arbitrary_phase_shift(
+            new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
-                get_gate_parameters(gate)["phi"]
+                get_gate_parameters(gate)["phi"],
+                atol=atol
             )
             if !isnothing(new_gate)
                 push!(output,new_gate)

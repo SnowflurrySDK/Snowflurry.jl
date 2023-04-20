@@ -130,8 +130,6 @@ export
     iswap_dagger,
     pi_8,
     pi_8_dagger,
-    phase,
-    phase_dagger,
     eye,
     control_z,
     control_x,

@@ -11,8 +11,6 @@ lambda=π/9
 
 single_qubit_gates=[
     hadamard(target),
-    phase(target),
-    phase_dagger(target),
     phase_shift(target,-phi/2),
     pi_8(target),
     pi_8_dagger(target),
@@ -23,7 +21,12 @@ single_qubit_gates=[
     sigma_y(target),
     sigma_z(target),
     universal(target, theta, phi, lambda),
-    x_90(target)
+    x_90(target),
+    x_minus_90(target),
+    y_90(target),
+    y_minus_90(target),
+    z_90(target),
+    z_minus_90(target),
 ]
 
 test_circuits=[
@@ -195,12 +198,14 @@ end
 
 end
 
-@testset "rightangle_or_arbitrary_phase_shift" begin
+@testset "simplify_rz_gate" begin
 
     list_params=[
         ( pi/2, Snowflake.Z90),
         (-pi/2, Snowflake.ZM90),
         ( pi,   Snowflake.SigmaZ),
+        ( pi/4, Snowflake.Pi8),
+        (-pi/4, Snowflake.Pi8Dagger),
         ( pi/3, Snowflake.PhaseShift)
     ]
 
@@ -209,21 +214,21 @@ end
 
     for (angle,type_result) in list_params
 
-        result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,angle)
+        result_gate=Snowflake.simplify_rz_gate(target,angle)
 
         @test typeof(result_gate)==type_result
     end
 
     # returns empty array
-    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,0.)
+    result_gate=Snowflake.simplify_rz_gate(target,0.)
 
     @test isnothing(result_gate)
 
-    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,1e-3)
+    result_gate=Snowflake.simplify_rz_gate(target,1e-3)
 
     @test typeof(result_gate)==Snowflake.PhaseShift
 
-    result_gate=Snowflake.rightangle_or_arbitrary_phase_shift(target,1e-3,atol=1e-1)
+    result_gate=Snowflake.simplify_rz_gate(target,1e-3,atol=1e-1)
 
     @test isnothing(result_gate)
 end

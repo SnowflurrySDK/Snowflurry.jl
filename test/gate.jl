@@ -89,12 +89,6 @@ end
     ψ_0 = fock(0,2)
     ψ_1 = fock(1,2)
 
-    S = phase(1)
-    @test get_instruction_symbol(S) == "s"
-    @test get_display_symbol(S) ==["S"]
-    @test S*ψ_0 ≈ ψ_0
-    @test S*ψ_1 ≈ im*ψ_1
-
     T = pi_8(1)
     @test get_instruction_symbol(T) == "t"
     @test get_display_symbol(T) ==["T"]
@@ -205,10 +199,6 @@ end
     @test get_instruction_symbol(pi_8_dag) == "t_dag"
     @test get_display_symbol(pi_8_dag) ==["T†"]
 
-    phase_dag=phase_dagger(1)
-    @test phase_dag*(phase(1)*initial_state_1) ≈ initial_state_1
-    @test get_instruction_symbol(phase_dag) == "s_dag"
-    @test get_display_symbol(phase_dag) ==["S†"]
 end
 
 @testset "inv" begin
@@ -280,21 +270,6 @@ end
     @test get_connected_qubits(z_minus_90_gate)==get_connected_qubits(inverse_z_minus_90)
     @test get_instruction_symbol(inverse_z_minus_90) == "z_90"
     @test get_display_symbol(inverse_z_minus_90) ==["Z_90"]
-
-    s = phase(1)
-    @test test_inverse(s)
-    inverse_s = inv(s)
-    @test get_connected_qubits(s)==get_connected_qubits(inverse_s)
-    @test eye() ≈ get_operator(s)*get_operator(inverse_s)
-    @test get_instruction_symbol(inverse_s) == "s_dag"
-    @test get_display_symbol(inverse_s) ==["S†"]
-
-    s_dag = phase_dagger(1)
-    @test test_inverse(s_dag)
-    inverse_s_dag = inv(s)
-    @test get_connected_qubits(s_dag)==get_connected_qubits(inverse_s_dag)
-    @test get_instruction_symbol(s_dag) == "s_dag"
-    @test get_display_symbol(s_dag) ==["S†"]
 
     t = pi_8(1)
     @test test_inverse(t)
