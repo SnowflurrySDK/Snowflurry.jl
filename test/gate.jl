@@ -348,9 +348,22 @@ end
     phi = -pi/4
     rotation_gate = rotation(target, theta, phi)
     moved_rotation = move_gate(rotation_gate, qubit_mapping)
+    @test moved_rotation isa Snowflake.Rotation
     @test moved_rotation.target == 3
     @test moved_rotation.theta ≈ theta
     @test moved_rotation.phi ≈ phi
+
+    rotation_x_gate = rotation_x(target, theta)
+    moved_rotation_x = move_gate(rotation_x_gate, qubit_mapping)
+    @test moved_rotation_x isa Snowflake.RotationX
+    @test moved_rotation_x.target == 3
+    @test moved_rotation_x.theta ≈ theta
+
+    rotation_y_gate = rotation_y(target, theta)
+    moved_rotation_y = move_gate(rotation_y_gate, qubit_mapping)
+    @test moved_rotation_y isa Snowflake.RotationY
+    @test moved_rotation_y.target == 3
+    @test moved_rotation_y.theta ≈ theta
 end
 
 

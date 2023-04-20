@@ -1090,6 +1090,12 @@ Base.inv(gate::RotationX) = rotation_x(gate.target, -gate.theta)
 
 get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
+function move_gate(gate::RotationX,
+    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+
+    return RotationX(new_connected_qubits[1], gate.theta)
+end
+
     """
     rotation_y(target, theta)
 
@@ -1109,6 +1115,12 @@ get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.t
 Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
 
 get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
+
+function move_gate(gate::RotationY,
+    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+
+    return RotationY(new_connected_qubits[1], gate.theta)
+end
 
 """
     phase_shift(target, phi)
