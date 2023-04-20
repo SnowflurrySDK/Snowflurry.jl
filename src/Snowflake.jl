@@ -44,6 +44,7 @@ export
     CompressSingleQubitGatesTranspiler,
     CastToPhaseShiftAndHalfRotationX,
     PlaceOperationsOnLine,
+    SimplifyRxGates,
 
     # Functions
     commute, 

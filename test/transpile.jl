@@ -392,3 +392,84 @@ end
         end
     end
 end
+
+
+@testset "simplify_rx_gate" begin
+
+    list_params=[
+        ( pi/2, Snowflake.X90),
+        (-pi/2, Snowflake.XM90),
+        ( pi,   Snowflake.SigmaX),
+        ( pi/3, Snowflake.RotationX)
+    ]
+
+    target=1
+
+
+    for (angle,type_result) in list_params
+
+        result_gate=Snowflake.simplify_rx_gate(target,angle)
+
+        @test typeof(result_gate)==type_result
+    end
+
+    # returns empty array
+    result_gate=Snowflake.simplify_rx_gate(target,0.)
+
+    @test isnothing(result_gate)
+
+    result_gate=Snowflake.simplify_rx_gate(target,1e-3)
+
+    @test typeof(result_gate)==Snowflake.RotationX
+
+    result_gate=Snowflake.simplify_rx_gate(target,1e-3,atol=1e-1)
+
+    @test isnothing(result_gate)
+end
+
+
+@testset "SimplifyRxGates" begin
+    transpiler = SimplifyRxGates()
+
+    target=1
+
+    test_inputs=[
+        (rotation_x(target,pi/2),  Snowflake.X90)
+        (rotation_x(target,-pi/2), Snowflake.XM90)
+        (rotation_x(target,pi),    Snowflake.SigmaX)
+        (rotation_x(target,pi/3),  Snowflake.RotationX)
+    ]
+
+    for (input_gate,type_result) in test_inputs
+        circuit=QuantumCircuit(qubit_count=target, gates=[input_gate])
+
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)
+
+        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+    end
+
+    circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,0.)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test compare_circuits(circuit,transpiled_circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==0
+
+    # with default tolerance
+    circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,1e-3)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==1
+
+    # with user-defined tolerance
+
+    transpiler=SimplifyRxGates(1e-1)
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==0
+end
