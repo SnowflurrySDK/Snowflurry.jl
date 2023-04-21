@@ -1174,6 +1174,12 @@ get_gate_parameters(gate::Universal)=Dict(
     "lambda"=>gate.lambda
 )
 
+function move_gate(gate::Universal,
+    new_connected_qubits::AbstractVector{<:Integer})::Universal
+
+    return Universal(new_connected_qubits[1], gate.theta, gate.phi, gate.lambda)
+end
+
 # two qubit gates
 
 """

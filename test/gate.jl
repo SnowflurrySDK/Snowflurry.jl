@@ -370,6 +370,15 @@ end
     @test moved_phase_shift isa Snowflake.PhaseShift
     @test moved_phase_shift.target == 3
     @test moved_phase_shift.phi ≈ phi
+
+    lambda = pi/3
+    universal_gate = universal(target, theta, phi, lambda)
+    moved_universal = move_gate(universal_gate, qubit_mapping)
+    @test moved_universal isa Snowflake.Universal
+    @test moved_universal.target == 3
+    @test moved_universal.theta ≈ theta
+    @test moved_universal.phi ≈ phi
+    @test moved_universal.lambda ≈ lambda
 end
 
 
