@@ -639,11 +639,6 @@ gates_in_output=[9,8]
             @test compare_circuits(circuit,transpiled_circuit)
 
             if end_pos==length(gates_list)
-                println("gates in input: $(length(get_circuit_gates(circuit)))")
-
-                println("input circuit: $circuit")
-                println("output circuit: $transpiled_circuit")
-
                 @test length(get_circuit_gates(transpiled_circuit))==gates_in_output
             end
         end
