@@ -43,6 +43,7 @@ export
     SwapQubitsForLineConnectivityTranspiler,
     SimplifyRxGates,
     SimplifyRzGates,
+    CompressRzGates,
 
     # Functions
     commute, 
