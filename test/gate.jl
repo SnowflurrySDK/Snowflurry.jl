@@ -364,6 +364,12 @@ end
     @test moved_rotation_y isa Snowflake.RotationY
     @test moved_rotation_y.target == 3
     @test moved_rotation_y.theta ≈ theta
+
+    phase_shift_gate = phase_shift(target, phi)
+    moved_phase_shift = move_gate(phase_shift_gate, qubit_mapping)
+    @test moved_phase_shift isa Snowflake.PhaseShift
+    @test moved_phase_shift.target == 3
+    @test moved_phase_shift.phi ≈ phi
 end
 
 

@@ -1062,7 +1062,7 @@ get_gate_parameters(gate::Rotation)=Dict(
 )
 
 function move_gate(gate::Rotation,
-    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+    new_connected_qubits::AbstractVector{<:Integer})::Rotation
 
     return Rotation(new_connected_qubits[1], gate.theta, gate.phi)
 end
@@ -1091,7 +1091,7 @@ Base.inv(gate::RotationX) = rotation_x(gate.target, -gate.theta)
 get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
 function move_gate(gate::RotationX,
-    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+    new_connected_qubits::AbstractVector{<:Integer})::RotationX
 
     return RotationX(new_connected_qubits[1], gate.theta)
 end
@@ -1117,7 +1117,7 @@ Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)
 get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
 function move_gate(gate::RotationY,
-    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+    new_connected_qubits::AbstractVector{<:Integer})::RotationY
 
     return RotationY(new_connected_qubits[1], gate.theta)
 end
@@ -1139,6 +1139,12 @@ get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.
 Base.inv(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
 
 get_gate_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
+
+function move_gate(gate::PhaseShift,
+    new_connected_qubits::AbstractVector{<:Integer})::PhaseShift
+
+    return PhaseShift(new_connected_qubits[1], gate.phi)
+end
 
 """
     universal(target, theta, phi, lambda)
