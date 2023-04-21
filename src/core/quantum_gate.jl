@@ -691,12 +691,11 @@ Return the `DiagonalOperator` that applies a phase shift `phi`.
 The `DiagonalOperator` is defined as:
 ```math
 P(\\phi) = \\begin{bmatrix}
-    i & 0 \\\\[0.5em]      
+    1 & 0 \\\\[0.5em]      
     0 & e^{i\\phi}
 \\end{bmatrix}.
 ```
 """ 
-
 phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
 
 """
