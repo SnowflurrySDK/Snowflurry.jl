@@ -521,6 +521,8 @@ end
         (phase_shift(target,pi/2),  Snowflake.Z90)
         (phase_shift(target,-pi/2), Snowflake.ZM90)
         (phase_shift(target,pi),    Snowflake.SigmaZ)
+        (phase_shift(target, pi/4), Snowflake.Pi8)
+        (phase_shift(target,-pi/4), Snowflake.Pi8Dagger)
         (phase_shift(target,pi/3),  Snowflake.PhaseShift)
     ]
 
