@@ -1243,6 +1243,12 @@ get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
 
+function move_gate(gate::ControlX,
+    new_connected_qubits::AbstractVector{<:Integer})::ControlX
+
+    return ControlX(new_connected_qubits...)
+end
+
 """
     iswap(qubit_1, qubit_2)
 
