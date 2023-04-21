@@ -346,11 +346,11 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     return output_circuit
 end
 
-function cast_to_cz(gate::Snowflake.AbstractGate)
+function cast_to_cz(gate::AbstractGate)
     throw(NotImplementedError(:cast_to_cz,gate))
 end
 
-function cast_to_cz(gate::Snowflake.Swap)::AbstractVector{Snowflake.AbstractGate}
+function cast_to_cz(gate::Snowflake.Swap)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -415,7 +415,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     return output
 end
 
-function cast_to_cz(gate::Snowflake.ControlX)::AbstractVector{Snowflake.AbstractGate}
+function cast_to_cz(gate::Snowflake.ControlX)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -472,7 +472,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     return output
 end
 
-function cast_to_cz(gate::Snowflake.ISwap)::AbstractVector{Snowflake.AbstractGate}
+function cast_to_cz(gate::Snowflake.ISwap)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -536,7 +536,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     return output
 end
 
-function cast_to_cx(gate::Toffoli)::AbstractVector{Snowflake.AbstractGate}
+function cast_to_cx(gate::Toffoli)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 3
     q1 = connected_qubits[1]
@@ -548,7 +548,7 @@ function cast_to_cx(gate::Toffoli)::AbstractVector{Snowflake.AbstractGate}
     t(q) = pi_8(q)
     t_dag(q) = pi_8_dagger(q)
 
-    return Vector{Snowflake.AbstractGate}([
+    return Vector{AbstractGate}([
         h(q3),
         cnot(q2,q3),
         t_dag(q3),
@@ -592,21 +592,15 @@ q[3]:──X──
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
-   qubit_count: 3
-Part 1 of 2
-q[1]:──────────────────*────────────────────*──────────────*───────
-                       |                    |              |
-q[2]:───────*──────────|─────────*──────────|────T─────────X───────
-            |          |         |          |
-q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──
+   qubit_count: 3 
+q[1]:──────────────────*────────────────────*──────────────*─────────T──────────*──
+                       |                    |              |                    |  
+q[2]:───────*──────────|─────────*──────────|────T─────────X──────────────T†────X──
+            |          |         |          |                                      
+q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──────────────────
+                                                                                   
 
-
-Part 2 of 2
-q[1]:──T──────────*──
-                  |
-q[2]:───────T†────X──
-
-q[3]:────────────────```
+```
 """
 function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count=get_num_qubits(circuit)
@@ -629,7 +623,11 @@ end
 
 CastToPhaseShiftAndHalfRotationX()=CastToPhaseShiftAndHalfRotationX(1e-6)
 
-function rightangle_or_arbitrary_phase_shift(target::Int,phase_angle::Real; atol=1e-6)
+function simplify_rz_gate(
+    target::Int,
+    phase_angle::Real; 
+    atol=1e-6)::Union{AbstractGate,Nothing}
+    
     if isapprox(phase_angle,π/2,atol=atol) 
         return z_90(target)
 
@@ -638,7 +636,16 @@ function rightangle_or_arbitrary_phase_shift(target::Int,phase_angle::Real; atol
 
     elseif isapprox(phase_angle,-π/2,atol=atol) 
         return z_minus_90(target)
-    
+
+    elseif isapprox(phase_angle,π/4,atol=atol) 
+        return pi_8(target)
+        
+    elseif isapprox(phase_angle,-π/4,atol=atol) 
+        return pi_8_dagger(target)
+
+    elseif isapprox(phase_angle,0.,atol=atol) 
+        return nothing
+
     else
         return phase_shift(target,phase_angle)
     
@@ -683,7 +690,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     if !(isapprox(lambda,0.,atol=atol))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,lambda;atol=atol)
+            simplify_rz_gate(target,lambda;atol=atol)
         )
     end
 
@@ -691,7 +698,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
         push!(gate_array,x_90(target))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,theta;atol=atol)
+            simplify_rz_gate(target,theta;atol=atol)
         )
         push!(gate_array,x_minus_90(target))
     end
@@ -699,7 +706,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     if !(isapprox(phi,0.,atol=atol))
         push!(
             gate_array,
-            rightangle_or_arbitrary_phase_shift(target,phi;atol=atol)
+            simplify_rz_gate(target,phi;atol=atol)
         )
     end
 
@@ -1063,3 +1070,114 @@ function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCir
 
 end
 
+struct SimplifyRzGates<:Transpiler 
+    atol::Real
+end
+
+SimplifyRzGates()=SimplifyRzGates(1e-6)
+
+"""
+    transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `SimplifyRzGates` transpiler stage 
+which finds PhaseShift gates in an input circuit and according to it's 
+phase angle phi, casts them to one of the right-angle RotationZ gates, 
+e.g. SigmaZ, Z90, ZM90, Pi8 or Pi8Dagger. In the case where phi≈0., the 
+gate is removed. The result of the input and output circuit on any 
+arbitrary state Ket is unchanged (up to a global phase). The tolerance 
+used for Base.isapprox() in each case can be set by passing an optional 
+argument to the Transpiler, e.g:
+transpiler=SimplifyRzGates(1.0e-10)
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.SimplifyRzGates();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi/2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(1.5708)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z_90──
+             
+q[2]:────────
+             
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(3.1416)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z──
+          
+q[2]:─────
+          
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(0.0000)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:
+     
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(
+    transpiler_stage::SimplifyRzGates, 
+    circuit::QuantumCircuit
+    )::QuantumCircuit
+
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    atol=transpiler_stage.atol
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa Snowflake.PhaseShift
+            new_gate=simplify_rz_gate(
+                get_connected_qubits(gate)[1],
+                get_gate_parameters(gate)["phi"],
+                atol=atol
+            )
+            if !isnothing(new_gate)
+                push!(output,new_gate)
+            end
+        else
+            push!(output, gate)
+        end
+    end
+
+    return output
+end

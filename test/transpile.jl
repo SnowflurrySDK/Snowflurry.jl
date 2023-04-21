@@ -11,8 +11,6 @@ lambda=π/9
 
 single_qubit_gates=[
     hadamard(target),
-    phase(target),
-    phase_dagger(target),
     phase_shift(target,-phi/2),
     pi_8(target),
     pi_8_dagger(target),
@@ -23,7 +21,12 @@ single_qubit_gates=[
     sigma_y(target),
     sigma_z(target),
     universal(target, theta, phi, lambda),
-    x_90(target)
+    x_90(target),
+    x_minus_90(target),
+    y_90(target),
+    y_minus_90(target),
+    z_90(target),
+    z_minus_90(target),
 ]
 
 test_circuits=[
@@ -468,6 +471,89 @@ end
     # with user-defined tolerance
 
     transpiler=SimplifyRxGates(1e-1)
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==0
+end
+
+@testset "simplify_rz_gate" begin
+
+    list_params=[
+        ( pi/2, Snowflake.Z90),
+        (-pi/2, Snowflake.ZM90),
+        ( pi,   Snowflake.SigmaZ),
+        ( pi/4, Snowflake.Pi8),
+        (-pi/4, Snowflake.Pi8Dagger),
+        ( pi/3, Snowflake.PhaseShift)
+    ]
+
+    target=1
+
+
+    for (angle,type_result) in list_params
+
+        result_gate=Snowflake.simplify_rz_gate(target,angle)
+
+        @test typeof(result_gate)==type_result
+    end
+
+    # returns empty array
+    result_gate=Snowflake.simplify_rz_gate(target,0.)
+
+    @test isnothing(result_gate)
+
+    result_gate=Snowflake.simplify_rz_gate(target,1e-3)
+
+    @test typeof(result_gate)==Snowflake.PhaseShift
+
+    result_gate=Snowflake.simplify_rz_gate(target,1e-3,atol=1e-1)
+
+    @test isnothing(result_gate)
+end
+
+@testset "SimplifyRzGates" begin
+    transpiler = SimplifyRzGates()
+
+    target=1
+
+    test_inputs=[
+        (phase_shift(target,pi/2),  Snowflake.Z90)
+        (phase_shift(target,-pi/2), Snowflake.ZM90)
+        (phase_shift(target,pi),    Snowflake.SigmaZ)
+        (phase_shift(target, pi/4), Snowflake.Pi8)
+        (phase_shift(target,-pi/4), Snowflake.Pi8Dagger)
+        (phase_shift(target,pi/3),  Snowflake.PhaseShift)
+    ]
+
+    for (input_gate,type_result) in test_inputs
+        circuit=QuantumCircuit(qubit_count=target, gates=[input_gate])
+
+        transpiled_circuit=transpile(transpiler,circuit)
+
+        @test compare_circuits(circuit,transpiled_circuit)
+
+        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+    end
+
+    circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,0.)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test compare_circuits(circuit,transpiled_circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==0
+
+    # with default tolerance
+    circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,1e-3)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test length(get_circuit_gates(transpiled_circuit))==1
+
+    # with user-defined tolerance
+
+    transpiler=SimplifyRzGates(1e-1)
 
     transpiled_circuit=transpile(transpiler,circuit)
 

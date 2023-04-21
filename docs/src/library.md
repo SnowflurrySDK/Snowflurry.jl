@@ -32,8 +32,6 @@ sigma_x
 sigma_y
 sigma_z
 hadamard
-phase
-phase_dagger
 pi_8
 pi_8_dagger
 x_90
