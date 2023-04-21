@@ -405,6 +405,15 @@ end
     @test moved_swap isa Snowflake.Swap
     @test moved_swap.target_1 == 2
     @test moved_swap.target_2 == 3
+
+    control_2 = 5
+    qubit_mapping = Dict(2=>3, 3=>2, 5=>4)
+    toffoli_gate = toffoli(control, control_2, target)
+    moved_toffoli = move_gate(toffoli_gate, qubit_mapping)
+    @test moved_toffoli isa Snowflake.Toffoli
+    @test moved_toffoli.control_1 == 2
+    @test moved_toffoli.control_2 == 4
+    @test moved_toffoli.target == 3
 end
 
 

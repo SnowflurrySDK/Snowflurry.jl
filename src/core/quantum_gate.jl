@@ -1333,6 +1333,12 @@ get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
 
+function move_gate(gate::Toffoli,
+    new_connected_qubits::AbstractVector{<:Integer})::Toffoli
+
+    return Toffoli(new_connected_qubits...)
+end
+
 """
     iswap_dagger(qubit_1, qubit_2)
 
