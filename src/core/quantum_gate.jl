@@ -1217,6 +1217,12 @@ get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
 
+function move_gate(gate::ControlZ,
+    new_connected_qubits::AbstractVector{<:Integer})::ControlZ
+
+    return ControlZ(new_connected_qubits...)
+end
+
 """
     control_x(control_qubit, target_qubit)
 

@@ -379,6 +379,14 @@ end
     @test moved_universal.theta ≈ theta
     @test moved_universal.phi ≈ phi
     @test moved_universal.lambda ≈ lambda
+
+    control = 3
+    qubit_mapping = Dict(2=>3, 3=>2)
+    control_z_gate = control_z(control, target)
+    moved_control_z = move_gate(control_z_gate, qubit_mapping)
+    @test moved_control_z isa Snowflake.ControlZ
+    @test moved_control_z.target == 3
+    @test moved_control_z.control == 2
 end
 
 
