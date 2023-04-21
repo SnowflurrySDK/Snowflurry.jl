@@ -393,6 +393,12 @@ end
     @test moved_control_x isa Snowflake.ControlX
     @test moved_control_x.target == 3
     @test moved_control_x.control == 2
+
+    iswap_gate = iswap(control, target)
+    moved_iswap = move_gate(iswap_gate, qubit_mapping)
+    @test moved_iswap isa Snowflake.ISwap
+    @test moved_iswap.target_1 == 2
+    @test moved_iswap.target_2 == 3
 end
 
 

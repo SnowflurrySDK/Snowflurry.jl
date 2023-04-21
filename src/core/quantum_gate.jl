@@ -1272,6 +1272,12 @@ Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
 
+function move_gate(gate::ISwap,
+    new_connected_qubits::AbstractVector{<:Integer})::ISwap
+
+    return ISwap(new_connected_qubits...)
+end
+
 """
     swap(qubit_1, qubit_2)
 
