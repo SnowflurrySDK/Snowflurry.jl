@@ -400,6 +400,12 @@ end
     @test moved_iswap.target_1 == 2
     @test moved_iswap.target_2 == 3
 
+    iswap_dagger_gate = iswap_dagger(control, target)
+    moved_iswap_dagger = move_gate(iswap_dagger_gate, qubit_mapping)
+    @test moved_iswap_dagger isa Snowflake.ISwapDagger
+    @test moved_iswap_dagger.target_1 == 2
+    @test moved_iswap_dagger.target_2 == 3
+
     swap_gate = swap(control, target)
     moved_swap = move_gate(swap_gate, qubit_mapping)
     @test moved_swap isa Snowflake.Swap
