@@ -87,8 +87,7 @@ q[2]:───────X──
 
 The first line adds a Hadamard gate to circuit object `c` which will operate on qubit 1. The second line adds a CNOT gate (Control-X gate) with qubit 1 as the control qubit and qubit 2 as the target qubit.
 
-!!! note
-	Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
+**Note**: Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
 The next step we want to take is to simulate our circuit. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
 
