@@ -25,18 +25,15 @@ import Pkg
 Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="BRANCH_NAME")
 ```
 
-**Note:** Replace the `BRANCH_NAME` with the name of the branch you want to use. The stable release is `main` and the most up-to-date one is `next`.
+**Note:** Replace the `BRANCH_NAME` with the name of the branch you want to use. 
 
 Multiple visualization tools are available in the SnowflakePlots package. After installing
 Snowflake, the SnowflakePlots package can be installed by entering the following in the
 Julia REPL:
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", subdir="SnowflakePlots.jl",
-    rev="BRANCH_NAME")
+Pkg.add(url="https://github.com/anyonlabs/SnowflakePlots.jl", rev="BRANCH_NAME")
 ```
-
-**Note:** `BRANCH_NAME` should be the same as the one used to add Snowflake.
 
 
 # Get Started
