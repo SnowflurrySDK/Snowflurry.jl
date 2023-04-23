@@ -76,7 +76,6 @@ c = QuantumCircuit(qubit_count=2)
 print(c)
 
 # output
-
 Quantum Circuit Object:
    qubit_count: 2
 q[1]:
