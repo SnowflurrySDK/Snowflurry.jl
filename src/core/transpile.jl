@@ -17,7 +17,7 @@ circuit on any arbitrary state Ket is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SequentialTranspiler([Snowflake.CompressSingleQubitGatesTranspiler(),Snowflake.CastToPhaseShiftAndHalfRotationX()]);
+julia> transpiler=Snowflake.SequentialTranspiler([Snowflake.CompressSingleQubitGatesTranspiler(),Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()]);
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1),hadamard(1)])
 Quantum Circuit Object:
@@ -617,11 +617,11 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
-struct CastToPhaseShiftAndHalfRotationX<:Transpiler 
+struct CastToPhaseShiftAndHalfRotationXTranspiler<:Transpiler 
     atol::Real
 end
 
-CastToPhaseShiftAndHalfRotationX()=CastToPhaseShiftAndHalfRotationX(1e-6)
+CastToPhaseShiftAndHalfRotationXTranspiler()=CastToPhaseShiftAndHalfRotationXTranspiler(1e-6)
 
 function simplify_rz_gate(
     target::Int,
@@ -715,9 +715,9 @@ end
 
 
 """
-    transpile(::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::CastToPhaseShiftAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `CastToPhaseShiftAndHalfRotationX` transpiler stage 
+Implementation of the `CastToPhaseShiftAndHalfRotationXTranspiler` transpiler stage 
 which converts all single-qubit gates in an input circuit and converts them 
 into combinations of PhaseShift and RotationX with angle π/2 in an output 
 circuit. For any gate in the input circuit, the number of gates in the 
@@ -726,7 +726,7 @@ circuit on any arbitrary state Ket is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX();
+julia> transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1)])
 Quantum Circuit Object:
@@ -796,7 +796,7 @@ true
 
 ```
 """
-function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationX, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     
@@ -933,7 +933,7 @@ function transpile(transpiler_stage::SimplifyRxGates, circuit::QuantumCircuit)::
     return output
 end
 
-struct PlaceOperationsOnLine<:Transpiler end
+struct SwapQubitsForLineConnectivityTranspiler<:Transpiler end
 
 function remap_qubits_to_consecutive(connected_qubits::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
     min_qubit=minimum(connected_qubits)
@@ -975,9 +975,9 @@ end
 
 
 """
-    transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `PlaceOperationsOnLine` transpiler stage 
+Implementation of the `SwapQubitsForLineConnectivityTranspiler` transpiler stage 
 which adds Swap gates around multi-qubit gates so that the 
 final operator acts on adjacent qubits. The result of the input 
 and output circuit on any arbitrary state Ket is unchanged 
@@ -985,7 +985,7 @@ and output circuit on any arbitrary state Ket is unchanged
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.PlaceOperationsOnLine();
+julia> transpiler=Snowflake.SwapQubitsForLineConnectivityTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 6, gates=[toffoli(4,6,1)])
 Quantum Circuit Object:
@@ -1029,7 +1029,7 @@ true
 
 ```
 """
-function transpile(::PlaceOperationsOnLine, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     

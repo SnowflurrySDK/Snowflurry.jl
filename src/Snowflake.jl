@@ -42,8 +42,8 @@ export
     CastISwapToCZGateTranspiler,
     CastToffoliToCXGateTranspiler,
     CompressSingleQubitGatesTranspiler,
-    CastToPhaseShiftAndHalfRotationX,
-    PlaceOperationsOnLine,
+    CastToPhaseShiftAndHalfRotationXTranspiler,
+    SwapQubitsForLineConnectivityTranspiler,
     SimplifyRxGates,
     SimplifyRzGates,
 
