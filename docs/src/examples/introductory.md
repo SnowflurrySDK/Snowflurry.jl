@@ -1,0 +1,11 @@
+# Introductory examples
+
+The introductory examples are the best place to start if you are new to quantum computation. These examples take you step by step through Snowflake, gradually introduce concepts and assume no prior quantum computation knowledge. We recommend you work through these examples in order to get the most out of them.
+
+## Single qubit readout fidelity
+
+In this example, we cover the basics of initialization, readout, and readout fidelity.
+
+Code: [examples/single\_qubit\_readout.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout.jl)
+
+Documentation: [Single-qubit readout example](./introductory/single_qubit_readout_fidelity.md)
