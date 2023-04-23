@@ -17,16 +17,31 @@ Make sure your system has Julia installed. If not, download the latest version f
 
 We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please file a bug if they don't), but we only actively test against the LTS and the latest stable version.
 
-### Installing the Snowflake package
-
-Launch a Julia REPL and type:
+### Installing `Snowflake.jl` package
+Snowflake is still in pre-release phase. Therefore, and for the time being, we recommand installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
 
 ```julia
 import Pkg
-Pkg.add("Snowflake")
+Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="main")
 ```
+This will add the Snowflake  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
 
-This will add the Snowflake package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
+**Note** Once `Snowflake.jl` is released, you can install the latest release using the following command:
+	```julia
+	import Pkg
+	Pkg.add("Snowflake")
+	```
+
+### Installing `SnowflakePlots.jl` package
+
+
+Multiple visualization tools are available in the SnowflakePlots package. After installing
+Snowflake, the SnowflakePlots package can be installed by entering the following in the
+Julia REPL:
+```julia
+import Pkg
+Pkg.add(url="https://github.com/anyonlabs/SnowflakePlots.jl", rev="main")
+```
 
 # Getting Started
 
@@ -38,7 +53,7 @@ A typical workflow to execute a quantum circuit on a quantum service consists of
 
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
-Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see https://en.wikipedia.org/wiki/Quantum_logic_gate for an introduction to quantum logic gates). This circuit is shown below:
+Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
 
 <div style="text-align: center;">
 	<img
@@ -101,6 +116,35 @@ print(ψ)
 0.0 + 0.0im
 0.0 + 0.0im
 0.7071067811865475 + 0.0im
+```
+
+Finally, we can use [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) to generate a histogram which shows the measurement
+output distribution after taking a certain number of shots, in this case 100, on a quantum
+computer simulator:
+
+```julia
+using SnowflakePlots
+plot_histogram(c, 100)
+```
+
+<div style="text-align: center;">
+	<img
+		src="./docs/src/assets/index/index_histogram.png"
+		title="Bell state generator circuit"
+		width="520
+		"
+	/>
+</div>
+
+The script below puts all the steps above together:
+
+```julia
+using Snowflake, SnowflakePlots
+c = QuantumCircuit(qubit_count=2)
+push!(c, [hadamard(1)])
+push!(c, [control_x(1, 2)])
+ψ = simulate(c)
+plot_histogram(c, 100)
 ```
 
 # Roadmap

@@ -12,13 +12,13 @@ jobs:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: '1.6.7'
+          version: '1.8.5'
       - name: Install dependencies
         run: >
           julia --project=docs/ -e 
           'using Pkg;
-          Pkg.develop(PackageSpec(path=pwd() * "/SnowflakePlots.jl")); 
           Pkg.develop(PackageSpec(path=pwd())); 
+          Pkg.develop(url="https://github.com/anyonlabs/SnowflakePlots.jl.git")
           Pkg.instantiate()'
       - name: Build and deploy
         env:
