@@ -120,48 +120,8 @@ compare_kets
 
 ### Visualization
 
-The SnowflakePlots package provides multiple tools for visualizing quantum computer
-calculations.
+The [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) package provides multiple visualization tools for Snowflake.jl. Please see the documentation of [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) for more details. 
 
-```@docs
-plot_bloch_sphere(circuit::QuantumCircuit; qubit_id::Int = 1,
-    bloch_sphere::BlochSphere = BlochSphere())
-plot_bloch_sphere(ket::Ket; qubit_id::Int = 1,
-    bloch_sphere::BlochSphere = BlochSphere())
-plot_bloch_sphere(density_matrix::AbstractOperator; qubit_id::Int = 1,
-    bloch_sphere::BlochSphere = BlochSphere())
-BlochSphere
-plot_bloch_sphere_animation(ket_list::Vector{Ket{T}} where {T<:Complex};
-    qubit_id::Int = 1,
-    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
-```
-```@raw html
-<iframe src="assets/visualize/plot_bloch_sphere_animation_for_ket.html"
-style="height:825px;width:100%;">
-</iframe>
-```
-```@docs
-plot_bloch_sphere_animation(density_matrix_list::Vector{T} where {T<:AbstractOperator};
-    qubit_id::Int = 1,
-    animated_bloch_sphere::AnimatedBlochSphere = AnimatedBlochSphere())
-```
-```@raw html
-<iframe src="assets/visualize/plot_bloch_sphere_animation_for_operator.html"
-style="height:825px;width:100%;">
-</iframe>
-```
-```@docs
-AnimatedBlochSphere
-```
-```@raw html
-<iframe src="assets/visualize/plot_bloch_sphere_animation_without_interpolation.html"
-style="height:825px;width:100%;">
-</iframe>
-```
-```@docs
-plot_histogram
-viz_wigner
-```
 
 ```@meta
 DocTestSetup = nothing
