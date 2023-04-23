@@ -6,13 +6,10 @@ Snowflakes allows one to easily design quantum circuits, experiments and applica
 
 module Snowflake
 using Base: String
-using LinearAlgebra
-using StatsBase
-using UUIDs
-using Parameters
 using Printf
 using StaticArrays
-import SparseArrays
+using LinearAlgebra
+import StatsBase
 
 
 
