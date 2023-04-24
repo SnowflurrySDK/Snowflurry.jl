@@ -8,7 +8,7 @@ In this example, we introduce the QPU interface and how to get the metadata of t
 
 Code: [examples/get\_qpu\_metadata.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/get_qpu_metadata.jl)
 
-Documentation: [Get QPU metadata example](./introductory/get_qpu_metadata.md.md)
+Documentation: [Get QPU metadata example](./introductory/get_qpu_metadata.md)
 
 ## Single qubit readout fidelity
 

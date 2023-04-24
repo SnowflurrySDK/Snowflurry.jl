@@ -63,7 +63,7 @@ end
 
 @testset "CompressSingleQubitGatesTranspiler" begin
         
-    transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
+    transpiler=CompressSingleQubitGatesTranspiler()
     
     # attempt compression of all pairs of single qubit gates
     for first_gate in single_qubit_gates
@@ -72,9 +72,47 @@ end
 
             transpiled_circuit=transpile(transpiler,circuit)
 
+            gates=get_circuit_gates(transpiled_circuit)
+
+            @test length(gates)==1
+
             @test compare_circuits(circuit,transpiled_circuit)
+
+            @test typeof(gates[1])==Snowflake.Universal
         end
     end
+
+    # attempt empty circuit
+    circuit = QuantumCircuit(qubit_count = 2)
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==0
+
+    # circuit with single gate is unchanged
+    circuit = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==1
+
+    @test circuit_contains_gate_type(transpiled_circuit, Snowflake.SigmaX)
+
+    # circuit with single gate and boundary is unchanged
+    circuit = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1),control_x(1,2)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==2
+
+    @test typeof(gates[1])==Snowflake.SigmaX
+    @test typeof(gates[2])==Snowflake.ControlX
 end 
 
 @testset "Transpiler" begin
@@ -83,9 +121,9 @@ end
     @test_throws NotImplementedError transpile(NonExistentTranspiler(),QuantumCircuit(qubit_count = 2))
 end
 
-@testset "basic transpilation" begin
+@testset "Compress to Universal: basic transpilation" begin
 
-    transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
+    transpiler=CompressSingleQubitGatesTranspiler()
 
     input_gate=sigma_x(1)
 
@@ -112,10 +150,10 @@ end
 
 end
 
-@testset "transpilation of single and multiple target gates" begin
+@testset "Compress to Universal: transpilation of single and multiple target gates" begin
     
     qubit_count=4
-    transpiler=Snowflake.CompressSingleQubitGatesTranspiler()
+    transpiler=CompressSingleQubitGatesTranspiler()
     
     for gates_list in test_circuits
         for end_pos in 1:length(gates_list)
@@ -318,7 +356,7 @@ end
 
     transpiler=get_transpiler(qpu) 
 
-    @test typeof(transpiler)==Snowflake.SequentialTranspiler
+    @test typeof(transpiler)==SequentialTranspiler
 end
 
 
@@ -353,7 +391,7 @@ end
 end
 
 @testset "cast_to_cz: swap" begin
-    transpiler = Snowflake.CastSwapToCZGateTranspiler()
+    transpiler = CastSwapToCZGateTranspiler()
 
     circuits = [
         QuantumCircuit(qubit_count=2, gates=[swap(1,2)]),
@@ -370,7 +408,7 @@ end
 end
 
 @testset "cast_to_cz: cx" begin
-    transpiler = Snowflake.CastCXToCZGateTranspiler()
+    transpiler = CastCXToCZGateTranspiler()
 
     circuits = [
         QuantumCircuit(qubit_count=2, gates=[control_x(1,2)]),
@@ -387,7 +425,7 @@ end
 end
 
 @testset "cast_to_cz: iswap" begin
-    transpiler = Snowflake.CastISwapToCZGateTranspiler()
+    transpiler = CastISwapToCZGateTranspiler()
 
     circuits = [
         QuantumCircuit(qubit_count=2, gates=[iswap(1,2)]),
@@ -404,7 +442,7 @@ end
 end
 
 @testset "cast_to_cx: toffoli" begin
-    transpiler = Snowflake.CastToffoliToCXGateTranspiler()
+    transpiler = CastToffoliToCXGateTranspiler()
 
     circuits = [
         QuantumCircuit(qubit_count=3, gates=[toffoli(1,2,3), iswap(1,2), toffoli(2,1,3)]),
@@ -618,4 +656,89 @@ end
     transpiled_circuit=transpile(transpiler,circuit)
 
     @test length(get_circuit_gates(transpiled_circuit))==0
+end
+
+@testset "compress_to_rz" begin
+    target=1
+    qubit_count=1
+
+    test_inputs=[
+        # single Rz-type gates
+        [z_90(target)],
+        [z_minus_90(target)],
+        [sigma_z(target)],
+        [pi_8(target)],
+        [pi_8_dagger(target)],
+        [phase_shift(target,pi/3)],
+
+        # multiple Rz-type gates
+        [z_90(target),pi_8(target)],
+        [sigma_z(target),pi_8_dagger(target)],
+        [phase_shift(target,pi/3),sigma_z(target),pi_8(target)],
+
+        # mixture of Rz-type and other gates
+        [z_90(target),pi_8(target),rotation_x(target,pi/5),pi_8(target)],
+        [sigma_y(target),sigma_z(target),pi_8_dagger(target),hadamard(target)],
+        [sigma_x(target),phase_shift(target,pi/3),sigma_z(target),pi_8(target)],
+
+    ]
+
+    for gates in test_inputs
+
+    end
+
+end
+
+test_circuits_Rz_type=[
+    [
+        sigma_z(1),
+        pi_8(1),
+        phase_shift(1,pi/7),
+        control_x(1,3),
+        sigma_x(2),
+        sigma_z(2),
+        control_x(1,4),
+        z_90(2),
+        sigma_x(1),
+        sigma_z(4),
+        pi_8_dagger(4),
+        toffoli(1,2,3),
+        phase_shift(4,pi/3),
+        pi_8_dagger(2)
+    ],
+    [   # all gates are `boundaries`
+        control_x(1,3),
+        sigma_x(2),
+        sigma_y(2),
+        control_x(4,2),
+        hadamard(3),
+        x_90(3),
+        control_x(1,4),
+        toffoli(1,4,3)
+    ]
+]
+
+gates_in_output=[9,8]
+
+@testset "CompressRzGatesTranspiler: transpilation of Rz-type and other gates" begin
+    
+    qubit_count=4
+    transpiler=CompressRzGatesTranspiler()
+    
+    for (gates_list,gates_in_output) in zip(test_circuits_Rz_type,gates_in_output)
+        for end_pos in 1:length(gates_list)
+
+            truncated_input=gates_list[1:end_pos]
+
+            circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+            
+            transpiled_circuit=transpile(transpiler,circuit)
+
+            @test compare_circuits(circuit,transpiled_circuit)
+
+            if end_pos==length(gates_list)
+                @test length(get_circuit_gates(transpiled_circuit))==gates_in_output
+            end
+        end
+    end
 end

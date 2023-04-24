@@ -44,6 +44,7 @@ export
     CastUniversalToRzRxRzTranspiler,
     SimplifyRxGates,
     SimplifyRzGates,
+    CompressRzGatesTranspiler,
 
     # Functions
     commute, 
