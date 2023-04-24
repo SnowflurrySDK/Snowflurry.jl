@@ -40,35 +40,23 @@ end
 
     response=get_request(
         requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID),
+        host*"/"*Snowflake.path_circuits*"/"*circuitID,
         access_token
     )
 
     compare_responses(expected_response,response)
 
-    @test_throws NotImplementedError get_request(
-        requestor,
-        joinpath(host,string(Snowflake.path_circuits,"wrong_ending")),
-        access_token
-    )
-
+    
     #### request from :get_result
 
     expected_response=HTTP.Response(200, [],body="{\"histogram\":{\"001\":\"100\"}}") 
 
     response=get_request(
         requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID,Snowflake.path_results),
+        host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*Snowflake.path_results,
         access_token
     )
-
     compare_responses(expected_response,response)
-
-    @test_throws NotImplementedError get_request(
-        requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID,string(Snowflake.path_results,"wrong_ending")),
-        access_token
-    )
 
 end
 

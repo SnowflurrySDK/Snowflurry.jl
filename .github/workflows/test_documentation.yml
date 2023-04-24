@@ -16,7 +16,6 @@ jobs:
           julia --project=docs/ -e 
           'using Pkg;
           Pkg.develop(PackageSpec(path=pwd())); 
-          Pkg.develop(url="https://github.com/anyonlabs/SnowflakePlots.jl.git");
           Pkg.instantiate()'
       - name: Build
         run: julia --project=docs/ docs/make.jl
