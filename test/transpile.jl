@@ -72,9 +72,47 @@ end
 
             transpiled_circuit=transpile(transpiler,circuit)
 
+            gates=get_circuit_gates(transpiled_circuit)
+
+            @test length(gates)==1
+
             @test compare_circuits(circuit,transpiled_circuit)
+
+            @test typeof(gates[1])==Snowflake.Universal
         end
     end
+
+    # attempt empty circuit
+    circuit = QuantumCircuit(qubit_count = 2)
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==0
+
+    # circuit with single gate is unchanged
+    circuit = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==1
+
+    @test circuit_contains_gate_type(transpiled_circuit, Snowflake.SigmaX)
+
+    # circuit with single gate and boundary is unchanged
+    circuit = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1),control_x(1,2)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    gates=get_circuit_gates(transpiled_circuit)
+
+    @test length(gates)==2
+
+    @test typeof(gates[1])==Snowflake.SigmaX
+    @test typeof(gates[2])==Snowflake.ControlX
 end 
 
 @testset "Transpiler" begin

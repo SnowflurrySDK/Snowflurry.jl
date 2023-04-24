@@ -363,13 +363,7 @@ true
 
 ```
 """
-function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-
-    if length(get_circuit_gates(circuit))==1
-        # no compression needed for individual gate
-        return circuit
-    end
-    
+function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit   
     return find_and_compress_blocks(circuit,is_multi_target,compress_to_universal)
 end
 
