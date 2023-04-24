@@ -7,7 +7,7 @@ access_token="not_a_real_access_token"
 
 function post_checker(url::String,access_token::String,body::String)
 
-    expected_url=joinpath(host,Snowflake.path_circuits)
+    expected_url=host*"/"*Snowflake.path_circuits
     expected_access_token=access_token
     expected_json="{\"num_repititions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
 
