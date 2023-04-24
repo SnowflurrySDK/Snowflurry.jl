@@ -70,21 +70,13 @@ In Snowflake, circuits have an implied measurement operation at the end of the c
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. To do that, we need a `QPU` object to interact with Anyon's quantum computer. `QPU` objects give a common interface to interact with a quantum computer. We need three things to construct an `AnyonQPU`, a `QPU` that interfaces with Anyon's quantum computers. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables.
+Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You get get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
 
 ```jldoctest single_qubit_readout_example; output = false
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
 
-# output
-
-"yukon.anyonsys.com"
-```
-
-When we have the environment variables, we can construct the `AnyonQPU` object.
-
-```jldoctest single_qubit_readout_example; output = false
 client = Client(host=host, user=user, access_token=token)
 qpu = AnyonQPU(client)
 
@@ -118,3 +110,5 @@ From the result, we can see that we have a very high estimated state preparation
 ## Summary
 
 In this example, we've gone over how to construct and readout a single qubit circuit. We've discussed state initialization, readout fidelity, and state preparation and measurement errors.
+
+The full code for this example is available at [examples/single\_qubit\_readout.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout.jl)
