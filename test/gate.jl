@@ -1,5 +1,6 @@
 using Snowflake
 using Test
+using LinearAlgebra
 
 include("test_functions.jl")
 
