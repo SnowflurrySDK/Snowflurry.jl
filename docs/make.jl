@@ -23,6 +23,7 @@ makedocs(
     modules = [Snowflake],
     pages = [
         "Home" => "index.md",
+        "Getting Started" => "getting_started.md",
         "Quantum Computing With Snowflake" => ["Basics" => "qc/basics.md"],
         #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
         "Library" => "library.md",

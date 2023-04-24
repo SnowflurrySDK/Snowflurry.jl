@@ -220,7 +220,7 @@ function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::
 
     circuit_json=serialize_job(circuit,num_repetitions)
   
-    path_url=joinpath(get_host(client),path_circuits)
+    path_url=get_host(client)*"/"*path_circuits
     
     response=post_request(
         get_requestor(client),
@@ -261,7 +261,7 @@ Status: succeeded
 """
 function get_status(client::Client,circuitID::String)::Status
 
-    path_url=joinpath(get_host(client),path_circuits,"$circuitID")
+    path_url=get_host(client)*"/"*path_circuits*"/"*"$circuitID"
     
     response=get_request(
         get_requestor(client),
@@ -308,7 +308,7 @@ Dict{String, Int64} with 1 entry:
 """
 function get_result(client::Client,circuitID::String)::Dict{String, Int}
 
-    path_url=joinpath(get_host(client),path_circuits,"$circuitID",path_results)
+    path_url=get_host(client)*"/"*path_circuits*"/"*"$circuitID"*"/"*path_results
     
     response=get_request(
         get_requestor(client),

@@ -40,7 +40,7 @@ end
 
     response=get_request(
         requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID),
+        host*"/"*Snowflake.path_circuits*"/"*circuitID,
         access_token
     )
 
@@ -48,7 +48,7 @@ end
 
     @test_throws NotImplementedError get_request(
         requestor,
-        joinpath(host,string(Snowflake.path_circuits,"wrong_ending")),
+        host*"/"*string(Snowflake.path_circuits,"wrong_ending"),
         access_token
     )
 
@@ -58,7 +58,7 @@ end
 
     response=get_request(
         requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID,Snowflake.path_results),
+        host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*Snowflake.path_results,
         access_token
     )
 
@@ -66,7 +66,7 @@ end
 
     @test_throws NotImplementedError get_request(
         requestor,
-        joinpath(host,Snowflake.path_circuits,circuitID,string(Snowflake.path_results,"wrong_ending")),
+        host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*string(Snowflake.path_results,"wrong_ending"),
         access_token
     )
 

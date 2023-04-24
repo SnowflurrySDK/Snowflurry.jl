@@ -6,4 +6,4 @@ push!(c, [control_x(1, 2)])
 
 ψ = simulate(c)
 
-plot_histogram(c, 1001)
+print(ψ)

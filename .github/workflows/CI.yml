@@ -3,19 +3,58 @@ on:
   - push
   - pull_request
 jobs:
-  test:
+  os-test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+      # don't run on draft PRs
+    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
     strategy:
-      fail-fast: false
+      fail-fast: true
+      max-parallel: 2
       matrix:
-        version:
-          - "1.6.7"
-        os:
-          - ubuntu-latest
-          - macOS-latest
-        arch:
-          - x64
+        os: [windows-latest, macOS-latest]
+        arch: ["x64"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: "Setup Julia"
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.8.5
+          arch: ${{ matrix.arch }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+          SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
+          SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
+          SNOWFLAKE_HOST: ${{secrets.SNOWFLAKE_HOST}}
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      
+      - name: Build Snowflake
+        run: >
+          julia --project=. -e 
+          'using Pkg;
+          Pkg.instantiate()'
+      
+      - name: Test Snowflake
+        uses: julia-actions/julia-runtest@v1
+
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ubuntu-latest
+     # don't run on draft PRs
+    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
+    strategy:
+      fail-fast: true
+      max-parallel: 2
+      matrix:
+        version: ['1.6.7', '1.7', '1.8', 'nightly']
+        arch: ["x64"]
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
