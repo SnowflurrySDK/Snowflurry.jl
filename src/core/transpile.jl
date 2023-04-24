@@ -86,7 +86,7 @@ end
 struct CompressSingleQubitGatesTranspiler<:Transpiler end
 
 # convert a single-target gate to a Universal gate
-function as_universal_gate(target::Integer,op::AbstractOperator)
+function as_universal_gate(target::Integer,op::AbstractOperator)::Universal
     @assert size(op)==(2,2)
     
     matrix=get_matrix(op)
@@ -134,6 +134,167 @@ function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
 
     return as_universal_gate(common_target,combined_op)
 end
+
+set_of_rz_gates=[
+    Z90,
+    ZM90,
+    SigmaZ,
+    Pi8,
+    Pi8Dagger,
+    PhaseShift
+]
+
+is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
+
+is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_rz_gates)
+
+is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
+
+function find_and_compress_blocks(
+    circuit::QuantumCircuit,
+    is_boundary::Function,
+    compression_function::Function
+    )::QuantumCircuit
+
+    gates=get_circuit_gates(circuit)
+
+    qubit_count=get_num_qubits(circuit)
+    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    # Split circuit into blocks of single-target gates that
+    # share a common target, separated by boundaries. 
+    # What constitutes a boundary is determined using 
+    # the `is_boundary` input. 
+    # Common-target gates inside a block can be combined, 
+    # but not with gates in another block, as a boundary
+    # is present between them. 
+    # If first gate is a boundary, first block is left empty. 
+
+    ######################################################
+    #
+    #  blocks_per_target is a Dict
+    #   where:
+    #       - keys    : the target numbers of qubits in circuit
+    #       - values  : Vector{Vector{i_gate::Int}}
+    #                   
+    #           where:   - i_gate  : the gate's index in 'gates'
+    #                    
+    #                    - Vector{i_gate} : a block of common-target 
+    #                       gates, with no boundary between them
+    #
+    #                    - Vector{Vector{i_gate}} : list of 
+    #                       consecutive blocks, each separated by 
+    #                       an entry in 'boundaries'   
+    #     
+    blocks_per_target=Dict{Int,Vector{Vector{Int}}}(Dict())
+
+    #initialize empty blocks at all targets
+    for target in 1:qubit_count
+        blocks_per_target[target]=[[]]
+    end
+
+    ######################################################
+    #
+    #  boudaries is a Vector of Tuple{i_gate::Int,targets::Int}
+    #  where:
+    #       i_gate  : the gate's index in 'gates'
+    #       targets : the targets of gate[i_gate]
+    #               
+    boundaries=Vector{Tuple{Int,Vector{Int}}}([]) 
+
+    current_block=[1 for _ in 1:qubit_count]
+
+    can_be_placed=Dict(target=>[true] for target in 1:qubit_count)
+
+    placed_gates=[false for _ in 1:length(gates)]
+
+    for (i_gate,gate) in enumerate(gates)
+        targets=get_connected_qubits(gate)
+
+        if is_boundary(gate)
+
+            # add group boundary at each of those targets
+            push!(boundaries,(i_gate,targets))
+            
+            for target in targets
+                # create new empty group at those targets
+                push!(blocks_per_target[target],[])
+
+                # disallow placement until boundary is passed
+                push!(can_be_placed[target],false)
+            end
+                
+        else
+            target=targets[1]
+            
+            # inside a group, common-target gates are put in blocks.
+            # append gate to last block
+            push!(blocks_per_target[target][end],i_gate)
+        end
+    end
+
+    # reverse so pop! returns first boundary
+    boundaries=reverse(boundaries)
+
+    iteration_count=0
+
+    #build compressed circuit
+    while true
+        iteration_count+=1
+
+        #place allowed blocks
+        for target in 1:qubit_count
+
+            block_index=current_block[target]
+
+            if can_be_placed[target][block_index]
+
+                block=blocks_per_target[target][block_index]
+
+                gates_block=[gates[i] for i in block]
+
+                if length(block)>1
+                    push!(output_circuit,compression_function(gates_block))
+                    
+                    for i_gate in block
+                        placed_gates[i_gate]=true
+                    end
+                elseif length(block)==1
+                    #no need to compress individual gate
+                    push!(output_circuit,gates_block[1])
+
+                    placed_gates[block[1]]=true
+                end
+
+                can_be_placed[target][block_index]=false
+            end
+        end
+
+        if !isempty(boundaries)
+            # pass boundary
+            (i_gate,targets)=pop!(boundaries)
+
+            push!(output_circuit,gates[i_gate])
+            placed_gates[i_gate]=true
+
+            #unlock next blocks for those targets (boundary passed)
+            for target in targets
+                current_block[target]+=1
+                can_be_placed[target][current_block[target]]=true
+            end
+
+        end
+
+        if all(placed_gates)
+            break
+        end
+
+        @assert iteration_count<length(gates)+1 ("Failed to construct output")
+    end
+
+    return output_circuit
+end
+
 
 """
     transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -202,148 +363,8 @@ true
 
 ```
 """
-function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-
-    gates=get_circuit_gates(circuit)
-    if length(gates)==1
-        return circuit
-    end
-    
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
-
-    # Split circuit into blocks of single-target gates that
-    # share a common target, separated by boundaries (multi-target gates).
-    # Common-target gates inside a block can be combined, 
-    # but not with gates in another block,as a multi-target gate 
-    # is present between them (a boundary). 
-    # If first gate is multi-target, first block is left empty. 
-
-    ######################################################
-    #
-    #  blocks_per_target is a Dict
-    #   where:
-    #       - keys    : the target numbers of qubits in circuit
-    #       - values  : Vector{Vector{i_gate::Int}}
-    #                   
-    #           where:   - i_gate  : the gate's index in 'gates'
-    #                    
-    #                    - Vector{i_gate} : a block of common-target 
-    #                       gates, with no boundary between them
-    #
-    #                    - Vector{Vector{i_gate}} : list of 
-    #                       consecutive blocks, each separated by 
-    #                       an entry in 'boundaries'   
-    #     
-    blocks_per_target=Dict{Int,Vector{Vector{Int}}}(Dict())
-
-    #initialize empty blocks at all targets
-    for target in 1:qubit_count
-        blocks_per_target[target]=[[]]
-    end
-
-    ######################################################
-    #
-    #  boudaries is a Vector of Tuple{i_gate::Int,targets::Int}
-    #  where:
-    #       i_gate  : the gate's index in 'gates'
-    #       targets : the targets of gate[i_gate]
-    #               
-    boundaries=Vector{Tuple{Int,Vector{Int}}}([]) 
-
-    current_block=[1 for _ in 1:qubit_count]
-
-    can_be_placed=Dict(target=>[true] for target in 1:qubit_count)
-
-    placed_gates=[false for _ in 1:length(gates)]
-
-    for (i_gate,gate) in enumerate(gates)
-        targets=get_connected_qubits(gate)
-
-        if length(targets)>1
-            # multi-target gate
-
-            # add group boundary at each of those targets
-            push!(boundaries,(i_gate,targets))
-            
-            for target in targets
-                # create new empty group at those targets
-                push!(blocks_per_target[target],[])
-
-                # disallow placement until boundary is passed
-                push!(can_be_placed[target],false)
-            end
-                
-        else
-            # single-target gate
-            target=targets[1]
-            
-            # inside a group, common-target gates are put in blocks.
-            # append gate to last block
-            push!(blocks_per_target[target][end],i_gate)
-        end
-    end
-
-    # reverse so pop! returns first boundary
-    boundaries=reverse(boundaries)
-
-    iteration_count=0
-
-    #build compressed circuit
-    while true
-        iteration_count+=1
-
-        #place allowed blocks
-        for target in 1:qubit_count
-
-            block_index=current_block[target]
-
-            if can_be_placed[target][block_index]
-
-                block=blocks_per_target[target][block_index]
-
-                gates_block=[gates[i] for i in block]
-
-                if length(block)>1
-                    push!(output_circuit,compress_to_universal(gates_block))
-                    
-                    for i_gate in block
-                        placed_gates[i_gate]=true
-                    end
-                elseif length(block)==1
-                    #no need to cast single gate to Universal
-                    push!(output_circuit,gates_block[1])
-
-                    placed_gates[block[1]]=true
-                end
-
-                can_be_placed[target][block_index]=false
-            end
-        end
-
-        if !isempty(boundaries)
-            # pass boundary
-            (i_gate,targets)=pop!(boundaries)
-
-            push!(output_circuit,gates[i_gate])
-            placed_gates[i_gate]=true
-
-            #unlock next blocks for those targets (boundary passed)
-            for target in targets
-                current_block[target]+=1
-                can_be_placed[target][current_block[target]]=true
-            end
-
-        end
-
-        if all(placed_gates)
-            break
-        end
-
-        @assert iteration_count<length(gates)+1 ("Failed to construct output")
-    end
-
-    return output_circuit
+function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit   
+    return find_and_compress_blocks(circuit,is_multi_target,compress_to_universal)
 end
 
 function cast_to_cz(gate::AbstractGate)
@@ -713,7 +734,6 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal;atol=1e-6)
     return gate_array
 end
 
-
 """
     transpile(::CastToPhaseShiftAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
@@ -823,6 +843,111 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
 
     return output_circuit
 end
+
+# Cast a Universal gate as U=Rz(β)Rx(γ)Rz(δ)
+# See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
+function cast_to_rz_rx_rz(gate::Universal)::Vector{AbstractGate}
+    params=get_gate_parameters(gate)
+   
+    target=get_connected_qubits(gate)[1]
+
+    γ=params["theta"]
+    β=params["phi"]+π/2
+    δ=params["lambda"]-π/2
+   
+    gate_array=Vector{AbstractGate}([])
+
+    push!(gate_array,phase_shift(target,δ))
+
+    push!(gate_array,rotation_x(target,γ))
+
+    push!(gate_array,phase_shift(target,β))
+
+    return gate_array
+end
+
+struct CastUniversalToRzRxRzTranspiler<:Transpiler end
+
+"""
+    transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
+which finds Universal gates in an input circuit and converst cast) 
+them into a sequence of PhaseShift (Rz), RotationX (Rx) and 
+PhaseShift (Rz) gates in a new circuit.
+The result of the input and output circuit on any arbitrary state Ket 
+is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastUniversalToRzRxRzTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,π/2,π/4,π/8)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──U(θ=1.5708,ϕ=0.7854,λ=0.3927)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(-1.1781)────Rx(1.5708)────P(2.3562)──
+                                              
+q[2]:─────────────────────────────────────────
+                                              
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,0,π/4,0)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=0.7854,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(-1.5708)────Rx(0.0000)────P(2.3562)──
+                                              
+q[2]:─────────────────────────────────────────
+                                              
+                                        
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+    gates=get_circuit_gates(circuit)
+    
+    qubit_count=get_num_qubits(circuit)
+    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in gates
+
+        targets=get_connected_qubits(gate)
+
+        if length(targets)>1
+            push!(output_circuit,gate)
+        else
+            if !(gate isa Snowflake.Universal)
+                gate=as_universal_gate(targets[1],get_operator(gate))
+            end
+
+            gate_array=cast_to_rz_rx_rz(gate)
+            push!(output_circuit,gate_array)
+        end
+    end
+
+    return output_circuit
+end
+
 
 struct SimplifyRxGates<:Transpiler 
     atol::Real
@@ -1180,4 +1305,116 @@ function transpile(
     end
 
     return output
+end
+
+struct CompressRzGatesTranspiler<:Transpiler end
+
+# construct a PhaseShift gate from an input Operator
+function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PhaseShift
+    @assert size(op)==(2,2) ("Received multi-target Operator: $op")
+    
+    matrix=get_matrix(op)
+
+    @assert matrix[1,2]≈ComplexF64(0.) ("Failed to build a PhaseShift gate from input Operator: $op")
+    @assert matrix[2,1]≈ComplexF64(0.) ("Failed to build a PhaseShift gate from input Operator: $op")
+
+    #find global phase offset angle
+    alpha=atan(imag(matrix[1,1]),real(matrix[1,1]) )
+    
+    #remove global offset
+    matrix*=exp(-im*alpha)
+    
+    #find relative phase offset angle
+    phi=atan(imag(matrix[2,2]),real(matrix[2,2]) )
+
+    return phase_shift(target, phi)
+end
+
+# compress (combine) several Rz-type gates with a common target to a PhaseShift gate
+function compress_to_rz(gates::Vector{<:AbstractGate})::PhaseShift
+    
+    combined_op=eye()
+    targets=get_connected_qubits(gates[1])
+
+    @assert length(targets)==1 ("Received gate with multiple targets: $(gates[1])")
+
+    common_target=targets[1]
+
+    for gate in gates
+        targets=get_connected_qubits(gate)
+        @assert length(targets)==1 ("Received gate with multiple targets: $gate")
+        @assert targets[1]==common_target ("Gates in array do not share common target")
+
+        combined_op=get_operator(gate)*combined_op
+    end
+    
+    return as_phase_shift_gate(common_target,combined_op)
+end
+
+"""
+    transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CompressRzGatesTranspiler` transpiler stage 
+which gathers all Rz-type gates sharing a common target in an input 
+circuit and combines them into single PhaseShift gate in a new circuit.
+Gates ordering may differ when gates are applied to different qubits, 
+but the result of the input and output circuit on any arbitrary state Ket 
+is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CompressRzGatesTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_z(1),z_90(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z────Z_90──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(-1.5708)──
+                   
+q[2]:──────────────
+                   
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_z(1),pi_8(1),control_x(2,3),z_minus_90(1)])
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──Z────T─────────Z_m90──
+                             
+q[2]:────────────*───────────
+                 |           
+q[3]:────────────X───────────
+                             
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──P(2.3562)───────
+                       
+q[2]:───────────────*──
+                    |  
+q[3]:───────────────X──
+                       
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+    if length(get_circuit_gates(circuit))==1
+        # no compression needed for individual gate
+        return circuit
+    end
+    
+    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,compress_to_rz)
 end
