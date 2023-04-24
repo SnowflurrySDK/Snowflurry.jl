@@ -129,18 +129,3 @@ Dict{String, Int64} with 2 entries:
 ```
 The above output shows that both qubits were measured to be in state '0' in 54 shots out of 100 tries on the virtual QPU. Similarly, both qubits were measured to be in state `1` for 46 shots out of 100 shots run on the QPU. We can achieve statistical convergence by increasing the `shots_count` and observe that outcomes are mesaured with equal probability.
 
-### Real hardware
-The following example shows how to define a client for remote access to Anyon's 6-qubit processor. 
-
-
-```jldoctest
-c = Client(host="https://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
-qpu=AnyonQPU(c)
-print(qpu)
-#output
-Quantum Processing Unit:
-   manufacturer:  Anyon Systems Inc.
-   generation:    Yukon 
-   serial_number: ANYK202201 
-
-```
