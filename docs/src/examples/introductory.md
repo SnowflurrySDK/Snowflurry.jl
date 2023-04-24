@@ -17,3 +17,11 @@ In this example, we cover the basics of initialization, readout, and readout fid
 Code: [examples/single\_qubit\_readout.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout.jl)
 
 Documentation: [Single-qubit readout example](./introductory/single_qubit_readout_fidelity.md)
+
+## Hadamard transpilation
+
+In this example, we introduce the hadamard gate and circuit transpilation.
+
+Code: [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard.jl)
+
+Documentation: [Hadamard transpilation example](./introductory/hadamard_transpilation.md)
