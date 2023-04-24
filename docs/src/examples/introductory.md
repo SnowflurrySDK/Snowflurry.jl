@@ -25,3 +25,12 @@ In this example, we excite the qubit into state one.
 Code: [examples/excitation\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/excitation_demonstration.jl)
 
 Documentation: [Excitation demonstration](./introductory/excitation_demonstration.md)
+
+## Entanglement demonstration
+
+In this example, we demonstrate entanglement by generating a bell state.
+
+Code: [examples/entanglement\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/entanglement_demonstration.jl)
+
+Documentation: [Entanglement demonstration example](./introductory/entanglement_demonstration.md)
+
