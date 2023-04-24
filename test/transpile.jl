@@ -131,6 +131,66 @@ end
     end
 end
 
+
+@testset "CastUniversalToRzRxRzTranspiler" begin
+
+    qubit_count=2
+    target=1
+    transpiler=CastUniversalToRzRxRzTranspiler()
+
+    list_params=[
+        #theta,     phi,    lambda, gates_in_output
+        (pi/13,     pi/3,   pi/5,   3),
+        (pi/13,     pi/3,   0,      3), 
+        (pi/13,     0,      pi/5,   3), 
+        (pi/13,     0,      0,      3), 
+        (0,         pi/3,   pi/5,   3),
+        (0,         pi/3,   0,      3), 
+        (0,         0,      pi/5,   3),
+        (0,         0,      0,      3),
+    ]
+
+    for (theta,phi,lambda,gates_in_output) in list_params
+
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count, 
+            gates=[universal(target,theta,phi,lambda)])
+    
+        transpiled_circuit=transpile(transpiler,circuit)
+    
+        gates=get_circuit_gates(transpiled_circuit)
+
+        @test length(gates)==gates_in_output
+
+        @test typeof(gates[1])==Snowflake.PhaseShift
+        @test typeof(gates[2])==Snowflake.RotationX
+        @test typeof(gates[3])==Snowflake.PhaseShift
+    
+        @test compare_circuits(circuit,transpiled_circuit)  
+    end
+
+    #from non-Universal gate
+    circuit = QuantumCircuit(qubit_count = qubit_count, gates=[sigma_x(target)])
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test compare_circuits(circuit,transpiled_circuit)  
+
+    #from single and multiple-target gates
+    circuit = QuantumCircuit(
+        qubit_count = 2, 
+        gates=[
+            universal(1,π/2,π/4,π/8),
+            control_x(1,2)
+            ]
+        )
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    @test compare_circuits(circuit,transpiled_circuit)  
+
+end
+
 @testset "cast_to_phase_shift_and_half_rotation_x: from universal" begin
 
     qubit_count=2
