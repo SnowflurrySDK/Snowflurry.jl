@@ -17,3 +17,11 @@ In this example, we cover the basics of initialization, readout, and readout fid
 Code: [examples/single\_qubit\_readout.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout.jl)
 
 Documentation: [Single-qubit readout example](./introductory/single_qubit_readout_fidelity.md)
+
+## Entanglement demonstration
+
+In this example, we demonstrate entanglement by generating a bell state.
+
+Code: [examples/entanglement\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/entanglement_demonstration.jl)
+
+Documentation: [Entanglement demonstration example](./introductory/entanglement_demonstration.md)
