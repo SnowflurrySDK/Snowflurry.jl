@@ -1499,3 +1499,49 @@ end
 struct TrivialTranspiler<:Transpiler end
 
 transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 
+
+struct RemoveSwapBySwappingGates <: Transpiler end
+
+function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+    gates = get_circuit_gates(circuit)
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count=qubit_count)
+    qubit_mapping = Dict{Int,Int}()
+    reverse_transpiled_gates = AbstractGate[]
+
+    for gate in reverse(gates)
+        if gate isa Swap
+            update_qubit_mapping!(qubit_mapping, gate)
+        else
+            moved_gate = move_gate(gate, qubit_mapping)
+            push!(reverse_transpiled_gates, moved_gate)
+        end
+    end
+    push!(output_circuit, reverse(reverse_transpiled_gates))
+    return output_circuit
+end
+
+function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, gate::Swap)
+    connected_qubits = get_connected_qubits(gate)
+    if haskey(qubit_mapping, connected_qubits[1])
+        outlet_qubit_2 = qubit_mapping[connected_qubits[1]]
+        pop!(qubit_mapping, connected_qubits[1])
+        add_first_swap_branch_mapping!(qubit_mapping, connected_qubits)
+        qubit_mapping[connected_qubits[2]] = outlet_qubit_2
+    else
+        add_first_swap_branch_mapping!(qubit_mapping, connected_qubits)
+        qubit_mapping[connected_qubits[2]] = connected_qubits[1]
+    end
+end
+
+function add_first_swap_branch_mapping!(qubit_mapping::Dict{Int,Int},
+    connected_qubits::Vector{<:Integer})
+   
+    if haskey(qubit_mapping, connected_qubits[2])
+        outlet_qubit = qubit_mapping[connected_qubits[2]]
+        pop!(qubit_mapping, connected_qubits[2])
+        qubit_mapping[connected_qubits[1]] = outlet_qubit
+    else
+        qubit_mapping[connected_qubits[1]] = connected_qubits[2]
+    end
+end

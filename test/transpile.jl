@@ -896,3 +896,25 @@ gates_in_output=[9,8]
         end
     end
 end
+
+@testset "remove_swap_by_swapping_gates" begin
+    transpiler = RemoveSwapBySwappingGates()
+
+    circuit =
+        QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),
+            swap(1, 2), swap(2, 3), sigma_x(2)])
+
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test simulate(circuit) ≈ simulate(transpiled_circuit)
+
+    circuit =
+        QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),
+            swap(1, 2), swap(1, 4), sigma_x(2)])
+
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test simulate(circuit) ≈ simulate(transpiled_circuit)
+end
