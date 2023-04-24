@@ -135,7 +135,7 @@ function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
     return as_universal_gate(common_target,combined_op)
 end
 
-set_of_Rz_gates=[
+set_of_rz_gates=[
     Z90,
     ZM90,
     SigmaZ,
@@ -146,7 +146,7 @@ set_of_Rz_gates=[
 
 is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
 
-is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_Rz_gates)
+is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_rz_gates)
 
 is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
 
