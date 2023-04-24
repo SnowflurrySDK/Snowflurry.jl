@@ -135,7 +135,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX()
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
 
     list_params=[
         #theta,     phi,    lambda, gates_in_output
@@ -168,7 +168,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX()
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
 
     for gate in single_qubit_gates
 
@@ -190,7 +190,7 @@ end
     @test length(get_circuit_gates(transpiled_circuit_default_tol))==5
 
     # with user-defined tolerance
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationX(1e-1)
+    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
 
     transpiled_circuit_high_tol=transpile(transpiler,circuit)
 
@@ -198,9 +198,9 @@ end
 
 end
 
-@testset "PlaceOperationsOnLine" begin
+@testset "SwapQubitsForLineConnectivityTranspiler" begin
     
-    transpiler=Snowflake.PlaceOperationsOnLine()
+    transpiler=Snowflake.SwapQubitsForLineConnectivityTranspiler()
 
     qubit_count=10
 
@@ -266,7 +266,7 @@ end
 
     transpiler=Snowflake.SequentialTranspiler([   
             Snowflake.CompressSingleQubitGatesTranspiler(),
-            Snowflake.CastToPhaseShiftAndHalfRotationX()
+            Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
         ])
 
     qubit_count=4
@@ -364,8 +364,8 @@ end
     
     transpiler=Snowflake.SequentialTranspiler([
         Snowflake.CompressSingleQubitGatesTranspiler(),
-        Snowflake.CastToPhaseShiftAndHalfRotationX(),
-        Snowflake.PlaceOperationsOnLine(),
+        Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler(),
+        Snowflake.SwapQubitsForLineConnectivityTranspiler(),
     ])
 
     qubit_count=6
