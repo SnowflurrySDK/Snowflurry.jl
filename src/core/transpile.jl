@@ -146,9 +146,9 @@ set_of_Rz_gates=[
 
 is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
 
-is_not_Rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_Rz_gates)
+is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_Rz_gates)
 
-is_multi_target_or_not_Rz(gate::AbstractGate)= is_multi_target(gate) || is_not_Rz_gate(gate)
+is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
 
 function find_and_compress_blocks(
     circuit::QuantumCircuit,
@@ -1203,7 +1203,7 @@ function transpile(
     return output
 end
 
-struct CompressRzGates<:Transpiler end
+struct CompressRzGatesTranspiler<:Transpiler end
 
 # construct a PhaseShift gate from an input Operator
 function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PhaseShift
@@ -1248,9 +1248,9 @@ function compress_to_rz(gates::Vector{<:AbstractGate})::PhaseShift
 end
 
 """
-    transpile(::CompressRzGates, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `CompressRzGates` transpiler stage 
+Implementation of the `CompressRzGatesTranspiler` transpiler stage 
 which gathers all Rz-type gates sharing a common target in an input 
 circuit and combines them into single PhaseShift gate in a new circuit.
 Gates ordering may differ when gates are applied to different qubits, 
@@ -1259,7 +1259,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CompressRzGates();
+julia> transpiler=Snowflake.CompressRzGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_z(1),z_90(1)])
 Quantum Circuit Object:
@@ -1305,12 +1305,12 @@ true
 
 ```
 """
-function transpile(::CompressRzGates, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     if length(get_circuit_gates(circuit))==1
         # no compression needed for individual gate
         return circuit
     end
     
-    return find_and_compress_blocks(circuit,is_multi_target_or_not_Rz,compress_to_rz)
+    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,compress_to_rz)
 end

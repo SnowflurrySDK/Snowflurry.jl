@@ -660,10 +660,10 @@ test_circuits_Rz_type=[
 
 gates_in_output=[9,8]
 
-@testset "CompressRzGates: transpilation of Rz-type and other gates" begin
+@testset "CompressRzGatesTranspiler: transpilation of Rz-type and other gates" begin
     
     qubit_count=4
-    transpiler=CompressRzGates()
+    transpiler=CompressRzGatesTranspiler()
     
     for (gates_list,gates_in_output) in zip(test_circuits_Rz_type,gates_in_output)
         for end_pos in 1:length(gates_list)
