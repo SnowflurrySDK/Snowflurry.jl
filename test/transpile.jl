@@ -132,11 +132,11 @@ end
 end
 
 
-@testset "CastUniversalToRzRxRz" begin
+@testset "CastUniversalToRzRxRzTranspiler" begin
 
     qubit_count=2
     target=1
-    transpiler=CastUniversalToRzRxRz()
+    transpiler=CastUniversalToRzRxRzTranspiler()
 
     list_params=[
         #theta,     phi,    lambda, gates_in_output
@@ -161,6 +161,10 @@ end
         gates=get_circuit_gates(transpiled_circuit)
 
         @test length(gates)==gates_in_output
+
+        @test typeof(gates[1])==Snowflake.PhaseShift
+        @test typeof(gates[2])==Snowflake.RotationX
+        @test typeof(gates[3])==Snowflake.PhaseShift
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end

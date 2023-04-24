@@ -824,33 +824,33 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
 end
 
 # Cast a Universal gate as U=Rz(β)Rx(γ)Rz(δ)
-# See: Nielsen and Chang, Quantum Computation and Quantum Information, p175.
-function cast_to_Rz_Rx_Rz(gate::Universal)::Vector{AbstractGate}
+# See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
+function cast_to_rz_rx_rz(gate::Universal)::Vector{AbstractGate}
     params=get_gate_parameters(gate)
    
     target=get_connected_qubits(gate)[1]
 
     γ=params["theta"]
-    β=params["phi"]
-    δ=params["lambda"]
+    β=params["phi"]+π/2
+    δ=params["lambda"]-π/2
    
     gate_array=Vector{AbstractGate}([])
 
     push!(gate_array,phase_shift(target,δ))
 
-    push!(gate_array,rotation_y(target,γ))
+    push!(gate_array,rotation_x(target,γ))
 
     push!(gate_array,phase_shift(target,β))
 
     return gate_array
 end
 
-struct CastUniversalToRzRxRz<:Transpiler end
+struct CastUniversalToRzRxRzTranspiler<:Transpiler end
 
 """
-    transpile(::CastUniversalToRzRxRz, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `CastUniversalToRzRxRz` transpiler stage 
+Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
 which finds Universal gates in an input circuit and converst cast) 
 them into a sequence of PhaseShift (Rz), RotationX (Rx) and 
 PhaseShift (Rz) gates in a new circuit.
@@ -859,7 +859,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastUniversalToRzRxRz();
+julia> transpiler=Snowflake.CastUniversalToRzRxRzTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,π/2,π/4,π/8)])
 Quantum Circuit Object:
@@ -872,10 +872,10 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(0.3927)────Ry(1.5708)────P(0.7854)──
-                                             
-q[2]:────────────────────────────────────────
-                                             
+q[1]:──P(-1.1781)────Rx(1.5708)────P(2.3562)──
+                                              
+q[2]:─────────────────────────────────────────
+                                              
 
 julia> compare_circuits(circuit,transpiled_circuit)
 true
@@ -891,16 +891,17 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(0.0000)────Ry(0.0000)────P(0.7854)──
-                                             
-q[2]:────────────────────────────────────────
-                                             
+q[1]:──P(-1.5708)────Rx(0.0000)────P(2.3562)──
+                                              
+q[2]:─────────────────────────────────────────
+                                              
+                                        
 julia> compare_circuits(circuit,transpiled_circuit)
 true
 
 ```
 """
-function transpile(::CastUniversalToRzRxRz, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     
@@ -918,7 +919,7 @@ function transpile(::CastUniversalToRzRxRz, circuit::QuantumCircuit)::QuantumCir
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
-            gate_array=cast_to_Rz_Rx_Rz(gate)
+            gate_array=cast_to_rz_rx_rz(gate)
             push!(output_circuit,gate_array)
         end
     end
