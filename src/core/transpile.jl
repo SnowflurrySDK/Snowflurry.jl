@@ -1512,7 +1512,7 @@ Removes the `Swap` gates from the `circuit` assuming all-to-all connectivity.
     where ``N`` is the number of qubits. The stage should not be used on sub-circuits
     where the input state is not ``|0\\rangle^{\\otimes N}``.
 
-This transpiler stage eliminates `Swap` gates by reordering the gates preceding each `Swap`
+This transpiler stage eliminates `Swap` gates by moving the gates preceding each `Swap`
 gate.
 
 # Examples
