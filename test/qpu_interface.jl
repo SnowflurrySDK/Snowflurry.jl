@@ -137,6 +137,19 @@ end
     @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
+@testset "Construct AnyonQPU" begin
+    host = "host"
+    user = "user"
+    token = "token"
+
+    qpu = AnyonQPU(host=host, user=user, access_token=token)
+    client = get_client(qpu)
+
+    @test client.host == host
+    @test client.user == user
+    @test client.access_token == token
+end
+
 @testset "run on AnyonQPU" begin
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
