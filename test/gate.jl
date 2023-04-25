@@ -28,6 +28,7 @@ end
     @test eye(2)≈kron(eye(),eye())
     @test_throws DomainError eye(0)
     @test eye(3)≈kron(eye(2),eye())
+    @test eye(4)≈kron(eye(3),eye(2))
 
     H = hadamard(1)
     h_oper=get_operator(H)
