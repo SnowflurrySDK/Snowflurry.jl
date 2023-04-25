@@ -10,7 +10,7 @@ A data structure to represent a Anyon System's QPU.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonQPU(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia>  qpu = AnyonQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
   
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
