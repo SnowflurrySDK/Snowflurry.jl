@@ -27,6 +27,5 @@ covered_lines, total_lines = get_summary(coverage)
 #clean .cov files
 clean_folder("src")
 clean_folder("test")
-clean_folder("protobuf")
 
 return covered_lines, total_lines
