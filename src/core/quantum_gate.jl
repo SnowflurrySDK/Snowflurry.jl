@@ -75,8 +75,43 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
+"""
+    move_gate(gate::AbstractGate,
+        qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+
+Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
+on `qubit_mapping`.
+
+The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
+qubits. The key indicates which target qubit to change while the associated value specifies
+the new qubit.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> move_gate(gate, Dict(1=>2))
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [2]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+```
+"""
 function move_gate(gate::AbstractGate,
-    qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+    qubit_mapping::AbstractDict{T,T})::AbstractGate where T<:Integer
 
     old_connected_qubits = get_connected_qubits(gate)
     new_connected_qubits = Int[]
@@ -97,8 +132,45 @@ function move_gate(gate::AbstractGate,
     end
 end
 
+"""
+    move_gate(gate::AbstractGate,
+        new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+
+Returns a copy of `gate` where the qubits on which the `gate` acts are
+`new_connected_qubits`.
+
+!!! tip "This function should not be called directly."
+    Because this function depends on the order of the `new_connected_qubits`, it is safer
+    to call [`move_gate(gate::AbstractGate, qubit_mapping::AbstractDict{T,T}) where T<:Integer`](@ref).
+
+This function must be overloaded for gates which are constructed with more than 1 argument.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> move_gate(gate, [2])
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [2]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+```
+"""
 function move_gate(gate::AbstractGate,
-    new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
+    new_connected_qubits::AbstractVector{T})::AbstractGate where T<:Integer
 
     return typeof(gate)(new_connected_qubits[1])
 end

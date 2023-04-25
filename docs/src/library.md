@@ -55,6 +55,8 @@ Base.:*(M::AbstractGate, x::Ket)
 apply_gate!
 get_operator
 inv(gate::AbstractGate)
+move_gate(gate::AbstractGate, qubit_mapping::AbstractDict{T,T}) where T<:Integer
+move_gate(gate::AbstractGate, new_connected_qubits::AbstractVector{T}) where T<:Integer
 ```
 
 ## Quantum Processing Unit
