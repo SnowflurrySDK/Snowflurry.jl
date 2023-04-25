@@ -10,22 +10,22 @@ A data structure to represent a Anyon System's QPU.
 
 # Example
 ```jldoctest
-julia>  c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
-  
-julia> qpu=AnyonQPU(c)
+julia>  qpu = AnyonQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
-   generation:    Yukon 
+   generation:    Yukon
    serial_number: ANYK202201 
-
 
 ```
 """
 struct AnyonQPU <: AbstractQPU
     client        ::Client
+
+    AnyonQPU(client::Client) = new(client)
+    AnyonQPU(; host::String, user::String, access_token::String) = new(Client(host=host, user=user, access_token=access_token))
 end
 
-get_metadata(qpu::AnyonQPU) = Dict{String,String}(
+get_metadata(::AnyonQPU) = Dict{String,String}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
