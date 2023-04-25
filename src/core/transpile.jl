@@ -976,8 +976,8 @@ struct CastRxToRzAndHalfRotationXTranspiler<:Transpiler end
 
 Implementation of the `CastRxToRzAndHalfRotationXTranspiler` transpiler stage 
 which finds RotationX gates in an input circuit and converts (casts) 
-them into a sequence of gates: X90 (RotationX with angle π/2), RotationZ (Rz) 
-and XM90 (RotationX with angle -π/2) in a new circuit.
+them into a sequence of gates: X90,ZM90,XM90 (equivalent to YM90),
+PhaseShift (Rz), then X90,Z90 and XM90 (equivalent to Y90) in a new circuit.
 The result of the input and output circuit on any arbitrary state Ket 
 is unchanged (up to a global phase).
 
