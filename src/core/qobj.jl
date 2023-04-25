@@ -193,6 +193,8 @@ DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 # so that an input of type DenseOperator is not copied
 DenseOperator(op::DenseOperator) = op
 
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,ComplexF64}(m))
+
 """
 
 getindex(A::AbstractOperator, i::Integer, j::Integer)
