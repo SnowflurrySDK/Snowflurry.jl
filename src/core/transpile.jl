@@ -948,6 +948,83 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
     return output_circuit
 end
 
+function cast_rx_to_rz_and_half_rotation_x(gate::RotationX)::Vector{AbstractGate}
+    params=get_gate_parameters(gate)
+   
+    target=get_connected_qubits(gate)[1]
+
+    theta   =params["theta"]
+
+    gate_array=Vector{AbstractGate}([])
+
+    push!(gate_array,x_90(target))
+    push!(gate_array,z_minus_90(target))
+    push!(gate_array,x_minus_90(target))
+    push!(gate_array,phase_shift(target,theta))
+    push!(gate_array,x_90(target))
+    push!(gate_array,z_90(target))
+    push!(gate_array,x_minus_90(target))
+
+    return gate_array
+end
+
+struct CastRxToRzAndHalfRotationXTranspiler<:Transpiler end
+
+
+"""
+    transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastRxToRzAndHalfRotationXTranspiler` transpiler stage 
+which finds RotationX gates in an input circuit and converts (casts) 
+them into a sequence of gates: X90 (RotationX with angle π/2), RotationZ (Rz) 
+and XM90 (RotationX with angle -π/2) in a new circuit.
+The result of the input and output circuit on any arbitrary state Ket 
+is unchanged (up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.CastRxToRzAndHalfRotationXTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,π/8)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Rx(0.3927)──
+                   
+q[2]:──────────────
+                   
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X_90────Z_m90────X_m90────P(0.3927)────X_90────Z_90────X_m90──
+                                                                     
+q[2]:────────────────────────────────────────────────────────────────
+                                                                                                
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+    gates=get_circuit_gates(circuit)
+    
+    qubit_count=get_num_qubits(circuit)
+    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+
+    for gate in gates
+        
+        if gate isa RotationX
+            gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
+            push!(output_circuit,gate_array)
+        else
+            push!(output_circuit,gate)
+        end
+    end
+
+    return output_circuit
+end
+
 
 struct SimplifyRxGates<:Transpiler 
     atol::Real

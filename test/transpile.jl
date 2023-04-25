@@ -229,6 +229,43 @@ end
 
 end
 
+@testset "cast_Rx_to_Rz_and_half_rotation_x" begin
+
+    qubit_count=2
+    target=1
+    transpiler=CastRxToRzAndHalfRotationXTranspiler()
+
+    list_params=[
+        #theta,     
+        π,π/2,π/4,π/8,π/6,              
+    ]
+
+    for theta in list_params
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count, 
+            gates=[rotation_x(target,theta)]
+        )
+            
+        transpiled_circuit=transpile(transpiler,circuit)
+            
+        @test compare_circuits(circuit,transpiled_circuit)  
+        
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.RotationX)
+
+        gates=get_circuit_gates(transpiled_circuit)
+        
+        @test length(gates)==7
+
+        @test typeof(gates[1])==Snowflake.X90
+        @test typeof(gates[2])==Snowflake.ZM90
+        @test typeof(gates[3])==Snowflake.XM90
+        @test typeof(gates[4])==Snowflake.PhaseShift
+        @test typeof(gates[5])==Snowflake.X90
+        @test typeof(gates[6])==Snowflake.Z90
+        @test typeof(gates[7])==Snowflake.XM90
+    end
+end
+
 @testset "cast_to_phase_shift_and_half_rotation_x: from universal" begin
 
     qubit_count=2
