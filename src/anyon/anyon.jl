@@ -25,7 +25,7 @@ struct AnyonQPU <: AbstractQPU
     client        ::Client
 end
 
-get_metadata(qpu::AnyonQPU) = Dict{String,String}(
+get_metadata(::AnyonQPU) = Dict{String,String}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
