@@ -507,22 +507,8 @@ I = \\begin{bmatrix}
 ```
 """
 eye(T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, 2, 2))
+eye(size::Integer, T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, size, size))
 
-# Contruct eye() of any size (or qubit_count)
-function eye(qubit_count::Integer,T::Type{<:Complex}=ComplexF64)
-    if qubit_count<1
-        throw(DomainError(qubit_count,
-            "Must have qubit_count>0"))
-    end 
-
-    if qubit_count==1
-        return eye(T)
-    elseif qubit_count==2
-        return kron(eye(qubit_count-1,T),eye(T))
-    else
-        return kron(eye(qubit_count-1,T),eye(qubit_count-2,T))
-    end
-end
 
 
 """

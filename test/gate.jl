@@ -25,10 +25,9 @@ end
 
 @testset "gate_set" begin
 
-    @test eye(2)≈kron(eye(),eye())
-    @test_throws DomainError eye(0)
-    @test eye(3)≈kron(eye(2),eye())
-    @test eye(4)≈kron(eye(3),eye(2))
+    @test eye(4)≈kron(eye(),eye())
+    @test eye(8)≈kron(eye(4),eye())
+    @test eye(6)≈kron(eye(3),eye(2))
 
     H = hadamard(1)
     h_oper=get_operator(H)

@@ -5,7 +5,7 @@ function test_inverse(gate::AbstractGate)
     inverse_gate=inv(gate)
     target_count=length(get_connected_qubits(gate))
 
-    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(target_count) )
+    return( get_operator(gate)*get_operator(inverse_gate) ≈ eye(2^target_count) )
 end
 
 function make_array(
