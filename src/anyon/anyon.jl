@@ -14,7 +14,7 @@ julia>  qpu = AnyonQPU(host="example.anyonsys.com",user="test_user",access_token
   
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
-   generation:    Yukon 
+   generation:    Yukon
    serial_number: ANYK202201 
 
 
