@@ -2,7 +2,7 @@
 
 The introductory examples are the best place to start if you are new to quantum computation. These examples take you step by step through Snowflake, gradually introduce concepts and assume no prior quantum computation knowledge. We recommend you work through these examples in order to get the most out of them.
 
-## Get qpu metadata
+## Get QPU metadata
 
 In this example, we introduce the QPU interface and how to get the metadata of the machine.
 
