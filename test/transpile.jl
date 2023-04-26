@@ -735,12 +735,21 @@ end
 @testset "simplify_rz_gate" begin
 
     list_params=[
-        ( pi/2, Snowflake.Z90),
-        (-pi/2, Snowflake.ZM90),
-        ( pi,   Snowflake.SigmaZ),
-        ( pi/4, Snowflake.Pi8),
-        (-pi/4, Snowflake.Pi8Dagger),
-        ( pi/3, Snowflake.PhaseShift)
+        ( pi/2,     Snowflake.Z90),
+        ( 5*pi/2,   Snowflake.Z90),
+        ( -3*pi/2,  Snowflake.Z90),
+        ( -7*pi/2,  Snowflake.Z90),
+        (-pi/2,     Snowflake.ZM90),
+        (-5*pi/2,   Snowflake.ZM90),
+        (3*pi/2,    Snowflake.ZM90),
+        (7*pi/2,    Snowflake.ZM90),
+        (-pi,       Snowflake.SigmaZ),
+        ( pi,       Snowflake.SigmaZ),
+        ( 3*pi,     Snowflake.SigmaZ),
+        (-3*pi,     Snowflake.SigmaZ),
+        ( pi/4,     Snowflake.Pi8),
+        (-pi/4,     Snowflake.Pi8Dagger),
+        ( pi/3,     Snowflake.PhaseShift)
     ]
 
     target=1
