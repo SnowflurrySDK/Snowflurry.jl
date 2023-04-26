@@ -382,16 +382,73 @@ end
 
 end
 
-@testset "get_transpiler" begin    
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-
-    num_repetitions=100
+@testset "AnyonQPU: transpilation of native gates" begin    
+    test_client=Client(host=host,user=user,access_token=access_token)
         
     qpu=AnyonQPU(test_client)
 
+    qubit_count=1
+    target=1
+    
     transpiler=get_transpiler(qpu) 
+    
+    set_of_native_gates=get_native_gate_types(qpu)
+    
+    input_gates_native=[
+        # gate_type, gate
+        phase_shift(target,-phi/2),
+        pi_8(target),
+        pi_8_dagger(target),
+        sigma_x(target),
+        sigma_y(target),
+        sigma_z(target),
+        x_90(target),
+        x_minus_90(target),
+        y_90(target),
+        y_minus_90(target),
+        z_90(target),
+        z_minus_90(target),
+    ]
+    
+    input_gates_foreign=[
+        # gate_type, gate
+        hadamard(target),
+        rotation(target,theta,phi),
+        rotation_x(target,theta),
+        rotation_y(target,theta),
+    ]
+    
+    for (gates_list,input_is_native) in vcat(
+            (input_gates_native,true),
+            (input_gates_foreign,false)
+        )
+        for gate in gates_list
+    
+            println("Input gate: $(typeof(gate))")
+        
+            circuit=QuantumCircuit(qubit_count=qubit_count,gates=[gate])
+            transpiled_circuit=transpile(transpiler,circuit)
+        
+            println("output: $transpiled_circuit")
+        
+            @test compare_circuits(circuit,transpiled_circuit)
+        
+            gates_in_output=get_circuit_gates(transpiled_circuit)
 
-    @test typeof(transpiler)==SequentialTranspiler
+            if input_is_native
+                test_is_not_rz=[
+                    !(typeof(gate) in Snowflake.set_of_rz_gates) for gate in gates_in_output
+                ]
+
+                # at most one non-Rz gate in output
+                @test sum(test_is_not_rz)<=1
+            end
+
+            for gate in gates_in_output
+                @test typeof(gate) in set_of_native_gates
+            end
+        end
+    end
 end
 
 
@@ -564,8 +621,8 @@ end
 end
 
 
-@testset "SimplifyRxGates" begin
-    transpiler = SimplifyRxGates()
+@testset "SimplifyRxGatesTranspiler" begin
+    transpiler = SimplifyRxGatesTranspiler()
 
     target=1
 
@@ -603,7 +660,7 @@ end
 
     # with user-defined tolerance
 
-    transpiler=SimplifyRxGates(1e-1)
+    transpiler=SimplifyRxGatesTranspiler(1e-1)
 
     transpiled_circuit=transpile(transpiler,circuit)
 
@@ -645,8 +702,8 @@ end
     @test isnothing(result_gate)
 end
 
-@testset "SimplifyRzGates" begin
-    transpiler = SimplifyRzGates()
+@testset "SimplifyRzGatesTranspiler" begin
+    transpiler = SimplifyRzGatesTranspiler()
 
     target=1
 
@@ -686,7 +743,7 @@ end
 
     # with user-defined tolerance
 
-    transpiler=SimplifyRzGates(1e-1)
+    transpiler=SimplifyRzGatesTranspiler(1e-1)
 
     transpiled_circuit=transpile(transpiler,circuit)
 
