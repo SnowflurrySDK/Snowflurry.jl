@@ -382,10 +382,8 @@ end
 
 end
 
-@testset "AnyonQPU: transpilation of native gates" begin    
-    test_client=Client(host=host,user=user,access_token=access_token)
-        
-    qpu=AnyonQPU(test_client)
+@testset "AnyonQPU: transpilation of native gates" begin            
+    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
 
     qubit_count=1
     target=1
@@ -424,13 +422,9 @@ end
         )
         for gate in gates_list
     
-            println("Input gate: $(typeof(gate))")
-        
             circuit=QuantumCircuit(qubit_count=qubit_count,gates=[gate])
             transpiled_circuit=transpile(transpiler,circuit)
-        
-            println("output: $transpiled_circuit")
-        
+                
             @test compare_circuits(circuit,transpiled_circuit)
         
             gates_in_output=get_circuit_gates(transpiled_circuit)
@@ -451,6 +445,71 @@ end
     end
 end
 
+@testset "AnyonQPU: transpilation of a Ghz circuit" begin
+    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+
+    qubit_count=5
+    
+    transpiler=get_transpiler(qpu) 
+    
+    set_of_native_gates=get_native_gate_types(qpu)
+
+    circuit=QuantumCircuit(qubit_count=qubit_count,gates=vcat(
+        hadamard(1),[control_x(i,i+1) for i in 1:qubit_count-1])
+    )
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    println("transpiled_circuit: $transpiled_circuit")
+
+    results=Dict{Int,Vector{DataType}}([])
+
+    for gate in get_circuit_gates(transpiled_circuit)
+
+        targets=get_connected_qubits(gate)
+
+        for target in targets
+            if haskey(results,target)
+                results[target]=push!(results[target],typeof(gate))
+            else
+                results[target]=[typeof(gate)]
+            end
+        end
+    end
+
+    for (target,gates_array_per_target) in results
+
+        if target==1
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+            ]
+        elseif target==qubit_count
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+            ]            
+        else
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+            ]
+        end
+    end
+end
 
 @testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
 

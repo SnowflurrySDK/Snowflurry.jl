@@ -125,7 +125,7 @@ Returns the transpiler associated with this QPU.
 julia> qpu=AnyonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastSwapToCZGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), CastToPhaseShiftAndHalfRotationXTranspiler(1.0e-6), SwapQubitsForLineConnectivityTranspiler()])
+SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastSwapToCZGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), SwapQubitsForLineConnectivityTranspiler()])
 
 ```
 """

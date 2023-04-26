@@ -91,17 +91,17 @@ transpiled_circuit = transpile(transpiler, circuit)
 # output
 
 Quantum Circuit Object:
-   qubit_count: 2
+   qubit_count: 2 
 Part 1 of 2
-q[1]:──Z────X_90────Z_90────X_m90──────────────────────────────────*──
-                                                                   |
-q[2]:────────────────────────────────Z────X_90────Z_90────X_m90────Z──
-
+q[1]:──Z_90────────────X_90────Z_90────────────────────*──────────
+                                                       |          
+q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90──
+                                                                  
 
 Part 2 of 2
-q[1]:──────────────────────────────
-
-q[2]:──Z────X_90────Z_90────X_m90──
+q[1]:────────────────
+                     
+q[2]:──X_90────Z_90──
 ```
 
 Now we run our quantum circuit on Anyon's quantum computer!

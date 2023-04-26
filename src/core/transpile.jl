@@ -649,13 +649,13 @@ function simplify_rz_gate(
     phase_angle::Real; 
     atol=1e-6)::Union{AbstractGate,Nothing}
     
-    if isapprox(phase_angle,π/2,atol=atol) 
+    if isapprox(phase_angle,π/2,atol=atol) || isapprox(phase_angle,-3*π/2,atol=atol)
         return z_90(target)
 
     elseif isapprox(abs(phase_angle),π,atol=atol) 
         return sigma_z(target)
 
-    elseif isapprox(phase_angle,-π/2,atol=atol) 
+    elseif isapprox(phase_angle,-π/2,atol=atol) || isapprox(phase_angle,3*π/2,atol=atol)
         return z_minus_90(target)
 
     elseif isapprox(phase_angle,π/4,atol=atol) 

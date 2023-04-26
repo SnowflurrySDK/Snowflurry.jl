@@ -105,8 +105,8 @@ transpiled_circuit = transpile(transpiler, circuit)
 # output
 
 Quantum Circuit Object:
-   qubit_count: 1
-q[1]:──Z────X_90────Z_90────X_m90──
+   qubit_count: 1 
+q[1]:──Z_90────X_90────Z_90──
 ```
 
 The transpiled circuit is shown below.
