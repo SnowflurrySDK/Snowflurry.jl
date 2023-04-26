@@ -14,7 +14,7 @@ Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/
 ```@raw html
 <div style="text-align: center;">
 	<img
-		src="./images/cnot_circuit.svg"
+		src="./images/bell_circuit.svg"
 		title="Bell state generator circuit"
 		width="240"
 	/>
