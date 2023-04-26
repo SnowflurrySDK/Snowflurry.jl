@@ -390,6 +390,8 @@ false
 
 ```
 """
+
+
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
 is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
@@ -403,8 +405,10 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 
 # specializations
 Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::SparseOperator, y::SparseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+
 
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
