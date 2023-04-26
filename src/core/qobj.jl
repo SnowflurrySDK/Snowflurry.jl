@@ -137,6 +137,8 @@ struct Bra{T<:Complex}
     Bra(x::Ket{T}) where {T<:Complex} = new{T}(adjoint(x.data))
     # This constructor is used when a Bra is multiplied by an AbstractOperator
     Bra(x::LinearAlgebra.Adjoint{T, SVector{N,T}}) where {N,T<:Complex} = new{T}(x) 
+    # This constructor is used when a Bra is multiplied by a SparseOperator or initialized with adjoint of vector
+    Bra(x::LinearAlgebra.Adjoint{T, Vector{T}}) where {T<:Complex} = new{T}(x) 
 end
 
 function Base.show(io::IO, x::Bra)
@@ -156,8 +158,8 @@ A structure representing a quantum operator with a sparse (CSR) matrix represent
 julia> z = SparseOperator([1.0 0.0;0.0 -1.0])
 (2, 2)-element Snowflake.DenseOperator:
 Underlying data ComplexF64:
-1.0 + 0.0im    0.0 + 0.0im
-0.0 + 0.0im    -1.0 + 0.0im
+1.0 + 0.0im    .
+.              -1.0 + 0.0im
 ```
 """
 
@@ -356,7 +358,6 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 
 Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
-
 Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
     AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
@@ -417,7 +418,9 @@ Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
 Base.:*(x::Ket, y::Bra) = DenseOperator(x.data * y.data)
 
 Base.:*(M::AbstractOperator, x::Ket) = Ket(Vector(DenseOperator(M).data * x.data))
+Base.:*(M::SparseOperator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::AbstractOperator) = Bra(x.data * DenseOperator(M).data)
+Base.:*(x::Bra, M::SparseOperator) = Bra(x.data * M.data)
 
 # generic cases
 Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOperator(B)
@@ -442,12 +445,14 @@ Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOper
 
 # specializations
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:SparseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
 
 
 # specializations
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:SparseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
 
@@ -512,11 +517,9 @@ julia> eigenvector_1 = F.vectors[:, 1]
 ```
 """
 LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
-
 # specializations
 LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
-
-SparseArrays.eigen(A::SparseOperator) = Arpack.eigs(A.data)
+LinearAlgebra.eigen(A::SparseOperator) = Arpack.eigs(A.data)
 
 """
     tr(A::AbstractOperator)
