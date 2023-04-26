@@ -387,6 +387,7 @@ end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError get_native_gate_types(NonExistentQPU())
+    @test_throws NotImplementedError get_num_qubits(NonExistentQPU())
 
 end
 

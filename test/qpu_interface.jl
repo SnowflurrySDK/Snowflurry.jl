@@ -152,24 +152,39 @@ end
 
 @testset "run on AnyonQPU" begin
 
-    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-        
+    requestor=MockRequestor(request_checker,post_checker)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-
     num_repetitions=100
-        
     qpu=AnyonQPU(test_client)
-
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
-
     @test get_client(qpu)==test_client
     
+    #test basic submission, no transpilation
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
+    histogram=run_job(qpu, circuit ,num_repetitions;transpiler=TrivialTranspiler())
+    @test histogram==Dict("001"=>num_repetitions)
+    @test !haskey(histogram,"error_msg")
+
+    # submit circuit with qubit_count_circuit>qubit_count_qpu
+    circuit = QuantumCircuit(qubit_count = 10)
+    @test_throws DomainError run_job(qpu, circuit ,num_repetitions)
+
+    # submit circuit with a non-native gate on this qpu (no transpilation)
+    requestor=MockRequestor(request_checker,post_checker_toffoli)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)        
+    qpu=AnyonQPU(test_client)
+    circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1,2,3)])
+    @test_throws DomainError run_job(qpu, circuit ,num_repetitions;transpiler=TrivialTranspiler())
+
+    # using AnyonQPU default transpiler
+    requestor=MockRequestor(request_checker,post_checker_transpiled)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    qpu=AnyonQPU(test_client)
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
     histogram=run_job(qpu, circuit ,num_repetitions)
     
     @test histogram==Dict("001"=>num_repetitions)
-
     @test !haskey(histogram,"error_msg")
-
 end
 
 @testset "run on VirtualQPU" begin

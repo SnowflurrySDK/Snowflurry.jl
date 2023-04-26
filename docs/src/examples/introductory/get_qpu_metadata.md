@@ -49,6 +49,7 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   qubit_count:   6
 ```
 
 Now that we have an `AnyonQPU` object, we want to get the machine's metadata to see what we're dealing with. We do this using the `get_metadata` function.
@@ -61,6 +62,7 @@ end
 
 # output
 AnyonQPU metadata:
+    qubit_count: 6
     generation: Yukon
     manufacturer: Anyon Systems Inc.
     serial_number: ANYK202201
@@ -73,6 +75,7 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   qubit_count:   6
 ```
 
 ## Summary

@@ -14,7 +14,8 @@ julia>  qpu = AnyonQPU(host="example.anyonsys.com",user="test_user",access_token
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
-   serial_number: ANYK202201 
+   serial_number: ANYK202201
+   qubit_count:   6 
 
 ```
 """
@@ -25,13 +26,16 @@ struct AnyonQPU <: AbstractQPU
     AnyonQPU(; host::String, user::String, access_token::String) = new(Client(host=host, user=user, access_token=access_token))
 end
 
-get_metadata(::AnyonQPU) = Dict{String,String}(
+get_metadata(::AnyonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
+    "qubit_count"   =>6,
 )
 
 get_client(qpu_service::AnyonQPU)=qpu_service.client
+
+get_num_qubits(qpu::AnyonQPU)=get_metadata(qpu)["qubit_count"]
 
 function Base.show(io::IO, qpu::AnyonQPU)
     metadata=get_metadata(qpu)
@@ -40,6 +44,7 @@ function Base.show(io::IO, qpu::AnyonQPU)
     println(io, "   manufacturer:  $(metadata["manufacturer"])")
     println(io, "   generation:    $(metadata["generation"])")
     println(io, "   serial_number: $(metadata["serial_number"])")
+    println(io, "   qubit_count:   $(metadata["qubit_count"])")
 end
 
 get_native_gate_types(::AnyonQPU)=[
@@ -55,6 +60,8 @@ get_native_gate_types(::AnyonQPU)=[
     Snowflake.YM90,
     Snowflake.Z90,
     Snowflake.ZM90,
+    Snowflake.ControlZ,
+    Snowflake.Swap,
 ]
 
 """
@@ -67,7 +74,7 @@ completed circuit calculations, or an error message.
 # Example
 
 ```jldoctest  
-julia> qpu=AnyonQPU(client);
+julia> qpu=AnyonQPU(client_anyon);
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
@@ -75,11 +82,42 @@ Dict{String, Int64} with 1 entry:
 
 ```
 """
-function run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,Int}
+function run_job(
+    qpu::AnyonQPU, 
+    circuit::QuantumCircuit,
+    num_repetitions::Integer;
+    transpiler::Transpiler=get_transpiler(qpu)
+    )::Dict{String,Int}
     
+    qubit_count_circuit=get_num_qubits(circuit)
+    qubit_count_qpu    =get_num_qubits(qpu)
+    if qubit_count_circuit>=qubit_count_qpu 
+        throw(
+            DomainError(
+                qpu,
+                "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu"
+            )
+        )
+    end
+
+    set_of_native_gates=get_native_gate_types(qpu)
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    for gate in get_circuit_gates(transpiled_circuit)
+        if !(typeof(gate) in set_of_native_gates)
+            throw(
+                DomainError(
+                    qpu,
+                    "Gate type $(typeof(gate)) is not native on $(typeof(qpu))"
+                )
+            )
+        end
+    end
+
     client=get_client(qpu)
 
-    circuitID=submit_circuit(client,circuit,num_repetitions)
+    circuitID=submit_circuit(client,transpiled_circuit,num_repetitions)
 
     status=get_status(client,circuitID;)
  

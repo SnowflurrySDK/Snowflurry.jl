@@ -86,6 +86,7 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   qubit_count:   6
 ```
 
 Now we run our quantum circuit on Anyon's quantum computer!
