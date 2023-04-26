@@ -41,18 +41,21 @@ host = ENV["ANYON_QUANTUM_HOST"]
 client = Client(host=host, user=user, access_token=token)
 qpu = AnyonQPU(client)
 
-# output 
-
+# output
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
 ```
 
 Next we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
 
-```jldoctest asynchronous_job; output = false
+```jldoctest asynchronous_job; output = false, setup = :(qpu = VirtualQPU()), filter = r".*"
 num_repititions = 200
 task = Task(() -> run_job(qpu, circuit, num_repititions))
 schedule(task)
 
-# output 
+# output
 
 ```
 
@@ -74,11 +77,13 @@ fibonacci(30)
 
 # output
 
+832040
+
 ```
 
 After we are done with our work, we can fetch the result of our job.
 
-```jldoctest asynchronous_job; output = false
+```jldoctest asynchronous_job; output = false, filter = r".*"
 result = fetch(task)
 println(result)
 
