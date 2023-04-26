@@ -957,13 +957,11 @@ function cast_rx_to_rz_and_half_rotation_x(gate::RotationX)::Vector{AbstractGate
 
     gate_array=Vector{AbstractGate}([])
 
-    push!(gate_array,x_90(target))
-    push!(gate_array,z_minus_90(target))
-    push!(gate_array,x_minus_90(target))
-    push!(gate_array,phase_shift(target,theta))
-    push!(gate_array,x_90(target))
     push!(gate_array,z_90(target))
+    push!(gate_array,x_90(target))
+    push!(gate_array,phase_shift(target,theta))
     push!(gate_array,x_minus_90(target))
+    push!(gate_array,z_minus_90(target))
 
     return gate_array
 end
@@ -975,9 +973,8 @@ struct CastRxToRzAndHalfRotationXTranspiler<:Transpiler end
     transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastRxToRzAndHalfRotationXTranspiler` transpiler stage 
-which finds RotationX gates in an input circuit and converts (casts) 
-them into a sequence of gates: X90,ZM90,XM90 (equivalent to YM90),
-PhaseShift (Rz), then X90,Z90 and XM90 (equivalent to Y90) in a new circuit.
+which finds RotationX(θ) gates in an input circuit and converts (casts) 
+them into a sequence of gates: Z90,X90,PhaseShift(θ),XM90,ZM90 in a new circuit.
 The result of the input and output circuit on any arbitrary state Ket 
 is unchanged (up to a global phase).
 
@@ -996,10 +993,11 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──X_90────Z_m90────X_m90────P(0.3927)────X_90────Z_90────X_m90──
-                                                                     
-q[2]:────────────────────────────────────────────────────────────────
-                                                                                                
+q[1]:──Z_90────X_90────P(0.3927)────X_m90────Z_m90──
+                                                    
+q[2]:───────────────────────────────────────────────
+                                                    
+
 julia> compare_circuits(circuit,transpiled_circuit)
 true
 

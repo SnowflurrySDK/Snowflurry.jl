@@ -254,15 +254,13 @@ end
 
         gates=get_circuit_gates(transpiled_circuit)
         
-        @test length(gates)==7
+        @test length(gates)==5
 
-        @test typeof(gates[1])==Snowflake.X90
-        @test typeof(gates[2])==Snowflake.ZM90
-        @test typeof(gates[3])==Snowflake.XM90
-        @test typeof(gates[4])==Snowflake.PhaseShift
-        @test typeof(gates[5])==Snowflake.X90
-        @test typeof(gates[6])==Snowflake.Z90
-        @test typeof(gates[7])==Snowflake.XM90
+        @test typeof(gates[1])==Snowflake.Z90
+        @test typeof(gates[2])==Snowflake.X90
+        @test typeof(gates[3])==Snowflake.PhaseShift
+        @test typeof(gates[4])==Snowflake.XM90
+        @test typeof(gates[5])==Snowflake.ZM90
     end
 end
 
