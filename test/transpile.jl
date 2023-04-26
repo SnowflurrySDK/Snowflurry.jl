@@ -382,6 +382,14 @@ end
 
 end
 
+@testset "AbstractQPU" begin
+    struct NonExistentQPU<:Snowflake.AbstractQPU end
+
+    @test_throws NotImplementedError get_metadata(NonExistentQPU())
+    @test_throws NotImplementedError get_native_gate_types(NonExistentQPU())
+
+end
+
 @testset "AnyonQPU: transpilation of native gates" begin            
     qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
 
@@ -459,8 +467,6 @@ end
     )
 
     transpiled_circuit=transpile(transpiler,circuit)
-
-    println("transpiled_circuit: $transpiled_circuit")
 
     results=Dict{Int,Vector{DataType}}([])
 
