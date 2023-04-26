@@ -29,8 +29,6 @@ export
     VirtualQPU,
     Client,
     Status,
-    BlochSphere,
-    AnimatedBlochSphere,
     NotImplementedError,
     Transpiler,
     SequentialTranspiler,
