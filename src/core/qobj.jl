@@ -149,6 +149,34 @@ end
 abstract type AbstractOperator end
 
 """
+A structure representing a quantum operator with a sparse (CSR) matrix representation.
+
+# Examples
+```jldoctest
+julia> z = SparseOperator([1.0 0.0;0.0 -1.0])
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    -1.0 + 0.0im
+```
+"""
+
+struct SparseOperator{T<:Complex}<:AbstractOperator
+    data::  SparseMatrixCSC{T, Int64}
+end
+# Constructor from Real-valued Matrix
+SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(sparse(Complex.(x)))
+# Constructor from Complex-valued Matrix
+SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(sparse(x))
+
+"""
+   sparse(x::AbstractOperator)
+
+Returns a SparseOperator representation of x.
+"""
+sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
+
+"""
 A structure representing a quantum operator with a full (dense) matrix representation.
 
 # Examples
@@ -363,7 +391,8 @@ false
 ```
 """
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
-is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
@@ -396,9 +425,11 @@ Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex}
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
+Base.:*(A::SparseOperator, B::SparseOperator) = SparseOperator(A.data*B.data)
 
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
+Base.:*(s::Number, A::SparseOperator) = SparseOperator(s*A.data)
 
 
 # generic cases
@@ -480,6 +511,8 @@ LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
 
 # specializations
 LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
+
+SparseArrays.eigen(A::SparseOperator) = Arpack.eigs(A.data)
 
 """
     tr(A::AbstractOperator)
@@ -590,6 +623,8 @@ Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(DenseOperator(x), Den
 
 Base.kron(x::DenseOperator, y::DenseOperator) = DenseOperator(kron(x.data, y.data))
 
+Base.kron(x::SparseOperator, y::SparseOperator) = SparseOperator(kron(x.data, y.data))
+
 
 """
 A structure representing a quantum multi-body system.
@@ -695,6 +730,13 @@ function Base.show(io::IO, x::DenseOperator)
         println(io)
     end
 end
+
+function Base.show(io::IO, x::SparseOperator)
+    println(io, "$(size(x.data))-element Snowflake.SparseOperator:")
+    println(io, "Underlying data $(eltype(x.data)):")
+    SparseArrays._show_with_braille_patterns(io,x.data)
+end
+
 
 function Base.show(io::IO, x::DiagonalOperator)
     println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.DiagonalOperator:")
