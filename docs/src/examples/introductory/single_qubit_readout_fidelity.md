@@ -113,4 +113,4 @@ From the result, we can see that we have a very high estimated state preparation
 
 In this example, we've gone over how to construct and readout a single qubit circuit. We've discussed state initialization, readout fidelity, and state preparation and measurement errors.
 
-The full code for this example is available at [examples/single\_qubit\_readout.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout.jl)
+The full code for this example is available at [examples/single\_qubit\_readout\_fidelity.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout_fidelity.jl)

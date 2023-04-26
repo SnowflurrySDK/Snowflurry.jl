@@ -142,4 +142,4 @@ Dict("1" => 109, "0" => 91)
 
 In this example, we've introduced the Hadamard gate. We've also demonstrated how to use a transpiler to transpile any circuit into a circuit which can be natively run on AnyonQPU.
 
-The full code for this example is available at [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard.jl)
+The full code for this example is available at [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard_transpilation.jl)
