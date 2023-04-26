@@ -382,18 +382,140 @@ end
 
 end
 
-@testset "get_transpiler" begin    
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+@testset "AbstractQPU" begin
+    struct NonExistentQPU<:Snowflake.AbstractQPU end
 
-    num_repetitions=100
-        
-    qpu=AnyonQPU(test_client)
+    @test_throws NotImplementedError get_metadata(NonExistentQPU())
+    @test_throws NotImplementedError get_native_gate_types(NonExistentQPU())
 
-    transpiler=get_transpiler(qpu) 
-
-    @test typeof(transpiler)==SequentialTranspiler
 end
 
+@testset "AnyonQPU: transpilation of native gates" begin            
+    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+
+    qubit_count=1
+    target=1
+    
+    transpiler=get_transpiler(qpu) 
+    
+    set_of_native_gates=get_native_gate_types(qpu)
+    
+    input_gates_native=[
+        # gate_type, gate
+        phase_shift(target,-phi/2),
+        pi_8(target),
+        pi_8_dagger(target),
+        sigma_x(target),
+        sigma_y(target),
+        sigma_z(target),
+        x_90(target),
+        x_minus_90(target),
+        y_90(target),
+        y_minus_90(target),
+        z_90(target),
+        z_minus_90(target),
+    ]
+    
+    input_gates_foreign=[
+        # gate_type, gate
+        hadamard(target),
+        rotation(target,theta,phi),
+        rotation_x(target,theta),
+        rotation_y(target,theta),
+    ]
+    
+    for (gates_list,input_is_native) in vcat(
+            (input_gates_native,true),
+            (input_gates_foreign,false)
+        )
+        for gate in gates_list
+    
+            circuit=QuantumCircuit(qubit_count=qubit_count,gates=[gate])
+            transpiled_circuit=transpile(transpiler,circuit)
+                
+            @test compare_circuits(circuit,transpiled_circuit)
+        
+            gates_in_output=get_circuit_gates(transpiled_circuit)
+
+            if input_is_native
+                test_is_not_rz=[
+                    !(typeof(gate) in Snowflake.set_of_rz_gates) for gate in gates_in_output
+                ]
+
+                # at most one non-Rz gate in output
+                @test sum(test_is_not_rz)<=1
+            end
+
+            for gate in gates_in_output
+                @test typeof(gate) in set_of_native_gates
+            end
+        end
+    end
+end
+
+@testset "AnyonQPU: transpilation of a Ghz circuit" begin
+    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+
+    qubit_count=5
+    
+    transpiler=get_transpiler(qpu) 
+    
+    set_of_native_gates=get_native_gate_types(qpu)
+
+    circuit=QuantumCircuit(qubit_count=qubit_count,gates=vcat(
+        hadamard(1),[control_x(i,i+1) for i in 1:qubit_count-1])
+    )
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    results=Dict{Int,Vector{DataType}}([])
+
+    for gate in get_circuit_gates(transpiled_circuit)
+
+        targets=get_connected_qubits(gate)
+
+        for target in targets
+            if haskey(results,target)
+                results[target]=push!(results[target],typeof(gate))
+            else
+                results[target]=[typeof(gate)]
+            end
+        end
+    end
+
+    for (target,gates_array_per_target) in results
+
+        if target==1
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+            ]
+        elseif target==qubit_count
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+            ]            
+        else
+            @test gates_array_per_target==[
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+                Snowflake.Z90,
+                Snowflake.X90,
+                Snowflake.Z90,
+                Snowflake.ControlZ,
+            ]
+        end
+    end
+end
 
 @testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
 
@@ -564,8 +686,8 @@ end
 end
 
 
-@testset "SimplifyRxGates" begin
-    transpiler = SimplifyRxGates()
+@testset "SimplifyRxGatesTranspiler" begin
+    transpiler = SimplifyRxGatesTranspiler()
 
     target=1
 
@@ -603,7 +725,7 @@ end
 
     # with user-defined tolerance
 
-    transpiler=SimplifyRxGates(1e-1)
+    transpiler=SimplifyRxGatesTranspiler(1e-1)
 
     transpiled_circuit=transpile(transpiler,circuit)
 
@@ -613,12 +735,21 @@ end
 @testset "simplify_rz_gate" begin
 
     list_params=[
-        ( pi/2, Snowflake.Z90),
-        (-pi/2, Snowflake.ZM90),
-        ( pi,   Snowflake.SigmaZ),
-        ( pi/4, Snowflake.Pi8),
-        (-pi/4, Snowflake.Pi8Dagger),
-        ( pi/3, Snowflake.PhaseShift)
+        ( pi/2,     Snowflake.Z90),
+        ( 5*pi/2,   Snowflake.Z90),
+        ( -3*pi/2,  Snowflake.Z90),
+        ( -7*pi/2,  Snowflake.Z90),
+        (-pi/2,     Snowflake.ZM90),
+        (-5*pi/2,   Snowflake.ZM90),
+        (3*pi/2,    Snowflake.ZM90),
+        (7*pi/2,    Snowflake.ZM90),
+        (-pi,       Snowflake.SigmaZ),
+        ( pi,       Snowflake.SigmaZ),
+        ( 3*pi,     Snowflake.SigmaZ),
+        (-3*pi,     Snowflake.SigmaZ),
+        ( pi/4,     Snowflake.Pi8),
+        (-pi/4,     Snowflake.Pi8Dagger),
+        ( pi/3,     Snowflake.PhaseShift)
     ]
 
     target=1
@@ -645,8 +776,8 @@ end
     @test isnothing(result_gate)
 end
 
-@testset "SimplifyRzGates" begin
-    transpiler = SimplifyRzGates()
+@testset "SimplifyRzGatesTranspiler" begin
+    transpiler = SimplifyRzGatesTranspiler()
 
     target=1
 
@@ -686,7 +817,7 @@ end
 
     # with user-defined tolerance
 
-    transpiler=SimplifyRzGates(1e-1)
+    transpiler=SimplifyRzGatesTranspiler(1e-1)
 
     transpiled_circuit=transpile(transpiler,circuit)
 

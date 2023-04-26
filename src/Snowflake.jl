@@ -41,8 +41,8 @@ export
     CastRxToRzAndHalfRotationXTranspiler,
     SwapQubitsForLineConnectivityTranspiler,
     CastUniversalToRzRxRzTranspiler,
-    SimplifyRxGates,
-    SimplifyRzGates,
+    SimplifyRxGatesTranspiler,
+    SimplifyRzGatesTranspiler,
     CompressRzGatesTranspiler,
 
     # Functions
@@ -96,6 +96,7 @@ export
     get_host,
     get_status,
     get_result,
+    get_native_gate_types,
     run_job,
     MockRequestor,
     HTTPRequestor,
