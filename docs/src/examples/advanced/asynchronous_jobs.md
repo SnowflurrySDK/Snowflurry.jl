@@ -59,11 +59,11 @@ schedule(task)
 
 ```
 
-We must remember to schedule the task; otherwise, Julia will not know that it should start running your task! Next, we need to yield execution of the current thread to the Julia scheduler to ensure that the scheduler starts with the task. Otherwise, the task will be scheduled, but it will never submit a job to the quantum computer! After yielding once, we can continue to do work before we [fetch](https://docs.julialang.org/en/v1/base/parallel/#Base.fetch-Tuple{task}) the results from that task.
+We must remember to schedule the task; otherwise, Julia will not know that it should start running your task! Next, we need to yield execution of the current thread to the newly scheduled task to ensure that the scheduler starts with the task. Otherwise, the task will be scheduled, but it might not submit a job to the quantum computer any time soon! After yielding once, we can continue to do work before we [fetch](https://docs.julialang.org/en/v1/base/parallel/#Base.fetch-Tuple{task}) the results from that task.
 
 
 ```jldoctest asynchronous_job; output = false
-yield()
+yieldto(task)
 
 # Simulate work by calculating the nth Fibonacci number slowly
 function fibonacci(n)

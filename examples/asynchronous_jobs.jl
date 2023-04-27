@@ -16,7 +16,7 @@ num_repititions = 200
 task = Task(() -> run_job(qpu, circuit, num_repititions))
 schedule(task)
 
-yield()
+yieldto(task)
 
 # Simulate work by calculating the nth Fibonacci number slowly
 function fibonacci(n)
