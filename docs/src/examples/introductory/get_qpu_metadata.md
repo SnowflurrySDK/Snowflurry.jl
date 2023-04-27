@@ -40,8 +40,7 @@ host = ENV["ANYON_QUANTUM_HOST"]
 When we have the environment variables, we can construct our `AnyonQPU` object.
 
 ```jldoctest get_qpu_metadata_example; output = false
-client = Client(host=host, user=user, access_token=token)
-qpu = AnyonQPU(client)
+qpu = AnyonQPU(host=host, user=user, access_token=token)
 
 # output
 
