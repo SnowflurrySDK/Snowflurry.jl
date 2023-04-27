@@ -1,6 +1,6 @@
 # Examples
 
-If you want to know how Snowflake is used, this is the palce to be.
+If you want to know how Snowflake is used, this is the place to be.
 
 ## Introductory examples
 
