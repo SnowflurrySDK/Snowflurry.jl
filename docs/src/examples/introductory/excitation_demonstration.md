@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to show a demonstration of how to excite a qubit into state one.
+This example is going to show a demonstration of how to excite a qubit into state $\left|1\right\rangle$.
 
 A Bloch sphere of a system in state one is shown below.
 
