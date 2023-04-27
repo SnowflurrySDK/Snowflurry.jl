@@ -35,6 +35,28 @@ using Pkg
 Pkg.test()
 ```
 
+## Build the documentation
+
+First open a julia REPL using the docs project
+
+```bash
+julia --project=./docs
+```
+
+If it is the first time building the docs you need to instantiate the Julia project and add the Snowflake project as a development dependency.
+
+```julia
+using Pkg
+Pkg.develop(PackageSpec(path=pwd()))
+Pkg.instantiate()
+```
+
+Then you can run
+
+```julia
+include("./docs/make.jl")
+```
+
 ## Run coverage locally
 If you haven't already, instantiate the project with Julia's package manager.
 ```bash
