@@ -17,7 +17,7 @@ using Test
     @test commute(σ_y,σ_z) ≈ 2.0im*σ_x
     @test commute(σ_z,σ_x) ≈ 2.0im*σ_y
     @test anticommute(σ_x,σ_x) ≈ 2.0*I
-    vals, vecs = eigen(kron(σ_z,I), which=:SR) #give eigenvalues with smallest real part
+    vals, vecs = eigen(kron(σ_z,I), nev=2, which=:SR) #give eigenvalues with smallest real part
     @test vals[1] ≈ -1.0
     @test vals[2] ≈ -1.0 
 
@@ -31,4 +31,5 @@ using Test
 
     @test kron(σ_x,σ_y) ≈ sparse(kron(sigma_x(),sigma_y()))
 
+    @test is_hermitian(σ_x)
 end

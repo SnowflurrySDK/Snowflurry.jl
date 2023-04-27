@@ -1,5 +1,6 @@
 using Snowflake
 using Test
+using StaticArrays
 
 include("test_functions.jl")
 
@@ -8,7 +9,9 @@ test_operator_implementation(DenseOperator,dim=2,label="DenseOperator")
 @testset "DenseOperator: single target" begin
   
     dense_op=DenseOperator([[1.,2.] [3.,4.]])
+    dense_op2=DenseOperator(SizedMatrix{2,2,ComplexF64}([[1.,2.] [3.,4.]]))
 
+    @test dense_op2 ≈ dense_op
     # Base.:* specialization
 
     result=Matrix{ComplexF64}([[7.,10.] [15.,22.]])
@@ -49,6 +52,8 @@ end
     @test dense_op*ψ_0 ≈ ψ_1
 
 end
+
+
 
 @testset "DenseOperator: three targets" begin
 

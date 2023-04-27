@@ -391,8 +391,6 @@ false
 
 ```
 """
-
-
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
 is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
