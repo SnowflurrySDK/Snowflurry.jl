@@ -649,13 +649,15 @@ function simplify_rz_gate(
     phase_angle::Real; 
     atol=1e-6)::Union{AbstractGate,Nothing}
     
-    if isapprox(phase_angle,π/2,atol=atol) 
+    phase_angle=phase_angle%(2*π)
+
+    if isapprox(phase_angle,π/2,atol=atol) || isapprox(phase_angle,-3*π/2,atol=atol)
         return z_90(target)
 
     elseif isapprox(abs(phase_angle),π,atol=atol) 
         return sigma_z(target)
 
-    elseif isapprox(phase_angle,-π/2,atol=atol) 
+    elseif isapprox(phase_angle,-π/2,atol=atol) || isapprox(phase_angle,3*π/2,atol=atol)
         return z_minus_90(target)
 
     elseif isapprox(phase_angle,π/4,atol=atol) 
@@ -1024,16 +1026,16 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 end
 
 
-struct SimplifyRxGates<:Transpiler 
+struct SimplifyRxGatesTranspiler<:Transpiler 
     atol::Real
 end
 
-SimplifyRxGates()=SimplifyRxGates(1e-6)
+SimplifyRxGatesTranspiler()=SimplifyRxGatesTranspiler(1e-6)
 
 """
-    transpile(::SimplifyRxGates, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `SimplifyRxGates` transpiler stage 
+Implementation of the `SimplifyRxGatesTranspiler` transpiler stage 
 which finds RotationX gates in an input circuit and according to it's 
 angle theta, casts them to one of the right-angle RotationX gates, 
 e.g. SigmaX, X90, or XM90. In the case where theta≈0., the gate is removed.
@@ -1042,7 +1044,7 @@ unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SimplifyRxGates();
+julia> transpiler=Snowflake.SimplifyRxGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,pi/2)])
 Quantum Circuit Object:
@@ -1107,7 +1109,7 @@ true
 
 ```
 """
-function transpile(transpiler_stage::SimplifyRxGates, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     qubit_count=get_num_qubits(circuit)
     output=QuantumCircuit(qubit_count=qubit_count)
@@ -1270,16 +1272,16 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
 
 end
 
-struct SimplifyRzGates<:Transpiler 
+struct SimplifyRzGatesTranspiler<:Transpiler 
     atol::Real
 end
 
-SimplifyRzGates()=SimplifyRzGates(1e-6)
+SimplifyRzGatesTranspiler()=SimplifyRzGatesTranspiler(1e-6)
 
 """
-    transpile(::SimplifyRzGates, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::SimplifyRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `SimplifyRzGates` transpiler stage 
+Implementation of the `SimplifyRzGatesTranspiler` transpiler stage 
 which finds PhaseShift gates in an input circuit and according to it's 
 phase angle phi, casts them to one of the right-angle RotationZ gates, 
 e.g. SigmaZ, Z90, ZM90, Pi8 or Pi8Dagger. In the case where phi≈0., the 
@@ -1287,11 +1289,11 @@ gate is removed. The result of the input and output circuit on any
 arbitrary state Ket is unchanged (up to a global phase). The tolerance 
 used for Base.isapprox() in each case can be set by passing an optional 
 argument to the Transpiler, e.g:
-transpiler=SimplifyRzGates(1.0e-10)
+transpiler=SimplifyRzGatesTranspiler(1.0e-10)
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SimplifyRzGates();
+julia> transpiler=Snowflake.SimplifyRzGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi/2)])
 Quantum Circuit Object:
@@ -1355,7 +1357,7 @@ true
 ```
 """
 function transpile(
-    transpiler_stage::SimplifyRzGates, 
+    transpiler_stage::SimplifyRzGatesTranspiler, 
     circuit::QuantumCircuit
     )::QuantumCircuit
 

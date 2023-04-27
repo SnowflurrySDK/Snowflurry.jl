@@ -102,7 +102,7 @@ Our circuit with the X-gate applied, and the implied measurement is shown below.
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You get get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
 
 ```jldoctest excitation_demonstration_example; output = false
 user = ENV["ANYON_QUANTUM_USER"]

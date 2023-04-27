@@ -78,7 +78,7 @@ Our circuit with the Hadamard-gate applied, and the implied measurement is shown
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You get get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
 
 ```jldoctest transpiled_hadamard_example; output = false
 user = ENV["ANYON_QUANTUM_USER"]
@@ -105,8 +105,8 @@ transpiled_circuit = transpile(transpiler, circuit)
 # output
 
 Quantum Circuit Object:
-   qubit_count: 1
-q[1]:──Z────X_90────Z_90────X_m90──
+   qubit_count: 1 
+q[1]:──Z_90────X_90────Z_90──
 ```
 
 The transpiled circuit is shown below.

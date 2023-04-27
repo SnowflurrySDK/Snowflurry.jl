@@ -70,7 +70,7 @@ In Snowflake, circuits have an implied measurement operation at the end of the c
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You get get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
 
 ```jldoctest single_qubit_readout_example; output = false
 user = ENV["ANYON_QUANTUM_USER"]

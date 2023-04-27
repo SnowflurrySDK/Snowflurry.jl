@@ -31,7 +31,6 @@ get_metadata(::AnyonQPU) = Dict{String,String}(
     "serial_number" =>"ANYK202201",
 )
 
-
 get_client(qpu_service::AnyonQPU)=qpu_service.client
 
 function Base.show(io::IO, qpu::AnyonQPU)
@@ -42,6 +41,21 @@ function Base.show(io::IO, qpu::AnyonQPU)
     println(io, "   generation:    $(metadata["generation"])")
     println(io, "   serial_number: $(metadata["serial_number"])")
 end
+
+get_native_gate_types(::AnyonQPU)=[
+    Snowflake.PhaseShift,
+    Snowflake.Pi8,
+    Snowflake.Pi8Dagger,
+    Snowflake.SigmaX,
+    Snowflake.SigmaY,
+    Snowflake.SigmaZ,
+    Snowflake.X90,
+    Snowflake.XM90,
+    Snowflake.Y90,
+    Snowflake.YM90,
+    Snowflake.Z90,
+    Snowflake.ZM90,
+]
 
 """
     run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
@@ -111,7 +125,7 @@ Returns the transpiler associated with this QPU.
 julia> qpu=AnyonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastSwapToCZGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), CastToPhaseShiftAndHalfRotationXTranspiler(1.0e-6), SwapQubitsForLineConnectivityTranspiler()])
+SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastSwapToCZGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), SwapQubitsForLineConnectivityTranspiler()])
 
 ```
 """
@@ -122,7 +136,11 @@ function get_transpiler(::AnyonQPU;atol=1e-6)::Transpiler
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
-        CastToPhaseShiftAndHalfRotationXTranspiler(atol),
+        CastUniversalToRzRxRzTranspiler(),
+        SimplifyRxGatesTranspiler(),
+        CastRxToRzAndHalfRotationXTranspiler(),
+        CompressRzGatesTranspiler(),
+        SimplifyRzGatesTranspiler(),
         SwapQubitsForLineConnectivityTranspiler(),
     ])
 end

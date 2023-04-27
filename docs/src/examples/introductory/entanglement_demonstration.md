@@ -12,7 +12,7 @@ This example is going to demonstrate entanglement by preparing and measuring a b
 
 ## Theory
 
-Bell states are a set of maximually entangled states. We are going to look at one of these states, $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$, today.
+Bell states are a set of maximally entangled states. We are going to look at one of these states, $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$, in this example.
 
 The $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$ state can be constructed using the following circuit.
 
@@ -26,11 +26,13 @@ The $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$ state can be 
 </div>
 ```
 
-The Hadamard gate on the first qubit puts the first qubit into state $\frac{\left|0\right\rangle+\left|1\right\rangle}{\sqrt{2}}$. Since the second qubit remains unchanged, the total system is in state $\frac{\left|00\right\rangle+\left|10\right\rangle}{\sqrt{2}}$
+The Hadamard gate on the first qubit puts the first qubit into state $\frac{\left|0\right\rangle+\left|1\right\rangle}{\sqrt{2}}$. Since the second qubit remains unchanged, the total system is in state $\frac{\left|00\right\rangle+\left|10\right\rangle}{\sqrt{2}}$ after applying the controlled-X (CX) gate on qubits one and two.
 
-After applying the controlled X gate on qubits one and two. If the first qubit is in state zero then nothing happens to the second qubits. State $\left|00\right\rangle$, therefore, stays the same. If the first qubit is in state one the second qubti is flipped. State $\left|10\right\rangle$, therefore, becomes state $\left|11\right\rangle$. After the controlled-X gate the system's state is there now $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$
+If the first qubit is in state zero then nothing happens to the second qubits. State $\left|00\right\rangle$, therefore, stays the same.
 
-The two qubit's states are now entangled. If you measure one of the qubits you also get information about the other qubit's state. They are no longer independant.
+If the first qubit is in state one the second qubit is flipped. State $\left|10\right\rangle$, therefore, becomes state $\left|11\right\rangle$. Therefore, after the controlled-X gate the system's state is $\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$.
+
+The two qubit's states are now entangled. If you measure one of the qubits you also get information about the other qubit's state. They are no longer independent.
 
 ## Code
 
@@ -64,7 +66,7 @@ q[1]:──H────*──
 q[2]:───────X──
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
 
 ```jldoctest entanglement_demonstration_example; output = false
 user = ENV["ANYON_QUANTUM_USER"]
@@ -82,7 +84,7 @@ Quantum Processing Unit:
    serial_number: ANYK202201
 ```
 
-We cannot run our circuit directly on the QPU since neither the Hadamard gate or the CX gate is a native gate of Anyon's Quantum Computer. We first have to transpile the circuit.
+We cannot run our circuit directly on the QPU since neither the Hadamard gate nor the CX gate is a native gate of Anyon's Quantum Computer. We first have to transpile the circuit.
 
 ```jldoctest entanglement_demonstration_example; output = false
 transpiler = get_transpiler(qpu)
@@ -91,17 +93,17 @@ transpiled_circuit = transpile(transpiler, circuit)
 # output
 
 Quantum Circuit Object:
-   qubit_count: 2
+   qubit_count: 2 
 Part 1 of 2
-q[1]:──Z────X_90────Z_90────X_m90──────────────────────────────────*──
-                                                                   |
-q[2]:────────────────────────────────Z────X_90────Z_90────X_m90────Z──
-
+q[1]:──Z_90────────────X_90────Z_90────────────────────*──────────
+                                                       |          
+q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90──
+                                                                  
 
 Part 2 of 2
-q[1]:──────────────────────────────
-
-q[2]:──Z────X_90────Z_90────X_m90──
+q[1]:────────────────
+                     
+q[2]:──X_90────Z_90──
 ```
 
 Now we run our quantum circuit on Anyon's quantum computer!

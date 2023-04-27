@@ -336,7 +336,8 @@ abstract type AbstractQPU end
 get_metadata(qpu::AbstractQPU) = 
     throw(NotImplementedError(:get_metadata,qpu))
 
-
+get_native_gate_types(qpu::AbstractQPU) = 
+    throw(NotImplementedError(:get_native_gate_types,qpu))
 
 """
     VirtualQPU
