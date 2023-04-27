@@ -44,6 +44,7 @@ export
     SimplifyRxGatesTranspiler,
     SimplifyRzGatesTranspiler,
     CompressRzGatesTranspiler,
+    TrivialTranspiler,
 
     # Functions
     commute, 
@@ -93,11 +94,14 @@ export
     serialize_job,
     submit_circuit,
     get_client,
+    print_connectivity,
     get_host,
     get_status,
     get_result,
-    get_native_gate_types,
+    is_native_gate,
+    is_native_circuit,
     run_job,
+    transpile_and_run_job,
     MockRequestor,
     HTTPRequestor,
     get_request,
@@ -139,9 +143,9 @@ include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
+include("core/transpile.jl")
 include("anyon/qpu_interface.jl")
 include("anyon/anyon.jl")
-include("core/transpile.jl")
 
 
 

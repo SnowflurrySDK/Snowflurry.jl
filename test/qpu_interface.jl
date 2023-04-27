@@ -148,48 +148,84 @@ end
     @test client.host == host
     @test client.user == user
     @test client.access_token == token
+
+    print_connectivity(qpu)
 end
 
-@testset "run on AnyonQPU" begin
+@testset "run_job on AnyonQPU" begin
 
-    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-        
+    requestor=MockRequestor(request_checker,post_checker)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-
     num_repetitions=100
-        
     qpu=AnyonQPU(test_client)
-
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
-
     @test get_client(qpu)==test_client
     
+    #test basic submission, no transpilation
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
     histogram=run_job(qpu, circuit ,num_repetitions)
-    
     @test histogram==Dict("001"=>num_repetitions)
-
     @test !haskey(histogram,"error_msg")
 
+end
+
+@testset "transpile_and_run_job on AnyonQPU" begin
+
+    requestor=MockRequestor(request_checker,post_checker)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    num_repetitions=100
+    qpu=AnyonQPU(test_client)
+
+    # submit circuit with qubit_count_circuit>qubit_count_qpu
+    circuit = QuantumCircuit(qubit_count = 10)
+    @test_throws DomainError transpile_and_run_job(qpu, circuit ,num_repetitions)
+
+    # submit circuit with a non-native gate on this qpu (no transpilation)
+    circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1,2,3)])
+    @test_throws DomainError transpile_and_run_job(
+        qpu, 
+        circuit,
+        num_repetitions;
+        transpiler=TrivialTranspiler()
+    )
+
+    # using AnyonQPU default transpiler
+    requestor=MockRequestor(request_checker,post_checker_toffoli)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    qpu=AnyonQPU(test_client)
+
+    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions)
+    
+    @test histogram==Dict("001"=>num_repetitions)
+    @test !haskey(histogram,"error_msg")
 end
 
 @testset "run on VirtualQPU" begin
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    
-    num_repetitions=100
         
+    num_repetitions=100
+    
     qpu=VirtualQPU()
     
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
+
+    for gate in get_circuit_gates(circuit)
+        @test is_native_gate(qpu,gate)
+    end
        
-    histogram=run_job(qpu, circuit ,num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions)
    
     @test histogram==Dict("001"=>num_repetitions)
 
 end
 
-@testset "get_metadata" begin
+@testset "AbstractQPU" begin
     struct NonExistentQPU<:Snowflake.AbstractQPU end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
+    @test_throws NotImplementedError is_native_gate(NonExistentQPU(),sigma_x(1))
+    @test_throws NotImplementedError is_native_circuit(NonExistentQPU(),sigma_x(1))
+    @test_throws NotImplementedError get_transpiler(NonExistentQPU())  
+
 end

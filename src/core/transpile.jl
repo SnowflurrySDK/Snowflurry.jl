@@ -1495,3 +1495,7 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
     
     return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,compress_to_rz)
 end
+
+struct TrivialTranspiler<:Transpiler end
+
+transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 

@@ -82,6 +82,8 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   qubit_count:   6
+   connectivity_type:  linear
 ```
 
 We cannot run our circuit directly on the QPU since neither the Hadamard gate nor the CX gate is a native gate of Anyon's Quantum Computer. We first have to transpile the circuit.
