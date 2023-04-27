@@ -95,6 +95,7 @@ Quantum Processing Unit:
    generation:    Yukon
    serial_number: ANYK202201
    qubit_count:   6
+   connectivity_type:  linear
 ```
 
 We cannot run our circuit directly on the QPU since the Hadamard gate is not a native gate of Anyon's Quantum Computer. The circuit first has to be transpiled. Transpilation is an object that can transform a circuit into a functionally equivalent circuit with a different form. To get a transpiler which can take an arbitrary circuit and transpile it into something that can run natively on a QPU, one has to use the `get_transpiler` on the QPU. With this transpiler, one can call the `transpile` function to transpile the circuit using the transpiler.

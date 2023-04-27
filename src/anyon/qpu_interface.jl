@@ -336,11 +336,17 @@ abstract type AbstractQPU end
 get_metadata(qpu::AbstractQPU) = 
     throw(NotImplementedError(:get_metadata,qpu))
 
-get_native_gate_types(qpu::AbstractQPU) = 
-    throw(NotImplementedError(:get_native_gate_types,qpu))
+is_native_gate(qpu::AbstractQPU,::AbstractGate) = 
+    throw(NotImplementedError(:is_native_gate,qpu))
+
+is_native_circuit(qpu::AbstractQPU,::AbstractGate) =
+    throw(NotImplementedError(:is_native_circuit,qpu))
 
 get_num_qubits(qpu::AbstractQPU) = 
     throw(NotImplementedError(:get_num_qubits,qpu))
+
+get_connectivity(qpu::AbstractQPU) = 
+    throw(NotImplementedError(:get_connectivity,qpu))
 
 """
     VirtualQPU
@@ -364,6 +370,10 @@ get_metadata(qpu::VirtualQPU) = Dict{String,String}(
     "package"     =>"Snowflake.jl",
 )
 
+is_native_gate(::VirtualQPU,::AbstractGate)::Bool = true
+
+is_native_circuit(::VirtualQPU,::QuantumCircuit)::Bool = true
+
 function Base.show(io::IO, qpu::VirtualQPU)
     metadata=get_metadata(qpu)
 
@@ -385,6 +395,20 @@ function read_response_body(body::Vector{UInt8})::String
     end
 
     return body_string
+end
+
+function transpile_and_run_job(
+    qpu::AbstractQPU, 
+    circuit::QuantumCircuit,
+    num_repetitions::Integer;
+    transpiler::Transpiler=TrivialTranspiler()
+    )::Dict{String,Int}
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    is_native_circuit(qpu,transpiled_circuit)
+
+    return run_job(qpu,transpiled_circuit,num_repetitions)
 end
 
 """

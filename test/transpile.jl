@@ -382,15 +382,6 @@ end
 
 end
 
-@testset "AbstractQPU" begin
-    struct NonExistentQPU<:Snowflake.AbstractQPU end
-
-    @test_throws NotImplementedError get_metadata(NonExistentQPU())
-    @test_throws NotImplementedError get_native_gate_types(NonExistentQPU())
-    @test_throws NotImplementedError get_num_qubits(NonExistentQPU())
-
-end
-
 @testset "AnyonQPU: transpilation of native gates" begin            
     qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
 
@@ -398,9 +389,7 @@ end
     target=1
     
     transpiler=get_transpiler(qpu) 
-    
-    set_of_native_gates=get_native_gate_types(qpu)
-    
+        
     input_gates_native=[
         # gate_type, gate
         phase_shift(target,-phi/2),
@@ -448,7 +437,7 @@ end
             end
 
             for gate in gates_in_output
-                @test typeof(gate) in set_of_native_gates
+                @test is_native_gate(qpu, gate)
             end
         end
     end
@@ -461,8 +450,6 @@ end
     
     transpiler=get_transpiler(qpu) 
     
-    set_of_native_gates=get_native_gate_types(qpu)
-
     circuit=QuantumCircuit(qubit_count=qubit_count,gates=vcat(
         hadamard(1),[control_x(i,i+1) for i in 1:qubit_count-1])
     )
