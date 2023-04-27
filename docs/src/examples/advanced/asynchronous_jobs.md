@@ -94,7 +94,7 @@ println(result)
 The results show that our circuit was run, and we got the expected result!
 
 ```text
-Dict("1" => 3, "0" => 197)
+Dict("00" => 104, "11" => 96)
 ```
 
 ## Summary
