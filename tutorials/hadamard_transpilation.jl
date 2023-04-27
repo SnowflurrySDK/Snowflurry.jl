@@ -14,6 +14,6 @@ transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
 
 num_repetitions = 200
-result = run_job(qpu, circuit, num_repetitions)
+result = run_job(qpu, transpiled_circuit, num_repetitions)
 
 println(result)
