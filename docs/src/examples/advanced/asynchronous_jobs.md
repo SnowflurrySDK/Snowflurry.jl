@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to how to run jobs asynchronous using Julia tasks. Asynchronous jobs allow users to continue other work while waiting for the quantum resources.
+This example is going to how to run jobs asynchronously using Julia tasks. Asynchronous jobs allow users to continue other work while waiting for the quantum resources.
 
 ## Julia tasks
 
