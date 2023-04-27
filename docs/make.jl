@@ -39,7 +39,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Examples" => "examples/index.md",
+        "Tutorials" => "tutorials/index.md",
         "Library" => "library.md",
     ],
     doctestfilters = [uuid_regex],

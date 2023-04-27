@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to show a demonstration of how to excite a qubit into state $\left|1\right\rangle$.
+This tutorial is going to show a demonstration of how to excite a qubit into state $\left|1\right\rangle$.
 
 A Bloch sphere of a system in state one is shown below.
 
@@ -66,7 +66,7 @@ Quantum gates are also, in general, represented as matrices. On a single-qubit, 
 
 We are going to start by importing Snowflake and creating an empty circuit.
 
-```jldoctest excitation_demonstration_example; output = false
+```jldoctest excitation_demonstration_tutorial; output = false
 using Snowflake
 
 circuit = QuantumCircuit(qubit_count = 1)
@@ -79,7 +79,7 @@ q[1]:
 
 We must now apply our X gate to our circuit.
 
-```jldoctest excitation_demonstration_example; output = false
+```jldoctest excitation_demonstration_tutorial; output = false
 qubit = 1
 push!(circuit, sigma_x(qubit))
 
@@ -102,9 +102,9 @@ Our circuit with the X-gate applied, and the implied measurement is shown below.
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this tutorial on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./get_qpu_metadata.md).
 
-```jldoctest excitation_demonstration_example; output = false
+```jldoctest excitation_demonstration_tutorial; output = false
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
@@ -138,6 +138,6 @@ Dict("1" => 191, "0" => 9)
 
 ## Summary
 
-In this example, we've gone over how to excite a qubit into state one. We've explained that a single qubit gate is a rotation around the Bloch's sphere.
+In this tutorial, we've gone over how to excite a qubit into state one. We've explained that a single qubit gate is a rotation around the Bloch's sphere.
 
-The full code is available at [examples/excitation\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/excitation_demonstration.jl)
+The full code is available at [tutorials/excitation\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/excitation_demonstration.jl)

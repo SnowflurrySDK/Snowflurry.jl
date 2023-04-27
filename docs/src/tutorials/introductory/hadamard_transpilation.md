@@ -1,4 +1,4 @@
-# Hadamard transpilation example
+# Hadamard transpilation tutorial
 
 ```@meta
 DocTestSetup = quote
@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to introduce the Hadamard gate. Also, this example demonstrates how to use a transpiler to run a non-native gate, the Hadamard gate, on Anyon's Quantum Computer.
+This tutorial is going to introduce the Hadamard gate. Also, this tutorial demonstrates how to use a transpiler to run a non-native gate, the Hadamard gate, on Anyon's Quantum Computer.
 
 ## Theory
 
@@ -41,7 +41,7 @@ A Bloch sphere representation of a Hadamard gate applied to state zero is shown 
 
 We are going to start by importing Snowflake.
 
-```jldoctest transpiled_hadamard_example; output = false
+```jldoctest transpiled_hadamard_tutorial; output = false
 using Snowflake
 
 circuit = QuantumCircuit(qubit_count = 1)
@@ -55,7 +55,7 @@ q[1]:
 
 We must now apply our Hadamard gate to our circuit.
 
-```jldoctest transpiled_hadamard_example; output = false
+```jldoctest transpiled_hadamard_tutorial; output = false
 push!(circuit, hadamard(1))
 
 # output
@@ -78,9 +78,9 @@ Our circuit with the Hadamard-gate applied, and the implied measurement is shown
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this tutorial on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./get_qpu_metadata.md).
 
-```jldoctest transpiled_hadamard_example; output = false
+```jldoctest transpiled_hadamard_tutorial; output = false
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
@@ -99,7 +99,7 @@ Quantum Processing Unit:
 
 We cannot run our circuit directly on the QPU since the Hadamard gate is not a native gate of Anyon's Quantum Computer. The circuit first has to be transpiled. Transpilation is an object that can transform a circuit into a functionally equivalent circuit with a different form. To get a transpiler which can take an arbitrary circuit and transpile it into something that can run natively on a QPU, one has to use the `get_transpiler` on the QPU. With this transpiler, one can call the `transpile` function to transpile the circuit using the transpiler.
 
-```jldoctest transpiled_hadamard_example; output = false
+```jldoctest transpiled_hadamard_tutorial; output = false
 transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
 
@@ -139,6 +139,6 @@ Dict("1" => 109, "0" => 91)
 
 ## Summary
 
-In this example, we've introduced the Hadamard gate. We've also demonstrated how to use a transpiler to transpile any circuit into a circuit which can be natively run on AnyonQPU.
+In this tutorial, we've introduced the Hadamard gate. We've also demonstrated how to use a transpiler to transpile any circuit into a circuit which can be natively run on AnyonQPU.
 
-The full code for this example is available at [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard_transpilation.jl)
+The full code for this tutorial is available at [tutorials/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/hadamard_transpilation.jl)
