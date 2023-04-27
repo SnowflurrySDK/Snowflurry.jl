@@ -75,7 +75,9 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
-is_gate_type(gate::AbstractGate, type::Type) = isa(gate, type)
+is_gate_type(gate::AbstractGate, type::Type)::Bool = isa(gate, type)
+
+get_gate_type(gate::AbstractGate)::Type = typeof(gate)
 
 struct MovedGate <:AbstractGate
     original_gate::AbstractGate
@@ -92,7 +94,9 @@ Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qu
 
 get_gate_parameters(gate::MovedGate) = get_gate_parameters(gate.original_gate)
 
-is_gate_type(gate::MovedGate, type::Type) = isa(gate.original_gate, type)
+is_gate_type(gate::MovedGate, type::Type)::Bool = isa(gate.original_gate, type)
+
+get_gate_type(gate::MovedGate)::Type = typeof(gate.original_gate)
 
 """
     move_gate(gate::AbstractGate,
