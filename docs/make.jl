@@ -40,7 +40,6 @@ makedocs(
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "Examples" => "examples/index.md",
-        #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
         "Library" => "library.md",
     ],
     doctestfilters = [uuid_regex],
