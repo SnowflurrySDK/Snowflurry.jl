@@ -1,7 +1,24 @@
 # Snowflake development
 
-!!! warning
-    This page is under construction 🚧
+## Installing Snowflake for local development
+
+When developing Snowflake, you must ensure that you are using a local copy of Snowflake, not the latest released version. The easiest way to achieve that is to set the project to the local directory.
+
+If you are starting a new instance of Julia, then you can activate the Snowflake project with
+
+```bash
+julia --project=.
+```
+
+Or, if you are inside a script or interpreter, you can use
+
+```julia
+using Pkg
+Pkg.activate(".")
+```
+
+If the current directory is not the Snowflake project, replace `.` with the Snowflake project path.
+
 
 ## Run coverage locally
 If you haven't already, instantiate the project with Julia's package manager.
