@@ -11,7 +11,7 @@ Snowflake is a pure Julia quantum computing stack that allows you to easily desi
 
 # Installation
 
-The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in contributing, head right over to our [Contributing to Snowflake page](contributing.md).
+The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in helping to develop Snowflake, head right over to our [Developing Snowflake](./development.md) page.
 
 ### Installing Julia
 
