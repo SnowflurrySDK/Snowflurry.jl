@@ -20,6 +20,21 @@ Pkg.activate(".")
 If the current directory is not the Snowflake project, replace `.` with the Snowflake project path.
 
 
+## Running tests
+
+First open a julia REPL in the current project
+
+```bash
+julia --project=.
+```
+
+and run the tests
+
+``julia
+using Pkg
+Pkg.test()
+```
+
 ## Run coverage locally
 If you haven't already, instantiate the project with Julia's package manager.
 ```bash
