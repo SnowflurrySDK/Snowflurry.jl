@@ -167,16 +167,16 @@ struct SparseOperator{T<:Complex}<:AbstractOperator
     data::  SparseMatrixCSC{T, Int64}
 end
 # Constructor from Real-valued Matrix
-SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(sparse(Complex.(x)))
+SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.sparse(Complex.(x)))
 # Constructor from Complex-valued Matrix
-SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(sparse(x))
+SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sparse(x))
 
 """
    sparse(x::AbstractOperator)
 
 Returns a SparseOperator representation of x.
 """
-sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
+SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
 """
 A structure representing a quantum operator with a full (dense) matrix representation.
@@ -519,7 +519,7 @@ julia> eigenvector_1 = F.vectors[:, 1]
 LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
 # specializations
 LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
-LinearAlgebra.eigen(A::SparseOperator) = Arpack.eigs(A.data)
+LinearAlgebra.eigen(A::SparseOperator;kwargs...) = Arpack.eigs(A.data;kwargs...)
 
 """
     tr(A::AbstractOperator)
@@ -541,8 +541,8 @@ julia> trace = tr(I)
 ```
 """
 LinearAlgebra.tr(A::AbstractOperator)=LinearAlgebra.tr(DenseOperator(A))
-
 LinearAlgebra.tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
+
 
 """
     expected_value(A::AbstractOperator, psi::Ket)
@@ -568,8 +568,9 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*(DenseOperator(A)*psi))
-expected_value(A::DenseOperator, psi::Ket) = (Bra(psi)*(A*psi))
+expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
+# expected_value(A::DenseOperator, psi::Ket) = (Bra(psi)*(A*psi))
+# expected_value(A::SparseOperator, psi::Ket) = (Bra(psi)*(A*psi))
 
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
