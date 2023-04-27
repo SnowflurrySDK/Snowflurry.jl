@@ -87,6 +87,7 @@ Base.adjoint
 is_hermitian
 Base.exp(A::AbstractOperator)
 Base.getindex(A::AbstractOperator, m::Int64, n::Int64)
+sparse
 eigen
 tr
 expected_value

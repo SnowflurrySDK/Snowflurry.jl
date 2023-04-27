@@ -172,9 +172,22 @@ SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.spars
 SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sparse(x))
 
 """
-   sparse(x::AbstractOperator)
+    sparse(x::AbstractOperator)
 
 Returns a SparseOperator representation of x.
+
+# Examples
+```jldoctest
+julia> z = sparse(sigma_z())
+(2, 2)-element Snowflake.SparseOperator:
+Underlying data ComplexF64:
+⠑
+
+julia> z.data
+2×2 SparseArrays.SparseMatrixCSC{ComplexF64, Int64} with 2 stored entries:
+ 1.0+0.0im       ⋅    
+     ⋅      -1.0+0.0im
+```
 """
 SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
