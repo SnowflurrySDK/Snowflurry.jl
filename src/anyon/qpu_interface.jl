@@ -342,9 +342,6 @@ is_native_gate(qpu::AbstractQPU,::AbstractGate) =
 is_native_circuit(qpu::AbstractQPU,::AbstractGate) =
     throw(NotImplementedError(:is_native_circuit,qpu))
 
-print_connectivity(qpu::AbstractQPU,io::IO=stdout) = 
-    throw(NotImplementedError(:print_connectivity,qpu))
-
 get_transpiler(qpu::AbstractQPU)=
     throw(NotImplementedError(:get_transpiler,qpu))
 

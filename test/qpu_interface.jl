@@ -226,7 +226,6 @@ end
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError is_native_gate(NonExistentQPU(),sigma_x(1))
     @test_throws NotImplementedError is_native_circuit(NonExistentQPU(),sigma_x(1))
-    @test_throws NotImplementedError print_connectivity(NonExistentQPU())  
     @test_throws NotImplementedError get_transpiler(NonExistentQPU())  
 
 end
