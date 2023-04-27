@@ -107,9 +107,11 @@ function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,St
 end
 
 """
-    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
 
-Run a circuit computation on a `QPU` service, repeatedly for the specified 
+This method first transpiles the input circuit using either the default transpiler, 
+or any other transpiler passed as a key-word argument.  
+The transpiled circuit is then run on the AnyonQPU, repeatedly for the specified 
 number of repetitions (num_repetitions). Returns the histogram of the 
 completed circuit calculations, or an error message.
 
