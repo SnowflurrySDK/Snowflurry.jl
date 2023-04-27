@@ -18,6 +18,16 @@ DocMeta.setdocmeta!(
             access_token="not_a_real_access_token",
             requestor=requestor
         );
+        requestor_transpilation=MockRequestor(
+            request_checker,
+            post_checker_transpiled
+        )
+        client_anyon = Client(
+            host="http://example.anyonsys.com",
+            user="test_user",
+            access_token="not_a_real_access_token",
+            requestor=requestor_transpilation
+        );
     end; 
     recursive = true
 )

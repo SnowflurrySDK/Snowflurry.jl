@@ -342,11 +342,11 @@ is_native_gate(qpu::AbstractQPU,::AbstractGate) =
 is_native_circuit(qpu::AbstractQPU,::AbstractGate) =
     throw(NotImplementedError(:is_native_circuit,qpu))
 
-get_num_qubits(qpu::AbstractQPU) = 
-    throw(NotImplementedError(:get_num_qubits,qpu))
+print_connectivity(qpu::AbstractQPU,io::IO=stdout) = 
+    throw(NotImplementedError(:print_connectivity,qpu))
 
-get_connectivity(qpu::AbstractQPU) = 
-    throw(NotImplementedError(:get_connectivity,qpu))
+get_transpiler(qpu::AbstractQPU)=
+    throw(NotImplementedError(:get_transpiler,qpu))
 
 """
     VirtualQPU
@@ -372,7 +372,9 @@ get_metadata(qpu::VirtualQPU) = Dict{String,String}(
 
 is_native_gate(::VirtualQPU,::AbstractGate)::Bool = true
 
-is_native_circuit(::VirtualQPU,::QuantumCircuit)::Bool = true
+is_native_circuit(::VirtualQPU,::QuantumCircuit)::Tuple{Bool,String} = (true,"")
+
+get_transpiler(::VirtualQPU)=TrivialTranspiler()
 
 function Base.show(io::IO, qpu::VirtualQPU)
     metadata=get_metadata(qpu)
@@ -397,11 +399,30 @@ function read_response_body(body::Vector{UInt8})::String
     return body_string
 end
 
+"""
+    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
+
+This method first transpiles the input circuit using either the default transpiler, 
+or any other transpiler passed as a key-word argument.  
+The transpiled circuit is then run on a `QPU` simulator, repeatedly for the specified 
+number of repetitions (num_repetitions). Returns the histogram of the 
+completed circuit calculations, or an error message.
+
+# Example
+```jldoctest 
+julia> qpu=VirtualQPU();
+
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+Dict{String, Int64} with 1 entry:
+  "001" => 100
+
+```
+"""
 function transpile_and_run_job(
-    qpu::AbstractQPU, 
+    qpu::VirtualQPU, 
     circuit::QuantumCircuit,
     num_repetitions::Integer;
-    transpiler::Transpiler=TrivialTranspiler()
+    transpiler::Transpiler=get_transpiler(qpu)
     )::Dict{String,Int}
 
     transpiled_circuit=transpile(transpiler,circuit)

@@ -40,7 +40,7 @@ get_client(qpu_service::AnyonQPU)=qpu_service.client
 
 get_num_qubits(qpu::AnyonQPU)=get_metadata(qpu)["qubit_count"]
 
-get_connectivity(qpu::AnyonQPU)="1──2──3──4──5──6"
+print_connectivity(qpu::AnyonQPU,io::IO=stdout)=println(io, "1──2──3──4──5──6")
 
 function Base.show(io::IO, qpu::AnyonQPU)
     metadata=get_metadata(qpu)
@@ -85,32 +85,45 @@ function is_native_gate(qpu::AnyonQPU,gate::AbstractGate)::Bool
     return (typeof(gate) in set_of_native_gates)
 end
 
-function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Bool
+function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
     if qubit_count_circuit>=qubit_count_qpu 
-        throw(
-            DomainError(
-                qpu,
-                "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu"
+        return (
+            false,
+            "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu"
             )
-        )
     end
 
     for gate in get_circuit_gates(circuit)
         if !is_native_gate(qpu,gate)
-            throw(
-                DomainError(
-                    qpu,
-                    "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
-                )
+            return (false,
+            "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
             )
         end
     end
 
-    return true
+    return (true,"")
 end
 
+"""
+    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+
+Run a circuit computation on a `QPU` service, repeatedly for the specified 
+number of repetitions (num_repetitions). Returns the histogram of the 
+completed circuit calculations, or an error message.
+
+# Example
+
+```jldoctest  
+julia> qpu=AnyonQPU(client_anyon);
+
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+Dict{String, Int64} with 1 entry:
+  "001" => 100
+
+```
+"""
 function transpile_and_run_job(
     qpu::AnyonQPU, 
     circuit::QuantumCircuit,
@@ -121,7 +134,11 @@ function transpile_and_run_job(
     
     transpiled_circuit=transpile(transpiler,circuit)
 
-    is_native_circuit(qpu,transpiled_circuit)
+    (passed,message)=is_native_circuit(qpu,transpiled_circuit)
+
+    if !passed
+        throw(DomainError(qpu, message))
+    end
 
     return run_job(qpu,transpiled_circuit,num_repetitions)
 end

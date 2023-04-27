@@ -94,7 +94,7 @@ export
     serialize_job,
     submit_circuit,
     get_client,
-    get_connectivity,
+    print_connectivity,
     get_host,
     get_status,
     get_result,

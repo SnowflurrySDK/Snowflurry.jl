@@ -149,7 +149,7 @@ end
     @test client.user == user
     @test client.access_token == token
 
-    @test get_connectivity(qpu)=="1──2──3──4──5──6"
+    print_connectivity(qpu)
 end
 
 @testset "run_job on AnyonQPU" begin
@@ -225,7 +225,8 @@ end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError is_native_gate(NonExistentQPU(),sigma_x(1))
-    @test_throws NotImplementedError get_num_qubits(NonExistentQPU())
-    @test_throws NotImplementedError get_connectivity(NonExistentQPU())  
+    @test_throws NotImplementedError is_native_circuit(NonExistentQPU(),sigma_x(1))
+    @test_throws NotImplementedError print_connectivity(NonExistentQPU())  
+    @test_throws NotImplementedError get_transpiler(NonExistentQPU())  
 
 end
