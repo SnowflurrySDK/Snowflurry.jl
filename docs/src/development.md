@@ -4,7 +4,10 @@
     This page is under construction 🚧
 
 ## Run coverage locally
-
+If you haven't already, instantiate the project with Julia's package manager.
+```bash
+julia --project=. -e 'using Pkg; Pkg.Instantiate()'
+``` .
 You run coverage locally from the project directory using
 
 ```bash
