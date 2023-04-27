@@ -75,6 +75,25 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
+is_gate_type(gate::AbstractGate, type::Type) = isa(gate, type)
+
+struct MovedGate <:AbstractGate
+    original_gate::AbstractGate
+    connected_qubits::Vector{Int}
+end
+
+get_connected_qubits(gate::MovedGate) = gate.connected_qubits
+
+function get_operator(gate::MovedGate, T::Type{<:Complex}=ComplexF64)
+    return get_operator(gate.original_gate, T)
+end
+
+Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
+
+get_gate_parameters(gate::MovedGate) = get_gate_parameters(gate.original_gate)
+
+is_gate_type(gate::MovedGate, type::Type) = isa(gate.original_gate, type)
+
 """
     move_gate(gate::AbstractGate,
         qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
@@ -126,53 +145,10 @@ function move_gate(gate::AbstractGate,
         end
     end
     if found_move
-        return move_gate(gate, new_connected_qubits)
+        return MovedGate(gate, new_connected_qubits)
     else
         return gate
     end
-end
-
-"""
-    move_gate(gate::AbstractGate,
-        new_connected_qubits::AbstractVector{<:Integer})::AbstractGate
-
-Returns a copy of `gate` where the qubits on which the `gate` acts are
-`new_connected_qubits`.
-
-!!! tip "This function should not be called directly."
-    Because this function depends on the order of the `new_connected_qubits`, it is safer
-    to call [`move_gate(gate::AbstractGate, qubit_mapping::AbstractDict{T,T}) where T<:Integer`](@ref).
-
-This function must be overloaded for gates which are constructed with more than 1 argument.
-
-# Examples
-```jldoctest
-julia> gate = sigma_x(1)
-Gate Object: Snowflake.SigmaX
-Connected_qubits	: [1]
-Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
-Underlying data type: ComplexF64:
-    .    1.0 + 0.0im
-    1.0 + 0.0im    .
-
-
-julia> move_gate(gate, [2])
-Gate Object: Snowflake.SigmaX
-Connected_qubits	: [2]
-Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
-Underlying data type: ComplexF64:
-    .    1.0 + 0.0im
-    1.0 + 0.0im    .
-
-
-```
-"""
-function move_gate(gate::AbstractGate,
-    new_connected_qubits::AbstractVector{T})::AbstractGate where T<:Integer
-
-    return typeof(gate)(new_connected_qubits[1])
 end
 
 struct NotImplementedError{ArgsT} <: Exception
@@ -1132,12 +1108,6 @@ get_gate_parameters(gate::Rotation)=Dict(
     "phi"   =>gate.phi,
 )
 
-function move_gate(gate::Rotation,
-    new_connected_qubits::AbstractVector{<:Integer})::Rotation
-
-    return Rotation(new_connected_qubits[1], gate.theta, gate.phi)
-end
-
 ########################################################################
 
 
@@ -1161,12 +1131,6 @@ Base.inv(gate::RotationX) = rotation_x(gate.target, -gate.theta)
 
 get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
-function move_gate(gate::RotationX,
-    new_connected_qubits::AbstractVector{<:Integer})::RotationX
-
-    return RotationX(new_connected_qubits[1], gate.theta)
-end
-
     """
     rotation_y(target, theta)
 
@@ -1187,12 +1151,6 @@ Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)
 
 get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
-function move_gate(gate::RotationY,
-    new_connected_qubits::AbstractVector{<:Integer})::RotationY
-
-    return RotationY(new_connected_qubits[1], gate.theta)
-end
-
 """
     phase_shift(target, phi)
 
@@ -1210,12 +1168,6 @@ get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.
 Base.inv(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
 
 get_gate_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
-
-function move_gate(gate::PhaseShift,
-    new_connected_qubits::AbstractVector{<:Integer})::PhaseShift
-
-    return PhaseShift(new_connected_qubits[1], gate.phi)
-end
 
 """
     universal(target, theta, phi, lambda)
@@ -1244,12 +1196,6 @@ get_gate_parameters(gate::Universal)=Dict(
     "phi"   =>gate.phi,
     "lambda"=>gate.lambda
 )
-
-function move_gate(gate::Universal,
-    new_connected_qubits::AbstractVector{<:Integer})::Universal
-
-    return Universal(new_connected_qubits[1], gate.theta, gate.phi, gate.lambda)
-end
 
 # two qubit gates
 
@@ -1288,12 +1234,6 @@ get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
 
-function move_gate(gate::ControlZ,
-    new_connected_qubits::AbstractVector{<:Integer})::ControlZ
-
-    return ControlZ(new_connected_qubits...)
-end
-
 """
     control_x(control_qubit, target_qubit)
 
@@ -1314,12 +1254,6 @@ end
 get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
-
-function move_gate(gate::ControlX,
-    new_connected_qubits::AbstractVector{<:Integer})::ControlX
-
-    return ControlX(new_connected_qubits...)
-end
 
 """
     iswap(qubit_1, qubit_2)
@@ -1344,12 +1278,6 @@ Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
 
-function move_gate(gate::ISwap,
-    new_connected_qubits::AbstractVector{<:Integer})::ISwap
-
-    return ISwap(new_connected_qubits...)
-end
-
 """
     swap(qubit_1, qubit_2)
 
@@ -1370,12 +1298,6 @@ end
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
 
 get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
-
-function move_gate(gate::Swap,
-    new_connected_qubits::AbstractVector{<:Integer})::Swap
-
-    return Swap(new_connected_qubits...)
-end
 
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
@@ -1405,12 +1327,6 @@ get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
 
-function move_gate(gate::Toffoli,
-    new_connected_qubits::AbstractVector{<:Integer})::Toffoli
-
-    return Toffoli(new_connected_qubits...)
-end
-
 """
     iswap_dagger(qubit_1, qubit_2)
 
@@ -1433,12 +1349,6 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
-
-function move_gate(gate::ISwapDagger,
-    new_connected_qubits::AbstractVector{<:Integer})::ISwapDagger
-
-    return ISwapDagger(new_connected_qubits...)
-end
 
 """
     Base.:*(M::AbstractGate, x::Ket)
@@ -1561,6 +1471,19 @@ function Base.show(io::IO, gate::AbstractGate)
         show_gate(io, typeof(gate), targets, get_operator(gate))
     else
         show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
+    end
+end
+
+function Base.show(io::IO, gate::MovedGate)
+
+    targets = get_connected_qubits(gate)
+
+    parameters = get_gate_parameters(gate)
+
+    if isempty(parameters)
+        show_gate(io, typeof(gate.original_gate), targets, get_operator(gate))
+    else
+        show_gate(io, typeof(gate.original_gate), targets, get_operator(gate), parameters)
     end
 end
 

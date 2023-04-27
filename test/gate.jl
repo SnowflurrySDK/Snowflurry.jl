@@ -333,93 +333,30 @@ end
 
 @testset "move_gate" begin
     target = 2
-    x_gate = sigma_x(target)
-    qubit_mapping = Dict(1=>2)
-    untouched_x_gate = move_gate(x_gate, qubit_mapping)
-    @test untouched_x_gate isa Snowflake.SigmaX
-    @test untouched_x_gate.target == target
-
-    qubit_mapping = Dict(2=>3)
-    moved_x_gate = move_gate(x_gate, qubit_mapping)
-    @test moved_x_gate isa Snowflake.SigmaX
-    @test moved_x_gate.target == 3
-
     theta = pi/2
-    phi = -pi/4
-    rotation_gate = rotation(target, theta, phi)
-    moved_rotation = move_gate(rotation_gate, qubit_mapping)
-    @test moved_rotation isa Snowflake.Rotation
-    @test moved_rotation.target == 3
-    @test moved_rotation.theta ≈ theta
-    @test moved_rotation.phi ≈ phi
+    rx_gate = rotation_x(target, theta)
+    qubit_mapping = Dict(1=>3, 3=>1)
+    untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test is_gate_type(untouched_rx_gate, Snowflake.RotationX)
+    @test get_connected_qubits(untouched_rx_gate) == [target]
+    @test get_gate_parameters(untouched_rx_gate) == Dict("theta"=>theta)
 
-    rotation_x_gate = rotation_x(target, theta)
-    moved_rotation_x = move_gate(rotation_x_gate, qubit_mapping)
-    @test moved_rotation_x isa Snowflake.RotationX
-    @test moved_rotation_x.target == 3
-    @test moved_rotation_x.theta ≈ theta
-
-    rotation_y_gate = rotation_y(target, theta)
-    moved_rotation_y = move_gate(rotation_y_gate, qubit_mapping)
-    @test moved_rotation_y isa Snowflake.RotationY
-    @test moved_rotation_y.target == 3
-    @test moved_rotation_y.theta ≈ theta
-
-    phase_shift_gate = phase_shift(target, phi)
-    moved_phase_shift = move_gate(phase_shift_gate, qubit_mapping)
-    @test moved_phase_shift isa Snowflake.PhaseShift
-    @test moved_phase_shift.target == 3
-    @test moved_phase_shift.phi ≈ phi
-
-    lambda = pi/3
-    universal_gate = universal(target, theta, phi, lambda)
-    moved_universal = move_gate(universal_gate, qubit_mapping)
-    @test moved_universal isa Snowflake.Universal
-    @test moved_universal.target == 3
-    @test moved_universal.theta ≈ theta
-    @test moved_universal.phi ≈ phi
-    @test moved_universal.lambda ≈ lambda
-
-    control = 3
     qubit_mapping = Dict(2=>3, 3=>2)
-    control_z_gate = control_z(control, target)
-    moved_control_z = move_gate(control_z_gate, qubit_mapping)
-    @test moved_control_z isa Snowflake.ControlZ
-    @test moved_control_z.target == 3
-    @test moved_control_z.control == 2
+    moved_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test is_gate_type(moved_rx_gate, Snowflake.RotationX)
+    @test get_connected_qubits(moved_rx_gate) == [3]
+    @test get_gate_parameters(moved_rx_gate) == Dict("theta"=>theta)
 
-    control_x_gate = control_x(control, target)
-    moved_control_x = move_gate(control_x_gate, qubit_mapping)
-    @test moved_control_x isa Snowflake.ControlX
-    @test moved_control_x.target == 3
-    @test moved_control_x.control == 2
+    inverse_moved_gate = inv(moved_rx_gate)
+    @test is_gate_type(inverse_moved_gate, Snowflake.RotationX)
+    @test get_connected_qubits(inverse_moved_gate) == [3]
+    @test get_gate_parameters(inverse_moved_gate) == Dict("theta"=>-theta)
 
-    iswap_gate = iswap(control, target)
-    moved_iswap = move_gate(iswap_gate, qubit_mapping)
-    @test moved_iswap isa Snowflake.ISwap
-    @test moved_iswap.target_1 == 2
-    @test moved_iswap.target_2 == 3
-
-    iswap_dagger_gate = iswap_dagger(control, target)
-    moved_iswap_dagger = move_gate(iswap_dagger_gate, qubit_mapping)
-    @test moved_iswap_dagger isa Snowflake.ISwapDagger
-    @test moved_iswap_dagger.target_1 == 2
-    @test moved_iswap_dagger.target_2 == 3
-
-    swap_gate = swap(control, target)
-    moved_swap = move_gate(swap_gate, qubit_mapping)
-    @test moved_swap isa Snowflake.Swap
-    @test moved_swap.target_1 == 2
-    @test moved_swap.target_2 == 3
-
-    control_2 = 5
-    qubit_mapping = Dict(2=>3, 3=>2, 5=>4)
-    toffoli_gate = toffoli(control, control_2, target)
-    moved_toffoli = move_gate(toffoli_gate, qubit_mapping)
-    @test moved_toffoli isa Snowflake.Toffoli
-    @test moved_toffoli.control_1 == 2
-    @test moved_toffoli.control_2 == 4
-    @test moved_toffoli.target == 3
+    qubit_mapping = Dict(2=>3, 3=>2, 4=>1, 1=>4)
+    toffoli_gate = toffoli(2, 3, 1)
+    moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
+    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
 end
 
 
