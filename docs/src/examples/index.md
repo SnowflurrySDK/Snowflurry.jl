@@ -53,7 +53,7 @@ More advanced uses are covered here.
 
 ### Asyncronous jobs
 
-In this example, we show how to submit multiple jobs to the quantum computer simultaneously.
+In this example, we show how to run jobs asynchronously using Julia tasks.
 
 
 Code: [examples/asynchronous\_jobsjl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/asynchronous_jobs.jl)
