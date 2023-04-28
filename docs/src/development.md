@@ -10,7 +10,7 @@ If you are starting a new instance of Julia, then you can activate the Snowflake
 julia --project=.
 ```
 
-Or, if you are inside a script or interpreter, you can use
+Or, if you are inside a script or REPL, you can use
 
 ```julia
 using Pkg
