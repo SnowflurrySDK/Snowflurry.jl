@@ -82,6 +82,58 @@ function Base.push!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
     return circuit
 end
 
+"""
+    append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
+
+Appends one or more `circuits_to_append` to the `base_circuit`.
+
+The `circuits_to_append` cannot contain more qubits than the `base_circuit`.
+
+# Examples
+```jldoctest
+julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> append_1 = QuantumCircuit(qubit_count=2, gates=[sigma_z(2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:─────
+          
+q[2]:──Z──
+          
+
+
+
+julia> append_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──*──
+       |  
+q[2]:──X──
+          
+
+
+
+julia> append!(base, append_1, append_2)
+
+julia> print(base)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X─────────*──
+                 |  
+q[2]:───────Z────X──
+                    
+
+
+```
+"""
 function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
     for circuit in circuits_to_append
         if base_circuit.qubit_count < circuit.qubit_count
