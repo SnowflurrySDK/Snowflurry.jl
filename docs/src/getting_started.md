@@ -1,5 +1,13 @@
 # Getting Started
 
+```@meta
+DocTestSetup = quote
+    ENV["ANYON_QUANTUM_USER"] = "test-user"
+    ENV["ANYON_QUANTUM_TOKEN"] = "not-a-real-token"
+    ENV["ANYON_QUANTUM_HOST"] = "yukon.anyonsys.com"
+end
+```
+
 ## Installation
 
 The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in helping to develop Snowflake, head right over to our [Developing Snowflake](./development.md) page.
@@ -102,6 +110,8 @@ The first line adds a Hadamard gate to circuit object `c` which will operate on 
 !!! note
 	Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
+## Simulate your circuit
+
 The next step we want to take is to simulate our circuit. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
 
 ```jldoctest getting_started
@@ -130,39 +140,77 @@ The script below puts all the steps above together:
 
 ```julia
 using Snowflake, SnowflakePlots
+
 c = QuantumCircuit(qubit_count=2)
 push!(c, hadamard(1))
 push!(c, control_x(1, 2))
 ψ = simulate(c)
-plot_histogram(c, 100)
+
+plot_histogram(ψ, 100)
 ```
 
-## Execute on hardware
+## Execute on Anyon's hardware
 
-Let's see how how to submit the circuit created in the previous section to a virtual or real hardware. 
-### Virtual QPU
-We can use Snowflake to create a virtual QPU on our local machine:
+Let's see how how to run the circuit created in the previous section on real hardawre.
+
+We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to the page. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md).
+
 ```jldoctest getting_started
-qpu=VirtualQPU()
+user = ENV["ANYON_QUANTUM_USER"]
+token = ENV["ANYON_QUANTUM_TOKEN"]
+host = ENV["ANYON_QUANTUM_HOST"]
+
+qpu = AnyonQPU(host=host, user=user, access_token=token)
 print(qpu)
+
 # output
-Quantum Simulator:
-   developers:  Anyon Systems Inc.
-   package:     Snowflake.jl
-```
-Note the `print(qpu)` command is used to print relevant information about the QPU.
 
-Because a virtual QPU can simulate any circuit as it is, we do not need to peform any compilation or tests to run the jobs on the virtual QPU. We can then simply run the job on the qpu for a given number of shots. 
-```julia
-shots_count=100
-result=run_job(qpu, c,shots_count)
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   qubit_count:   6
+   connectivity_type:  linear
 ```
-The `result` variable is a dictionary representing the histogram of the measurement results:
-```julia
-print(result)
-Dict{String, Int64} with 2 entries:
-  "00" => 54
-  "11" => 46
-```
-The above output shows that both qubits were measured to be in state '0' in 54 shots out of 100 tries on the virtual QPU. Similarly, both qubits were measured to be in state `1` for 46 shots out of 100 shots run on the QPU. We can achieve statistical convergence by increasing the `shots_count` and observe that outcomes are mesaured with equal probability.
 
+We can now run our circuit with
+
+```jldoctest getting_started; output = false, filter = r".*"
+num_repetitions = 200
+result = transpile_and_run_job(qpu, circuit, num_repetitions)
+
+# output
+```
+
+and plot the results with
+
+```julia
+plot_histogram(result)
+```
+
+![Measurement results histogram](assets/index/index_histogram.png)
+
+The script below puts all the steps above together:
+
+```julia
+using Snowflake, SnowflakePlots
+
+user = ENV["ANYON_QUANTUM_USER"]
+token = ENV["ANYON_QUANTUM_TOKEN"]
+host = ENV["ANYON_QUANTUM_HOST"]
+
+qpu = AnyonQPU(host=host, user=user, access_token=token)
+
+circuit = QuantumCircuit(qubit_count=2)
+push!(circuit, [hadamard(1)])
+push!(circuit, [control_x(1, 2)])
+
+num_repetitions = 200
+result = transpile_and_run_job(qpu, circuit, num_repetitions)
+
+plot_histogram(result)
+```
+
+## More information
+
+For more information head over to our [Tutorials page](./tutorials/index.md) or our [Library reference page](./library.md).
