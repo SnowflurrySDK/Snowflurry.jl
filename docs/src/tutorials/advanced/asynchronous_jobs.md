@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to how to run jobs asynchronously using Julia tasks. Asynchronous jobs allow users to continue other work while waiting for the quantum resources.
+This tutorial is going to how to run jobs asynchronously using Julia tasks. Asynchronous jobs allow users to continue other work while waiting for the quantum resources.
 
 ## Julia tasks
 
@@ -38,8 +38,7 @@ user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
 
-client = Client(host=host, user=user, access_token=token)
-qpu = AnyonQPU(client)
+qpu = AnyonQPU(host=host, user=user, access_token=token)
 
 # output
 Quantum Processing Unit:
@@ -101,6 +100,6 @@ Dict("00" => 104, "11" => 96)
 
 ## Summary
 
-In this example, we've gone over how to use asynchronous programming to do work while waiting for quantum jobs to complete.
+In this tutorial, we've gone over how to use asynchronous programming to do work while waiting for quantum jobs to complete.
 
-The full code is available at [examples/asynchronous\_jobs.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/asynchronous_jobs.jl)
+The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/asynchronous_jobs.jl)

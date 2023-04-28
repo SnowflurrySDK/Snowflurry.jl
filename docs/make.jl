@@ -39,9 +39,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Quantum Computing With Snowflake" => ["Basics" => "qc/basics.md"],
-        "Examples" => "examples/index.md",
-        #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
+        "Tutorials" => "tutorials/index.md",
         "Library" => "library.md",
     ],
     doctestfilters = [uuid_regex],

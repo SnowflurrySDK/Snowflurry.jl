@@ -1,4 +1,4 @@
-# Single-qubit readout example
+# Single-qubit readout tutorial
 
 ```@meta
 DocTestSetup = quote
@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to show you how to construct a circuit and measure the circuit without any operations. During this example, we will discuss initialization, readout, and readout fidelity.
+This tutorial is going to show you how to construct a circuit and measure the circuit without any operations. During this tutorial, we will discuss initialization, readout, and readout fidelity.
 
 
 A Bloch sphere of a system in state zero is shown below.
@@ -27,7 +27,7 @@ A Bloch sphere of a system in state zero is shown below.
 
 We are going to start by importing Snowflake.
 
-```jldoctest single_qubit_readout_example; output = false
+```jldoctest single_qubit_readout_tutorial; output = false
 using Snowflake
 
 # output
@@ -37,7 +37,7 @@ using Snowflake
 This will bring all Snowflake's imports into the local scope for us to use. Next, we will create our circuit.
 
 
-```jldoctest single_qubit_readout_example; output = false
+```jldoctest single_qubit_readout_tutorial; output = false
 circuit = QuantumCircuit(qubit_count = 1)
 
 # output
@@ -70,15 +70,14 @@ In Snowflake, circuits have an implied measurement operation at the end of the c
 </div>
 ```
 
-Now we want to run this example on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md).
+Now we want to run this tutorial on Anyon's Quantum computer. We need to construct an AnyonQPU object. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./get_qpu_metadata.md).
 
-```jldoctest single_qubit_readout_example; output = false
+```jldoctest single_qubit_readout_tutorial; output = false
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
 
-client = Client(host=host, user=user, access_token=token)
-qpu = AnyonQPU(client)
+qpu = AnyonQPU(host=host, user=user, access_token=token)
 
 # output
 
@@ -111,6 +110,6 @@ From the result, we can see that we have a very high estimated state preparation
 
 ## Summary
 
-In this example, we've gone over how to construct and readout a single qubit circuit. We've discussed state initialization, readout fidelity, and state preparation and measurement errors.
+In this tutorial, we've gone over how to construct and readout a single qubit circuit. We've discussed state initialization, readout fidelity, and state preparation and measurement errors.
 
-The full code for this example is available at [examples/single\_qubit\_readout\_fidelity.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/single_qubit_readout_fidelity.jl)
+The full code for this tutorial is available at [tutorials/single\_qubit\_readout\_fidelity.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/single_qubit_readout_fidelity.jl)

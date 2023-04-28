@@ -1,4 +1,4 @@
-# Get QPU metadata example
+# Get QPU metadata tutorial
 
 ```@meta
 using Snowflake
@@ -10,7 +10,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to teach you what a QPU object is. Also, we are going to show you how to construct an AnyonQPU object which can be used to interact with Anyon's quantum hardware. Finally, this example will show you how to get metadata from a QPU object.
+This tutorial is going to teach you what a QPU object is. Also, we are going to show you how to construct an AnyonQPU object which can be used to interact with Anyon's quantum hardware. Finally, this tutorial will show you how to get metadata from a QPU object.
 
 ## Code
 
@@ -18,7 +18,7 @@ A QPU object is an object which implements the `AbstractQPU` interface. This int
 
 We are going to start by importing Snowflake.
 
-```jldoctest get_qpu_metadata_example; output = false
+```jldoctest get_qpu_metadata_tutorial; output = false
 using Snowflake
 
 # output
@@ -27,7 +27,7 @@ using Snowflake
 
 Next, we are going to create the QPU object. We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables.
 
-```jldoctest get_qpu_metadata_example; output = false
+```jldoctest get_qpu_metadata_tutorial; output = false
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
@@ -39,9 +39,8 @@ host = ENV["ANYON_QUANTUM_HOST"]
 
 When we have the environment variables, we can construct our `AnyonQPU` object.
 
-```jldoctest get_qpu_metadata_example; output = false
-client = Client(host=host, user=user, access_token=token)
-qpu = AnyonQPU(client)
+```jldoctest get_qpu_metadata_tutorial; output = false
+qpu = AnyonQPU(host=host, user=user, access_token=token)
 
 # output
 
@@ -55,7 +54,7 @@ Quantum Processing Unit:
 
 Now that we have an `AnyonQPU` object, we want to get the machine's metadata to see what we're dealing with. We do this using the `get_metadata` function.
 
-```jldoctest get_qpu_metadata_example; output = false
+```jldoctest get_qpu_metadata_tutorial; output = false
 println("AnyonQPU metadata:")
 for (key,value) in get_metadata(qpu)
     println("    $(key): $(value)")
@@ -83,6 +82,6 @@ Quantum Processing Unit:
 
 ## Summary
 
-In this example, we've gone over what a QPU object is. We've also shown how to construct an `AnyonQPU` object and how to retrieve its metadata.
+In this tutorial, we've gone over what a QPU object is. We've also shown how to construct an `AnyonQPU` object and how to retrieve its metadata.
 
-The full code for this example is available at [examples/get\_qpu\_metadata.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/get_qpu_metadata.jl)
+The full code for this tutorial is available at [tutorials/get\_qpu\_metadata.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/get_qpu_metadata.jl)
