@@ -1472,22 +1472,8 @@ function Base.show(io::IO, gate::AbstractGate)
     parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
-        show_gate(io, typeof(gate), targets, get_operator(gate))
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate))
     else
-        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate), parameters)
     end
 end
-
-function Base.show(io::IO, gate::MovedGate)
-
-    targets = get_connected_qubits(gate)
-
-    parameters = get_gate_parameters(gate)
-
-    if isempty(parameters)
-        show_gate(io, typeof(gate.original_gate), targets, get_operator(gate))
-    else
-        show_gate(io, typeof(gate.original_gate), targets, get_operator(gate), parameters)
-    end
-end
-

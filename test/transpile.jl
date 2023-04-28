@@ -78,7 +78,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test typeof(gates[1])==Snowflake.Universal
+            @test is_gate_type(gates[1], Snowflake.Universal)
         end
     end
 
@@ -111,8 +111,8 @@ end
 
     @test length(gates)==2
 
-    @test typeof(gates[1])==Snowflake.SigmaX
-    @test typeof(gates[2])==Snowflake.ControlX
+    @test is_gate_type(gates[1], Snowflake.SigmaX)
+    @test is_gate_type(gates[2], Snowflake.ControlX)
 end 
 
 @testset "Transpiler" begin
@@ -200,9 +200,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test typeof(gates[1])==Snowflake.PhaseShift
-        @test typeof(gates[2])==Snowflake.RotationX
-        @test typeof(gates[3])==Snowflake.PhaseShift
+        @test is_gate_type(gates[1], Snowflake.PhaseShift)
+        @test is_gate_type(gates[2], Snowflake.RotationX)
+        @test is_gate_type(gates[3], Snowflake.PhaseShift)
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -256,11 +256,11 @@ end
         
         @test length(gates)==5
 
-        @test typeof(gates[1])==Snowflake.Z90
-        @test typeof(gates[2])==Snowflake.X90
-        @test typeof(gates[3])==Snowflake.PhaseShift
-        @test typeof(gates[4])==Snowflake.XM90
-        @test typeof(gates[5])==Snowflake.ZM90
+        @test is_gate_type(gates[1], Snowflake.Z90)
+        @test is_gate_type(gates[2], Snowflake.X90)
+        @test is_gate_type(gates[3], Snowflake.PhaseShift)
+        @test is_gate_type(gates[4], Snowflake.XM90)
+        @test is_gate_type(gates[5], Snowflake.ZM90)
     end
 end
 
@@ -429,7 +429,8 @@ end
 
             if input_is_native
                 test_is_not_rz=[
-                    !(typeof(gate) in Snowflake.set_of_rz_gates) for gate in gates_in_output
+                    !(get_gate_type(gate) in Snowflake.set_of_rz_gates)
+                    for gate in gates_in_output
                 ]
 
                 # at most one non-Rz gate in output
@@ -464,9 +465,9 @@ end
 
         for target in targets
             if haskey(results,target)
-                results[target]=push!(results[target],typeof(gate))
+                results[target]=push!(results[target], get_gate_type(gate))
             else
-                results[target]=[typeof(gate)]
+                results[target]=[get_gate_type(gate)]
             end
         end
     end
@@ -656,7 +657,7 @@ end
 
         result_gate=Snowflake.simplify_rx_gate(target,angle)
 
-        @test typeof(result_gate)==type_result
+        @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
@@ -666,7 +667,7 @@ end
 
     result_gate=Snowflake.simplify_rx_gate(target,1e-3)
 
-    @test typeof(result_gate)==Snowflake.RotationX
+    @test is_gate_type(result_gate, Snowflake.RotationX)
 
     result_gate=Snowflake.simplify_rx_gate(target,1e-3,atol=1e-1)
 
@@ -693,7 +694,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,0.)])
@@ -747,7 +748,7 @@ end
 
         result_gate=Snowflake.simplify_rz_gate(target,angle)
 
-        @test typeof(result_gate)==type_result
+        @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
@@ -757,7 +758,7 @@ end
 
     result_gate=Snowflake.simplify_rz_gate(target,1e-3)
 
-    @test typeof(result_gate)==Snowflake.PhaseShift
+    @test is_gate_type(result_gate, Snowflake.PhaseShift)
 
     result_gate=Snowflake.simplify_rz_gate(target,1e-3,atol=1e-1)
 
@@ -785,7 +786,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,0.)])

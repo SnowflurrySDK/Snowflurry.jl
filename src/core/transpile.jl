@@ -146,7 +146,7 @@ set_of_rz_gates=[
 
 is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
 
-is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_rz_gates)
+is_not_rz_gate(gate::AbstractGate) = !(get_gate_type(gate) in set_of_rz_gates)
 
 is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
 
@@ -1245,10 +1245,10 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
 
         if length(consecutive_mapping)>1
     
-            gates_block=[typeof(gate)(consecutive_mapping...)]
+            gates_block=[get_gate_type(gate)(consecutive_mapping...)]
 
             @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
-                "Failed to construct gate: $(typeof((gates_block[1])))")
+                "Failed to construct gate: $(get_gate_type((gates_block[1])))")
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit

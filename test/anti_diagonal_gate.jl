@@ -117,7 +117,7 @@ end
 
 @testset "AntiDiagonal Gate: sigma_p, sigma_m" begin
 
-    @test typeof(sigma_p())==AntiDiagonalOperator{2,ComplexF64}
-    @test typeof(sigma_m())==AntiDiagonalOperator{2,ComplexF64}
+    @test sigma_p() isa AntiDiagonalOperator{2,ComplexF64}
+    @test sigma_m() isa AntiDiagonalOperator{2,ComplexF64}
 
 end

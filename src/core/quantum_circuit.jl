@@ -262,7 +262,7 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[typeof(gate)]
+get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[get_gate_type(gate)]
 
 gates_instruction_symbols=Dict(
     SigmaX      =>"x",
