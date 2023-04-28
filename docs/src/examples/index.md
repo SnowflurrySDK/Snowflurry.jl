@@ -41,7 +41,7 @@ Documentation: [Hadamard transpilation example](./introductory/hadamard_transpil
 
 ### Entanglement demonstration
 
-In this example, we demonstrate entanglement by generating a bell state.
+In this example, we demonstrate entanglement by generating a Bell state.
 
 Code: [examples/entanglement\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/entanglement_demonstration.jl)
 
