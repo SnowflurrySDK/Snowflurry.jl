@@ -126,8 +126,8 @@ The transpiled circuit is shown below.
 Now we run our quantum circuit on Anyon's quantum computer!
 
 ```julia
-num_repititions = 200
-result = run_job(qpu, transpiled_circuit, num_repititions)
+num_repetitions = 200
+result = run_job(qpu, transpiled_circuit, num_repetitions)
 
 println(result)
 ```
@@ -142,4 +142,4 @@ Dict("1" => 109, "0" => 91)
 
 In this example, we've introduced the Hadamard gate. We've also demonstrated how to use a transpiler to transpile any circuit into a circuit which can be natively run on AnyonQPU.
 
-The full code for this example is available at [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard.jl)
+The full code for this example is available at [examples/hadamard\_transplation.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/hadamard_transpilation.jl)

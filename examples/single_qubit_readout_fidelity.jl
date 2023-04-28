@@ -9,7 +9,7 @@ host = ENV["ANYON_QUANTUM_HOST"]
 client = Client(host=host, user=user, access_token=token)
 qpu = AnyonQPU(client)
 
-num_repititions = 200
-result = run_job(qpu, circuit, num_repititions)
+num_repetitions = 200
+result = run_job(qpu, circuit, num_repetitions)
 
 println(result)

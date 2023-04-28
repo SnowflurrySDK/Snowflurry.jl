@@ -8,7 +8,7 @@ DocTestSetup = quote
 end
 ```
 
-This example is going to show a demonstration of how to excite a qubit into state one.
+This example is going to show a demonstration of how to excite a qubit into state $\left|1\right\rangle$.
 
 A Bloch sphere of a system in state one is shown below.
 
@@ -125,8 +125,8 @@ Quantum Processing Unit:
 Now we run our quantum circuit on Anyon's quantum computer!
 
 ```julia
-num_repititions = 200
-result = run_job(qpu, circuit, num_repititions)
+num_repetitions = 200
+result = run_job(qpu, circuit, num_repetitions)
 
 println(result)
 ```

@@ -122,7 +122,7 @@ q[2]:─────
 
 
 julia> serialize_job(c,10)
-"{\\\"num_repititions\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"num_repetitions\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -132,7 +132,7 @@ function serialize_job(circuit::QuantumCircuit,repetitions::Integer)::String
         "circuit"=>Dict{String,Any}(
                 "operations"=>Vector{Dict{String,Any}}()
             ),
-        "num_repititions"=>repetitions
+        "num_repetitions"=>repetitions
     )
 
     for gate in get_circuit_gates(circuit)

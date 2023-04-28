@@ -14,7 +14,7 @@ qpu = AnyonQPU(client)
 transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
 
-num_repititions = 200
-result = run_job(qpu, circuit, num_repititions)
+num_repetitions = 200
+result = run_job(qpu, circuit, num_repetitions)
 
 println(result)
