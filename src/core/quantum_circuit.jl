@@ -101,12 +101,10 @@ q[2]:─────
 
 
 
-julia> append_1 = QuantumCircuit(qubit_count=2, gates=[sigma_z(2)])
+julia> append_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
 Quantum Circuit Object:
-   qubit_count: 2 
-q[1]:─────
-          
-q[2]:──Z──
+   qubit_count: 1 
+q[1]:──Z──
           
 
 
@@ -126,9 +124,9 @@ julia> append!(base, append_1, append_2)
 julia> print(base)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──X─────────*──
+q[1]:──X────Z────*──
                  |  
-q[2]:───────Z────X──
+q[2]:────────────X──
                     
 
 
