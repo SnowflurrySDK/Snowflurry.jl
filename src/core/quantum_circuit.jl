@@ -187,7 +187,7 @@ false
 """
 function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
     for gate in get_circuit_gates(circuit)
-        if gate isa gate_type
+        if is_gate_type(gate, gate_type)
             return true
         end
     end

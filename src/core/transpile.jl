@@ -426,7 +426,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.Swap
+        if is_gate_type(gate, Snowflake.Swap)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -483,7 +483,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.ControlX
+        if is_gate_type(gate, Snowflake.ControlX)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -547,7 +547,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.ISwap
+        if is_gate_type(gate, Snowflake.ISwap)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -628,7 +628,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.Toffoli
+        if is_gate_type(gate, Snowflake.Toffoli)
             push!(output, cast_to_cx(gate))
         else
             push!(output, gate)
@@ -834,7 +834,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(gate isa Snowflake.Universal)
+            if !(is_gate_type(gate, Snowflake.Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -938,7 +938,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(gate isa Snowflake.Universal)
+            if !(is_gate_type(gate, Snowflake.Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -1014,7 +1014,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 
     for gate in gates
         
-        if gate isa RotationX
+        if is_gate_type(gate, RotationX)
             gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
             push!(output_circuit,gate_array)
         else
@@ -1117,7 +1117,7 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.RotationX
+        if is_gate_type(gate, Snowflake.RotationX)
             new_gate=simplify_rx_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["theta"];
@@ -1367,7 +1367,7 @@ function transpile(
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.PhaseShift
+        if is_gate_type(gate, Snowflake.PhaseShift)
             new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["phi"],
@@ -1549,7 +1549,7 @@ function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::Quantu
     reverse_transpiled_gates = AbstractGate[]
 
     for gate in reverse(gates)
-        if gate isa Swap
+        if is_gate_type(gate, Swap)
             update_qubit_mapping!(qubit_mapping, gate)
         else
             moved_gate = move_gate(gate, qubit_mapping)
