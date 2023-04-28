@@ -13,6 +13,22 @@ using Test
     _Ψ = Bra(Ψ_p)
     print(_Ψ)
 
+    # scalar multiplication should not promote type of Ket datatype
+    Ψ_0 = spin_up(ComplexF32)
+    a=10.0
+    Ψ_scaled = a*Ψ_0 
+    Ψ_scaled2= Ψ_0*a 
+
+    @test typeof(Ψ_0)==typeof(Ψ_scaled)
+    @test typeof(Ψ_0)==typeof(Ψ_scaled2)    
+
+    a=ComplexF64(10.0)
+    Ψ_scaled = a*Ψ_0 
+    Ψ_scaled2= Ψ_0*a 
+
+    @test typeof(Ψ_0)==typeof(Ψ_scaled)
+    @test typeof(Ψ_0)==typeof(Ψ_scaled2)    
+
     # test if adjoin operations work properly
     @test adjoint(Ψ_p) ≈ Bra(Ψ_p)
     @test adjoint(_Ψ) ≈ Ψ_p

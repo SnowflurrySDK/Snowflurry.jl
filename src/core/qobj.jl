@@ -36,6 +36,10 @@ Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},
 # default output is Ket{ComplexF64}
 Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer}=Ket(Vector{S}(x))
 
+# overload constructor to enable initialization from Complex{Integer}-valued array
+# default output is Ket{ComplexF64}
+Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Complex{Int}}=Ket(Vector{S}(x))
+
 function Base.show(io::IO, x::Ket)
     println(io, "$(length(x.data))-element Ket{$(eltype(x.data))}:")
     for val in x.data
@@ -193,7 +197,9 @@ DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 # so that an input of type DenseOperator is not copied
 DenseOperator(op::DenseOperator) = op
 
-DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,ComplexF64}(m))
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,T}(m))
+
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
 
 """
 
@@ -365,7 +371,8 @@ false
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
 
-Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
+Base.:*(s::Number, x::Ket) = Ket(eltype(x.data)(s) * x.data)
+Base.:*(x::Ket,s::Number) = Base.:*(s,x)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
@@ -392,26 +399,35 @@ Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOper
 # specializations
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,T}) where {N,T<:Complex} =
     DenseOperator(A.data*B.data)
+Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
+    DenseOperator(promote(A.data,B.data)[1]*promote(A.data,B.data)[2])
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
-Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
-
+Base.:*(s::Number, A::AbstractOperator) = typeof(A)(eltype(A.data)(s)*A.data)
+Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
+Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(eltype(A.data)(s)*A.data)
+Base.:*(A::AntiDiagonalOperator,s::Number) = Base.:*(s, A)
 
 # generic cases
 Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
 Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOperator(B)
 
 # specializations
+Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
+    DenseOperator(promote(A.data,B.data)[1] + promote(A.data,B.data)[2])
+
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
 
 
 # specializations
+Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
+    DenseOperator(promote(A.data,B.data)[1] - promote(A.data,B.data)[2])
+
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
@@ -528,8 +544,8 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*(DenseOperator(A)*psi))
-expected_value(A::DenseOperator, psi::Ket) = (Bra(psi)*(A*psi))
+expected_value(A::AbstractOperator, psi::Ket)::Complex = (Bra(psi)*(DenseOperator(A)*psi))
+expected_value(A::DenseOperator, psi::Ket)::Complex = (Bra(psi)*(A*psi))
 
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
