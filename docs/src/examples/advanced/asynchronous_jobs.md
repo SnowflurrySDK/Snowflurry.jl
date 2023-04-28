@@ -53,8 +53,8 @@ Quantum Processing Unit:
 Next we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
 
 ```jldoctest asynchronous_job; output = false, setup = :(qpu = VirtualQPU()), filter = r".*"
-num_repititions = 200
-task = Task(() -> run_job(qpu, circuit, num_repititions))
+num_repetitions = 200
+task = Task(() -> run_job(qpu, circuit, num_repetitions))
 schedule(task)
 
 # output

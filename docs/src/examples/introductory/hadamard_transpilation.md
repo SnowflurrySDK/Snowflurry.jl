@@ -126,8 +126,8 @@ The transpiled circuit is shown below.
 Now we run our quantum circuit on Anyon's quantum computer!
 
 ```julia
-num_repititions = 200
-result = run_job(qpu, transpiled_circuit, num_repititions)
+num_repetitions = 200
+result = run_job(qpu, transpiled_circuit, num_repetitions)
 
 println(result)
 ```
