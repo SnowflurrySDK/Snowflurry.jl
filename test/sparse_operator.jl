@@ -32,4 +32,6 @@ using Test
     @test kron(σ_x,σ_y) ≈ sparse(kron(sigma_x(),sigma_y()))
 
     @test is_hermitian(σ_x)
+
+    println(σ_x)  #test "show" function
 end
