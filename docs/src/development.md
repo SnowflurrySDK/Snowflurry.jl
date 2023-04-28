@@ -30,7 +30,7 @@ julia --project=.
 
 and run the tests
 
-``julia
+```julia
 using Pkg
 Pkg.test()
 ```
@@ -49,6 +49,22 @@ If it is the first time building the docs you need to instantiate the Julia proj
 using Pkg
 Pkg.develop(PackageSpec(path=pwd()))
 Pkg.instantiate()
+```
+
+At which point, the project status should be similar to the one below. The versions might be slightly different, but what is important is that the `Status` line refers to the `docs/Project.toml` and that `Snowflake` refers to `<pwd()>/Snowflake.jl`.
+
+```julia
+Pkg.status()
+
+# output
+      Status `<pwd()>/Snowflake.jl/docs/Project.toml`
+  [e30172f5] Documenter v0.27.24
+  [cd3eb016] HTTP v1.7.4
+  [682c06a0] JSON v0.21.4
+  [7bd9edc1] Snowflake v0.1.0 `<pwd()>/Snowflake.jl`
+  [90137ffa] StaticArrays v1.5.21
+  [2913bbd2] StatsBase v0.33.21
+  [de0858da] Printf
 ```
 
 Then you can run
