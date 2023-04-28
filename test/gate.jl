@@ -331,6 +331,36 @@ end
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 end
 
+@testset "move_gate" begin
+    target = 2
+    theta = pi/2
+    rx_gate = rotation_x(target, theta)
+    qubit_mapping = Dict(1=>3, 3=>1)
+    untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test is_gate_type(untouched_rx_gate, Snowflake.RotationX)
+    @test get_gate_type(untouched_rx_gate) == Snowflake.RotationX
+    @test get_connected_qubits(untouched_rx_gate) == [target]
+    @test get_gate_parameters(untouched_rx_gate) == Dict("theta"=>theta)
+
+    qubit_mapping = Dict(2=>3, 3=>2)
+    moved_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test is_gate_type(moved_rx_gate, Snowflake.RotationX)
+    @test get_gate_type(moved_rx_gate) == Snowflake.RotationX
+    @test get_connected_qubits(moved_rx_gate) == [3]
+    @test get_gate_parameters(moved_rx_gate) == Dict("theta"=>theta)
+
+    inverse_moved_gate = inv(moved_rx_gate)
+    @test is_gate_type(inverse_moved_gate, Snowflake.RotationX)
+    @test get_connected_qubits(inverse_moved_gate) == [3]
+    @test get_gate_parameters(inverse_moved_gate) == Dict("theta"=>-theta)
+
+    qubit_mapping = Dict(2=>3, 3=>2, 4=>1, 1=>4)
+    toffoli_gate = toffoli(2, 3, 1)
+    moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
+    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
+end
+
 
 @testset "gate_set_exceptions" begin
     @test_throws DomainError control_x(1, 1)

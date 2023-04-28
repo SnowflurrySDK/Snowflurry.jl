@@ -146,7 +146,7 @@ set_of_rz_gates=[
 
 is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
 
-is_not_rz_gate(gate::AbstractGate) = !(typeof(gate) in set_of_rz_gates)
+is_not_rz_gate(gate::AbstractGate) = !(get_gate_type(gate) in set_of_rz_gates)
 
 is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
 
@@ -426,7 +426,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.Swap
+        if is_gate_type(gate, Snowflake.Swap)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -483,7 +483,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.ControlX
+        if is_gate_type(gate, Snowflake.ControlX)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -547,7 +547,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.ISwap
+        if is_gate_type(gate, Snowflake.ISwap)
             push!(output, cast_to_cz(gate))
         else
             push!(output, gate)
@@ -628,7 +628,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.Toffoli
+        if is_gate_type(gate, Snowflake.Toffoli)
             push!(output, cast_to_cx(gate))
         else
             push!(output, gate)
@@ -834,7 +834,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(gate isa Snowflake.Universal)
+            if !(is_gate_type(gate, Snowflake.Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -938,7 +938,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(gate isa Snowflake.Universal)
+            if !(is_gate_type(gate, Snowflake.Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -1014,7 +1014,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 
     for gate in gates
         
-        if gate isa RotationX
+        if is_gate_type(gate, RotationX)
             gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
             push!(output_circuit,gate_array)
         else
@@ -1117,7 +1117,7 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.RotationX
+        if is_gate_type(gate, Snowflake.RotationX)
             new_gate=simplify_rx_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["theta"];
@@ -1245,10 +1245,10 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
 
         if length(consecutive_mapping)>1
     
-            gates_block=[typeof(gate)(consecutive_mapping...)]
+            gates_block=[get_gate_type(gate)(consecutive_mapping...)]
 
             @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
-                "Failed to construct gate: $(typeof((gates_block[1])))")
+                "Failed to construct gate: $(get_gate_type((gates_block[1])))")
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit
@@ -1367,7 +1367,7 @@ function transpile(
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if gate isa Snowflake.PhaseShift
+        if is_gate_type(gate, Snowflake.PhaseShift)
             new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["phi"],
@@ -1499,3 +1499,86 @@ end
 struct TrivialTranspiler<:Transpiler end
 
 transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 
+
+struct RemoveSwapBySwappingGates <: Transpiler end
+
+"""
+    transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+
+Removes the `Swap` gates from the `circuit` assuming all-to-all connectivity.
+
+!!! warning "The initial state must be the ground state!"
+    This transpiler stage assumes that the input state is ``|0\\rangle^{\\otimes N}``
+    where ``N`` is the number of qubits. The stage should not be used on sub-circuits
+    where the input state is not ``|0\\rangle^{\\otimes N}``.
+
+This transpiler stage eliminates `Swap` gates by moving the gates preceding each `Swap`
+gate.
+
+# Examples
+```jldoctest
+julia> transpiler = RemoveSwapBySwappingGates();
+
+julia> circuit = QuantumCircuit(qubit_count=2, gates=[hadamard(1), swap(1,2), sigma_x(2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──H────☒───────
+            |       
+q[2]:───────☒────X──
+                    
+
+
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──────────
+               
+q[2]:──H────X──
+               
+
+
+
+```
+"""
+function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+    gates = get_circuit_gates(circuit)
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count=qubit_count)
+    qubit_mapping = Dict{Int,Int}()
+    reverse_transpiled_gates = AbstractGate[]
+
+    for gate in reverse(gates)
+        if is_gate_type(gate, Swap)
+            update_qubit_mapping!(qubit_mapping, gate)
+        else
+            moved_gate = move_gate(gate, qubit_mapping)
+            push!(reverse_transpiled_gates, moved_gate)
+        end
+    end
+    push!(output_circuit, reverse(reverse_transpiled_gates))
+    return output_circuit
+end
+
+function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, gate::Swap)
+    connected_qubits = get_connected_qubits(gate)
+    outlet_qubit_1 = 0
+    outlet_qubit_2 = 0
+
+    if haskey(qubit_mapping, connected_qubits[1])
+        outlet_qubit_2 = qubit_mapping[connected_qubits[1]]
+        pop!(qubit_mapping, connected_qubits[1])
+    else
+        outlet_qubit_2 = connected_qubits[1]
+    end
+
+    if haskey(qubit_mapping, connected_qubits[2])
+        outlet_qubit_1 = qubit_mapping[connected_qubits[2]]
+        pop!(qubit_mapping, connected_qubits[2])
+    else
+        outlet_qubit_1 = connected_qubits[2]
+    end
+
+    qubit_mapping[connected_qubits[1]] = outlet_qubit_1
+    qubit_mapping[connected_qubits[2]] = outlet_qubit_2
+end

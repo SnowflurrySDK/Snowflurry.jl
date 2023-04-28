@@ -187,7 +187,7 @@ false
 """
 function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
     for gate in get_circuit_gates(circuit)
-        if gate isa gate_type
+        if is_gate_type(gate, gate_type)
             return true
         end
     end
@@ -210,9 +210,9 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
     gate_params=get_gate_parameters(gate)
 
     if isempty(gate_params)
-        return gates_display_symbols[typeof(gate)]
+        return gates_display_symbols[get_gate_type(gate)]
     else
-        symbol_specs=gates_display_symbols[typeof(gate)]
+        symbol_specs=gates_display_symbols[get_gate_type(gate)]
 
         symbol_gate=symbol_specs[1]
         fields=symbol_specs[2:end]
@@ -262,7 +262,7 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[typeof(gate)]
+get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[get_gate_type(gate)]
 
 gates_instruction_symbols=Dict(
     SigmaX      =>"x",

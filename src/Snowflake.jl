@@ -45,6 +45,7 @@ export
     SimplifyRzGatesTranspiler,
     CompressRzGatesTranspiler,
     TrivialTranspiler,
+    RemoveSwapBySwappingGates,
 
     # Functions
     commute, 
@@ -69,6 +70,9 @@ export
     get_num_bodies,
     get_connected_qubits,
     get_gate_parameters,
+    is_gate_type,
+    get_gate_type,
+    move_gate,
     normalize!,
     get_measurement_probabilities,
     genlaguerre,

@@ -159,7 +159,7 @@ for (gates_list,outputname) in [
                         Vector{Float64}(dataDict[gate]["times"])
                         )
 
-                    if typeof(labels_per_gate[gate])==String
+                    if labels_per_gate[gate] isa String
                         labels_per_gate[gate]=hcat(
                             [labels_per_gate[gate]],
                             Vector{String}([filename])

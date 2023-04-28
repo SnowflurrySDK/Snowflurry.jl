@@ -72,7 +72,7 @@ function is_native_gate(qpu::AnyonQPU,gate::AbstractGate)::Bool
         ControlZ,
     ]
 
-    if typeof(gate)==ControlZ
+    if is_gate_type(gate, ControlZ)
         @assert get_metadata(qpu)["connectivity_type"]==line_connectivity_label (
             "Not implemented for connectivity type: $(get_metadata(qpu)["connectivity_type"])"
         )
@@ -82,7 +82,7 @@ function is_native_gate(qpu::AnyonQPU,gate::AbstractGate)::Bool
         return (abs(targets[1]-targets[2])==1)        
     end
         
-    return (typeof(gate) in set_of_native_gates)
+    return (get_gate_type(gate) in set_of_native_gates)
 end
 
 function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
@@ -98,7 +98,7 @@ function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,St
     for gate in get_circuit_gates(circuit)
         if !is_native_gate(qpu,gate)
             return (false,
-            "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
+            "Gate type $(get_gate_type(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
             )
         end
     end

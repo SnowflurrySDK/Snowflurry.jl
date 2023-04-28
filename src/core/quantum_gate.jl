@@ -75,6 +75,142 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
+"""
+    is_gate_type(gate::AbstractGate, type::Type)::Bool 
+
+Determines if a `gate` is of the specified `type`.
+
+!!! warning "Use is_gate_type instead of isa!"
+    For `AbstractGate` objects, `is_gate_type` should be used instead of `isa`. The
+    utilization of `isa` could lead to unexpected behavior (e.g. if a gate has been moved).
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> is_gate_type(gate, Snowflake.SigmaX)
+true
+
+julia> is_gate_type(gate, Snowflake.SigmaY)
+false
+
+```
+"""
+is_gate_type(gate::AbstractGate, type::Type)::Bool = isa(gate, type)
+
+"""
+    get_gate_type(gate::AbstractGate)::Type
+
+Returns the type of a `gate`.
+
+!!! warning "Use get_gate_type instead of typeof!"
+    For `AbstractGate` objects, `get_gate_type` should be used instead of `typeof`. The
+    utilization of `typeof` could lead to unexpected behavior (e.g. if a gate has been
+    moved).
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> get_gate_type(gate)
+Snowflake.SigmaX
+
+```
+"""
+get_gate_type(gate::AbstractGate)::Type = typeof(gate)
+
+struct MovedGate <:AbstractGate
+    original_gate::AbstractGate
+    connected_qubits::Vector{Int}
+end
+
+get_connected_qubits(gate::MovedGate) = gate.connected_qubits
+
+function get_operator(gate::MovedGate, T::Type{<:Complex}=ComplexF64)
+    return get_operator(gate.original_gate, T)
+end
+
+Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
+
+get_gate_parameters(gate::MovedGate) = get_gate_parameters(gate.original_gate)
+
+is_gate_type(gate::MovedGate, type::Type)::Bool = isa(gate.original_gate, type)
+
+get_gate_type(gate::MovedGate)::Type = typeof(gate.original_gate)
+
+"""
+    move_gate(gate::AbstractGate,
+        qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+
+Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
+on `qubit_mapping`.
+
+The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
+qubits. The key indicates which target qubit to change while the associated value specifies
+the new qubit.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> move_gate(gate, Dict(1=>2))
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [2]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+```
+"""
+function move_gate(gate::AbstractGate,
+    qubit_mapping::AbstractDict{T,T})::AbstractGate where T<:Integer
+
+    old_connected_qubits = get_connected_qubits(gate)
+    new_connected_qubits = Int[]
+    found_move = false
+    for (i_qubit, old_qubit) in enumerate(old_connected_qubits)
+        if haskey(qubit_mapping, old_qubit)
+            if !found_move
+                new_connected_qubits = deepcopy(old_connected_qubits)
+                found_move = true
+            end
+            new_connected_qubits[i_qubit] = qubit_mapping[old_qubit]
+        end
+    end
+    if found_move
+        return MovedGate(gate, new_connected_qubits)
+    else
+        return gate
+    end
+end
+
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
     args::ArgsT
@@ -663,12 +799,11 @@ Return the `DiagonalOperator` that applies a phase shift `phi`.
 The `DiagonalOperator` is defined as:
 ```math
 P(\\phi) = \\begin{bmatrix}
-    i & 0 \\\\[0.5em]      
+    1 & 0 \\\\[0.5em]      
     0 & e^{i\\phi}
 \\end{bmatrix}.
 ```
 """ 
-
 phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
 
 """
@@ -1393,9 +1528,8 @@ function Base.show(io::IO, gate::AbstractGate)
     parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
-        show_gate(io, typeof(gate), targets, get_operator(gate))
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate))
     else
-        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate), parameters)
     end
 end
-
