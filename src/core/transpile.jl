@@ -1562,25 +1562,23 @@ end
 
 function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, gate::Swap)
     connected_qubits = get_connected_qubits(gate)
+    outlet_qubit_1 = 0
+    outlet_qubit_2 = 0
+
     if haskey(qubit_mapping, connected_qubits[1])
         outlet_qubit_2 = qubit_mapping[connected_qubits[1]]
         pop!(qubit_mapping, connected_qubits[1])
-        add_first_swap_branch_mapping!(qubit_mapping, connected_qubits)
-        qubit_mapping[connected_qubits[2]] = outlet_qubit_2
     else
-        add_first_swap_branch_mapping!(qubit_mapping, connected_qubits)
-        qubit_mapping[connected_qubits[2]] = connected_qubits[1]
+        outlet_qubit_2 = connected_qubits[1]
     end
-end
 
-function add_first_swap_branch_mapping!(qubit_mapping::Dict{Int,Int},
-    connected_qubits::Vector{<:Integer})
-   
     if haskey(qubit_mapping, connected_qubits[2])
-        outlet_qubit = qubit_mapping[connected_qubits[2]]
+        outlet_qubit_1 = qubit_mapping[connected_qubits[2]]
         pop!(qubit_mapping, connected_qubits[2])
-        qubit_mapping[connected_qubits[1]] = outlet_qubit
     else
-        qubit_mapping[connected_qubits[1]] = connected_qubits[2]
+        outlet_qubit_1 = connected_qubits[2]
     end
+
+    qubit_mapping[connected_qubits[1]] = outlet_qubit_1
+    qubit_mapping[connected_qubits[2]] = outlet_qubit_2
 end
