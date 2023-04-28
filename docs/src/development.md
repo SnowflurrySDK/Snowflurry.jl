@@ -75,7 +75,7 @@ include("./docs/make.jl")
 
 ## Run coverage locally
 
-If you haven't already, instantiated the project with Julia's package manager.
+If you haven't already, instantiate the project with Julia's package manager.
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.Instantiate()'
