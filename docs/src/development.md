@@ -43,7 +43,7 @@ First open a julia REPL using the docs project
 julia --project=./docs
 ```
 
-If it is the first time building the docs you need to instantiate the Julia project and add the Snowflake project as a development dependency.
+If it is the first time building the docs, you need to instantiate the Julia project and add the Snowflake project as a development dependency. This means the version of the Snowflake package loaded is the one at the path specified, `pwd()`, and not the one registered at JuliaHub.
 
 ```julia
 using Pkg
