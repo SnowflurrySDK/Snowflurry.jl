@@ -14,7 +14,7 @@ This example is going to how to run jobs asynchronously using Julia tasks. Async
 
 Communication with a quantum computer happens over a network. Any requests sent to a quantum computer are sent over the network. After the request is sent, we can only continue the job execution when we get a response from the quantum computer.
 
-If we absolutely have to have the job's result, we have no choice but to wait. Often, other work can be done while waiting for the quantum job to complete. We want to be able to suspend the `run_job` so that we can continue with other work until we are ready to use the result. This type of control flow is called asynchronous control flow. We recommend you read [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with it.
+If we absolutely have to have the job's result, we have no choice but to wait. Often, other work can be done while waiting for the quantum job to complete. We want to be able to continue with other work until we are ready to use the result. This type of control flow is called asynchronous control flow. We recommend you read [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with it.
 
 A quantum job communicating with a quantum computer will [yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution every time it waits for a response from the quantum computer. This gives you the opportunity to perform work while the quantum computer is running your job.
 
