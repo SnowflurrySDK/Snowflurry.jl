@@ -103,4 +103,4 @@ Dict("00" => 104, "11" => 96)
 
 In this example, we've gone over how to use asynchronous programming to do work while waiting for quantum jobs to complete.
 
-The full code is avilable at [examples/asynchronous\_jobs.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/asynchronous_jobs.jl)
+The full code is available at [examples/asynchronous\_jobs.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/examples/asynchronous_jobs.jl)
