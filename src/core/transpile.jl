@@ -1239,13 +1239,15 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
     output_circuit=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in gates
-
+        
         connected_qubits=get_connected_qubits(gate)
         (consecutive_mapping,sorting_order)=remap_qubits_to_consecutive(connected_qubits)
+        
+        params=get_gate_parameters(gate)
 
         if length(consecutive_mapping)>1
     
-            gates_block=[get_gate_type(gate)(consecutive_mapping...)]
+            gates_block=[get_gate_type(gate)(consecutive_mapping...,values(params)...)]
 
             @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
                 "Failed to construct gate: $(get_gate_type((gates_block[1])))")

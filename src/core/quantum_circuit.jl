@@ -209,13 +209,18 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
 
+    targets=get_connected_qubits(gate)
+
+    num_targets=length(targets)
+    num_params=length(gate_params)
+
     if isempty(gate_params)
         return gates_display_symbols[get_gate_type(gate)]
     else
         symbol_specs=gates_display_symbols[get_gate_type(gate)]
 
-        symbol_gate=symbol_specs[1]
-        fields=symbol_specs[2:end]
+        symbol_gate=symbol_specs[num_targets]
+        fields=symbol_specs[num_targets+1:end]
         repetitions=length(fields)
     
         # create format specifier of correct precision
@@ -231,7 +236,13 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
         end
     
         # construct label using gate_params
-        return [formatter(str_label_with_precision,parameter_values...)]
+        label_with_params=formatter(str_label_with_precision,parameter_values...)
+
+        if num_targets==1
+            return [label_with_params]
+        else
+            return vcat(symbol_specs[1:end-num_params-1],label_with_params)
+        end
     end
     
 end
