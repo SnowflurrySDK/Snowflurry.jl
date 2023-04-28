@@ -172,3 +172,17 @@ end
         gates=[sigma_x(2), sigma_x(1), hadamard(2)])
     @test compare_circuits(circuit, expected_circuit)
 end
+
+@testset "prepend" begin
+    circuit = QuantumCircuit(qubit_count=2, gates=[sigma_x(2)])
+    wide_circuit = QuantumCircuit(qubit_count=3)
+    @test_throws ErrorException prepend!(circuit, wide_circuit)
+
+    circuit_2 = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    circuit_3 = QuantumCircuit(qubit_count=2, gates=[hadamard(2)])
+    prepend!(circuit, circuit_2, circuit_3)
+
+    expected_circuit = QuantumCircuit(qubit_count=2,
+        gates=[sigma_x(1), hadamard(2), sigma_x(2)])
+    @test compare_circuits(circuit, expected_circuit)
+end

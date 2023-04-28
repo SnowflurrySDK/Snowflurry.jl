@@ -94,6 +94,18 @@ function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumC
     end
 end
 
+function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
+    for circuit in circuits_to_prepend
+        if base_circuit.qubit_count < circuit.qubit_count
+            throw(ErrorException("the circuit to prepend has more qubits "*
+                "($(circuit.qubit_count)) than the base circuit "*
+                "($(base_circuit.qubit_count) qubits)"))
+        else
+            prepend!(base_circuit.gates, circuit.gates)
+        end
+    end
+end
+
 
 """
     compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
