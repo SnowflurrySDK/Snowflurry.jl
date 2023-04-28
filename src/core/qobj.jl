@@ -699,11 +699,11 @@ Underlying data ComplexF64:
 
 ```
 """
-function get_embed_operator(op::DenseOperator, target_body_index::Int, system::MultiBodySystem)
+function get_embed_operator(op::T, target_body_index::Int, system::MultiBodySystem) where {T<:Union{DenseOperator, SparseOperator}}
     n_body = length(system.hilbert_space_structure)
     @assert target_body_index <= n_body
 
-    result = DenseOperator(
+    result = T(
         Matrix{eltype(op.data)}(
             I,
             system.hilbert_space_structure[1],
@@ -720,11 +720,12 @@ function get_embed_operator(op::DenseOperator, target_body_index::Int, system::M
             result = kron(result, op)
         else
             n_hilbert = system.hilbert_space_structure[i_body]
-            result = kron(result, DenseOperator(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
+            result = kron(result, T(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
         end
     end
     return result
 end
+
 
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(DenseOperator(op), target_body_index, system)
