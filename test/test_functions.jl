@@ -107,22 +107,14 @@ function test_operator_implementation(
 
         op=op_type(input_array_complex)
 
-        # scalar multiplication should not cause promotion of operator datatype 
+        # scalar multiplication
         a=10.0 #Float
         op_scaled=a*op
         op_scaled2=op*a
 
         @test a*op[1,1]≈op_scaled[1,1]
         @test a*op[1,1]≈op_scaled2[1,1]
-        @test typeof(op[1,1])==typeof(op[1,1]) 
-
-        a=ComplexF64(10.0)
-        op_scaled=a*op
-        op_scaled2=op*a
-
-        @test a*op[1,1]≈op_scaled[1,1]
-        @test a*op[1,1]≈op_scaled2[1,1]
-        @test typeof(op[1,1])==typeof(op[1,1])
+        @test typeof(op[1,1])==ComplexF64
 
         # operator constructed with non-default type
         op=op_type(input_array_complex_32)

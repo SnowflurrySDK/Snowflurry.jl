@@ -371,7 +371,7 @@ false
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
 
-Base.:*(s::Number, x::Ket) = Ket(eltype(x.data)(s) * x.data)
+Base.:*(s::Number, x::Ket) = Ket(s*x.data)
 Base.:*(x::Ket,s::Number) = Base.:*(s,x)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
@@ -406,9 +406,9 @@ Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex}
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(s::Number, A::AbstractOperator) = typeof(A)(eltype(A.data)(s)*A.data)
+Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
 Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
-Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(eltype(A.data)(s)*A.data)
+Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 Base.:*(A::AntiDiagonalOperator,s::Number) = Base.:*(s, A)
 
 # generic cases
