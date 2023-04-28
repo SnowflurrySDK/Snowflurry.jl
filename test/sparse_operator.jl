@@ -1,6 +1,10 @@
 using Snowflake
 using Test
 
+include("test_functions.jl")
+test_operator_implementation(SparseOperator,dim=2,label="SparseOperator",values=[1.,2.,0.,3.])
+ 
+
 @testset "SparseOperator" begin
     σ_z=SparseOperator([1.0 0.0;0.0 -1.0])
     σ_y=SparseOperator([0.0 -im;im 0.0])
@@ -34,4 +38,7 @@ using Test
     @test is_hermitian(σ_x)
 
     println(σ_x)  #test "show" function
+
+    get_matrix(σ_z) ≈ get_matrix(sigma_z()) #compare get_matrix for both sparse and dense operators
+
 end

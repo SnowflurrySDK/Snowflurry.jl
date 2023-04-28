@@ -170,6 +170,10 @@ end
 SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.sparse(Complex.(x)))
 # Constructor from Complex-valued Matrix
 SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sparse(x))
+# Constructor from Integer-valued Matrix
+# default output is Operator{ComplexF64}
+SparseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SparseOperator(Matrix{S}(x))
+
 
 """
     sparse(x::AbstractOperator)
@@ -181,13 +185,9 @@ Returns a SparseOperator representation of x.
 julia> z = sparse(sigma_z())
 (2, 2)-element Snowflake.SparseOperator:
 Underlying data ComplexF64:
-⠑
+ 1.0 + 0.0im        ⋅     
+      ⋅       -1.0 + 0.0im
 
-julia> z.data
-2×2 SparseArrays.SparseMatrixCSC{ComplexF64, Int64} with 2 stored entries:
- 1.0+0.0im       ⋅    
-     ⋅      -1.0+0.0im
-```
 """
 SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
@@ -580,8 +580,6 @@ julia> expected_value(A, ψ)
 ```
 """
 expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
-# expected_value(A::DenseOperator, psi::Ket) = (Bra(psi)*(A*psi))
-# expected_value(A::SparseOperator, psi::Ket) = (Bra(psi)*(A*psi))
 
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
@@ -734,6 +732,7 @@ get_matrix(op::AbstractOperator) =
     throw(NotImplementedError(:get_matrix,op))
 
 get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+get_matrix(op::SparseOperator{T}) where {T<:Complex} = convert(Matrix{T},op.data)
 
 function Base.show(io::IO, x::DenseOperator)
     println(io, "$(size(x.data))-element Snowflake.DenseOperator:")
@@ -754,7 +753,7 @@ end
 function Base.show(io::IO, x::SparseOperator)
     println(io, "$(size(x.data))-element Snowflake.SparseOperator:")
     println(io, "Underlying data $(eltype(x.data)):")
-    SparseArrays._show_with_braille_patterns(io,x.data)
+    Base.print_array(io,x.data)
 end
 
 

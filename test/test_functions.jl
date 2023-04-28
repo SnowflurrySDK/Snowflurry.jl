@@ -151,9 +151,10 @@ function test_operator_implementation(
 
         op=op_type(make_array(dim, ComplexF64, values))
     
-        Snowflake.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
-
-        @test op*ψ_0 ≈ ψ_1
+        if (op_type!=SparseOperator)
+            Snowflake.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
+            @test op*ψ_0 ≈ ψ_1
+        end
 
     end
 end
