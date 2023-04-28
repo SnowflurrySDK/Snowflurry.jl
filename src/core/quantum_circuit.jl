@@ -146,8 +146,60 @@ function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumC
     end
 end
 
+"""
+    prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
+
+Prepends one or more `circuits_to_prepend` to the `base_circuit`.
+
+The order of the `circuits_to_prepend` is maintained (i.e. `circuits_to_prepend[1]` will
+appear leftmost in `base_circuit`). The `circuits_to_prepend` cannot contain more qubits
+than the `base_circuit`.
+
+# Examples
+```jldoctest
+julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> prepend_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──Z──
+          
+
+
+
+julia> prepend_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──*──
+       |  
+q[2]:──X──
+          
+
+
+
+julia> prepend!(base, prepend_1, prepend_2)
+
+julia> print(base)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z────*────X──
+            |       
+q[2]:───────X───────
+                    
+
+
+```
+"""
 function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
-    for circuit in circuits_to_prepend
+    for circuit in reverse(circuits_to_prepend)
         if base_circuit.qubit_count < circuit.qubit_count
             throw(ErrorException("the circuit to prepend has more qubits "*
                 "($(circuit.qubit_count)) than the base circuit "*
