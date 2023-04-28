@@ -75,6 +75,35 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
 
+"""
+    is_gate_type(gate::AbstractGate, type::Type)::Bool 
+
+Determines if a `gate` is of the specified `type`.
+
+!!! warning "Use is_gate_type instead of isa!"
+    For `AbstractGate` objects, `is_gate_type` should be used instead of `isa`. The
+    utilization of `isa` could lead to unexpected behavior (e.g. if a gate has been moved).
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> is_gate_type(gate, Snowflake.SigmaX)
+true
+
+julia> is_gate_type(gate, Snowflake.SigmaY)
+false
+
+```
+"""
 is_gate_type(gate::AbstractGate, type::Type)::Bool = isa(gate, type)
 
 get_gate_type(gate::AbstractGate)::Type = typeof(gate)

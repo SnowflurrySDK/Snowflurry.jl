@@ -55,6 +55,7 @@ Base.:*(M::AbstractGate, x::Ket)
 apply_gate!
 get_operator
 inv(gate::AbstractGate)
+is_gate_type
 move_gate
 ```
 
