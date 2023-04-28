@@ -46,6 +46,8 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   qubit_count:   6
+   connectivity_type:  linear
 ```
 
 Next we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
