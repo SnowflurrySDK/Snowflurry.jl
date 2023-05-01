@@ -40,4 +40,15 @@ end
 
     @test kron(diag_op,anti_diag_op)≈ kron(diag_op_dense,anti_diag_op_dense)
 
+    # mixing operator data types
+
+    op_32=AntiDiagonalOperator(ComplexF32[3,4])
+    op_64=AntiDiagonalOperator(ComplexF64[1,5])
+
+    @test typeof((op_32*op_64)[1,1])==typeof(promote(op_32[1,1],op_64[1,1])[1])
+
+    op_32=AntiDiagonalOperator(ComplexF32[3,4])
+    op_64=DiagonalOperator(ComplexF64[3,4])
+
+    @test typeof((op_32*op_64)[1,1])==typeof(promote(op_32[1,1],op_64[1,1])[1])    
 end

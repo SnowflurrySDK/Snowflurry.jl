@@ -32,7 +32,9 @@ function test_operator_implementation(
 
     input_array_int     =make_array(dim, Int64 , values)
     input_array_float   =make_array(dim, Float64, values)
+    input_array_complex_int =make_array(dim, Complex{Int64}, values)
     input_array_complex =make_array(dim, ComplexF64, values)
+    input_array_complex_32 =make_array(dim, ComplexF32, values)
     complex_offset      =make_array(dim, ComplexF64, [0.0+im for _ in values])
 
     result_array        =make_array(dim, ComplexF64, values)
@@ -74,8 +76,13 @@ function test_operator_implementation(
         @test op[first_row,first_col]==result_array[1]
         @test op[last_row,last_col]==result_array[end]
 
-        # Constructor from Complex-valued Array
+        # Constructor from Complex{Float}-valued Array
         op=op_type(input_array_complex)
+        @test op[first_row,first_col]==result_array[1]
+        @test op[last_row,last_col]==result_array[end]
+
+        # Constructor from Complex{Int}-valued Array
+        op=op_type(input_array_complex_int)
         @test op[first_row,first_col]==result_array[1]
         @test op[last_row,last_col]==result_array[end]
 
@@ -97,6 +104,36 @@ function test_operator_implementation(
 
     test_label=string(label," math operations")
     @testset "$test_label"  begin
+
+        op=op_type(input_array_complex)
+
+        # scalar multiplication
+        a=10.0 #Float
+        op_scaled=a*op
+        op_scaled2=op*a
+
+        @test a*op[1,1]≈op_scaled[1,1]
+        @test a*op[1,1]≈op_scaled2[1,1]
+        @test typeof(op[1,1])==ComplexF64
+
+        # operator constructed with non-default type
+        op=op_type(input_array_complex_32)
+
+        a=10.0 #Float
+        op_scaled=a*op
+        op_scaled2=op*a
+
+        @test a*op[1,1]≈op_scaled[1,1]
+        @test a*op[1,1]≈op_scaled2[1,1]
+        @test typeof(op[1,1])==typeof(op[1,1])
+
+        a=ComplexF64(10.0)
+        op_scaled=a*op
+        op_scaled2=op*a
+
+        @test a*op[1,1]≈op_scaled[1,1]
+        @test a*op[1,1]≈op_scaled2[1,1]
+        @test typeof(op[1,1])==typeof(op[1,1])
 
         op=op_type(input_array_complex+complex_offset)
 

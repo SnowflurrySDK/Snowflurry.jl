@@ -1,5 +1,6 @@
 using Snowflake
 using Test
+using StaticArrays
 
 include("test_functions.jl")
 
@@ -8,7 +9,7 @@ test_operator_implementation(DenseOperator,dim=2,label="DenseOperator")
 @testset "DenseOperator: single target" begin
   
     dense_op=DenseOperator([[1.,2.] [3.,4.]])
-
+   
     # Base.:* specialization
 
     result=Matrix{ComplexF64}([[7.,10.] [15.,22.]])
@@ -34,6 +35,28 @@ test_operator_implementation(DenseOperator,dim=2,label="DenseOperator")
     vals, vecs = eigen(dense_op)
     @test vals[1] ≈  -0.37228132326901453 + 0.0im
     @test vals[2] ≈   5.372281323269014 + 0.0im
+
+    # construct from SizedMatrix{Float}
+    dense_op=DenseOperator(SizedMatrix(SMatrix{2,2}([1. 2.; 3. 4.])))
+
+    @test get_matrix(dense_op)==ComplexF64[1. 2.;3. 4.]
+
+    # construct from SizedMatrix{ComplexF64}
+    dense_op64=DenseOperator(SizedMatrix(SMatrix{2,2}(ComplexF64[1. 2.; 3. 4.])))
+
+    @test get_matrix(dense_op64)==ComplexF64[1. 2.;3. 4.]
+    @test eltype(get_matrix(dense_op64))==ComplexF64
+
+    # construct from SizedMatrix{ComplexF32}
+    dense_op32=DenseOperator(SizedMatrix(SMatrix{2,2}(ComplexF32[1. 2.; 3. 4.])))
+
+    @test get_matrix(dense_op32)==ComplexF32[1. 2.;3. 4.]
+    @test eltype(get_matrix(dense_op32))==ComplexF32
+
+    substract_op=dense_op64-dense_op32
+
+    @test get_matrix(substract_op)==ComplexF64[0. 0.;0. 0.]
+    @test eltype(get_matrix(substract_op))==ComplexF64
 
 end
 
