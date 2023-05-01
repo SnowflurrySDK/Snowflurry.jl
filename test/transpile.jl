@@ -382,6 +382,46 @@ end
 
 end
 
+@testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
+
+    struct MultiParamMultiTargetGate <: Snowflake.AbstractGate
+        target_1::Int
+        target_2::Int
+        target_3::Int
+        theta::Real
+        phi::Real
+    end
+
+    Snowflake.get_connected_qubits(gate::MultiParamMultiTargetGate)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflake.get_gate_parameters(gate::MultiParamMultiTargetGate)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
+    Snowflake.get_operator(gate::MultiParamMultiTargetGate, T::Type{<:Complex}=ComplexF64) = DenseOperator(
+        T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+        0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
+        0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+        0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+        0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0
+        0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+        0.0 0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.theta)
+        0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.phi) 0.0]
+    )
+
+    Snowflake.gates_display_symbols[MultiParamMultiTargetGate]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
+
+    Snowflake.gates_instruction_symbols[MultiParamMultiTargetGate]="mm"
+
+
+    circuit=QuantumCircuit(qubit_count=5,gates=[MultiParamMultiTargetGate(1,3,5,π,π/3)])
+
+    transpiler=SwapQubitsForLineConnectivityTranspiler()
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    println("circuit: $circuit") # test printout for multi-target multi-param gate
+    
+    @test compare_circuits(circuit,transpiled_circuit)
+
+end
+
 @testset "AnyonQPU: transpilation of native gates" begin            
     qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
 
