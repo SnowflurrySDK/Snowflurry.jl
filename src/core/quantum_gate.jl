@@ -68,6 +68,30 @@ Underlying data ComplexF64:
 
 ```
 
+To enable printout of a circuit containing our new gate type, a symbol 
+must be defined as follows.
+```jldoctest gate_struct
+julia> Snowflake.gates_display_symbols[X45]=["X45"];
+
+```
+
+If this gate is to be sent as an instructions to a hardware QPU, 
+an instruction string must be defined.
+```jldoctest gate_struct
+julia> Snowflake.gates_instruction_symbols[X45]="x45";
+
+```
+
+A circuit containing this gate can now be constructed:
+```jldoctest gate_struct
+julia> circuit=QuantumCircuit(qubit_count=2,gates=[x_45_gate])
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:──X45──
+
+q[2]:───────
+```
+
 """
 abstract type AbstractGate end
 
