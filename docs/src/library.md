@@ -10,6 +10,8 @@ DocTestSetup = :(using Snowflake, SnowflakePlots)
 QuantumCircuit
 push!
 pop!
+append!
+prepend!
 simulate
 simulate_shots
 get_measurement_probabilities(circuit::QuantumCircuit)

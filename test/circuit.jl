@@ -158,3 +158,31 @@ end
     probabilities = get_measurement_probabilities(circuit, target_qubit)
     @test probabilities ≈ [0, 1]
 end
+
+@testset "append" begin
+    circuit = QuantumCircuit(qubit_count=2, gates=[sigma_x(2)])
+    wide_circuit = QuantumCircuit(qubit_count=3)
+    @test_throws ErrorException append!(circuit, wide_circuit)
+
+    circuit_2 = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    circuit_3 = QuantumCircuit(qubit_count=2, gates=[hadamard(2)])
+    append!(circuit, circuit_2, circuit_3)
+
+    expected_circuit = QuantumCircuit(qubit_count=2,
+        gates=[sigma_x(2), sigma_x(1), hadamard(2)])
+    @test compare_circuits(circuit, expected_circuit)
+end
+
+@testset "prepend" begin
+    circuit = QuantumCircuit(qubit_count=2, gates=[sigma_x(2)])
+    wide_circuit = QuantumCircuit(qubit_count=3)
+    @test_throws ErrorException prepend!(circuit, wide_circuit)
+
+    circuit_2 = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    circuit_3 = QuantumCircuit(qubit_count=2, gates=[hadamard(1)])
+    prepend!(circuit, circuit_2, circuit_3)
+
+    expected_circuit = QuantumCircuit(qubit_count=2,
+        gates=[sigma_x(1), hadamard(1), sigma_x(2)])
+    @test compare_circuits(circuit, expected_circuit)
+end
