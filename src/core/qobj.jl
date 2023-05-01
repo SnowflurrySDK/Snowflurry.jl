@@ -417,7 +417,7 @@ Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOper
 
 # specializations
 Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
-    DenseOperator(promote(A.data,B.data)[1] + promote(A.data,B.data)[2])
+    DenseOperator(+(promote(A.data,B.data)...))
 
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
@@ -426,7 +426,7 @@ Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data
 
 # specializations
 Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
-    DenseOperator(promote(A.data,B.data)[1] - promote(A.data,B.data)[2])
+    DenseOperator(-(promote(A.data,B.data)...))
 
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
