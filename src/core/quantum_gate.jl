@@ -75,7 +75,7 @@ julia> Snowflake.gates_display_symbols[X45]=["X45"];
 
 ```
 
-If this gate is to be sent as an instructions to a hardware QPU, 
+If this gate is to be sent as an instruction to a hardware QPU, 
 an instruction string must be defined.
 ```jldoctest gate_struct
 julia> Snowflake.gates_instruction_symbols[X45]="x45";
@@ -279,6 +279,65 @@ function apply_gate!(state::Ket, gate::AbstractGate)
     apply_operator!(state,operator,connected_qubits)
 end
 
+# specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
+# `phase` argument adds a phase offset to swapped coefficients. 
+# adapted from https://github.com/qulacs/qulacs, method SWAP_gate_parallel_unroll()
+function apply_swap_operator!(
+    state::Ket,
+    connected_qubits::Vector{<:Integer};
+    phase::Complex=1.
+    )
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+    
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    (target_qubit_index_0,target_qubit_index_1)=
+        Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
+
+    loop_dim = div(dim,4)
+
+    mask_0 = UInt64(1) << target_qubit_index_0
+    mask_1 = UInt64(1) << target_qubit_index_1
+    
+    mask = mask_0 + mask_1
+
+    min_qubit_index = minimum([target_qubit_index_0, target_qubit_index_1])
+    max_qubit_index = maximum([target_qubit_index_0, target_qubit_index_1])
+    
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    if (target_qubit_index_0 == 0 || target_qubit_index_1 == 0)
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index_0 = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask_0;
+            basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+            @inbounds temp = state.data[basis_index_0+1]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*phase
+            @inbounds state.data[basis_index_1+1] = temp*phase
+        end
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)    
+            basis_index_0 = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask_0
+            basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+            @inbounds temp0 = state.data[basis_index_0+1]
+            @inbounds temp1 = state.data[basis_index_0+2]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*phase
+            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]*phase
+            @inbounds state.data[basis_index_1+1] = temp0*phase
+            @inbounds state.data[basis_index_1+2] = temp1*phase
+        end
+    end
+end
+
 # specialization for single target dense gate (size N=2, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()
 function apply_operator!(
@@ -319,7 +378,7 @@ end
 function apply_operator!(
     state::Ket,
     operator::DenseOperator{N},
-    connected_qubit::Vector{<:Integer}) where N 
+    connected_qubits::Vector{<:Integer}) where N 
 
     qubit_count = get_num_qubits(state)
 
@@ -329,8 +388,8 @@ function apply_operator!(
 
     # the bitwise implementation assumes target numbering starting at 0,
     # with first qubit on the rightmost side
-    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubit)])
-    target_qubit_index_count=UInt64(length(connected_qubit))
+    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)])
+    target_qubit_index_count=UInt64(length(connected_qubits))
     
     sort_array=Vector{UInt64}(undef, target_qubit_index_count)
     mask_array=Vector{UInt64}(undef, target_qubit_index_count)
@@ -1433,6 +1492,33 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
+
+# optimized application of a Swap-like gate without calling associated operator
+function apply_gate!(state::Ket, gate::Union{Swap,ISwap,ISwapDagger})
+    qubit_count = get_num_qubits(state)
+
+    connected_qubits=get_connected_qubits(gate)
+
+    @assert length(connected_qubits)==2 ("Swap requires 2 targets. Recieved $(length(connected_qubits))")
+
+    if any(t -> t>qubit_count ,connected_qubits)
+        throw(DomainError(connected_qubits,
+            "Not enough qubits in the Ket for the targets in gate"))
+    end
+
+    type_in_ket=eltype(state.data)
+
+    if get_gate_type(gate)==Swap
+        phase=type_in_ket(1.)
+    elseif get_gate_type(gate)==ISwap
+        phase=type_in_ket(im)
+    elseif get_gate_type(gate)==ISwapDagger
+        phase=type_in_ket(-im)
+    end
+
+    apply_swap_operator!(state,connected_qubits;phase=phase)
+end
+
 
 """
     Base.:*(M::AbstractGate, x::Ket)
