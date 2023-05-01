@@ -82,7 +82,18 @@ function mesolve(
     c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     )::Matrix{<:Real}
-    drho_dt(t,ρ) = -im*commute(H,ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
+    Hamiltonian(t) = H
+    mesolve(Hamiltonian, ρ_0, t; c_ops=c_ops, e_ops=e_ops)
+end
+
+function mesolve(
+    H::Function, 
+    ρ_0::AbstractOperator, 
+    t::StepRangeLen; 
+    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+    )::Matrix{<:Real}
+    drho_dt(t,ρ) = -im*commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
     n_t = length(t)
     n_o = length(e_ops)
     observable=zeros(n_t, n_o) 
