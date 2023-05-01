@@ -212,11 +212,19 @@ end
     @test test_inverse(cnot)
     inverse_cnot = inv(cnot)
     @test get_connected_qubits(cnot)==get_connected_qubits(inverse_cnot)
+    @test get_control_qubits(cnot)==[1]
+    @test get_target_qubits(cnot)==[2]
+    @test get_control_qubits(cnot)==get_control_qubits(inverse_cnot)
+    @test get_target_qubits(cnot)==get_target_qubits(inverse_cnot)
 
     cz = control_z(1, 2)
     @test test_inverse(cz)
     inverse_cz = inv(cz)
     @test get_connected_qubits(cz)==get_connected_qubits(inverse_cz)
+    @test get_control_qubits(cz)==[1]
+    @test get_target_qubits(cz)==[2]
+    @test get_control_qubits(cz)==get_control_qubits(inverse_cz)
+    @test get_target_qubits(cz)==get_target_qubits(inverse_cz)
 
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
@@ -339,12 +347,23 @@ end
 
     # test fallback implementation of inv(::AbstractGate)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
+
+    struct UnknownControlledGate<:AbstractControlledGate end
+
+    @test_throws NotImplementedError get_target_qubits(UnknownControlledGate())
+    @test_throws NotImplementedError get_control_qubits(UnknownControlledGate())
+
 end
 
 @testset "move_gate" begin
     target = 2
     theta = pi/2
     rx_gate = rotation_x(target, theta)
+    qubit_mapping = Dict(2=>3)
+    moved_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test_throws NotImplementedError get_control_qubits(moved_rx_gate)
+    @test_throws NotImplementedError get_target_qubits(moved_rx_gate)
+    
     qubit_mapping = Dict(1=>3, 3=>1)
     untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
     @test is_gate_type(untouched_rx_gate, Snowflake.RotationX)
@@ -369,6 +388,18 @@ end
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
     @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
     @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
+
+    qubit_mapping = Dict(2=>22, 3=>33,4=>44)
+    toffoli_gate = toffoli(2, 3, 4)
+    @test get_connected_qubits(toffoli_gate) == [2, 3, 4]
+    @test get_control_qubits(toffoli_gate)==[2,3]
+    @test get_target_qubits(toffoli_gate)==[4]
+
+    moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
+    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test get_connected_qubits(moved_toffoli_gate) == [22, 33, 44]
+    @test get_control_qubits(moved_toffoli_gate)==[22,33]
+    @test get_target_qubits(moved_toffoli_gate)==[44]
 end
 
 

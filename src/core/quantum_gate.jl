@@ -166,6 +166,34 @@ end
 
 get_connected_qubits(gate::MovedGate) = gate.connected_qubits
 
+function get_control_qubits(gate::MovedGate)::Vector{Int}
+    if gate.original_gate isa AbstractControlledGate
+        old_connected_qubits=get_connected_qubits(gate.original_gate)
+        old_control_qubits=get_control_qubits(gate.original_gate)
+
+        return [gate.connected_qubits[i] 
+            for (i,num) in enumerate(old_connected_qubits) 
+                if num in old_control_qubits
+            ]
+    else
+        throw(NotImplementedError(:get_control_qubits,gate))
+    end
+end
+
+function get_target_qubits(gate::MovedGate)::Vector{Int}
+    if gate.original_gate isa AbstractControlledGate
+        old_connected_qubits=get_connected_qubits(gate.original_gate)
+        old_target_qubits=get_target_qubits(gate.original_gate)
+
+        return [gate.connected_qubits[i] 
+            for (i,num) in enumerate(old_connected_qubits) 
+                if num in old_target_qubits
+            ]
+    else
+        throw(NotImplementedError(:get_target_qubits,gate))
+    end
+end
+
 function get_operator(gate::MovedGate, T::Type{<:Complex}=ComplexF64)
     return get_operator(gate.original_gate, T)
 end
@@ -1363,7 +1391,15 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-struct ControlZ <: AbstractGate
+abstract type AbstractControlledGate<:AbstractGate end
+
+get_control_qubits(gate::AbstractControlledGate)=
+    throw(NotImplementedError(:get_control_qubits,gate))
+
+get_target_qubits(gate::AbstractControlledGate)=
+    throw(NotImplementedError(:get_target_qubits,gate))
+
+struct ControlZ <: AbstractControlledGate
     control::Int
     target::Int
 end
@@ -1371,6 +1407,10 @@ end
 get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
+
+get_control_qubits(gate::ControlZ)=[gate.control]
+
+get_target_qubits(gate::ControlZ)=[gate.target]
 
 """
     control_x(control_qubit, target_qubit)
@@ -1384,7 +1424,7 @@ function control_x(control_qubit::Integer, target_qubit::Integer)
     return ControlX(control_qubit,target_qubit)
 end
 
-struct ControlX <: AbstractGate
+struct ControlX <: AbstractControlledGate
     control::Int
     target::Int
 end
@@ -1392,6 +1432,10 @@ end
 get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
+
+get_control_qubits(gate::ControlX)=[gate.control]
+
+get_target_qubits(gate::ControlX)=[gate.target]
 
 """
     iswap(qubit_1, qubit_2)
@@ -1455,7 +1499,7 @@ function toffoli(
     return Toffoli(control_qubit_1, control_qubit_2, target_qubit)
 end
 
-struct Toffoli <: AbstractGate
+struct Toffoli <: AbstractControlledGate
     control_1::Int
     control_2::Int
     target::Int
@@ -1464,6 +1508,10 @@ end
 get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
+
+get_control_qubits(gate::Toffoli)=[gate.control_1, gate.control_2]
+
+get_target_qubits(gate::Toffoli)=[gate.target]
 
 """
     iswap_dagger(qubit_1, qubit_2)
