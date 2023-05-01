@@ -18,10 +18,10 @@ end
 @testset "push_pop_gate" begin
     c = QuantumCircuit(qubit_count = 2)
     print(c)
-    push!(c, [hadamard(1)])
+    push!(c, hadamard(1))
     @test length(get_circuit_gates(c)) == 1
 
-    push!(c, [control_x(1, 2)])
+    push!(c, control_x(1, 2))
     @test length(get_circuit_gates(c)) == 2
     pop!(c)
     @test length(get_circuit_gates(c)) == 1
@@ -37,24 +37,24 @@ end
 @testset "print_circuit" begin
     c = QuantumCircuit(qubit_count = 2)
     for i = 1:50
-        push!(c, [control_x(1, 2)])
+        push!(c, control_x(1, 2))
     end
     print(c)
 
     c = QuantumCircuit(qubit_count = 10)
-    push!(c, [control_x(9, 10)])
+    push!(c, control_x(9, 10))
     print(c)
 
     c = QuantumCircuit(qubit_count = 3)
-    push!(c, [control_x(1, 3),rotation(2,π,-π/4),control_z(2,1)])
+    push!(c, control_x(1, 3), rotation(2,π,-π/4), control_z(2,1))
     print(c)
 end
 
 
 @testset "gate type in circuit" begin
     circuit = QuantumCircuit(qubit_count = 2)
-    push!(circuit, [hadamard(1)])
-    push!(circuit, [control_x(1, 2)])   
+    push!(circuit, hadamard(1))
+    push!(circuit, control_x(1, 2))   
 
     @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
@@ -72,8 +72,8 @@ end
     Ψ_p = (1.0 / sqrt(2.0)) * (Ψ_up + Ψ_down)
     Ψ_m = (1.0 / sqrt(2.0)) * (Ψ_up - Ψ_down)
     c = QuantumCircuit(qubit_count = 2)
-    push!(c, [hadamard(1)])
-    push!(c, [control_x(1, 2)])
+    push!(c, hadamard(1))
+    push!(c, control_x(1, 2))
     ψ = simulate(c)
     @test ψ ≈ 1 / sqrt(2.0) * (kron(Ψ_up, Ψ_up) + kron(Ψ_down, Ψ_down))
 
@@ -96,9 +96,9 @@ end
 
     c = QuantumCircuit(qubit_count = 2)
 
-    push!(c, [hadamard(1), sigma_x(2)])
-    push!(c, [hadamard(2)])
-    push!(c, [control_x(1, 2)])
+    push!(c, hadamard(1), sigma_x(2))
+    push!(c, hadamard(2))
+    push!(c, control_x(1, 2))
     ψ = simulate(c)
 
     @test ψ ≈ kron(Ψ_m, Ψ_m)
@@ -128,7 +128,7 @@ end
 
 @testset "get_num_gates_per_type" begin
     c = QuantumCircuit(qubit_count = 2)
-    push!(c, [sigma_x(1), sigma_x(2)])
+    push!(c, sigma_x(1), sigma_x(2))
     push!(c, control_x(1, 2))
     push!(c, sigma_x(2))
     gate_counts = get_num_gates_per_type(c)
@@ -137,7 +137,7 @@ end
 
 @testset "get_num_gates" begin
     c = QuantumCircuit(qubit_count = 2)
-    push!(c, [sigma_x(1), sigma_x(2)])
+    push!(c, sigma_x(1), sigma_x(2))
     push!(c, control_x(1, 2))
     push!(c, sigma_x(2))
     num_gates = get_num_gates(c)
@@ -146,7 +146,7 @@ end
 
 @testset "get_measurement_probabilities" begin
     circuit = QuantumCircuit(qubit_count=2)
-    push!(circuit, [hadamard(1), sigma_x(2)])
+    push!(circuit, hadamard(1), sigma_x(2))
     probabilities = get_measurement_probabilities(circuit)
     @test probabilities ≈ [0, 0.5, 0, 0.5]
 

@@ -27,7 +27,7 @@ Base.@kwdef struct QuantumCircuit
         c=new(qubit_count,[])
 
         # add gates, with ensure_gate_is_in_circuit()
-        push!(c,gates)
+        push!(c,gates...)
 
         return c
     end
@@ -38,16 +38,19 @@ get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
 get_circuit_gates(circuit::QuantumCircuit)=circuit.gates
 
 """
-    push!(circuit::QuantumCircuit, gate::AbstractGate)
-    push!(circuit::QuantumCircuit, gates::Array{AbstractGate})
+    push!(circuit::QuantumCircuit, gates::AbstractGate...)
 
-Pushes a single gate or an array of gates to the `circuit` gates. This function is mutable. 
+Inserts one or more `gates` at the end of a `circuit`.
+
+A `Vector` of `AbstractGate` objects can be passed to this function by using splatting.
+More details about splatting are provided
+[here](https://docs.julialang.org/en/v1/manual/faq/#What-does-the-...-operator-do?).
 
 # Examples
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, [hadamard(1),sigma_x(2)])
+julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -67,17 +70,24 @@ q[2]:───────X────X──
 
 
 
+julia> gate_list = [sigma_x(1), hadamard(2)];
+
+julia> push!(c, gate_list...)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──H─────────*────X───────
+                 |            
+q[2]:───────X────X─────────H──
+                              
+
+
+
 ```
 """
-function Base.push!(circuit::QuantumCircuit, gate::AbstractGate)
-    ensure_gate_is_in_circuit(circuit, gate)
-    push!(get_circuit_gates(circuit), gate)
-    return circuit
-end
-
-function Base.push!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
-    for gate in gates
-        push!(circuit, gate)
+function Base.push!(circuit::QuantumCircuit, gates::AbstractGate...)
+    for single_gate in gates
+        ensure_gate_is_in_circuit(circuit, single_gate)
+        push!(get_circuit_gates(circuit), single_gate)
     end
     return circuit
 end
@@ -425,7 +435,7 @@ Removes the last gate from `circuit.gates`.
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, [hadamard(1),sigma_x(2)])
+julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -756,7 +766,7 @@ is 50% and the probability of measuring 11 is also 50%.
 ```jldoctest get_circuit_measurement_probabilities
 julia> circuit = QuantumCircuit(qubit_count=2);
 
-julia> push!(circuit, [hadamard(1), sigma_x(2)])
+julia> push!(circuit, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -852,7 +862,7 @@ The dictionary keys are the instruction_symbol of the gates while the values are
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count=2);
 
-julia> push!(c, [hadamard(1), hadamard(2)]);
+julia> push!(c, hadamard(1), hadamard(2));
 
 julia> push!(c, control_x(1, 2));
 
@@ -895,7 +905,7 @@ Returns the number of gates in the `circuit`.
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count=2);
 
-julia> push!(c, [hadamard(1), hadamard(2)]);
+julia> push!(c, hadamard(1), hadamard(2));
 
 julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:

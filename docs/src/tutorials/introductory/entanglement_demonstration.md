@@ -55,7 +55,7 @@ q[2]:
 We must now apply our gates to our circuit.
 
 ```jldoctest entanglement_demonstration_tutorial; output = false
-push!(circuit, [hadamard(1), control_x(1, 2)])
+push!(circuit, hadamard(1), control_x(1, 2))
 
 # output
 

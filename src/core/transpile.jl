@@ -427,7 +427,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
 
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, Snowflake.Swap)
-            push!(output, cast_to_cz(gate))
+            push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
         end
@@ -484,7 +484,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
 
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, Snowflake.ControlX)
-            push!(output, cast_to_cz(gate))
+            push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
         end
@@ -548,7 +548,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
 
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, Snowflake.ISwap)
-            push!(output, cast_to_cz(gate))
+            push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
         end
@@ -629,7 +629,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
 
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, Snowflake.Toffoli)
-            push!(output, cast_to_cx(gate))
+            push!(output, cast_to_cx(gate)...)
         else
             push!(output, gate)
         end
@@ -839,7 +839,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
             end
 
             gate_array=cast_to_phase_shift_and_half_rotation_x(gate;atol=atol)
-            push!(output_circuit,gate_array)
+            push!(output_circuit, gate_array...)
         end
     end
 
@@ -943,7 +943,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
             end
 
             gate_array=cast_to_rz_rx_rz(gate)
-            push!(output_circuit,gate_array)
+            push!(output_circuit, gate_array...)
         end
     end
 
@@ -1016,7 +1016,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
         
         if is_gate_type(gate, RotationX)
             gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
-            push!(output_circuit,gate_array)
+            push!(output_circuit, gate_array...)
         else
             push!(output_circuit,gate)
         end
@@ -1261,7 +1261,7 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
                 consecutive_mapping
             )
 
-            push!(output_circuit,gates_block)
+            push!(output_circuit, gates_block...)
         else
             # no effect for single-target gate
             push!(output_circuit,gate)
@@ -1556,7 +1556,7 @@ function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::Quantu
             push!(reverse_transpiled_gates, moved_gate)
         end
     end
-    push!(output_circuit, reverse(reverse_transpiled_gates))
+    push!(output_circuit, reverse(reverse_transpiled_gates)...)
     return output_circuit
 end
 

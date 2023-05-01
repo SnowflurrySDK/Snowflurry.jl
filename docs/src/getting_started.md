@@ -47,8 +47,8 @@ q[2]:
 In Snowflake, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. We now proceed by adding gates to our circuit.
 
 ```jldoctest getting_started
-push!(c, [hadamard(1)])
-push!(c, [control_x(1, 2)])
+push!(c, hadamard(1))
+push!(c, control_x(1, 2))
 
 print(c)
 
@@ -94,8 +94,8 @@ The script below puts all the steps above together:
 ```julia
 using Snowflake, SnowflakePlots
 c = QuantumCircuit(qubit_count=2)
-push!(c, [hadamard(1)])
-push!(c, [control_x(1, 2)])
+push!(c, hadamard(1))
+push!(c, control_x(1, 2))
 ψ = simulate(c)
 plot_histogram(c, 100)
 ```
