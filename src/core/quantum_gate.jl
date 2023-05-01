@@ -366,6 +366,69 @@ function apply_operator!(
     end
 end
 
+# optimized application of ControlX gate on state Ket.  
+# adapted from https://github.com/qulacs/qulacs, method CNOT_gate_parallel_unroll()
+function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+
+    loop_dim = div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-target_qubit 
+    control_qubit_index=qubit_count-control_qubit 
+    
+    target_mask = UInt64(1) << target_qubit_index
+    control_mask = UInt64(1) << control_qubit_index
+
+    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
+    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1;
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    if target_qubit_index == 0
+        # swap neighboring two basis
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index = ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            @inbounds temp = state.data[basis_index+1]
+            @inbounds state.data[basis_index+1] = state.data[basis_index+2]
+            @inbounds state.data[basis_index+2] = temp
+        end
+    elseif (control_qubit_index == 0)
+        # no neighboring swap
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index_0 =(state_index & low_mask) + 
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+            @inbounds temp = state.data[basis_index_0+1]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
+            @inbounds state.data[basis_index_1+1] = temp
+        end
+    else
+        # a,a+1 is swapped to a^m, a^m+1, respectively
+        for state_index in StepRange(0,2,loop_dim-1)
+            basis_index_0 =(state_index & low_mask) + 
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+            @inbounds temp0 = state.data[basis_index_0+1]
+            @inbounds temp1 = state.data[basis_index_0+2]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
+            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]
+            @inbounds state.data[basis_index_1+1] = temp0
+            @inbounds state.data[basis_index_1+2] = temp1
+        end
+    end
+end
+
 # specialization for single target dense gate (size N=2, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()
 function apply_operator!(
@@ -1436,6 +1499,27 @@ get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
 get_control_qubits(gate::ControlX)=[gate.control]
 
 get_target_qubits(gate::ControlX)=[gate.target]
+
+# optimized application of ControlX gate without calling operator 
+# (it is hard-coded in apply_control_x!)
+function apply_gate!(state::Ket, gate::ControlX)
+    qubit_count = get_num_qubits(state)
+    
+    connected_qubits=get_connected_qubits(gate)
+
+    if any(t -> t>qubit_count ,connected_qubits)
+        throw(DomainError(connected_qubits,
+            "Not enough qubits in the Ket for the targets in gate"))
+    end
+
+    control_qubits=get_control_qubits(gate)
+    @assert length(control_qubits)==1
+
+    target_qubits=get_target_qubits(gate)
+    @assert length(target_qubits)==1
+
+    apply_control_x!(state,control_qubits[1],target_qubits[1])
+end
 
 """
     iswap(qubit_1, qubit_2)

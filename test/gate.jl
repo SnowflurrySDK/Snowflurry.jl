@@ -189,6 +189,22 @@ end
     @test get_instruction_symbol(iden) == "i"
     @test get_display_symbol(iden) ==["I"]
     @test get_matrix(get_operator(iden)) ≈ get_matrix(eye())
+    
+    cx=control_x(1,2)
+    
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+
+    ψ_1_2=Ket([1.,2.,4.,3.])
+    ψ_2_1=Ket([1.,4.,3.,2.])
+    
+    @test ψ_1_2 ≈ control_x(1,2)*ψ_input
+    @test ψ_2_1 ≈ control_x(2,1)*ψ_input
+
+    @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError control_x(1,10)*ψ_input
+    
 
 end
 
