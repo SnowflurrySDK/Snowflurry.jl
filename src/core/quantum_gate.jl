@@ -443,6 +443,52 @@ function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
     end
 end
 
+# optimized application of ControlZ gate on state Ket.  
+# adapted from https://github.com/qulacs/qulacs, method CZ_gate_parallel_unroll()
+function apply_control_z!(state::Ket,control_qubit::Int,target_qubit::Int)
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+
+    loop_dim = div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-target_qubit 
+    control_qubit_index=qubit_count-control_qubit 
+    
+    target_mask = UInt64(1) << target_qubit_index
+    control_mask = UInt64(1) << control_qubit_index
+
+    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
+    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1;
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    mask = target_mask + control_mask
+
+    if target_qubit_index == 0 || control_qubit_index == 0
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask
+            state.data[basis_index+1] *= -1
+        end
+    else
+        for state_index in StepRange(0,2,loop_dim-1)
+            basis_index = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask
+            state.data[basis_index+1] *= -1
+            state.data[basis_index+2] *= -1
+        end
+    end
+end
+
 # specialization for single target dense gate (size N=2, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()
 function apply_operator!(
@@ -1512,9 +1558,9 @@ get_control_qubits(gate::ControlX)=[gate.control]
 
 get_target_qubits(gate::ControlX)=[gate.target]
 
-# optimized application of ControlX gate without calling operator 
-# (it is hard-coded in apply_control_x!)
-function apply_gate!(state::Ket, gate::ControlX)
+# optimized application of ControlX or ControlZ gate without calling operator 
+# (it is hard-coded in apply_control_x! or apply_control_z!)
+function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ})
     qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
@@ -1530,7 +1576,11 @@ function apply_gate!(state::Ket, gate::ControlX)
     target_qubits=get_target_qubits(gate)
     @assert length(target_qubits)==1
 
-    apply_control_x!(state,control_qubits[1],target_qubits[1])
+    if get_gate_type(gate)==ControlX
+        apply_control_x!(state,control_qubits[1],target_qubits[1])
+    else
+        apply_control_z!(state,control_qubits[1],target_qubits[1])
+    end
 end
 
 """

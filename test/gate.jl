@@ -206,6 +206,20 @@ end
     @test_throws DomainError control_x(1,10)*ψ_input
     
 
+    cz=control_z(1,2)
+    
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+
+    ψ_1_2=Ket([1.,2.,3.,-4.])
+    
+    @test ψ_1_2 ≈ control_z(1,2)*ψ_input
+    @test ψ_1_2 ≈ control_z(2,1)*ψ_input
+
+    @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError control_x(1,10)*ψ_input
+
 end
 
 @testset "adjoint_gates" begin
