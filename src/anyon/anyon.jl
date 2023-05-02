@@ -173,23 +173,11 @@ function run_job(
 
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    status=get_status(client,circuitID;)
+    status=get_status(client,circuitID)
  
-    ref_time_query=Base.time_ns()
-    query_delay=100/1e6 #100 ms between queries to host
-
-    while true        
-        current_time=Base.time_ns()
-
-        if (current_time-ref_time_query)>query_delay
-            status=get_status(client,circuitID;)
-            ref_time_query=current_time
-        end
-           
-        if !(get_status_type(status) in [queued_status,running_status])
-            break
-        end
-
+    while get_status_type(status) in [queued_status,running_status]
+        sleep(0.1) #100 ms between queries to host
+        status=get_status(client,circuitID)
     end
     
     status_type=get_status_type(status)
