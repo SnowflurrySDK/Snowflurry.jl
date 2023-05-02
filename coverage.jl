@@ -48,6 +48,6 @@ println("Covered lines: $(covered_lines)")
 println("Total lines: $(total_lines)")
 println("Coverage percentage: $(covered_lines/total_lines)")
 
-println("\n\tDetailed results: \n")
+println("\n\tDetailed results, missed lines: \n")
 
 print_missed_lines(coverage)
