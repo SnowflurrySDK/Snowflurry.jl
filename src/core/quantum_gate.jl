@@ -164,47 +164,54 @@ struct MovedGate <:AbstractGate
     connected_qubits::Vector{Int}
 end
 
-get_connected_qubits(gate::MovedGate) = gate.connected_qubits
-
-function get_control_qubits(gate::MovedGate)::Vector{Int}
-    if gate.original_gate isa AbstractControlledGate
-        old_connected_qubits=get_connected_qubits(gate.original_gate)
-        old_control_qubits=get_control_qubits(gate.original_gate)
-
-        return [gate.connected_qubits[i] 
-            for (i,num) in enumerate(old_connected_qubits) 
-                if num in old_control_qubits
-            ]
-    else
-        throw(NotImplementedError(:get_control_qubits,gate))
-    end
+struct MovedControlledGate <:AbstractControlledGate
+    original_gate::AbstractControlledGate
+    connected_qubits::Vector{Int}
 end
 
-function get_target_qubits(gate::MovedGate)::Vector{Int}
-    if gate.original_gate isa AbstractControlledGate
-        old_connected_qubits=get_connected_qubits(gate.original_gate)
-        old_target_qubits=get_target_qubits(gate.original_gate)
+UnionMovedGates=Union{MovedGate,MovedControlledGate}
 
-        return [gate.connected_qubits[i] 
-            for (i,num) in enumerate(old_connected_qubits) 
-                if num in old_target_qubits
-            ]
-    else
-        throw(NotImplementedError(:get_target_qubits,gate))
-    end
+function get_control_qubits(gate::UnionMovedGates)::Vector{Int}
+    old_connected_qubits=get_connected_qubits(gate.original_gate)
+    old_control_qubits=get_control_qubits(gate.original_gate)
+
+    return [gate.connected_qubits[i] 
+        for (i,num) in enumerate(old_connected_qubits) 
+            if num in old_control_qubits
+        ]
 end
 
-function get_operator(gate::MovedGate, T::Type{<:Complex}=ComplexF64)
+get_control_qubits(::AbstractGate)=
+    throw(NotImplementedError(:get_control_qubits,gate))
+
+function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
+    old_connected_qubits=get_connected_qubits(gate.original_gate)
+    old_target_qubits=get_target_qubits(gate.original_gate)
+
+    return [gate.connected_qubits[i] 
+        for (i,num) in enumerate(old_connected_qubits) 
+            if num in old_target_qubits
+        ]
+end
+
+get_target_qubits(gate::AbstractGate)=
+    throw(NotImplementedError(:get_target_qubits,gate))
+
+function get_operator(gate::UnionMovedGates, T::Type{<:Complex}=ComplexF64)
     return get_operator(gate.original_gate, T)
 end
 
 Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
 
-get_gate_parameters(gate::MovedGate) = get_gate_parameters(gate.original_gate)
+Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate), gate.connected_qubits)
 
-is_gate_type(gate::MovedGate, type::Type)::Bool = isa(gate.original_gate, type)
+get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
 
-get_gate_type(gate::MovedGate)::Type = typeof(gate.original_gate)
+is_gate_type(gate::UnionMovedGates, type::Type)::Bool = isa(gate.original_gate, type)
+
+get_gate_type(gate::UnionMovedGates)::Type = typeof(gate.original_gate)
+
+get_connected_qubits(gate::Union{MovedGate,MovedControlledGate}) = gate.connected_qubits
 
 """
     move_gate(gate::AbstractGate,
@@ -241,8 +248,9 @@ Underlying data type: ComplexF64:
 
 ```
 """
-function move_gate(gate::AbstractGate,
-    qubit_mapping::AbstractDict{T,T})::AbstractGate where T<:Integer
+function move_gate(gate::G,
+    qubit_mapping::AbstractDict{T,T}
+    )::G where {T<:Integer,G<:UnionMovedGates}
 
     old_connected_qubits = get_connected_qubits(gate)
     new_connected_qubits = Int[]
@@ -257,7 +265,11 @@ function move_gate(gate::AbstractGate,
         end
     end
     if found_move
-        return MovedGate(gate, new_connected_qubits)
+        if G==AbstractControlledGate
+            return MovedControlledGate(gate, new_connected_qubits)
+        else
+            return MovedGate(gate, new_connected_qubits)
+        end
     else
         return gate
     end
