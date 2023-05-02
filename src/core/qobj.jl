@@ -201,6 +201,28 @@ DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{
 
 DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
 
+struct SwapLikeOperator{T<:Complex}<:AbstractOperator
+    phase::T
+end
+
+# Constructor from Real phase value, or other numeric types.
+SwapLikeOperator(phase::T) where {T<:Real} = SwapLikeOperator(Complex{T}(phase))
+
+# Constructor from Complex{Int} or Complex{Bool} such as `im`
+SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Complex{Bool}} = 
+    SwapLikeOperator(S(phase))
+
+# Constructor from Integer-valued phase
+# default output is Operator{ComplexF64}
+SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SwapLikeOperator(S(phase))
+
+# Cast SwapLikeOperator to DenseOperator
+DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
+    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, op.phase, 0.0] [0.0, op.phase, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+)
+
+get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
+
 """
 
 getindex(A::AbstractOperator, i::Integer, j::Integer)
@@ -338,6 +360,8 @@ Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
 Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
     AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
+Base.adjoint(A::SwapLikeOperator) = typeof(A)(adjoint(A.phase))
+
 
 """
     is_hermitian(A::AbstractOperator)
@@ -383,6 +407,10 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::SwapLikeOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x.phase, y.phase, atol=atol)
+
+Base.:isapprox(x::SwapLikeOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), y, atol=atol)
+Base.:isapprox(x::AbstractOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x, DenseOperator(y), atol=atol)
 
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
@@ -408,8 +436,12 @@ Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:
 
 Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
 Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
+
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 Base.:*(A::AntiDiagonalOperator,s::Number) = Base.:*(s, A)
+
+Base.:*(s::Number, A::SwapLikeOperator) = s*DenseOperator(A)
+Base.:*(A::SwapLikeOperator,s::Number)  = s*DenseOperator(A)
 
 # generic cases
 Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
@@ -422,6 +454,7 @@ Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Com
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)+DenseOperator(B)
 
 
 # specializations
@@ -431,6 +464,7 @@ Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Com
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)-DenseOperator(B)
 
 Base.length(x::Union{Ket, Bra}) = length(x.data)
 
@@ -553,6 +587,7 @@ Base.:size(M::AbstractOperator) = size(M.data)
 # specializations
 Base.:size(M::DiagonalOperator)     = (length(M.data),length(M.data))
 Base.:size(M::AntiDiagonalOperator) = (length(M.data),length(M.data))
+Base.:size(M::SwapLikeOperator) = (4,4)
 
 
 # iterator for Ket object
@@ -706,6 +741,25 @@ function Base.show(io::IO, x::DenseOperator)
                 print(io, "$(x.data[i, j])")
             else
                 print(io, "    $(x.data[i, j])")
+            end
+        end
+        println(io)
+    end
+end
+
+function Base.show(io::IO, x::SwapLikeOperator)
+    println(io, "$(size(x))-element Snowflake.SwapLikeOperator:")
+    println(io, "Underlying data $(eltype(x.phase)):")
+    (nrow, ncol) = size(x)
+
+    println(io, "Equivalent DenseOperator:")
+    denseop=DenseOperator(x)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
+            if j == 1
+                print(io, "$(denseop.data[i, j])")
+            else
+                print(io, "    $(denseop.data[i, j])")
             end
         end
         println(io)
