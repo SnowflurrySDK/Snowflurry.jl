@@ -190,8 +190,8 @@ end
     @test get_display_symbol(iden) ==["I"]
     @test get_matrix(get_operator(iden)) ≈ get_matrix(eye())
     
-    cx=control_x(1,2)
     
+    # ControlX   
     ψ_input=Ket([1.,2.,3.,4.])
     ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
 
@@ -206,8 +206,7 @@ end
     @test_throws DomainError control_x(1,10)*ψ_input
     
 
-    cz=control_z(1,2)
-    
+    # ControlX
     ψ_input=Ket([1.,2.,3.,4.])
     ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
 
@@ -219,6 +218,25 @@ end
     @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
 
     @test_throws DomainError control_x(1,10)*ψ_input
+
+    #Toffoli
+    ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.,5.,6.,7.,8.])
+
+    ψ_1_2_3=Ket([1.,2.,3.,4.,5.,6.,8.,7.])
+    ψ_1_3_2=Ket([1.,2.,3.,4.,5.,8.,7.,6.])
+    ψ_2_3_1=Ket([1.,2.,3.,8.,5.,6.,7.,4.])
+    
+    @test ψ_1_2_3 ≈ toffoli(1,2,3)*ψ_input
+    @test ψ_1_2_3 ≈ toffoli(2,1,3)*ψ_input
+    @test ψ_1_3_2 ≈ toffoli(1,3,2)*ψ_input
+    @test ψ_1_3_2 ≈ toffoli(3,1,2)*ψ_input
+    @test ψ_2_3_1 ≈ toffoli(2,3,1)*ψ_input
+    @test ψ_2_3_1 ≈ toffoli(3,2,1)*ψ_input
+
+    @test typeof(toffoli(1,2,3)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError toffoli(1,2,10)*ψ_input
 
 end
 
