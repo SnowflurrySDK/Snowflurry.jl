@@ -95,6 +95,8 @@ q[2]:───────
 """
 abstract type AbstractGate end
 
+abstract type AbstractControlledGate<:AbstractGate end
+
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict()
@@ -171,7 +173,7 @@ end
 
 UnionMovedGates=Union{MovedGate,MovedControlledGate}
 
-function get_control_qubits(gate::UnionMovedGates)::Vector{Int}
+function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
     old_connected_qubits=get_connected_qubits(gate.original_gate)
     old_control_qubits=get_control_qubits(gate.original_gate)
 
@@ -181,7 +183,7 @@ function get_control_qubits(gate::UnionMovedGates)::Vector{Int}
         ]
 end
 
-get_control_qubits(::AbstractGate)=
+get_control_qubits(gate::AbstractGate)=
     throw(NotImplementedError(:get_control_qubits,gate))
 
 function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
@@ -248,9 +250,9 @@ Underlying data type: ComplexF64:
 
 ```
 """
-function move_gate(gate::G,
+function move_gate(gate::AbstractGate,
     qubit_mapping::AbstractDict{T,T}
-    )::G where {T<:Integer,G<:UnionMovedGates}
+    )::AbstractGate where {T<:Integer}
 
     old_connected_qubits = get_connected_qubits(gate)
     new_connected_qubits = Int[]
@@ -265,7 +267,7 @@ function move_gate(gate::G,
         end
     end
     if found_move
-        if G==AbstractControlledGate
+        if gate isa AbstractControlledGate
             return MovedControlledGate(gate, new_connected_qubits)
         else
             return MovedGate(gate, new_connected_qubits)
@@ -1465,8 +1467,6 @@ function ensure_target_qubits_are_different(target::Array)
         end
     end
 end
-
-abstract type AbstractControlledGate<:AbstractGate end
 
 get_control_qubits(gate::AbstractControlledGate)=
     throw(NotImplementedError(:get_control_qubits,gate))

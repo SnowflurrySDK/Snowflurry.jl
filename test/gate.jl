@@ -416,6 +416,10 @@ end
     @test get_connected_qubits(moved_toffoli_gate) == [22, 33, 44]
     @test get_control_qubits(moved_toffoli_gate)==[22,33]
     @test get_target_qubits(moved_toffoli_gate)==[44]
+
+    inv_moved_toffoli_gate=inv(moved_toffoli_gate)
+
+    @test inv_moved_toffoli_gate==moved_toffoli_gate
 end
 
 
