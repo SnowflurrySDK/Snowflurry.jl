@@ -934,3 +934,13 @@ julia> get_num_gates(c)
 ```
 """
 get_num_gates(circuit::QuantumCircuit)::Integer=length(get_circuit_gates(circuit))
+
+function permute_qubits!(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
+    gates_list = get_circuit_gates(circuit)
+    for (i_gate, gate) in enumerate(gates_list)
+        moved_gate = move_gate(gate, qubit_mapping)
+        circuit.gates[i_gate] = moved_gate
+    end
+end

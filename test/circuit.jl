@@ -186,3 +186,13 @@ end
         gates=[sigma_x(1), hadamard(1), sigma_x(2)])
     @test compare_circuits(circuit, expected_circuit)
 end
+
+@testset "permute_qubits!" begin
+    circuit = QuantumCircuit(qubit_count=5, gates=[sigma_x(2), sigma_y(3), sigma_z(1),
+        hadamard(4)])
+    map = Dict(1=>3, 3=>1, 2=>5, 5=>2)
+    permute_qubits!(circuit, map)
+    expected_circuit = QuantumCircuit(qubit_count=5, gates=[sigma_x(5), sigma_y(1),
+        sigma_z(3), hadamard(4)])
+    @test compare_circuits(circuit, expected_circuit)
+end
