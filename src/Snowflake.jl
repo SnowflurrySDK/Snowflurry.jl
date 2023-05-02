@@ -22,6 +22,7 @@ export
     DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
+    SwapLikeOperator,
     MultiBodySystem,
     QuantumCircuit,
     AbstractGate,

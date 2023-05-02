@@ -9,12 +9,14 @@ function test_inverse(gate::AbstractGate)
 end
 
 function make_array(
-    dim::Integer,
+    dim::Union{Integer,Nothing},
     T::Type{<:Number}=Float64,
     values::Vector{<:Number}=[1.,2.,3.,4.]
     )
 
-    if dim ==1
+    if isnothing(dim)
+        return T(values[1])
+    elseif dim ==1
         return array_test=convert(Vector{T},values)
     elseif dim==2
         return array_test=convert(Matrix{T},reshape(values,2,2))
@@ -26,7 +28,7 @@ end
 
 function test_operator_implementation(
     op_type::Type{<:AbstractOperator};
-    dim::Integer=2,
+    dim::Union{Integer,Nothing}=2,
     label="",
     values::Vector{<:Number}=[1.,2.,3.,4.])
 
@@ -42,7 +44,11 @@ function test_operator_implementation(
     test_label=string(label," constructors")
     @testset "$test_label"  begin
 
-        matrix_size=div(length(values),dim)
+        if isnothing(dim)
+            matrix_size=4 #SwapLikeOperator are size (4,4)
+        else
+            matrix_size=div(length(values),dim)
+        end
 
         if op_type==AntiDiagonalOperator
             first_row=1
@@ -89,7 +95,7 @@ function test_operator_implementation(
         op=op_type(input_array_complex+complex_offset)
 
         # Constructor from adjoint(op_type{T})
-        if dim==1
+        if  isnothing(dim) || dim==1
             dense_mat=get_matrix(op)
             result=adjoint(dense_mat)
         else
@@ -138,28 +144,37 @@ function test_operator_implementation(
         op=op_type(input_array_complex+complex_offset)
 
         # Base.:+ and Base.:- 
-        sum_op=op+op
+        if (op_type==SwapLikeOperator)
+            sum_op=op+op
+            
+            @test sum_op≈ DenseOperator(op)+DenseOperator(op)
+                    
+            diff_op=sum_op-op
+            @test diff_op ≈ op
 
-        op_2=op_type(2*(input_array_complex+complex_offset))
-        
-        @test sum_op≈ op_2
-        @test sum_op≈ DenseOperator(op)+op
-        @test sum_op≈ op+DenseOperator(op)
-                
-        diff_op=sum_op-op
-        @test diff_op ≈ op
-        
-        diff_op=op_2-op
-        @test DenseOperator(op)≈ diff_op
+        else
+            sum_op=op+op
 
+            op_2=op_type(2*(input_array_complex+complex_offset))
+            
+            @test sum_op≈ op_2
+            @test sum_op≈ DenseOperator(op)+op
+            @test sum_op≈ op+DenseOperator(op)
+                    
+            diff_op=sum_op-op
+            @test diff_op ≈ op
 
-        @test get_matrix(2*op) == get_matrix(op + op)    
-        @test 2*op ≈ op + DenseOperator(op)
-        @test 2*op ≈ DenseOperator(op) + op
-
-        @test get_matrix(op) == get_matrix(2*op - op)
-        @test DenseOperator(op) ≈ 2*op - DenseOperator(op)
-        @test DenseOperator(op) ≈ 2*DenseOperator(op) - op
+            diff_op=op_2-op
+            @test DenseOperator(op)≈ diff_op
+            
+            @test get_matrix(2*op) == get_matrix(op + op)    
+            @test 2*op ≈ op + DenseOperator(op)
+            @test 2*op ≈ DenseOperator(op) + op
+            
+            @test get_matrix(op) == get_matrix(2*op - op)
+            @test DenseOperator(op) ≈ 2*op - DenseOperator(op)
+            @test DenseOperator(op) ≈ 2*DenseOperator(op) - op
+        end
         
         # Commutation relations
         
@@ -178,7 +193,10 @@ function test_operator_implementation(
 
     test_label=string(label," apply_operator")
     @testset "$test_label"  begin
-        if dim==1
+        if isnothing(dim)
+            ψ_0=Ket(collect(1:4))
+            ψ_1=Ket(collect(1:4))   
+        elseif dim==1
             ψ_0=Ket(make_array(dim, ComplexF64, values))
             ψ_1=Ket(make_array(dim, ComplexF64, values))           
         else

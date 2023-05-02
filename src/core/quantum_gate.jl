@@ -282,10 +282,10 @@ end
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
 # `phase` argument adds a phase offset to swapped coefficients. 
 # adapted from https://github.com/qulacs/qulacs, method SWAP_gate_parallel_unroll()
-function apply_swap_operator!(
+function apply_operator!(
     state::Ket,
-    connected_qubits::Vector{<:Integer};
-    phase::Complex=1.
+    op::SwapLikeOperator,
+    connected_qubits::Vector{<:Integer}
     )
     qubit_count = get_num_qubits(state)
 
@@ -319,8 +319,8 @@ function apply_swap_operator!(
                 ((state_index & high_mask) << 2) + mask_0;
             basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
             @inbounds temp = state.data[basis_index_0+1]
-            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*phase
-            @inbounds state.data[basis_index_1+1] = temp*phase
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
+            @inbounds state.data[basis_index_1+1] = temp*op.phase
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)    
@@ -330,10 +330,10 @@ function apply_swap_operator!(
             basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
             @inbounds temp0 = state.data[basis_index_0+1]
             @inbounds temp1 = state.data[basis_index_0+2]
-            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*phase
-            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]*phase
-            @inbounds state.data[basis_index_1+1] = temp0*phase
-            @inbounds state.data[basis_index_1+2] = temp1*phase
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
+            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]*op.phase
+            @inbounds state.data[basis_index_1+1] = temp0*op.phase
+            @inbounds state.data[basis_index_1+2] = temp1*op.phase
         end
     end
 end
@@ -967,9 +967,7 @@ iSWAP = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, im, 0.0] [0.0, im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
-)
+iswap(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(im))
 
 """
     swap()
@@ -984,9 +982,7 @@ iSWAP = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-swap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
-)
+swap(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(1.0))
 
 """
     toffoli()
@@ -1029,9 +1025,7 @@ iSWAP^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap_dagger(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, -im, 0.0] [0.0, -im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]],
-)
+iswap_dagger(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(-im))
 
 """
     sigma_x(target)
@@ -1492,33 +1486,6 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
-
-# optimized application of a Swap-like gate without calling associated operator
-function apply_gate!(state::Ket, gate::Union{Swap,ISwap,ISwapDagger})
-    qubit_count = get_num_qubits(state)
-
-    connected_qubits=get_connected_qubits(gate)
-
-    @assert length(connected_qubits)==2 ("Swap requires 2 targets. Recieved $(length(connected_qubits))")
-
-    if any(t -> t>qubit_count ,connected_qubits)
-        throw(DomainError(connected_qubits,
-            "Not enough qubits in the Ket for the targets in gate"))
-    end
-
-    type_in_ket=eltype(state.data)
-
-    if get_gate_type(gate)==Swap
-        phase=type_in_ket(1.)
-    elseif get_gate_type(gate)==ISwap
-        phase=type_in_ket(im)
-    elseif get_gate_type(gate)==ISwapDagger
-        phase=type_in_ket(-im)
-    end
-
-    apply_swap_operator!(state,connected_qubits;phase=phase)
-end
-
 
 """
     Base.:*(M::AbstractGate, x::Ket)
