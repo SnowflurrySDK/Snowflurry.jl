@@ -339,7 +339,7 @@ get_metadata(qpu::AbstractQPU) =
 is_native_gate(qpu::AbstractQPU,::AbstractGate) = 
     throw(NotImplementedError(:is_native_gate,qpu))
 
-is_native_circuit(qpu::AbstractQPU,::AbstractGate) =
+is_native_circuit(qpu::AbstractQPU,::QuantumCircuit) =
     throw(NotImplementedError(:is_native_circuit,qpu))
 
 get_transpiler(qpu::AbstractQPU)=
