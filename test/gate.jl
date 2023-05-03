@@ -206,7 +206,7 @@ end
     @test_throws DomainError control_x(1,10)*ψ_input
     
 
-    # ControlX
+    # ControlZ
     ψ_input=Ket([1.,2.,3.,4.])
     ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
 
