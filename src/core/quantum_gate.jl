@@ -626,7 +626,7 @@ function apply_operator!(
 
     # the bitwise implementation assumes target numbering starting at 0,
     # with first qubit on the rightmost side
-    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)])
+    target_qubit_index_list=Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
     target_qubit_index_count=UInt64(length(connected_qubits))
     
     sort_array=Vector{UInt64}(undef, target_qubit_index_count)
