@@ -113,14 +113,15 @@ function test_operator_implementation(
 
         op=op_type(input_array_complex)
 
-        # scalar multiplication
+        # scalar multiplication, enforcing Julia promotion conventions
         a=10.0 #Float
         op_scaled=a*op
         op_scaled2=op*a
 
         @test a*op[1,1]≈op_scaled[1,1]
         @test a*op[1,1]≈op_scaled2[1,1]
-        @test typeof(op[1,1])==ComplexF64
+        @test typeof(op_scaled[1,1])==typeof(promote(a,op[1,1])[1])
+        @test typeof(op_scaled2[1,1])==typeof(promote(a,op[1,1])[1])
 
         # operator constructed with non-default type
         op=op_type(input_array_complex_32)
@@ -131,7 +132,8 @@ function test_operator_implementation(
 
         @test a*op[1,1]≈op_scaled[1,1]
         @test a*op[1,1]≈op_scaled2[1,1]
-        @test typeof(op[1,1])==typeof(op[1,1])
+        @test typeof(op_scaled[1,1])==typeof(promote(a,op[1,1])[1])
+        @test typeof(op_scaled2[1,1])==typeof(promote(a,op[1,1])[1])
 
         a=ComplexF64(10.0)
         op_scaled=a*op
@@ -139,7 +141,8 @@ function test_operator_implementation(
 
         @test a*op[1,1]≈op_scaled[1,1]
         @test a*op[1,1]≈op_scaled2[1,1]
-        @test typeof(op[1,1])==typeof(op[1,1])
+        @test typeof(op_scaled[1,1])==typeof(promote(a,op[1,1])[1])
+        @test typeof(op_scaled2[1,1])==typeof(promote(a,op[1,1])[1])
 
         op=op_type(input_array_complex+complex_offset)
 

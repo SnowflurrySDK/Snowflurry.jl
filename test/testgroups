@@ -12,3 +12,4 @@ diagonal_operator
 diagonal_gate
 anti_diagonal_gate
 swap_operator
+identity_operator
