@@ -17,8 +17,11 @@ function print_missed_lines(fc::FileCoverage;num_char_to_print::Integer=100)
 
     for (i,counts) in enumerate(coverage)
         if counts==0
-            println("File: $(fc.filename),\t line number: $(i) : $(
-                lines[i][1:minimum([num_char_to_print,length(lines[i])])])")
+            print("File: $(fc.filename), \tline number: ")
+            printstyled("$(i)",color=:red)
+            printstyled(" : $(
+                lines[i][1:minimum([num_char_to_print,length(lines[i])])])\n",
+                color=:cyan)
         end
     end
 end
@@ -48,6 +51,8 @@ println("Covered lines: $(covered_lines)")
 println("Total lines: $(total_lines)")
 println("Coverage percentage: $(covered_lines/total_lines)")
 
-println("\n\tDetailed results, missed lines: \n")
+if ~(isapprox(covered_lines/total_lines,1.0))
+    println("\n\tDetailed results, missed lines: \n")
 
-print_missed_lines(coverage)
+    print_missed_lines(coverage)
+end
