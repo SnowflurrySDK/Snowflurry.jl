@@ -1759,8 +1759,8 @@ get_control_qubits(gate::Toffoli)=[gate.control_1, gate.control_2]
 
 get_target_qubits(gate::Toffoli)=[gate.target]
 
-# optimized application of ControlX or ControlZ gate without calling operator 
-# (it is hard-coded in apply_control_x! or apply_control_z!)
+# optimized application of ControlX, ControlZ or Toffoli gate without calling operator 
+# (it is hard-coded in apply_control_x!, apply_control_z! or apply_toffoli!, respectively)
 function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ,Toffoli})
     qubit_count = get_num_qubits(state)
     
