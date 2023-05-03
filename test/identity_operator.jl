@@ -2,8 +2,6 @@ using Snowflake
 using Test
 using StaticArrays
 
-include("test_functions.jl")
-
 label="IdentityOperator"
 
 test_label=string(label," constructors")
