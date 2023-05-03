@@ -5,7 +5,7 @@ using LinearAlgebra
 if ~(@isdefined(time_stamp)) 
     # enables time_stamp to be common for all benchmarks done through runBenchmarks.jl
     # or for individual benchmarks to be run seperately.
-    time_stamp=Dates.format(now(),"dd-mm-YYYY_HH:MM")
+    time_stamp=Dates.format(now(),"dd-mm-YYYY_HHhMM")
 end
 
 BLAS.set_num_threads(1)
