@@ -1491,7 +1491,7 @@ get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
 """
     identity_gate(target)
 
-Return the Identity `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to the target qubit.
+Return the Identity `Gate`, which applies the [`identity_gate()`](@ref) `IdentityOperator` to the target qubit.
 """
 identity_gate(target::Integer) = Identity(target)
 
