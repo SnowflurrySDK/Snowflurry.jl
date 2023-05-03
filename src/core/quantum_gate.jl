@@ -171,6 +171,9 @@ struct MovedControlledGate <:AbstractControlledGate
     connected_qubits::Vector{Int}
 end
 
+MovedGate(gate::AbstractControlledGate, connected_qubits::Vector{Int}) = 
+    MovedControlledGate(gate,connected_qubits)
+
 UnionMovedGates=Union{MovedGate,MovedControlledGate}
 
 function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
@@ -213,7 +216,7 @@ is_gate_type(gate::UnionMovedGates, type::Type)::Bool = isa(gate.original_gate, 
 
 get_gate_type(gate::UnionMovedGates)::Type = typeof(gate.original_gate)
 
-get_connected_qubits(gate::Union{MovedGate,MovedControlledGate}) = gate.connected_qubits
+get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
 
 """
     move_gate(gate::AbstractGate,
@@ -267,11 +270,7 @@ function move_gate(gate::AbstractGate,
         end
     end
     if found_move
-        if gate isa AbstractControlledGate
-            return MovedControlledGate(gate, new_connected_qubits)
-        else
-            return MovedGate(gate, new_connected_qubits)
-        end
+        return MovedGate(gate, new_connected_qubits)
     else
         return gate
     end
