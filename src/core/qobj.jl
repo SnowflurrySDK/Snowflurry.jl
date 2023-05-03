@@ -223,6 +223,14 @@ DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
 
 get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
 
+struct IdentityOperator{T<:Complex}<: AbstractOperator end
+
+IdentityOperator(T::Type=ComplexF64)=IdentityOperator{T}()
+
+DenseOperator(::IdentityOperator{T}) where {T<:Complex}=eye(T)
+
+get_matrix(op::IdentityOperator)=get_matrix(DenseOperator(op))
+
 """
 
 getindex(A::AbstractOperator, i::Integer, j::Integer)
@@ -362,6 +370,7 @@ Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
 
 Base.adjoint(A::SwapLikeOperator) = typeof(A)(adjoint(A.phase))
 
+Base.adjoint(A::IdentityOperator) = A
 
 """
     is_hermitian(A::AbstractOperator)
@@ -434,14 +443,13 @@ Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex}
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 
-Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
-Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
-
+Base.:*(s::Number, A::DenseOperator) = DenseOperator(s*A.data)
+Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
-Base.:*(A::AntiDiagonalOperator,s::Number) = Base.:*(s, A)
-
 Base.:*(s::Number, A::SwapLikeOperator) = s*DenseOperator(A)
-Base.:*(A::SwapLikeOperator,s::Number)  = s*DenseOperator(A)
+Base.:*(s::Number, A::IdentityOperator) = s*DenseOperator(A)
+
+Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
 
 # generic cases
 Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
@@ -588,6 +596,7 @@ Base.:size(M::AbstractOperator) = size(M.data)
 Base.:size(M::DiagonalOperator)     = (length(M.data),length(M.data))
 Base.:size(M::AntiDiagonalOperator) = (length(M.data),length(M.data))
 Base.:size(M::SwapLikeOperator) = (4,4)
+Base.:size(M::IdentityOperator) = (2,2)
 
 
 # iterator for Ket object

@@ -185,6 +185,11 @@ end
         "lambda"=>pi/2
         )
 
+    iden = identity_gate(1)
+    @test get_instruction_symbol(iden) == "i"
+    @test get_display_symbol(iden) ==["I"]
+    @test get_matrix(get_operator(iden)) ≈ get_matrix(eye())
+
 end
 
 @testset "adjoint_gates" begin
@@ -309,6 +314,11 @@ end
     @test test_inverse(u)
     inverse_u = inv(u)
     @test get_connected_qubits(u)==get_connected_qubits(inverse_u)
+
+    iden = identity_gate(1)
+    @test test_inverse(iden)
+    inverse_iden = inv(iden)
+    @test get_connected_qubits(iden)==get_connected_qubits(inverse_iden)
 
     struct UnknownGate <: AbstractGate
         instruction_symbol::String

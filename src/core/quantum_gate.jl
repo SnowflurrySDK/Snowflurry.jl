@@ -566,7 +566,8 @@ function apply_operator!(
     end
 end
 
-
+# IdentityOperator leaves the state Ket unchanged
+apply_operator!(state::Ket,op::IdentityOperator,connected_qubits::Vector{<:Integer})=nothing
 
 # Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
 function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qubit_index::UInt64)
@@ -1486,6 +1487,21 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
+
+"""
+    identity_gate(target)
+
+Return the Identity `Gate`, which applies the [`identity_gate()`](@ref) `IdentityOperator` to the target qubit.
+"""
+identity_gate(target::Integer) = Identity(target)
+
+struct Identity <: AbstractGate
+    target::Integer
+end
+
+get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{T}()
+
+get_connected_qubits(gate::Identity)=[gate.target]
 
 """
     Base.:*(M::AbstractGate, x::Ket)

@@ -384,6 +384,7 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 end
 
 gates_display_symbols=Dict(
+    Identity    =>["I"],
     SigmaX      =>["X"],
     SigmaY      =>["Y"],
     SigmaZ      =>["Z"],
@@ -412,6 +413,7 @@ gates_display_symbols=Dict(
 get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[get_gate_type(gate)]
 
 gates_instruction_symbols=Dict(
+    Identity    =>"i",
     SigmaX      =>"x",
     SigmaY      =>"y",
     SigmaZ      =>"z",

@@ -10,6 +10,7 @@ phi=π/7
 lambda=π/9
 
 single_qubit_gates=[
+    identity_gate(target),
     hadamard(target),
     phase_shift(target,-phi/2),
     pi_8(target),
@@ -33,6 +34,7 @@ test_circuits=[
     [
         sigma_x(1),
         sigma_y(1),
+        identity_gate(1),
         hadamard(2),
         control_x(1,3),
         sigma_x(2),

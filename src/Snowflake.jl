@@ -19,6 +19,7 @@ export
     Bra,
     Ket,
     AbstractOperator,
+    IdentityOperator,
     DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
@@ -116,6 +117,7 @@ export
     apply_gate!,
 
     # Gates
+    identity_gate,
     sigma_x,
     sigma_y,
     sigma_z,

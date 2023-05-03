@@ -28,6 +28,7 @@ circuit_contains_gate_type
 ```@docs
 AbstractGate
 eye
+identity_gate
 sigma_p
 sigma_m
 sigma_x
