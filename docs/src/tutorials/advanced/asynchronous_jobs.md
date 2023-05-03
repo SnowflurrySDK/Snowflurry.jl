@@ -23,7 +23,7 @@ A quantum job communicating with a quantum computer will [yield](https://docs.ju
 
 To give you maximum flexibility, Snowflake does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
 
-We will start by importing Snowflake, building our circuit, and defining our QPU. You can get more information on QPU objects at the [Get QPU Metadata example](./get_qpu_metadata.md) tutorial.
+We will start by importing Snowflake, building our circuit, and defining our QPU. You can get more information on QPU objects at the [Get QPU Metadata example](../introductory/get_qpu_metadata.md) tutorial.
 
 
 ```jldoctest asynchronous_job; output = false

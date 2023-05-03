@@ -189,6 +189,54 @@ end
     @test get_instruction_symbol(iden) == "i"
     @test get_display_symbol(iden) ==["I"]
     @test get_matrix(get_operator(iden)) ≈ get_matrix(eye())
+    
+    
+    # ControlX   
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+
+    ψ_1_2=Ket([1.,2.,4.,3.])
+    ψ_2_1=Ket([1.,4.,3.,2.])
+    
+    @test ψ_1_2 ≈ control_x(1,2)*ψ_input
+    @test ψ_2_1 ≈ control_x(2,1)*ψ_input
+
+    @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError control_x(1,10)*ψ_input
+    
+
+    # ControlZ
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+
+    ψ_1_2=Ket([1.,2.,3.,-4.])
+    
+    @test ψ_1_2 ≈ control_z(1,2)*ψ_input
+    @test ψ_1_2 ≈ control_z(2,1)*ψ_input
+
+    @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError control_x(1,10)*ψ_input
+
+    #Toffoli
+    ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.,5.,6.,7.,8.])
+
+    ψ_1_2_3=Ket([1.,2.,3.,4.,5.,6.,8.,7.])
+    ψ_1_3_2=Ket([1.,2.,3.,4.,5.,8.,7.,6.])
+    ψ_2_3_1=Ket([1.,2.,3.,8.,5.,6.,7.,4.])
+    
+    @test ψ_1_2_3 ≈ toffoli(1,2,3)*ψ_input
+    @test ψ_1_2_3 ≈ toffoli(2,1,3)*ψ_input
+    @test ψ_1_3_2 ≈ toffoli(1,3,2)*ψ_input
+    @test ψ_1_3_2 ≈ toffoli(3,1,2)*ψ_input
+    @test ψ_2_3_1 ≈ toffoli(2,3,1)*ψ_input
+    @test ψ_2_3_1 ≈ toffoli(3,2,1)*ψ_input
+
+    @test typeof(toffoli(1,2,3)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError toffoli(1,2,10)*ψ_input
 
 end
 
@@ -212,11 +260,19 @@ end
     @test test_inverse(cnot)
     inverse_cnot = inv(cnot)
     @test get_connected_qubits(cnot)==get_connected_qubits(inverse_cnot)
+    @test get_control_qubits(cnot)==[1]
+    @test get_target_qubits(cnot)==[2]
+    @test get_control_qubits(cnot)==get_control_qubits(inverse_cnot)
+    @test get_target_qubits(cnot)==get_target_qubits(inverse_cnot)
 
     cz = control_z(1, 2)
     @test test_inverse(cz)
     inverse_cz = inv(cz)
     @test get_connected_qubits(cz)==get_connected_qubits(inverse_cz)
+    @test get_control_qubits(cz)==[1]
+    @test get_target_qubits(cz)==[2]
+    @test get_control_qubits(cz)==get_control_qubits(inverse_cz)
+    @test get_target_qubits(cz)==get_target_qubits(inverse_cz)
 
     rx = rotation_x(1, pi/3)
     @test test_inverse(rx)
@@ -339,12 +395,23 @@ end
 
     # test fallback implementation of inv(::AbstractGate)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
+
+    struct UnknownControlledGate<:AbstractControlledGate end
+
+    @test_throws NotImplementedError get_target_qubits(UnknownControlledGate())
+    @test_throws NotImplementedError get_control_qubits(UnknownControlledGate())
+
 end
 
 @testset "move_gate" begin
     target = 2
     theta = pi/2
     rx_gate = rotation_x(target, theta)
+    qubit_mapping = Dict(2=>3)
+    moved_rx_gate = move_gate(rx_gate, qubit_mapping)
+    @test_throws NotImplementedError get_control_qubits(moved_rx_gate)
+    @test_throws NotImplementedError get_target_qubits(moved_rx_gate)
+    
     qubit_mapping = Dict(1=>3, 3=>1)
     untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
     @test is_gate_type(untouched_rx_gate, Snowflake.RotationX)
@@ -369,6 +436,22 @@ end
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
     @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
     @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
+
+    qubit_mapping = Dict(2=>22, 3=>33,4=>44)
+    toffoli_gate = toffoli(2, 3, 4)
+    @test get_connected_qubits(toffoli_gate) == [2, 3, 4]
+    @test get_control_qubits(toffoli_gate)==[2,3]
+    @test get_target_qubits(toffoli_gate)==[4]
+
+    moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
+    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test get_connected_qubits(moved_toffoli_gate) == [22, 33, 44]
+    @test get_control_qubits(moved_toffoli_gate)==[22,33]
+    @test get_target_qubits(moved_toffoli_gate)==[44]
+
+    inv_moved_toffoli_gate=inv(moved_toffoli_gate)
+
+    @test inv_moved_toffoli_gate==moved_toffoli_gate
 end
 
 
