@@ -22,6 +22,8 @@ serialize_job
 transpile
 compare_circuits
 circuit_contains_gate_type
+permute_qubits!
+permute_qubits
 ```
 
 ## Quantum Gates
