@@ -99,7 +99,7 @@ abstract type AbstractControlledGate<:AbstractGate end
 
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
-get_gate_parameters(gate::AbstractGate)=Dict()
+get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
