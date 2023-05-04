@@ -92,6 +92,9 @@ function stub_response_sequence(response_sequence::Vector{HTTP.Response})
   idx = 0
 
   return function(url::String, access_token::String)
+    if idx >= length(response_sequence)
+      throw(ErrorException("too many requests; response sequence exhausted"))
+    end
     idx += 1
     return response_sequence[idx]
   end
