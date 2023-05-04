@@ -182,12 +182,10 @@ function run_job(
     
     status_type=get_status_type(status)
 
-    if status_type == failed_status       
-        return Dict("error_msg"=>get_status_message(status))
-
-    elseif status_type == cancelled_status       
-        return Dict("error_msg"=>cancelled_status)
-    
+    if status_type == failed_status
+        throw(ErrorException(get_status_message(status)))
+    elseif status_type == cancelled_status
+        throw(ErrorException(cancelled_status))
     else 
         @assert status_type == succeeded_status (
             "Server returned an unrecognized status type: $status_type"

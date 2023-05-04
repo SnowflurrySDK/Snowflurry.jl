@@ -163,9 +163,37 @@ end
     
     #test basic submission, no transpilation
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    histogram=run_job(qpu, circuit ,num_repetitions)
+    histogram=run_job(qpu, circuit, num_repetitions)
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")
+
+    #verify that run_job blocks until a 'long-running' job completes
+    requestor=MockRequestor(
+      mock_response_sequence([
+        mockStatus("queued"),
+        mockStatus("running"),
+        mockStatus("running"),
+        mockStatus("succeeded"),
+        mockResult()
+      ]),
+      post_checker)
+    qpu = AnyonQPU(Client(host,user,access_token,requestor))
+    histogram=run_job(qpu, circuit, num_repetitions)
+    @test histogram==Dict("001"=>num_repetitions)
+    @test !haskey(histogram, "error_msg")
+
+    #verify that run_job returns an error if the QPU returns an error
+    requestor=MockRequestor(
+      mock_response_sequence([
+        mockStatus("queued"),
+        mockStatus("running"),
+        mockStatus("running"),
+        mockFailedStatus(),
+        mockFailureResult()
+      ]),
+      post_checker)
+    qpu = AnyonQPU(Client(host,user,access_token,requestor))
+    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
 
 end
 
