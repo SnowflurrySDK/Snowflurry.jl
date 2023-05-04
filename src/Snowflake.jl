@@ -46,6 +46,7 @@ export
     CastUniversalToRzRxRzTranspiler,
     SimplifyRxGatesTranspiler,
     SimplifyRzGatesTranspiler,
+    SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
     TrivialTranspiler,
     RemoveSwapBySwappingGates,

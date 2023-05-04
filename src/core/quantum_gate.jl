@@ -99,7 +99,7 @@ abstract type AbstractControlledGate<:AbstractGate end
 
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
-get_gate_parameters(gate::AbstractGate)=Dict()
+get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
@@ -991,15 +991,38 @@ T^\\dagger = \\begin{bmatrix}
 pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, exp(-im*pi/4.0)])
 
 """
-    eye()
+    eye(),
+    eye(size::Integer)
 
-Return the identity `Operator`, which is defined as:
+Return the identity matrix as a `DenseOperator`, which is defined as:
 ```math
 I = \\begin{bmatrix}
     1 & 0 \\\\
     0 & 1
     \\end{bmatrix}.
 ```
+
+Calling eye(size) will produce an identity matrix `DenseOperator` 
+of dimensions (size,size).
+
+# Examples
+```jldoctest
+julia> eye()
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im
+
+julia> eye(4)
+(4, 4)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+
+```
+
 """
 eye(T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, 2, 2))
 eye(size::Integer, T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, size, size))

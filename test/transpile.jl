@@ -450,6 +450,7 @@ end
     
     input_gates_foreign=[
         # gate_type, gate
+        identity_gate(target),
         hadamard(target),
         rotation(target,theta,phi),
         rotation_x(target,theta),

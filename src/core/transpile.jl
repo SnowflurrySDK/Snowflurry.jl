@@ -1592,3 +1592,128 @@ function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, gate::Swap)
     qubit_mapping[connected_qubits[1]] = outlet_qubit_1
     qubit_mapping[connected_qubits[2]] = outlet_qubit_2
 end
+
+struct SimplifyTrivialGatesTranspiler<:Transpiler 
+    atol::Real
+end
+
+SimplifyTrivialGatesTranspiler()=SimplifyTrivialGatesTranspiler(1e-6)
+
+function is_trivial_gate(gate::AbstractGate;atol=1e-6)::Bool
+    
+    params=get_gate_parameters(gate)
+
+    if is_gate_type(gate,Identity)
+        return true
+    elseif is_gate_type(gate,Universal)
+        if isapprox( params["theta"],   0.;atol=atol) && 
+            isapprox(params["phi"],     0.;atol=atol) &&
+            isapprox(params["lambda"],  0.;atol=atol)
+            return true
+        end
+    elseif is_gate_type(gate,Rotation)
+        if isapprox( params["theta"],   0.;atol=atol) && 
+            isapprox(params["phi"],     0.;atol=atol)
+            return true
+        end
+    elseif is_gate_type(gate,RotationX) || is_gate_type(gate,RotationY)
+        if isapprox(params["theta"],0.;atol=atol) 
+            return true
+        end
+    elseif is_gate_type(gate,PhaseShift)
+        if isapprox(params["phi"],0.;atol=atol)
+            return true
+        end
+    end
+    
+    return false
+end
+
+"""
+    transpile(::SimplifyTrivialGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `SimplifyTrivialGatesTranspiler` transpiler stage 
+which finds gates which have no effect on the state Ket, such as Identity, and 
+parameterized gates with null parameters such as rotation_x(target, 0.).
+The result of the input and output circuit on any 
+arbitrary state Ket is unchanged (up to a global phase). The tolerance 
+used for Base.isapprox() in each case can be set by passing an optional 
+argument to the Transpiler, e.g:
+transpiler=SimplifyTrivialGatesTranspiler(1.0e-10)
+
+# Examples
+```jldoctest
+julia> transpiler=Snowflake.SimplifyTrivialGatesTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[identity_gate(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──I──
+          
+q[2]:─────
+          
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:      
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──P(0.0000)──
+                  
+q[2]:─────────────
+                  
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:      
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,0.,0.,0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                             
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:
+     
+q[2]:      
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
+function transpile(
+    transpiler_stage::SimplifyTrivialGatesTranspiler, 
+    circuit::QuantumCircuit)::QuantumCircuit
+
+    qubit_count=get_num_qubits(circuit)
+    output=QuantumCircuit(qubit_count=qubit_count)
+
+    atol=transpiler_stage.atol
+
+    for gate in get_circuit_gates(circuit)
+        if ~is_trivial_gate(gate;atol=atol)
+            push!(output, gate)
+        end
+    end
+
+    return output
+end
