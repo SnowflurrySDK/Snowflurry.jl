@@ -12,26 +12,28 @@ include("SnowflakeBenchmarking.jl")
     end
 end
 
-outputpath=joinpath(commonpath,"data_PHASE")
+outputpath=joinpath(commonpath,datapath,"PHASE")
 
 if !ispath(outputpath)
     mkpath(outputpath)
 end
 
-write(joinpath(outputpath,"data_PHASE_$(time_stamp).json"), JSON.json(benchmarks))
+write(joinpath(outputpath,"PHASE_$(time_stamp).json"), JSON.json(benchmarks))
 
 plot(nqubits,
     benchmarks["PHASE"]["times"],
     label="PHASE",
     yaxis=:log, 
-    color="blue" 
+    color="blue",
+    dpi=dpi 
 )
 
 scatter!(
     nqubits,
     benchmarks["PHASE"]["times"],
     label=nothing,
-    color="blue"
+    color="blue",
+    dpi=dpi
 )
 
 
