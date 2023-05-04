@@ -426,6 +426,12 @@ end
     @test get_connected_qubits(moved_rx_gate) == [3]
     @test get_gate_parameters(moved_rx_gate) == Dict("theta"=>theta)
 
+    moved_twice_rx = move_gate(moved_rx_gate, qubit_mapping)
+    @test is_gate_type(moved_twice_rx, Snowflake.RotationX)
+    @test get_gate_type(moved_twice_rx) == Snowflake.RotationX
+    @test get_connected_qubits(moved_twice_rx) == [2]
+    @test get_gate_parameters(moved_twice_rx) == Dict("theta"=>theta)
+    
     inverse_moved_gate = inv(moved_rx_gate)
     @test is_gate_type(inverse_moved_gate, Snowflake.RotationX)
     @test get_connected_qubits(inverse_moved_gate) == [3]

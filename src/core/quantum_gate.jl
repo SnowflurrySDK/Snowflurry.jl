@@ -212,9 +212,11 @@ Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate
 
 get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
 
-is_gate_type(gate::UnionMovedGates, type::Type)::Bool = isa(gate.original_gate, type)
+function is_gate_type(gate::UnionMovedGates, type::Type)::Bool
+    return is_gate_type(gate.original_gate, type)
+end
 
-get_gate_type(gate::UnionMovedGates)::Type = typeof(gate.original_gate)
+get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
 
 get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
 
