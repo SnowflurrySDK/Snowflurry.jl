@@ -84,15 +84,15 @@ mockStatus(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":
 mockFailedStatus() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
 mockResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":\"100\"}}")
 mockFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
+mockCancelledResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
 
 # Returns a function that will yield the given responses in order as it's
 # repeatedly called.
 function mock_response_sequence(response_sequence::Vector{HTTP.Response})
-	idx = 0
+  idx = 0
 
-	return function(url::String, access_token::String)
-		idx += 1
-		println("url: $url, idx: $idx")
-		return response_sequence[idx]
-	end
+  return function(url::String, access_token::String)
+    idx += 1
+    return response_sequence[idx]
+  end
 end

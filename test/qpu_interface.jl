@@ -182,7 +182,7 @@ end
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram, "error_msg")
 
-    #verify that run_job returns an error if the QPU returns an error
+    #verify that run_job throws an error if the QPU returns an error
     requestor=MockRequestor(
       mock_response_sequence([
         mockStatus("queued"),
@@ -190,6 +190,19 @@ end
         mockStatus("running"),
         mockFailedStatus(),
         mockFailureResult()
+      ]),
+      post_checker)
+    qpu = AnyonQPU(Client(host,user,access_token,requestor))
+    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+
+    #verify that run_job throws an error if the job was cancelled
+    requestor=MockRequestor(
+      mock_response_sequence([
+        mockStatus("queued"),
+        mockStatus("running"),
+        mockStatus("running"),
+        mockStatus("cancelled"),
+        mockCancelledResult()
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
