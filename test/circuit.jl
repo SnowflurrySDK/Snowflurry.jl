@@ -195,4 +195,24 @@ end
     expected_circuit = QuantumCircuit(qubit_count=5, gates=[sigma_x(5), sigma_y(1),
         sigma_z(3), hadamard(4)])
     @test compare_circuits(circuit, expected_circuit)
+
+    circuit = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    map = Dict(1=>2)
+    @test_throws ErrorException permute_qubits!(circuit, map)
+
+    circuit = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    map = Dict(2=>1)
+    @test_throws ErrorException permute_qubits!(circuit, map)
+
+    circuit = QuantumCircuit(qubit_count=1, gates=[sigma_x(1)])
+    map = Dict(0=>2)
+    @test_throws ErrorException permute_qubits!(circuit, map)
+
+    circuit = QuantumCircuit(qubit_count=2, gates=[sigma_x(1), sigma_y(2)])
+    map = Dict(1=>1, 2=>1)
+    @test_throws ErrorException permute_qubits!(circuit, map)
+
+    circuit = QuantumCircuit(qubit_count=2, gates=[sigma_x(1), sigma_y(2)])
+    map = Dict(1=>2)
+    @test_throws ErrorException permute_qubits!(circuit, map)
 end

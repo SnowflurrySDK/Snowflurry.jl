@@ -938,6 +938,27 @@ get_num_gates(circuit::QuantumCircuit)::Integer=length(get_circuit_gates(circuit
 function permute_qubits!(circuit::QuantumCircuit,
     qubit_mapping::AbstractDict{T,T}) where T<:Integer
 
+    assert_qubit_mapping_is_valid(qubit_mapping, get_num_qubits(circuit))
+    unsafe_permute_qubits!(circuit, qubit_mapping)
+end
+
+function assert_qubit_mapping_is_valid(qubit_mapping::AbstractDict{T,T},
+    qubit_count::Integer) where T<:Integer
+
+    sorted_keys = sort(collect(keys(qubit_mapping)))
+    sorted_values = sort(collect(values(qubit_mapping)))
+    if sorted_keys != sorted_values
+        throw(ErrorException("the qubit mapping is invalid"))
+    end
+    if last(sorted_keys) < 1 || first(sorted_keys) > qubit_count
+        throw(ErrorException("the qubit mapping has a value that does not fit in the "*
+            "circuit"))
+    end
+end
+
+function unsafe_permute_qubits!(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
     gates_list = get_circuit_gates(circuit)
     for (i_gate, gate) in enumerate(gates_list)
         moved_gate = move_gate(gate, qubit_mapping)
