@@ -169,12 +169,12 @@ end
 
     #verify that run_job blocks until a 'long-running' job completes
     requestor=MockRequestor(
-      mock_response_sequence([
-        mockStatus("queued"),
-        mockStatus("running"),
-        mockStatus("running"),
-        mockStatus("succeeded"),
-        mockResult()
+      stub_response_sequence([
+        stubStatusResponse("queued"),
+        stubStatusResponse("running"),
+        stubStatusResponse("running"),
+        stubStatusResponse("succeeded"),
+        stubResult()
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
@@ -184,12 +184,12 @@ end
 
     #verify that run_job throws an error if the QPU returns an error
     requestor=MockRequestor(
-      mock_response_sequence([
-        mockStatus("queued"),
-        mockStatus("running"),
-        mockStatus("running"),
-        mockFailedStatus(),
-        mockFailureResult()
+      stub_response_sequence([
+        stubStatusResponse("queued"),
+        stubStatusResponse("running"),
+        stubStatusResponse("running"),
+        stubFailedStatusResponse(),
+        stubFailureResult()
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
@@ -197,12 +197,12 @@ end
 
     #verify that run_job throws an error if the job was cancelled
     requestor=MockRequestor(
-      mock_response_sequence([
-        mockStatus("queued"),
-        mockStatus("running"),
-        mockStatus("running"),
-        mockStatus("cancelled"),
-        mockCancelledResult()
+      stub_response_sequence([
+        stubStatusResponse("queued"),
+        stubStatusResponse("running"),
+        stubStatusResponse("running"),
+        stubStatusResponse("cancelled"),
+        stubCancelledResultResponse()
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))

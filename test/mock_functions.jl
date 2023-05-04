@@ -80,15 +80,15 @@ function request_checker(url::String,access_token::String)
     throw(NotImplementedError(:get_request,url))
 end
 
-mockStatus(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":\"$status\"}}")
-mockFailedStatus() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
-mockResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":\"100\"}}")
-mockFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
-mockCancelledResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
+stubStatusResponse(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":\"$status\"}}")
+stubFailedStatusResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
+stubResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":\"100\"}}")
+stubFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
+stubCancelledResultResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
 
 # Returns a function that will yield the given responses in order as it's
 # repeatedly called.
-function mock_response_sequence(response_sequence::Vector{HTTP.Response})
+function stub_response_sequence(response_sequence::Vector{HTTP.Response})
   idx = 0
 
   return function(url::String, access_token::String)
