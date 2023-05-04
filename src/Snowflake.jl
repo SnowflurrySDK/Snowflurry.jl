@@ -91,6 +91,7 @@ export
     circuit_contains_gate_type,
     compare_kets,
     permute_qubits!,
+    permute_qubits,
    
     transpile,
     get_status_type,

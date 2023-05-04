@@ -965,3 +965,11 @@ function unsafe_permute_qubits!(circuit::QuantumCircuit,
         circuit.gates[i_gate] = moved_gate
     end
 end
+
+function permute_qubits(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
+    circuit_copy = deepcopy(circuit)
+    permute_qubits!(circuit_copy, qubit_mapping)
+    return circuit_copy
+end
