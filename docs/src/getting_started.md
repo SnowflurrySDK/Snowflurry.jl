@@ -153,12 +153,60 @@ plot_histogram(ψ, 100)
 
 Let's see how how to run the circuit created in the previous section on real hardawre.
 
-We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to the page. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md).
+We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to [Quantum Processing Unit](./library.md#quantum-processing-unit). You can get more information on QPU objects at the [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md).
 
 Let's see how to submit the circuit created in the previous section to a virtual or real hardware. 
 ### Virtual QPU
 We can use Snowflake to create a virtual QPU on our local machine:
+
 ```jldoctest getting_started
+qpu = VirtualQPU()
+print(qpu)
+
+# output
+
+Quantum Simulator:
+   developers:  Anyon Systems Inc.
+   package:     Snowflake.jl
+
+```
+
+Because a virtual QPU can simulate any circuit as it is, we do not need to perform any transpilation or tests to run the jobs on the virtual QPU. Any circuit which is built using the gates in Snowflake can be run as-is on the qpu for a given number of shots. 
+```julia
+shots_count=100
+result=run_job(qpu, c,shots_count)
+```
+
+The `result` variable is a dictionary representing the histogram of the measurement results, with keys being the state vector, and values being the corresponding measurement counts:
+```julia
+print(result)
+Dict{String, Int64} with 2 entries:
+  "00" => 54
+  "11" => 46
+```
+The above output shows that both qubits were measured to be in state '0' in 54 shots out of 100 tries on the virtual QPU. Similarly, both qubits were measured to be in state `1` for 46 shots out of 100 shots run on the QPU. We can achieve statistical convergence by increasing the `shots_count` and observe that outcomes are measured with equal probability.
+
+The script below puts all the steps above together:
+
+```julia
+using Snowflake
+
+qpu = VirtualQPU()
+
+circuit = QuantumCircuit(qubit_count=2)
+push!(circuit, hadamard(1))
+push!(circuit, control_x(1, 2))
+
+num_repetitions = 200
+result = run_job(qpu, circuit, num_repetitions)
+
+```
+
+
+### Hardware QPU
+We can use Snowflake to submit a job to a real QPU:
+
+```julia
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
@@ -175,23 +223,12 @@ Quantum Processing Unit:
    qubit_count:   6
    connectivity_type:  linear
 ```
-Because a virtual QPU can simulate any circuit as it is, we do not need to perform any transpilation or tests to run the jobs on the virtual QPU. Any circuit which is built using the gates in Snowflake can be run as-is on the qpu for a given number of shots. 
-```julia
-shots_count=100
-result=run_job(qpu, c,shots_count)
-```
-The `result` variable is a dictionary representing the histogram of the measurement results, with keys being the state vector, and values being the corresponding measurement counts:
-```julia
-print(result)
-Dict{String, Int64} with 2 entries:
-  "00" => 54
-  "11" => 46
-```
-The above output shows that both qubits were measured to be in state '0' in 54 shots out of 100 tries on the virtual QPU. Similarly, both qubits were measured to be in state `1` for 46 shots out of 100 shots run on the QPU. We can achieve statistical convergence by increasing the `shots_count` and observe that outcomes are mesaured with equal probability.
 
-We can now run our circuit with
+Contraty to a virtual QPU, a physical QPU can only process a defined set of native gates. For any circuit that is contructed with Snowflake, a transpilation step is required, by which the circuit is converted into an equivalent one, but containing only gates that are native on the AnyonQPU. Optimization are also performed so that the total gate count is minimized.  
 
-```jldoctest getting_started; output = false, filter = r".*"
+The circuit is transpiled and run on AnyonQPU with the following command:
+
+```julia
 num_repetitions = 200
 result = transpile_and_run_job(qpu, circuit, num_repetitions)
 
@@ -199,7 +236,7 @@ result = transpile_and_run_job(qpu, circuit, num_repetitions)
 
 ```
 
-and plot the results with
+and the results are plotted with
 
 ```julia
 plot_histogram(result)
@@ -219,8 +256,8 @@ host = ENV["ANYON_QUANTUM_HOST"]
 qpu = AnyonQPU(host=host, user=user, access_token=token)
 
 circuit = QuantumCircuit(qubit_count=2)
-push!(circuit, [hadamard(1)])
-push!(circuit, [control_x(1, 2)])
+push!(circuit, hadamard(1))
+push!(circuit, control_x(1, 2))
 
 num_repetitions = 200
 result = transpile_and_run_job(qpu, circuit, num_repetitions)
