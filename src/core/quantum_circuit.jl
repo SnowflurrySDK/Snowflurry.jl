@@ -5,7 +5,7 @@
 A data structure to represent a *quantum circuit*.  
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
-- `gates::Array{Array{Gate}}` -- the sequence of gates to operate on qubits.
+- `gates::Vector{AbstractGate}` -- the sequence of gates to operate on qubits.
 
 # Examples
 ```jldoctest
