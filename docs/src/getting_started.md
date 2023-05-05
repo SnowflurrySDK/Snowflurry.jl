@@ -153,9 +153,10 @@ plot_histogram(ψ, 100)
 
 Let's see how how to run the circuit created in the previous section on real hardawre.
 
-We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to [Quantum Processing Unit](./library.md#quantum-processing-unit). You can get more information on QPU objects at the [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md).
+We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md) and [Quantum Processing Unit](./library.md#quantum-processing-unit).
 
 Let's see how to submit the circuit created in the previous section to a virtual or real hardware. 
+
 ### Virtual QPU
 We can use Snowflake to create a virtual QPU on our local machine:
 
@@ -171,7 +172,7 @@ Quantum Simulator:
 
 ```
 
-Because a virtual QPU can simulate any circuit as it is, we do not need to perform any transpilation or tests to run the jobs on the virtual QPU. Any circuit which is built using the gates in Snowflake can be run as-is on the qpu for a given number of shots. 
+Because a virtual QPU can simulate any circuit as it is, we do not need to perform any transpilation or tests to run the jobs on the virtual QPU. Any circuit which is built using the gates in Snowflake can be run on the qpu for a given number of shots. 
 ```julia
 shots_count=100
 result=run_job(qpu, c,shots_count)
