@@ -975,7 +975,7 @@ end
 """
     fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
 
-Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as a Ket.
+Returns the `i`th Fock basis of a Hilbert space with size `hspace_size` as a Ket.
 
 The Ket contains values of type `T`, which by default is ComplexF64.
 # Examples
