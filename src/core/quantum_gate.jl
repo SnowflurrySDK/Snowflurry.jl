@@ -477,15 +477,15 @@ function apply_control_z!(state::Ket,control_qubit::Int,target_qubit::Int)
             basis_index = (state_index & low_mask) +
                 ((state_index & mid_mask) << 1) +
                 ((state_index & high_mask) << 2) + mask
-            state.data[basis_index+1] *= -1
+            @inbounds state.data[basis_index+1] *= -1
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
             basis_index = (state_index & low_mask) +
                 ((state_index & mid_mask) << 1) +
                 ((state_index & high_mask) << 2) + mask
-            state.data[basis_index+1] *= -1
-            state.data[basis_index+2] *= -1
+            @inbounds state.data[basis_index+1] *= -1
+            @inbounds state.data[basis_index+2] *= -1
         end
     end
 end
@@ -664,16 +664,16 @@ function apply_operator!(
 
         # compute matrix-vector multiply
         for y in 0:(matrix_dim-1)
-            buffer_list[y+1] = 0
+            @inbounds buffer_list[y+1] = 0
             for x in 0:matrix_dim-1
-                buffer_list[y+1] += matrix[Int(x * matrix_dim + y +1)] *
+                @inbounds buffer_list[y+1] += matrix[Int(x * matrix_dim + y +1)] *
                  state.data[Int(basis_0 ⊻ matrix_mask_list[x+1] +1)]
             end
         end
 
         # set result
         for y in  0:(matrix_dim-1)
-            state.data[Int(basis_0 ⊻ matrix_mask_list[y+1]+1)] = buffer_list[y+1];
+            @inbounds state.data[Int(basis_0 ⊻ matrix_mask_list[y+1]+1)] = buffer_list[y+1];
         end
 
     end
@@ -756,7 +756,7 @@ function apply_operator!(
 
         # compute matrix-vector multiply
         for y in 0:(matrix_dim-1)
-            state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
+            @inbounds state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
         end
 
     end
@@ -777,7 +777,7 @@ function apply_operator!(
     # with first qubit on the rightmost side
     target_qubit_index=qubit_count-connected_qubit[1]
     
-    offdiagonal=operator.data
+    anti_diagonal=operator.data
 
     loop_dim = div(dim, 2);
     mask = (UInt64(1) << target_qubit_index);
@@ -786,21 +786,21 @@ function apply_operator!(
     
     if target_qubit_index==0 # (qubit_count-1)
         for basis_index in StepRange(0,2,dim-2)
-            temp = state.data[basis_index+1]
-            state.data[basis_index+1] = offdiagonal[1]*state.data[basis_index + 2]
-            state.data[basis_index+2] = offdiagonal[2]*temp
+            @inbounds temp = state.data[basis_index+1]
+            @inbounds state.data[basis_index+1] = anti_diagonal[1]*state.data[basis_index + 2]
+            @inbounds state.data[basis_index+2] = anti_diagonal[2]*temp
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
             basis_index_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
             basis_index_1 = basis_index_0 + mask
 
-            temp0 = state.data[basis_index_0+1];
-            temp1 = state.data[basis_index_0 + 2];
-            state.data[basis_index_0+1] = offdiagonal[1]*state.data[basis_index_1+1];
-            state.data[basis_index_0+2] = offdiagonal[1]*state.data[basis_index_1 + 2];
-            state.data[basis_index_1+1] = offdiagonal[2]*temp0;
-            state.data[basis_index_1+2] = offdiagonal[2]*temp1;
+            @inbounds temp0 = state.data[basis_index_0+1];
+            @inbounds temp1 = state.data[basis_index_0 + 2];
+            @inbounds state.data[basis_index_0+1] = anti_diagonal[1]*state.data[basis_index_1+1];
+            @inbounds state.data[basis_index_0+2] = anti_diagonal[1]*state.data[basis_index_1 + 2];
+            @inbounds state.data[basis_index_1+1] = anti_diagonal[2]*temp0;
+            @inbounds state.data[basis_index_1+2] = anti_diagonal[2]*temp1;
         end
     end
 end
