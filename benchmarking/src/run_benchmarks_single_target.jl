@@ -3,7 +3,7 @@ using Dates
 # this timestamp will propagate to all benchmarks output filenames
 time_stamp=Dates.format(now(),"dd-mm-YYYY_HHhMM")
 
-if @isdefined(ARGS)
+if @isdefined(ARGS) && length(ARGS)>0
     # pass a manual label to identify this benchmark run by defining 
     # ARGS="my_label" before including this script 
     manual_label=ARGS
@@ -12,7 +12,7 @@ if @isdefined(ARGS)
 
 end
 
-println("Launching benchmarks on single-target gate, label: $time_stamp")
+println("Launching benchmarks on single-target gates, label: $time_stamp")
 
 const prefix_benchmark_script_file="benchmark_"
 

@@ -3,7 +3,7 @@ using Dates
 # this timestamp will propagate to all benchmarks output filenames
 time_stamp=Dates.format(now(),"dd-mm-YYYY_HHhMM")
 
-if @isdefined(ARGS)
+if @isdefined(ARGS) && length(ARGS)>0
     # pass a manual label to identify this benchmark run by defining 
     # ARGS="my_label" before including this script 
     manual_label=ARGS

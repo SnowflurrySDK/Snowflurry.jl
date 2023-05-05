@@ -1,36 +1,51 @@
 #!/bin/bash
+##################################################################
+# Must be run as an executable shell script, (not using $ source).
+#
+# Call as:
+#
+# $ benchmarking/benchmarks.sh [OPTIONS]
+#
+##################################################################
+
 Help()
 {
    # Display Help
-   echo "Configure and run benchmarks on the Snowflake package."
+   echo "Run benchmarks on the Snowflake package and plot the results."
    echo
-   echo "Syntax: test [-a|s|l]"
+   echo "Syntax: test [-a|s|l|v|h]"
    echo "options:"
-   echo "a     run benchmarks on all gates [Default]."
+   echo "a     Run benchmarks on all gates [Default]."
    echo "s     Run benchmarks in single target gates."
-   echo "l     appends LABEL string to output files."
+   echo "l     Appends LABEL string to output files."
+   echo "v     Verbose: prints command sent to Julia REPL."
    echo "h     Show this help."
    echo
 }
 
 sim_type="all"
 LABEL=""
+VERBOSE=false
 
-while getopts ":hasl:" option; do
-   case $option in
-      h) # display Help
+while [ ! -z "$1" ]; do
+  case "$1" in
+      --help|-h) 
          Help
-         return 0;;
-      a) # run all
+         exit 0;;
+      --all|-a) 
          sim_type="all";;
-      s) 
+      --single|-s) 
          sim_type="single";;
-      l) 
-         LABEL=$OPTARG;;
-     \?) # Invalid option
-         echo "Error: Unrecognized option"
+      --label|-l) 
+         shift
+         LABEL="$1";;
+      --verbose|-v) 
+         VERBOSE=true;;
+      *) # Invalid option
+         echo "Error: Unrecognized option: $1"
          exit 1;;
-   esac
+  esac
+shift
 done
 
 
@@ -40,8 +55,10 @@ case $sim_type in
       echo -n "Running benchmarks on all gates";;
    "single")
       echo ""
-      echo -n "Running benchmarks on single target gates";;
+      echo -n "Running benchmarks on single-target gates";;
 esac
+
+COMMAND=""
 
 if [ "$LABEL" = "" ]; then
    echo ""
@@ -49,13 +66,6 @@ if [ "$LABEL" = "" ]; then
 else
    echo " using label: \"$LABEL\""
    echo ""
-fi
-
-COMMAND='using Pkg;
-          Pkg.develop(PackageSpec(path=pwd())); 
-          Pkg.instantiate();'
-
-if [ "$LABEL" != "" ]; then
    COMMAND="${COMMAND} ARGS=\"${LABEL}\";"
 fi
 
@@ -68,8 +78,12 @@ case $sim_type in
           include(\"benchmarking/src/plot.jl\");";;
 esac
 
-echo $COMMAND
-echo ""
+if $VERBOSE; then
+   echo "Command sent to Julia REPL:"
+   echo ""
+   echo $COMMAND
+   echo ""
+fi
 
 julia --project=benchmarking -e "$COMMAND";
 
