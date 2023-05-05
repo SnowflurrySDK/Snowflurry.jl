@@ -9,11 +9,11 @@ transpile(t::Transpiler,::QuantumCircuit)::QuantumCircuit=
     SequentialTranspiler(Vector{<:Transpiler})
     
 Composite transpiler object which is constructed from an array 
-of Transpiler stages. Calling 
-    `transpile(::SequentialTranspiler,::QuantumCircuit)``
+of `Transpiler`` stages. Calling 
+    `transpile(::SequentialTranspiler,::QuantumCircuit)`
 will apply each stage in sequence to the input circuit, and return
 a transpiled output circuit. The result of the input and output 
-circuit on any arbitrary state Ket is unchanged (up to a global phase).
+circuit on any arbitrary state `Ket` is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
@@ -301,9 +301,9 @@ end
 
 Implementation of the `CompressSingleQubitGatesTranspiler` transpiler stage 
 which gathers all single-qubit gates sharing a common target in an input 
-circuit and combines them into single universal gates in a new circuit.
+circuit and combines them into single `Universal` gates in a new circuit.
 Gates ordering may differ when gates are applied to different qubits, 
-but the result of the input and output circuit on any arbitrary state Ket 
+but the result of the input and output circuit on any arbitrary state `Ket` 
 is unchanged (up to a global phase).
 
 # Examples
@@ -396,8 +396,8 @@ struct CastSwapToCZGateTranspiler <: Transpiler end
     transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastSwapToCZGateTranspiler` transpiler stage which
-expands all Swap gates into CZ gates and single-qubit gates. The result of the
-input and output circuit on any arbitrary state Ket is unchanged (up to a
+expands all Swap gates into `CZ` gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
 # Examples
@@ -454,9 +454,9 @@ struct CastCXToCZGateTranspiler <: Transpiler end
 """
     transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `CastCZToCZGateTranspiler` transpiler stage which
-expands all CX gates into CZ gates and single-qubit gates. The result of the
-input and output circuit on any arbitrary state Ket is unchanged (up to a
+Implementation of the `CastCXToCZGateTranspiler` transpiler stage which
+expands all `CX` gates into `CZ` and `Hadamard` gates. The result of the
+input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
 # Examples
@@ -517,8 +517,8 @@ struct CastISwapToCZGateTranspiler <: Transpiler end
     transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastISwapToCZGateTranspiler` transpiler stage which
-expands all ISwap gates into CZ gates and single-qubit gates. The result of the
-input and output circuit on any arbitrary state Ket is unchanged (up to a
+expands all `ISwap` gates into `CZ` gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
 # Examples
@@ -594,8 +594,8 @@ struct CastToffoliToCXGateTranspiler <: Transpiler end
     transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastToffoliToCXGateTranspiler` transpiler stage which
-expands all Toffoli gates into CX gates and single-qubit gates. The result of the
-input and output circuit on any arbitrary state Ket is unchanged (up to a
+expands all Toffoli gates into `CX` gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
 # Examples
@@ -741,10 +741,10 @@ end
 
 Implementation of the `CastToPhaseShiftAndHalfRotationXTranspiler` transpiler stage 
 which converts all single-qubit gates in an input circuit and converts them 
-into combinations of PhaseShift and RotationX with angle π/2 in an output 
+into combinations of `PhaseShift` and `RotationX` with angle π/2 in an output 
 circuit. For any gate in the input circuit, the number of gates in the 
 output varies between zero and 5. The result of the input and output 
-circuit on any arbitrary state Ket is unchanged (up to a global phase).
+circuit on any arbitrary state `Ket` is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
@@ -874,10 +874,10 @@ struct CastUniversalToRzRxRzTranspiler<:Transpiler end
     transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
-which finds Universal gates in an input circuit and converst cast) 
-them into a sequence of PhaseShift (Rz), RotationX (Rx) and 
-PhaseShift (Rz) gates in a new circuit.
-The result of the input and output circuit on any arbitrary state Ket 
+which finds `Universal` gates in an input circuit and converst casts 
+them into a sequence of `PhaseShift` (Rz), `RotationX` (Rx) and 
+`PhaseShift` (Rz) gates in a new circuit.
+The result of the input and output circuit on any arbitrary state `Ket` 
 is unchanged (up to a global phase).
 
 # Examples
@@ -975,9 +975,9 @@ struct CastRxToRzAndHalfRotationXTranspiler<:Transpiler end
     transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastRxToRzAndHalfRotationXTranspiler` transpiler stage 
-which finds RotationX(θ) gates in an input circuit and converts (casts) 
-them into a sequence of gates: Z90,X90,PhaseShift(θ),XM90,ZM90 in a new circuit.
-The result of the input and output circuit on any arbitrary state Ket 
+which finds `RotationX(θ)` gates in an input circuit and converts (casts) 
+them into a sequence of gates: `Z90`,`X90`,`PhaseShift(θ)`,`XM90`,`ZM90` in a new circuit.
+The result of the input and output circuit on any arbitrary state `Ket` 
 is unchanged (up to a global phase).
 
 # Examples
@@ -1036,10 +1036,10 @@ SimplifyRxGatesTranspiler()=SimplifyRxGatesTranspiler(1e-6)
     transpile(::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `SimplifyRxGatesTranspiler` transpiler stage 
-which finds RotationX gates in an input circuit and according to it's 
-angle theta, casts them to one of the right-angle RotationX gates, 
-e.g. SigmaX, X90, or XM90. In the case where theta≈0., the gate is removed.
-The result of the input and output circuit on any arbitrary state Ket is 
+which finds `RotationX` gates in an input circuit and according to it's 
+angle theta, casts them to one of the right-angle `RotationX` gates, 
+e.g. `SigmaX`, `X90`, or `XM90`. In the case where `theta≈0.`, the gate is removed.
+The result of the input and output circuit on any arbitrary state `Ket` is 
 unchanged (up to a global phase).
 
 # Examples
@@ -1180,9 +1180,9 @@ end
     transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `SwapQubitsForLineConnectivityTranspiler` transpiler stage 
-which adds Swap gates around multi-qubit gates so that the 
-final operator acts on adjacent qubits. The result of the input 
-and output circuit on any arbitrary state Ket is unchanged 
+which adds `Swap` gates around multi-qubit gates so that the 
+final `Operator` acts on adjacent qubits. The result of the input 
+and output circuit on any arbitrary state `Ket` is unchanged 
 (up to a global phase).
 
 # Examples
@@ -1292,14 +1292,14 @@ SimplifyRzGatesTranspiler()=SimplifyRzGatesTranspiler(1e-6)
     transpile(::SimplifyRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `SimplifyRzGatesTranspiler` transpiler stage 
-which finds PhaseShift gates in an input circuit and according to it's 
-phase angle phi, casts them to one of the right-angle RotationZ gates, 
-e.g. SigmaZ, Z90, ZM90, Pi8 or Pi8Dagger. In the case where phi≈0., the 
+which finds `PhaseShift` gates in an input circuit and according to it's 
+phase angle phi, casts them to one of the right-angle `RotationZ` gates, 
+e.g. `SigmaZ`, `Z90`, `ZM90`, `Pi8` or `Pi8Dagger`. In the case where `phi≈0.`, the 
 gate is removed. The result of the input and output circuit on any 
-arbitrary state Ket is unchanged (up to a global phase). The tolerance 
-used for Base.isapprox() in each case can be set by passing an optional 
-argument to the Transpiler, e.g:
-transpiler=SimplifyRzGatesTranspiler(1.0e-10)
+arbitrary state `Ket` is unchanged (up to a global phase). The tolerance 
+used for `Base.isapprox()` in each case can be set by passing an optional 
+argument to the `Transpiler`, e.g:
+`transpiler=SimplifyRzGatesTranspiler(1.0e-10)`
 
 # Examples
 ```jldoctest
@@ -1445,7 +1445,7 @@ Implementation of the `CompressRzGatesTranspiler` transpiler stage
 which gathers all Rz-type gates sharing a common target in an input 
 circuit and combines them into single PhaseShift gate in a new circuit.
 Gates ordering may differ when gates are applied to different qubits, 
-but the result of the input and output circuit on any arbitrary state Ket 
+but the result of the input and output circuit on any arbitrary state `Ket` 
 is unchanged (up to a global phase).
 
 # Examples
