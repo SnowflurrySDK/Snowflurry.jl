@@ -17,7 +17,7 @@ circuit on any arbitrary state Ket is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SequentialTranspiler([Snowflake.CompressSingleQubitGatesTranspiler(),Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()]);
+julia> transpiler=SequentialTranspiler([CompressSingleQubitGatesTranspiler(),CastToPhaseShiftAndHalfRotationXTranspiler()]);
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1),hadamard(1)])
 Quantum Circuit Object:
@@ -308,7 +308,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CompressSingleQubitGatesTranspiler();
+julia> transpiler=CompressSingleQubitGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
@@ -371,7 +371,7 @@ function cast_to_cz(gate::AbstractGate)
     throw(NotImplementedError(:cast_to_cz,gate))
 end
 
-function cast_to_cz(gate::Snowflake.Swap)::AbstractVector{AbstractGate}
+function cast_to_cz(gate::Swap)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -402,7 +402,7 @@ global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastSwapToCZGateTranspiler();
+julia> transpiler=CastSwapToCZGateTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[swap(1, 2)])
 Quantum Circuit Object:
@@ -426,7 +426,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.Swap)
+        if is_gate_type(gate, Swap)
             push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
@@ -436,7 +436,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     return output
 end
 
-function cast_to_cz(gate::Snowflake.ControlX)::AbstractVector{AbstractGate}
+function cast_to_cz(gate::ControlX)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -461,7 +461,7 @@ global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastCXToCZGateTranspiler();
+julia> transpiler=CastCXToCZGateTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[control_x(1, 2)])
 Quantum Circuit Object:
@@ -483,7 +483,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.ControlX)
+        if is_gate_type(gate, ControlX)
             push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
@@ -493,7 +493,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     return output
 end
 
-function cast_to_cz(gate::Snowflake.ISwap)::AbstractVector{AbstractGate}
+function cast_to_cz(gate::ISwap)::AbstractVector{AbstractGate}
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
@@ -523,7 +523,7 @@ global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastISwapToCZGateTranspiler();
+julia> transpiler=CastISwapToCZGateTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[iswap(1, 2)])
 Quantum Circuit Object:
@@ -547,7 +547,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.ISwap)
+        if is_gate_type(gate, ISwap)
             push!(output, cast_to_cz(gate)...)
         else
             push!(output, gate)
@@ -600,7 +600,7 @@ global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastToffoliToCXGateTranspiler();
+julia> transpiler=CastToffoliToCXGateTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1, 2, 3)])
 Quantum Circuit Object:
@@ -628,7 +628,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.Toffoli)
+        if is_gate_type(gate, Toffoli)
             push!(output, cast_to_cx(gate)...)
         else
             push!(output, gate)
@@ -748,7 +748,7 @@ circuit on any arbitrary state Ket is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler();
+julia> transpiler=CastToPhaseShiftAndHalfRotationXTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_x(1)])
 Quantum Circuit Object:
@@ -834,7 +834,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(is_gate_type(gate, Snowflake.Universal))
+            if !(is_gate_type(gate, Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -882,7 +882,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastUniversalToRzRxRzTranspiler();
+julia> transpiler=CastUniversalToRzRxRzTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[universal(1,π/2,π/4,π/8)])
 Quantum Circuit Object:
@@ -938,7 +938,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(is_gate_type(gate, Snowflake.Universal))
+            if !(is_gate_type(gate, Universal))
                 gate=as_universal_gate(targets[1],get_operator(gate))
             end
 
@@ -982,7 +982,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CastRxToRzAndHalfRotationXTranspiler();
+julia> transpiler=CastRxToRzAndHalfRotationXTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,π/8)])
 Quantum Circuit Object:
@@ -1044,7 +1044,7 @@ unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SimplifyRxGatesTranspiler();
+julia> transpiler=SimplifyRxGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[rotation_x(1,pi/2)])
 Quantum Circuit Object:
@@ -1117,7 +1117,7 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.RotationX)
+        if is_gate_type(gate, RotationX)
             new_gate=simplify_rx_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["theta"];
@@ -1187,7 +1187,7 @@ and output circuit on any arbitrary state Ket is unchanged
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SwapQubitsForLineConnectivityTranspiler();
+julia> transpiler=SwapQubitsForLineConnectivityTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 6, gates=[toffoli(4,6,1)])
 Quantum Circuit Object:
@@ -1303,7 +1303,7 @@ transpiler=SimplifyRzGatesTranspiler(1.0e-10)
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SimplifyRzGatesTranspiler();
+julia> transpiler=SimplifyRzGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi/2)])
 Quantum Circuit Object:
@@ -1377,7 +1377,7 @@ function transpile(
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Snowflake.PhaseShift)
+        if is_gate_type(gate, PhaseShift)
             new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
                 get_gate_parameters(gate)["phi"],
@@ -1450,7 +1450,7 @@ is unchanged (up to a global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.CompressRzGatesTranspiler();
+julia> transpiler=CompressRzGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[sigma_z(1),z_90(1)])
 Quantum Circuit Object:
@@ -1643,7 +1643,7 @@ transpiler=SimplifyTrivialGatesTranspiler(1.0e-10)
 
 # Examples
 ```jldoctest
-julia> transpiler=Snowflake.SimplifyTrivialGatesTranspiler();
+julia> transpiler=SimplifyTrivialGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[identity_gate(1)])
 Quantum Circuit Object:
