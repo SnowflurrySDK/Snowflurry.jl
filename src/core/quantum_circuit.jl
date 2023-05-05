@@ -826,7 +826,8 @@ end
 """
     inv(circuit::QuantumCircuit)
 
-Return a `QuantumCircuit` which is the inverse of the input `circuit`.
+Return a `QuantumCircuit` which is the inverse of the input `circuit`. 
+Each gate is replaced by it's corresponding inverse, and the order of gates is reversed.
 
 # Examples
 ```jldoctest
