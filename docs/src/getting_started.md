@@ -155,6 +155,9 @@ Let's see how how to run the circuit created in the previous section on real har
 
 We want to interact with Anyon's Quantum Computers, so we are going to construct an `AnyonQPU`. Three things are needed to construct an `AnyonQPU`. We need the username and access token to authenticate with the quantum computer and the hostname where the quantum computer can be found. The easiest way to get these parameters is by reading them from environment variables. For more information on QPU objects please go to the page. You can get more information on QPU objects at the [Get QPU Metadata tutorial](./tutorials/introductory/get_qpu_metadata.md).
 
+Let's see how to submit the circuit created in the previous section to a virtual or real hardware. 
+### Virtual QPU
+We can use Snowflake to create a virtual QPU on our local machine:
 ```jldoctest getting_started
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
@@ -172,6 +175,19 @@ Quantum Processing Unit:
    qubit_count:   6
    connectivity_type:  linear
 ```
+Because a virtual QPU can simulate any circuit as it is, we do not need to perform any transpilation or tests to run the jobs on the virtual QPU. Any circuit which is built using the gates in Snowflake can be run as-is on the qpu for a given number of shots. 
+```julia
+shots_count=100
+result=run_job(qpu, c,shots_count)
+```
+The `result` variable is a dictionary representing the histogram of the measurement results, with keys being the state vector, and values being the corresponding measurement counts:
+```julia
+print(result)
+Dict{String, Int64} with 2 entries:
+  "00" => 54
+  "11" => 46
+```
+The above output shows that both qubits were measured to be in state '0' in 54 shots out of 100 tries on the virtual QPU. Similarly, both qubits were measured to be in state `1` for 46 shots out of 100 shots run on the QPU. We can achieve statistical convergence by increasing the `shots_count` and observe that outcomes are mesaured with equal probability.
 
 We can now run our circuit with
 
