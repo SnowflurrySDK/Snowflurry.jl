@@ -13,13 +13,13 @@ Help()
    # Display Help
    echo "Run benchmarks on the Snowflake package and plot the results."
    echo
-   echo "Syntax: test [-a|s|l|v|h]"
+   echo "Syntax: benchmarking/benchmarks.sh [-a|s|l|v|h]"
    echo "options:"
-   echo "a     Run benchmarks on all gates [Default]."
-   echo "s     Run benchmarks in single target gates."
-   echo "l     Appends LABEL string to output files."
-   echo "v     Verbose: prints command sent to Julia REPL."
-   echo "h     Show this help."
+   echo "--all|-a       Run benchmarks on all gates [Default]."
+   echo "--single|-s    Run benchmarks in single target gates."
+   echo "--label|-l     Following argument is appended to output filenames: -l \"_my_label\""
+   echo "--verbose|-v   Verbose: prints command sent to Julia REPL."
+   echo "--help|-h      Show this help."
    echo
 }
 
