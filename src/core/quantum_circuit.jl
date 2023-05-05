@@ -641,7 +641,9 @@ end
 """
     simulate(circuit::QuantumCircuit)
 
-Simulates and returns the wavefunction of the quantum device after running `circuit`. 
+Simulates and returns the wavefunction of the quantum device after running `circuit`, 
+assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
+`ψ=fock(0,2^get_num_qubits(circuit))`. 
 
 Employs the approach described in Listing 5 of
 [Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
@@ -691,7 +693,8 @@ end
 """
     simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
+Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results. 
+The distribution of measured states corresponds to the coefficients in the resulting state Ket. 
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
@@ -740,7 +743,6 @@ julia> simulate_shots(c, 99)
 ```
 """
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
-    # return simulateShots(c, shots_count)
     ψ = simulate(c)
     amplitudes = adjoint.(ψ) .* ψ
     weights = Float32[]
