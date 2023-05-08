@@ -35,6 +35,10 @@ end
     @test pauli_x*pauli_y == get_pauli(sigma_z(1), num_qubits, imaginary_exponent=1)
     @test pauli_z*pauli_y == get_pauli(sigma_x(1), num_qubits, imaginary_exponent=1,
         negative_exponent=1)
+
+    num_qubits = 2
+    pauli_x2 = get_pauli(sigma_x(2), num_qubits)
+    @test_throws ErrorException pauli_eye*pauli_x2
 end
 
 @testset "get_pauli_using_circuit" begin

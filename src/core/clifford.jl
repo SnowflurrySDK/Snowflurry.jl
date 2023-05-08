@@ -176,9 +176,42 @@ function unsafe_get_pauli(gate::SigmaZ, num_qubits::Integer,
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
+"""
+    Base.:*(p1::PauliGroupElement, p2::PauliGroupElement)::PauliGroupElement
+
+Returns the product of two `PauliGroupElement` objects.
+
+The `PauliGroupElement` objects must be associated with the same number of qubits.
+
+# Examples
+```jldoctest
+julia> pauli_z = get_pauli(sigma_z(1), 1)
+Pauli Group Element:
+1.0*Z(1)
+
+
+
+julia> pauli_y = get_pauli(sigma_y(1), 1)
+Pauli Group Element:
+1.0*Y(1)
+
+
+
+julia> pauli_z*pauli_y
+Pauli Group Element:
+-1.0im*X(1)
+
+
+
+```
+"""
 function Base.:*(p1::PauliGroupElement, p2::PauliGroupElement)::PauliGroupElement
 
     new_delta = p1.delta+p2.delta
+    if nrows(p1.u) != nrows(p2.u)
+        throw(ErrorException("the Pauli group elements must be associated with the "
+        *"same number of qubits"))
+    end
     new_u = p1.u+p2.u
     twice_num_qubits = nrows(new_u)
     num_qubits = Int(twice_num_qubits/2)

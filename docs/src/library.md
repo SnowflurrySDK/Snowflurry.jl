@@ -138,6 +138,7 @@ Pauli group elements.
 ```@docs
 Snowflake.PauliGroupElement
 get_pauli
+Base.:*(p1::Snowflake.PauliGroupElement, p2::Snowflake.PauliGroupElement)
 ```
 
 
