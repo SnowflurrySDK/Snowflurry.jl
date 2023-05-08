@@ -139,6 +139,9 @@ Pauli group elements.
 Snowflake.PauliGroupElement
 get_pauli
 Base.:*(p1::Snowflake.PauliGroupElement, p2::Snowflake.PauliGroupElement)
+get_quantum_circuit
+get_negative_exponent
+get_imaginary_exponent
 ```
 
 

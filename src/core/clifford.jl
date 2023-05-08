@@ -26,9 +26,9 @@ Returns a `PauliGroupElement` given a `circuit` containing Pauli gates.
 
 A Pauli group element corresponds to ``i^\\delta (-1)^\\epsilon \\sigma_a``, where
 ``\\delta`` and ``\\epsilon`` are set by specifying `imaginary_exponent` and
-`negative_exponent`, respectively. The exponents have a default value of 0. As for
-``\\sigma_a``, it is a tensor product of Pauli operators. The Pauli operators are specified
-in the `circuit`.
+`negative_exponent`, respectively. The exponents must be 0 or 1. Their default value is 0.
+As for ``\\sigma_a``, it is a tensor product of Pauli operators. The Pauli operators are
+specified in the `circuit`.
 
 # Examples
 ```jldoctest
@@ -109,10 +109,10 @@ Returns a `PauliGroupElement` given a `gate` and the number of qubits.
 
 A Pauli group element corresponds to ``i^\\delta (-1)^\\epsilon \\sigma_a``, where
 ``\\delta`` and ``\\epsilon`` are set by specifying `imaginary_exponent` and
-`negative_exponent`, respectively. The exponents have a default value of 0. As for
-``\\sigma_a``, it is a tensor product of Pauli operators. In this variant of the `get_pauli`
-function, a single Pauli operator is set by providing a `gate`. The number of qubits
-is specified by `num_qubits`.
+`negative_exponent`, respectively. The exponents must be 0 or 1. Their default value is 0.
+As for ``\\sigma_a``, it is a tensor product of Pauli operators. In this variant of the
+`get_pauli` function, a single Pauli operator is set by providing a `gate`. The number of
+qubits is specified by `num_qubits`.
 
 # Examples
 ```jldoctest
@@ -267,16 +267,98 @@ function get_displayable_pauli(pauli::PauliGroupElement)
     return DisplayablePauli(circuit, lift(imaginary_exponent), lift(negative_exponent))
 end
 
+
+"""
+    get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
+
+Returns the Pauli gates of a `PauliGroupElement` as a `QuantumCircuit`.
+
+# Examples
+```jldoctest
+julia> circuit = QuantumCircuit(qubit_count=2);
+
+julia> push!(circuit, sigma_x(1), sigma_y(2))
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X───────
+               
+q[2]:───────Y──
+               
+
+
+
+julia> pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+Pauli Group Element:
+-1.0im*X(1)*Y(2)
+
+
+
+julia> get_quantum_circuit(pauli)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X───────
+               
+q[2]:───────Y──
+               
+
+
+
+```
+"""
 function get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
     displayable_pauli = get_displayable_pauli(pauli)
     return displayable_pauli.circuit
 end
 
+"""
+    get_negative_exponent(pauli::PauliGroupElement)::Int
+
+Returns the negative exponent of a `PauliGroupElement`.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(2);
+
+julia> num_qubits = 3;
+
+julia> pauli = get_pauli(gate, num_qubits, negative_exponent=1)
+Pauli Group Element:
+-1.0*X(2)
+
+
+
+julia> get_negative_exponent(pauli)
+1
+
+```
+"""
 function get_negative_exponent(pauli::PauliGroupElement)::Int
     displayable_pauli = get_displayable_pauli(pauli)
     return displayable_pauli.negative_exponent
 end
 
+"""
+    get_imaginary_exponent(pauli::PauliGroupElement)::Int
+
+Returns the imaginary exponent of a `PauliGroupElement`.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(2);
+
+julia> num_qubits = 3;
+
+julia> pauli = get_pauli(gate, num_qubits, imaginary_exponent=1)
+Pauli Group Element:
+1.0im*X(2)
+
+
+
+julia> get_imaginary_exponent(pauli)
+1
+
+```
+"""
 function get_imaginary_exponent(pauli::PauliGroupElement)::Int
     displayable_pauli = get_displayable_pauli(pauli)
     return displayable_pauli.imaginary_exponent
