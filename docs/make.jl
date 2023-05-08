@@ -41,6 +41,7 @@ makedocs(
         "Getting Started" => "getting_started.md",
         "Tutorials" => "tutorials/index.md",
         "Library" => "library.md",
+        "Developing" => "development.md",
     ],
     doctestfilters = [uuid_regex],
     strict = true,
