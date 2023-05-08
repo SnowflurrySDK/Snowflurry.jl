@@ -131,6 +131,15 @@ compare_kets
 
 The [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) package provides multiple visualization tools for Snowflake.jl. Please see the documentation of [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) for more details. 
 
+## Clifford Simulator
+Snowflake provides tools for the efficient storage and manipulation of Clifford gates and
+Pauli group elements.
+
+```@docs
+Snowflake.PauliGroupElement
+get_pauli
+```
+
 
 ```@meta
 DocTestSetup = nothing

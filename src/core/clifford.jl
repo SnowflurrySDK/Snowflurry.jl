@@ -5,9 +5,12 @@ const GFInt = GFElem{Int}
 const GFMatrix = MatSpaceElem{GFInt}
 
 """
-    PauliGroupElement(u::gfp_mat, delta::Int, epsilon::Int)
+    PauliGroupElement
+
 A Pauli group element which is represented using the approach of
 [Dehaene and De Moor (2003)](https://doi.org/10.1103/PhysRevA.68.042318).
+
+The [`get_pauli`](@ref) functions should be used to generate `PauliGroupElement` objects.
 """
 struct PauliGroupElement
     u::GFMatrix
@@ -15,6 +18,63 @@ struct PauliGroupElement
     epsilon::GFInt
 end
 
+"""
+    get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
+        negative_exponent::Integer=0)::PauliGroupElement
+
+Returns a `PauliGroupElement` given a `circuit` containing Pauli gates.
+
+A Pauli group element corresponds to ``i^\\delta (-1)^\\epsilon \\sigma_a``, where
+``\\delta`` and ``\\epsilon`` are set by specifying `imaginary_exponent` and
+`negative_exponent`, respectively. The exponents have a default value of 0. As for
+``\\sigma_a``, it is a tensor product of Pauli operators. The Pauli operators are specified
+in the `circuit`.
+
+# Examples
+```jldoctest
+julia> circuit = QuantumCircuit(qubit_count=2);
+
+julia> push!(circuit, sigma_x(1), sigma_y(2))
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X───────
+               
+q[2]:───────Y──
+               
+
+
+
+julia> get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+Pauli Group Element:
+-1.0im*X(1)*Y(2)
+
+
+
+```
+
+If multiple Pauli gates are applied to the same qubit in the `circuit`, the gates are
+multiplied with the first gate in the `circuit` being the rightmost gate in the
+multiplication.
+
+```jldoctest
+julia> circuit = QuantumCircuit(qubit_count=1);
+
+julia> push!(circuit, sigma_x(1), sigma_z(1))
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──X────Z──
+               
+
+
+
+julia> get_pauli(circuit)
+Pauli Group Element:
+1.0im*Y(1)
+
+
+
+```
+"""
 function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
