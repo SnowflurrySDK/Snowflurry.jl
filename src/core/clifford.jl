@@ -101,50 +101,77 @@ function assert_exponents_are_in_the_field(imaginary_exponent::Integer,
     end
 end
 
-function get_pauli(gate::AbstractGate, qubit_count::Integer; imaginary_exponent::Integer=0,
+"""
+    get_pauli(gate::AbstractGate, num_qubits::Integer; imaginary_exponent::Integer=0,
+        negative_exponent::Integer=0)::PauliGroupElement
+
+Returns a `PauliGroupElement` given a `gate` and the number of qubits.
+
+A Pauli group element corresponds to ``i^\\delta (-1)^\\epsilon \\sigma_a``, where
+``\\delta`` and ``\\epsilon`` are set by specifying `imaginary_exponent` and
+`negative_exponent`, respectively. The exponents have a default value of 0. As for
+``\\sigma_a``, it is a tensor product of Pauli operators. In this variant of the `get_pauli`
+function, a single Pauli operator is set by providing a `gate`. The number of qubits
+is specified by `num_qubits`.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(2);
+
+julia> num_qubits = 3;
+
+julia> get_pauli(gate, num_qubits)
+Pauli Group Element:
+1.0*X(2)
+
+
+
+```
+"""
+function get_pauli(gate::AbstractGate, num_qubits::Integer; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
     target_qubit = get_connected_qubits(gate)[1]
-    if target_qubit > qubit_count
+    if target_qubit > num_qubits
         throw(ErrorException("the target qubit is not in the circuit"))
     end
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
-    return unsafe_get_pauli(gate, qubit_count, GF(2)(imaginary_exponent),
+    return unsafe_get_pauli(gate, num_qubits, GF(2)(imaginary_exponent),
         GF(2)(negative_exponent))
 end
 
-function unsafe_get_pauli(gate::Identity, qubit_count::Integer,
+function unsafe_get_pauli(gate::Identity, num_qubits::Integer,
     imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
     
-    u = zero_matrix(GF(2), 2*qubit_count, 1)
+    u = zero_matrix(GF(2), 2*num_qubits, 1)
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(gate::SigmaX, qubit_count::Integer,
+function unsafe_get_pauli(gate::SigmaX, num_qubits::Integer,
     imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
     
     target_qubit = get_connected_qubits(gate)[1]
-    u = zero_matrix(GF(2), 2*qubit_count, 1)
-    u[qubit_count+target_qubit, 1] = 1
+    u = zero_matrix(GF(2), 2*num_qubits, 1)
+    u[num_qubits+target_qubit, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(gate::SigmaY, qubit_count::Integer,
+function unsafe_get_pauli(gate::SigmaY, num_qubits::Integer,
         imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
     target_qubit = get_connected_qubits(gate)[1]
-    u = zero_matrix(GF(2), 2*qubit_count, 1)
+    u = zero_matrix(GF(2), 2*num_qubits, 1)
     u[target_qubit, 1] = 1
-    u[qubit_count+target_qubit, 1] = 1
+    u[num_qubits+target_qubit, 1] = 1
     negative_exponent += imaginary_exponent+1
     imaginary_exponent += 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(gate::SigmaZ, qubit_count::Integer,
+function unsafe_get_pauli(gate::SigmaZ, num_qubits::Integer,
     imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
     
     target_qubit = get_connected_qubits(gate)[1]
-    u = zero_matrix(GF(2), 2*qubit_count, 1)
+    u = zero_matrix(GF(2), 2*num_qubits, 1)
     u[target_qubit, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
