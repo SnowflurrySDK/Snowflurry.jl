@@ -47,3 +47,10 @@ end
     expected_pauli = get_pauli(expected_circuit)
     @test pauli == expected_pauli
 end
+
+@testset "get_quantum_circuit_using_pauli" begin
+    circuit = QuantumCircuit(qubit_count=4, gates=[sigma_z(2), sigma_x(3), sigma_y(4)])
+    pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+    returned_circuit = get_quantum_circuit(pauli)
+    @test compare_circuits(circuit, returned_circuit)
+end

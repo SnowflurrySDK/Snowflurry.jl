@@ -113,3 +113,20 @@ function Base.:(==)(lhs::PauliGroupElement, rhs::PauliGroupElement)::Bool
         return true
     end
 end
+
+function get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
+    u = pauli.u
+    num_qubits = Int(nrows(u)/2)
+    circuit = QuantumCircuit(qubit_count=num_qubits)
+    for i_qubit = 1:num_qubits
+        u_for_qubit = u[2*i_qubit-1:2*i_qubit, 1]
+        if u_for_qubit == GF(2)[0; 1]
+            push!(circuit, sigma_x(i_qubit))
+        elseif u_for_qubit == GF(2)[1; 1]
+            push!(circuit, sigma_y(i_qubit))
+        elseif u_for_qubit == GF(2)[1; 0]
+            push!(circuit, sigma_z(i_qubit))
+        end
+    end
+    return circuit
+end

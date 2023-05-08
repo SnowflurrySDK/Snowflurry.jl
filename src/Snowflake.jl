@@ -123,6 +123,7 @@ export
     apply_gate!,
 
     get_pauli,
+    get_quantum_circuit,
 
     # Gates
     identity_gate,
