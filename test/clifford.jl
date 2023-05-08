@@ -36,3 +36,14 @@ end
     @test pauli_z*pauli_y == get_pauli(sigma_x(1), num_qubits, imaginary_exponent=1,
         negative_exponent=1)
 end
+
+@testset "get_pauli_using_circuit" begin
+    circuit = QuantumCircuit(qubit_count=4, gates=[sigma_z(2), sigma_x(3), sigma_y(4)])
+    push!(circuit, identity_gate(2), sigma_z(3))
+    pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+    
+    expected_circuit = QuantumCircuit(qubit_count=4,
+        gates=[sigma_z(2), sigma_y(3), sigma_y(4)])
+    expected_pauli = get_pauli(expected_circuit)
+    @test pauli == expected_pauli
+end
