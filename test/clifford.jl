@@ -54,3 +54,10 @@ end
     returned_circuit = get_quantum_circuit(pauli)
     @test compare_circuits(circuit, returned_circuit)
 end
+
+@testset "get_exponents" begin
+    circuit = QuantumCircuit(qubit_count=4, gates=[sigma_z(2), sigma_x(3), sigma_y(4)])
+    pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+    negative_exponent = get_negative_exponent(pauli)
+    @test negative_exponent == 1
+end

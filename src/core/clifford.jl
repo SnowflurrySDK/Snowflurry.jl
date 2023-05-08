@@ -1,4 +1,5 @@
-using AbstractAlgebra: GFElem, Generic.MatSpaceElem, GF, zero_matrix, nrows, identity_matrix
+using AbstractAlgebra: GFElem, Generic.MatSpaceElem, GF, zero_matrix, nrows,
+    identity_matrix, lift
 
 const GFInt = GFElem{Int}
 const GFMatrix = MatSpaceElem{GFInt}
@@ -64,17 +65,16 @@ function unsafe_get_pauli(gate::SigmaX, qubit_count::Integer,
     
     target_qubit = get_connected_qubits(gate)[1]
     u = zero_matrix(GF(2), 2*qubit_count, 1)
-    u[2*target_qubit, 1] = 1
+    u[qubit_count+target_qubit, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
 function unsafe_get_pauli(gate::SigmaY, qubit_count::Integer,
         imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
     target_qubit = get_connected_qubits(gate)[1]
-    first_index = 2*target_qubit-1
     u = zero_matrix(GF(2), 2*qubit_count, 1)
-    u[first_index, 1] = 1
-    u[first_index+1, 1] = 1
+    u[target_qubit, 1] = 1
+    u[qubit_count+target_qubit, 1] = 1
     negative_exponent += imaginary_exponent+1
     imaginary_exponent += 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
@@ -85,7 +85,7 @@ function unsafe_get_pauli(gate::SigmaZ, qubit_count::Integer,
     
     target_qubit = get_connected_qubits(gate)[1]
     u = zero_matrix(GF(2), 2*qubit_count, 1)
-    u[2*target_qubit-1, 1] = 1
+    u[target_qubit, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
@@ -114,19 +114,46 @@ function Base.:(==)(lhs::PauliGroupElement, rhs::PauliGroupElement)::Bool
     end
 end
 
-function get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
+struct DisplayablePauli
+    circuit::QuantumCircuit
+    imaginary_exponent::Int
+    negative_exponent::Int
+end
+
+function get_displayable_pauli(pauli::PauliGroupElement)
+    println(pauli)
     u = pauli.u
     num_qubits = Int(nrows(u)/2)
     circuit = QuantumCircuit(qubit_count=num_qubits)
+    imaginary_exponent = pauli.delta
+    negative_exponent = pauli.epsilon
+
     for i_qubit = 1:num_qubits
-        u_for_qubit = u[2*i_qubit-1:2*i_qubit, 1]
-        if u_for_qubit == GF(2)[0; 1]
-            push!(circuit, sigma_x(i_qubit))
-        elseif u_for_qubit == GF(2)[1; 1]
-            push!(circuit, sigma_y(i_qubit))
-        elseif u_for_qubit == GF(2)[1; 0]
-            push!(circuit, sigma_z(i_qubit))
+        u1 = u[i_qubit, 1]
+        u2 = u[i_qubit+num_qubits, 1]
+        if u1 == GF(2)(0)
+            if u2 == GF(2)(1)
+                push!(circuit, sigma_x(i_qubit))
+            end
+        else
+            if u2 == GF(2)(0)
+                push!(circuit, sigma_z(i_qubit))
+            else
+                push!(circuit, sigma_y(i_qubit))
+                negative_exponent += imaginary_exponent
+                imaginary_exponent += 1
+            end
         end
     end
-    return circuit
+    return DisplayablePauli(circuit, lift(imaginary_exponent), lift(negative_exponent))
+end
+
+function get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
+    displayable_pauli = get_displayable_pauli(pauli)
+    return displayable_pauli.circuit
+end
+
+function get_negative_exponent(pauli::PauliGroupElement)::Int
+    displayable_pauli = get_displayable_pauli(pauli)
+    return displayable_pauli.negative_exponent
 end
