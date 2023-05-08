@@ -1,4 +1,4 @@
-using AbstractAlgebra: GFElem, Generic.MatSpaceElem, GF, zero_matrix
+using AbstractAlgebra: GFElem, Generic.MatSpaceElem, GF, zero_matrix, nrows, identity_matrix
 
 const GFInt = GFElem{Int}
 const GFMatrix = MatSpaceElem{GFInt}
@@ -14,7 +14,7 @@ struct PauliGroupElement
     epsilon::GFInt
 end
 
-function get_pauli(circuit::QuantumCircuit, imaginary_exponent::Integer=0,
+function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
@@ -38,7 +38,7 @@ function assert_exponents_are_in_the_field(imaginary_exponent::Integer,
     end
 end
 
-function get_pauli(gate::AbstractGate, qubit_count::Integer, imaginary_exponent::Integer=0,
+function get_pauli(gate::AbstractGate, qubit_count::Integer; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
     target_qubit = get_connected_qubits(gate)[1]
@@ -91,13 +91,13 @@ function Base.:*(p1::PauliGroupElement, p2::PauliGroupElement)::PauliGroupElemen
 
     new_delta = p1.delta+p2.delta
     new_u = p1.u+p2.u
-    twice_num_qubits = ncols(new_u)
-    num_qubits = twice_num_qubits/2
+    twice_num_qubits = nrows(new_u)
+    num_qubits = Int(twice_num_qubits/2)
     capital_u = zero_matrix(GF(2), twice_num_qubits, twice_num_qubits)
     capital_u[1:num_qubits, num_qubits+1:twice_num_qubits] =
         identity_matrix(GF(2), num_qubits)
     new_epsilon = p1.epsilon+p2.epsilon+p1.delta*p2.delta+transpose(p2.u)*capital_u*p1.u
-    return PauliGroupElement(new_u, new_delta, new_epsilon)
+    return PauliGroupElement(new_u, new_delta, new_epsilon[1,1])
 end
 
 function Base.:(==)(lhs::PauliGroupElement, rhs::PauliGroupElement)::Bool
