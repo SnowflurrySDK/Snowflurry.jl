@@ -161,3 +161,35 @@ function get_imaginary_exponent(pauli::PauliGroupElement)::Int
     displayable_pauli = get_displayable_pauli(pauli)
     return displayable_pauli.imaginary_exponent
 end
+
+function Base.show(io::IO, pauli::PauliGroupElement)
+    println(io, "Pauli Group Element:")
+    displayable_pauli = get_displayable_pauli(pauli)
+    if displayable_pauli.negative_exponent == 1
+        print(io, "-")
+    end
+    print(io, "1.0")
+    if displayable_pauli.imaginary_exponent == 1
+        print(io, "im")
+    end
+    for gate in get_circuit_gates(displayable_pauli.circuit)
+        print_pauli_gate(io, gate)
+    end
+    println(io)
+    println(io)
+end
+
+function print_pauli_gate(io::IO, gate::SigmaX)
+    target = get_connected_qubits(gate)[1]
+    print(io, "*X($(target))")
+end
+
+function print_pauli_gate(io::IO, gate::SigmaY)
+    target = get_connected_qubits(gate)[1]
+    print(io, "*Y($(target))")
+end
+
+function print_pauli_gate(io::IO, gate::SigmaZ)
+    target = get_connected_qubits(gate)[1]
+    print(io, "*Z($(target))")
+end

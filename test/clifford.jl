@@ -64,3 +64,9 @@ end
     imaginary_exponent = get_imaginary_exponent(pauli)
     @test imaginary_exponent == 0
 end
+
+@testset "print_pauli" begin
+    circuit = QuantumCircuit(qubit_count=4, gates=[sigma_z(2), sigma_x(3), sigma_y(4)])
+    pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+    print(pauli)
+end
