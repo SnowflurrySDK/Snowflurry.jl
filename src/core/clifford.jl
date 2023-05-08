@@ -121,7 +121,6 @@ struct DisplayablePauli
 end
 
 function get_displayable_pauli(pauli::PauliGroupElement)
-    println(pauli)
     u = pauli.u
     num_qubits = Int(nrows(u)/2)
     circuit = QuantumCircuit(qubit_count=num_qubits)
@@ -156,4 +155,9 @@ end
 function get_negative_exponent(pauli::PauliGroupElement)::Int
     displayable_pauli = get_displayable_pauli(pauli)
     return displayable_pauli.negative_exponent
+end
+
+function get_imaginary_exponent(pauli::PauliGroupElement)::Int
+    displayable_pauli = get_displayable_pauli(pauli)
+    return displayable_pauli.imaginary_exponent
 end

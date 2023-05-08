@@ -125,6 +125,7 @@ export
     get_pauli,
     get_quantum_circuit,
     get_negative_exponent,
+    get_imaginary_exponent,
 
     # Gates
     identity_gate,
