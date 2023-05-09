@@ -234,13 +234,13 @@ function Base.:(==)(lhs::PauliGroupElement, rhs::PauliGroupElement)::Bool
     end
 end
 
-struct DisplayablePauli
+struct PauliCircuit
     circuit::QuantumCircuit
     imaginary_exponent::Int
     negative_exponent::Int
 end
 
-function get_displayable_pauli(pauli::PauliGroupElement)
+function convert_to_pauli_circuit(pauli::PauliGroupElement)::PauliCircuit
     u = pauli.u
     num_qubits = Int(nrows(u)/2)
     circuit = QuantumCircuit(qubit_count=num_qubits)
@@ -264,7 +264,7 @@ function get_displayable_pauli(pauli::PauliGroupElement)
             end
         end
     end
-    return DisplayablePauli(circuit, lift(imaginary_exponent), lift(negative_exponent))
+    return PauliCircuit(circuit, lift(imaginary_exponent), lift(negative_exponent))
 end
 
 
@@ -306,7 +306,7 @@ q[2]:───────Y──
 ```
 """
 function get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
-    displayable_pauli = get_displayable_pauli(pauli)
+    displayable_pauli = convert_to_pauli_circuit(pauli)
     return displayable_pauli.circuit
 end
 
@@ -333,7 +333,7 @@ julia> get_negative_exponent(pauli)
 ```
 """
 function get_negative_exponent(pauli::PauliGroupElement)::Int
-    displayable_pauli = get_displayable_pauli(pauli)
+    displayable_pauli = convert_to_pauli_circuit(pauli)
     return displayable_pauli.negative_exponent
 end
 
@@ -360,13 +360,13 @@ julia> get_imaginary_exponent(pauli)
 ```
 """
 function get_imaginary_exponent(pauli::PauliGroupElement)::Int
-    displayable_pauli = get_displayable_pauli(pauli)
+    displayable_pauli = convert_to_pauli_circuit(pauli)
     return displayable_pauli.imaginary_exponent
 end
 
 function Base.show(io::IO, pauli::PauliGroupElement)
     println(io, "Pauli Group Element:")
-    displayable_pauli = get_displayable_pauli(pauli)
+    displayable_pauli = convert_to_pauli_circuit(pauli)
     if displayable_pauli.negative_exponent == 1
         print(io, "-")
     end
