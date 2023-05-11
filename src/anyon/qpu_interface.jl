@@ -32,6 +32,9 @@ struct MockRequestor<:Requestor
     post_checker::Function
 end
 
+get_request_throttle(::HTTPRequestor) = ()->sleep(0.1) # 100 ms between queries to the host
+get_request_throttle(::MockRequestor) = Returns(nothing) # no delay while testing
+
 const path_circuits ="circuits"
 const path_results  ="result"
 
@@ -283,6 +286,17 @@ function get_status(client::Client,circuitID::String)::Status
     else
         return Status(type=body["status"]["type"])
     end
+end
+
+function poll_for_status(client::Client, circuitID::String)::Status
+    request_throttle = get_request_throttle(get_requestor(client))
+    status=get_status(client,circuitID)
+    while get_status_type(status) in [queued_status,running_status]
+        request_throttle()
+        status=get_status(client,circuitID)
+    end
+
+    return status
 end
 
 """

@@ -173,12 +173,7 @@ function run_job(
 
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    status=get_status(client,circuitID)
- 
-    while get_status_type(status) in [queued_status,running_status]
-        sleep(0.1) #100 ms between queries to host
-        status=get_status(client,circuitID)
-    end
+    status=poll_for_status(client,circuitID)
     
     status_type=get_status_type(status)
 
