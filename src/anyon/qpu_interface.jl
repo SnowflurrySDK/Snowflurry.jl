@@ -33,7 +33,7 @@ struct MockRequestor<:Requestor
 end
 
 get_request_throttle(::HTTPRequestor) = ()->sleep(0.1) # 100 ms between queries to the host
-get_request_throttle(::MockRequestor) = Returns(nothing) # no delay while testing
+get_request_throttle(::MockRequestor) = ()->nothing # no delay while testing
 
 const path_circuits ="circuits"
 const path_results  ="result"
