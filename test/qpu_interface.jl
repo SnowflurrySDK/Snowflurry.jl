@@ -6,6 +6,9 @@ include("mock_functions.jl")
 
 requestor=MockRequestor(request_checker,post_checker)
 
+# While testing, this throttle can be used to skip delays between status requests.
+no_throttle=()->nothing
+
 function compare_responses(expected::HTTP.Response,received::HTTP.Response)
 
     for f in fieldnames(typeof(received))
@@ -163,7 +166,7 @@ end
     
     #test basic submission, no transpilation
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    histogram=run_job(qpu, circuit, num_repetitions)
+    histogram=run_job(qpu, circuit, num_repetitions, status_request_throttle=no_throttle)
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")
 
@@ -178,7 +181,7 @@ end
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
-    histogram=run_job(qpu, circuit, num_repetitions)
+    histogram=run_job(qpu, circuit, num_repetitions, status_request_throttle=no_throttle)
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram, "error_msg")
 
@@ -193,7 +196,7 @@ end
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
-    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions, status_request_throttle=no_throttle)
 
     #verify that run_job throws an error if the job was cancelled
     requestor=MockRequestor(
@@ -206,7 +209,7 @@ end
       ]),
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
-    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions, status_request_throttle=no_throttle)
 
 end
 
@@ -219,7 +222,7 @@ end
 
     # submit circuit with qubit_count_circuit>qubit_count_qpu
     circuit = QuantumCircuit(qubit_count = 10)
-    @test_throws DomainError transpile_and_run_job(qpu, circuit ,num_repetitions)
+    @test_throws DomainError transpile_and_run_job(qpu, circuit ,num_repetitions, status_request_throttle=no_throttle)
 
     # submit circuit with a non-native gate on this qpu (no transpilation)
     circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1,2,3)])
@@ -227,15 +230,15 @@ end
         qpu, 
         circuit,
         num_repetitions;
-        transpiler=TrivialTranspiler()
+        transpiler=TrivialTranspiler(),
+        status_request_throttle=no_throttle
     )
-
     # using AnyonQPU default transpiler
     requestor=MockRequestor(request_checker,post_checker_toffoli)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
     qpu=AnyonQPU(test_client)
 
-    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions, status_request_throttle=no_throttle)
     
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")

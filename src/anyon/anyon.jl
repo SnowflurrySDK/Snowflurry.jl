@@ -107,13 +107,17 @@ function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,St
 end
 
 """
-    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu), status_request_throttle::Function=default_throttle)
 
-This method first transpiles the input circuit using either the default transpiler, 
-or any other transpiler passed as a key-word argument.  
-The transpiled circuit is then run on the AnyonQPU, repeatedly for the specified 
-number of repetitions (num_repetitions). Returns the histogram of the 
-completed circuit calculations, or an error message.
+This method first transpiles the input circuit using either the default
+transpiler, or any other transpiler passed as a key-word argument.
+The transpiled circuit is then run on the AnyonQPU, repeatedly for the
+specified number of repetitions (num_repetitions).
+An optional request throttle can be passed to control the cadence with which
+requests for job status are sent to the `QPU` service.
+
+Returns the histogram of the completed circuit calculations, or an error
+message.
 
 # Example
 
@@ -127,10 +131,11 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::AnyonQPU, 
+    qpu::AnyonQPU,
     circuit::QuantumCircuit,
     num_repetitions::Integer;
-    transpiler::Transpiler=get_transpiler(qpu)
+    transpiler::Transpiler=get_transpiler(qpu),
+    status_request_throttle::Function=default_throttle
     )::Dict{String,Int}
 
     
@@ -142,15 +147,19 @@ function transpile_and_run_job(
         throw(DomainError(qpu, message))
     end
 
-    return run_job(qpu,transpiled_circuit,num_repetitions)
+    return run_job(qpu,transpiled_circuit,num_repetitions,status_request_throttle=status_request_throttle)
 end
 
 """
-    run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+    run_job(qpu::AnyonQPU, circuit::QuantumCircuit, num_repetitions::Integer; status_request_throttle::Function=default_throttle)
 
-Run a circuit computation on a `QPU` service, repeatedly for the specified 
-number of repetitions (num_repetitions). Returns the histogram of the 
-completed circuit calculations, or an error message.
+Run a circuit computation on a `QPU` service, repeatedly for the specified
+number of repetitions (num_repetitions).
+An optional request throttle can be passed to control the cadence with which
+requests for job status are sent to the `QPU` service.
+
+Returns the histogram of the completed circuit calculations, or an error
+message.
 
 # Example
 
@@ -164,16 +173,17 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::AnyonQPU, 
+    qpu::AnyonQPU,
     circuit::QuantumCircuit,
-    num_repetitions::Integer
+    num_repetitions::Integer;
+    status_request_throttle::Function=default_throttle
     )::Dict{String,Int}
     
     client=get_client(qpu)
 
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    status=poll_for_status(client,circuitID)
+    status=poll_for_status(client,circuitID,status_request_throttle)
     
     status_type=get_status_type(status)
 
@@ -187,6 +197,18 @@ function run_job(
         )
         return get_result(client,circuitID)
     end
+end
+
+const default_throttle = () -> sleep(0.1) # 100ms between queries to host
+
+function poll_for_status(client::Client, circuitID::String, request_throttle::Function)::Status
+    status=get_status(client,circuitID)
+    while get_status_type(status) in [queued_status,running_status]
+        request_throttle()
+        status=get_status(client,circuitID)
+    end
+
+    return status
 end
 
 """
