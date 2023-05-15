@@ -7,7 +7,7 @@ include("mock_functions.jl")
 requestor=MockRequestor(request_checker,post_checker)
 
 # While testing, this throttle can be used to skip delays between status requests.
-no_throttle=()->nothing
+no_throttle=()->Snowflake.status_request_throttle(0)
 
 function compare_responses(expected::HTTP.Response,received::HTTP.Response)
 
@@ -210,7 +210,6 @@ end
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor))
     @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions, status_request_throttle=no_throttle)
-
 end
 
 @testset "transpile_and_run_job on AnyonQPU" begin
