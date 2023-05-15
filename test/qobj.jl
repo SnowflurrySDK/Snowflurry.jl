@@ -13,6 +13,31 @@ using Test
     _Ψ = Bra(Ψ_p)
     print(_Ψ)
 
+    # scalar multiplication
+    Ψ_0 = Ket([1.,2.])
+    a=10.0
+    Ψ_scaled = a*Ψ_0 
+    Ψ_scaled2= Ψ_0*a 
+
+    @test typeof(Ψ_scaled )==Ket{ComplexF64}
+    @test typeof(Ψ_scaled2)==Ket{ComplexF64}
+
+    @test Ψ_scaled ≈Ket([10.,20.])
+    @test Ψ_scaled2≈Ket([10.,20.])
+
+    a=ComplexF64(10.0)
+    Ψ_scaled = a*Ψ_0 
+    Ψ_scaled2= Ψ_0*a 
+
+    @test typeof(Ψ_scaled )==Ket{ComplexF64}
+    @test typeof(Ψ_scaled2)==Ket{ComplexF64}
+
+    @test Ψ_scaled ≈Ket([10.,20.])
+    @test Ψ_scaled2≈Ket([10.,20.])
+
+    Ψ_0 = spin_up()
+    Ψ_1 = spin_down()
+
     # test if adjoin operations work properly
     @test adjoint(Ψ_p) ≈ Bra(Ψ_p)
     @test adjoint(_Ψ) ≈ Ψ_p
@@ -52,6 +77,48 @@ using Test
     # Z gate
     @test Z * Ψ_0 ≈ Ψ_0
     @test Z * Ψ_1 ≈ -Ψ_1
+
+    # Swap gate
+    ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+
+    ψ_1_2  =Ket([1.,2.,5.,6.,3.,4.,7.,8.])
+    ψ_1_3  =Ket([1.,5.,3.,7.,2.,6.,4.,8.])
+
+    @test ψ_1_2≈swap(1,2)*ψ_input
+    @test ψ_1_2≈swap(2,1)*ψ_input
+    @test ψ_1_3≈swap(1,3)*ψ_input
+    @test ψ_1_3≈swap(3,1)*ψ_input
+
+    @test typeof(swap(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError swap(1,10)*ψ_input
+
+    # ISwap gate
+    ψ_1_2  =Ket([1.,2.,5.0*im,6.0*im,3.0*im,4.0*im,7.,8.])
+    ψ_1_3  =Ket([1.,5.0*im,3.,7.0*im,2.0*im,6.,4.0*im,8.])
+
+    @test ψ_1_2≈iswap(1,2)*ψ_input
+    @test ψ_1_2≈iswap(2,1)*ψ_input
+    @test ψ_1_3≈iswap(1,3)*ψ_input
+    @test ψ_1_3≈iswap(3,1)*ψ_input
+
+    @test typeof(iswap(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError iswap(1,10)*ψ_input
+
+    # ISwapDagger gate
+    ψ_1_2  =Ket([1.,2.,5.0*-im,6.0*-im,3.0*-im,4.0*-im,7.,8.])
+    ψ_1_3  =Ket([1.,5.0*-im,3.,7.0*-im,2.0*-im,6.,4.0*-im,8.])
+
+    @test ψ_1_2≈iswap_dagger(1,2)*ψ_input
+    @test ψ_1_2≈iswap_dagger(2,1)*ψ_input
+    @test ψ_1_3≈iswap_dagger(1,3)*ψ_input
+    @test ψ_1_3≈iswap_dagger(3,1)*ψ_input
+
+    @test typeof(iswap_dagger(1,2)*ψ_input_32)==Ket{ComplexF32}
+
+    @test_throws DomainError iswap_dagger(1,10)*ψ_input
 
 end
 

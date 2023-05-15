@@ -3,6 +3,7 @@ multi_body_system
 dynamic_system
 gate
 transpile
+transpile_trivial_gates
 circuit
 submit_circuit
 qpu_interface
@@ -12,3 +13,6 @@ dense_gate
 diagonal_operator
 diagonal_gate
 anti_diagonal_gate
+swap_operator
+identity_operator
+pauli

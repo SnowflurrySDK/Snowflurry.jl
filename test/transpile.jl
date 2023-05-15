@@ -10,6 +10,7 @@ phi=π/7
 lambda=π/9
 
 single_qubit_gates=[
+    identity_gate(target),
     hadamard(target),
     phase_shift(target,-phi/2),
     pi_8(target),
@@ -33,6 +34,7 @@ test_circuits=[
     [
         sigma_x(1),
         sigma_y(1),
+        identity_gate(1),
         hadamard(2),
         control_x(1,3),
         sigma_x(2),
@@ -78,7 +80,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test typeof(gates[1])==Snowflake.Universal
+            @test is_gate_type(gates[1], Snowflake.Universal)
         end
     end
 
@@ -111,8 +113,8 @@ end
 
     @test length(gates)==2
 
-    @test typeof(gates[1])==Snowflake.SigmaX
-    @test typeof(gates[2])==Snowflake.ControlX
+    @test is_gate_type(gates[1], Snowflake.SigmaX)
+    @test is_gate_type(gates[2], Snowflake.ControlX)
 end 
 
 @testset "Transpiler" begin
@@ -200,9 +202,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test typeof(gates[1])==Snowflake.PhaseShift
-        @test typeof(gates[2])==Snowflake.RotationX
-        @test typeof(gates[3])==Snowflake.PhaseShift
+        @test is_gate_type(gates[1], Snowflake.PhaseShift)
+        @test is_gate_type(gates[2], Snowflake.RotationX)
+        @test is_gate_type(gates[3], Snowflake.PhaseShift)
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -256,11 +258,11 @@ end
         
         @test length(gates)==5
 
-        @test typeof(gates[1])==Snowflake.Z90
-        @test typeof(gates[2])==Snowflake.X90
-        @test typeof(gates[3])==Snowflake.PhaseShift
-        @test typeof(gates[4])==Snowflake.XM90
-        @test typeof(gates[5])==Snowflake.ZM90
+        @test is_gate_type(gates[1], Snowflake.Z90)
+        @test is_gate_type(gates[2], Snowflake.X90)
+        @test is_gate_type(gates[3], Snowflake.PhaseShift)
+        @test is_gate_type(gates[4], Snowflake.XM90)
+        @test is_gate_type(gates[5], Snowflake.ZM90)
     end
 end
 
@@ -382,11 +384,43 @@ end
 
 end
 
-@testset "AbstractQPU" begin
-    struct NonExistentQPU<:Snowflake.AbstractQPU end
+@testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
 
-    @test_throws NotImplementedError get_metadata(NonExistentQPU())
-    @test_throws NotImplementedError get_native_gate_types(NonExistentQPU())
+    struct MultiParamMultiTargetGate <: Snowflake.AbstractGate
+        target_1::Int
+        target_2::Int
+        target_3::Int
+        theta::Real
+        phi::Real
+    end
+
+    Snowflake.get_connected_qubits(gate::MultiParamMultiTargetGate)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflake.get_gate_parameters(gate::MultiParamMultiTargetGate)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
+    Snowflake.get_operator(gate::MultiParamMultiTargetGate, T::Type{<:Complex}=ComplexF64) = DenseOperator(
+        T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+        0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
+        0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+        0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+        0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0
+        0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+        0.0 0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.theta)
+        0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.phi) 0.0]
+    )
+
+    Snowflake.gates_display_symbols[MultiParamMultiTargetGate]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
+
+    Snowflake.gates_instruction_symbols[MultiParamMultiTargetGate]="mm"
+
+
+    circuit=QuantumCircuit(qubit_count=5,gates=[MultiParamMultiTargetGate(1,3,5,π,π/3)])
+
+    transpiler=SwapQubitsForLineConnectivityTranspiler()
+
+    transpiled_circuit=transpile(transpiler,circuit)
+
+    println("circuit: $circuit") # test printout for multi-target multi-param gate
+    
+    @test compare_circuits(circuit,transpiled_circuit)
 
 end
 
@@ -397,9 +431,7 @@ end
     target=1
     
     transpiler=get_transpiler(qpu) 
-    
-    set_of_native_gates=get_native_gate_types(qpu)
-    
+        
     input_gates_native=[
         # gate_type, gate
         phase_shift(target,-phi/2),
@@ -418,6 +450,7 @@ end
     
     input_gates_foreign=[
         # gate_type, gate
+        identity_gate(target),
         hadamard(target),
         rotation(target,theta,phi),
         rotation_x(target,theta),
@@ -439,7 +472,8 @@ end
 
             if input_is_native
                 test_is_not_rz=[
-                    !(typeof(gate) in Snowflake.set_of_rz_gates) for gate in gates_in_output
+                    !(get_gate_type(gate) in Snowflake.set_of_rz_gates)
+                    for gate in gates_in_output
                 ]
 
                 # at most one non-Rz gate in output
@@ -447,7 +481,7 @@ end
             end
 
             for gate in gates_in_output
-                @test typeof(gate) in set_of_native_gates
+                @test is_native_gate(qpu, gate)
             end
         end
     end
@@ -460,8 +494,6 @@ end
     
     transpiler=get_transpiler(qpu) 
     
-    set_of_native_gates=get_native_gate_types(qpu)
-
     circuit=QuantumCircuit(qubit_count=qubit_count,gates=vcat(
         hadamard(1),[control_x(i,i+1) for i in 1:qubit_count-1])
     )
@@ -476,9 +508,9 @@ end
 
         for target in targets
             if haskey(results,target)
-                results[target]=push!(results[target],typeof(gate))
+                results[target]=push!(results[target], get_gate_type(gate))
             else
-                results[target]=[typeof(gate)]
+                results[target]=[get_gate_type(gate)]
             end
         end
     end
@@ -668,7 +700,7 @@ end
 
         result_gate=Snowflake.simplify_rx_gate(target,angle)
 
-        @test typeof(result_gate)==type_result
+        @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
@@ -678,7 +710,7 @@ end
 
     result_gate=Snowflake.simplify_rx_gate(target,1e-3)
 
-    @test typeof(result_gate)==Snowflake.RotationX
+    @test is_gate_type(result_gate, Snowflake.RotationX)
 
     result_gate=Snowflake.simplify_rx_gate(target,1e-3,atol=1e-1)
 
@@ -705,7 +737,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,0.)])
@@ -759,7 +791,7 @@ end
 
         result_gate=Snowflake.simplify_rz_gate(target,angle)
 
-        @test typeof(result_gate)==type_result
+        @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
@@ -769,7 +801,7 @@ end
 
     result_gate=Snowflake.simplify_rz_gate(target,1e-3)
 
-    @test typeof(result_gate)==Snowflake.PhaseShift
+    @test is_gate_type(result_gate, Snowflake.PhaseShift)
 
     result_gate=Snowflake.simplify_rz_gate(target,1e-3,atol=1e-1)
 
@@ -797,7 +829,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test typeof(get_circuit_gates(transpiled_circuit)[1])==type_result
+        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,0.)])
@@ -907,4 +939,26 @@ gates_in_output=[9,8]
             end
         end
     end
+end
+
+@testset "remove_swap_by_swapping_gates" begin
+    transpiler = RemoveSwapBySwappingGates()
+
+    circuit =
+        QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),
+            swap(1, 2), swap(2, 3), sigma_x(2)])
+
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test simulate(circuit) ≈ simulate(transpiled_circuit)
+
+    circuit =
+        QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),
+            swap(1, 2), swap(1, 4), sigma_x(2)])
+
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test simulate(circuit) ≈ simulate(transpiled_circuit)
 end

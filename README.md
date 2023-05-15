@@ -57,7 +57,7 @@ Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/
 
 <div style="text-align: center;">
 	<img
-		src="./docs/src/images/cnot_circuit.svg"
+		src="./docs/src/images/bell_circuit.svg"
 		title="Bell state generator circuit"
 		width="240"
 	/>
@@ -83,7 +83,7 @@ q[1]:
 q[2]:
 ```
 
-In Snowflake, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. We now proceed by adding gates to our circuit.
+In Snowflake, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it. We now proceed by adding gates to our circuit.
 
 ```julia
 push!(c, [hadamard(1)])

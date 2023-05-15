@@ -5,7 +5,7 @@
 A data structure to represent a *quantum circuit*.  
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
-- `gates::Array{Array{Gate}}` -- the sequence of gates to operate on qubits.
+- `gates::Vector{AbstractGate}` -- the sequence of gates to operate on qubits.
 
 # Examples
 ```jldoctest
@@ -27,7 +27,7 @@ Base.@kwdef struct QuantumCircuit
         c=new(qubit_count,[])
 
         # add gates, with ensure_gate_is_in_circuit()
-        push!(c,gates)
+        push!(c,gates...)
 
         return c
     end
@@ -38,16 +38,19 @@ get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
 get_circuit_gates(circuit::QuantumCircuit)=circuit.gates
 
 """
-    push!(circuit::QuantumCircuit, gate::AbstractGate)
-    push!(circuit::QuantumCircuit, gates::Array{AbstractGate})
+    push!(circuit::QuantumCircuit, gates::AbstractGate...)
 
-Pushes a single gate or an array of gates to the `circuit` gates. This function is mutable. 
+Inserts one or more `gates` at the end of a `circuit`.
+
+A `Vector` of `AbstractGate` objects can be passed to this function by using splatting.
+More details about splatting are provided
+[here](https://docs.julialang.org/en/v1/manual/faq/#What-does-the-...-operator-do?).
 
 # Examples
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, [hadamard(1),sigma_x(2)])
+julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -67,19 +70,152 @@ q[2]:───────X────X──
 
 
 
+julia> gate_list = [sigma_x(1), hadamard(2)];
+
+julia> push!(c, gate_list...)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──H─────────*────X───────
+                 |            
+q[2]:───────X────X─────────H──
+                              
+
+
+
 ```
 """
-function Base.push!(circuit::QuantumCircuit, gate::AbstractGate)
-    ensure_gate_is_in_circuit(circuit, gate)
-    push!(get_circuit_gates(circuit), gate)
+function Base.push!(circuit::QuantumCircuit, gates::AbstractGate...)
+    for single_gate in gates
+        ensure_gate_is_in_circuit(circuit, single_gate)
+        push!(get_circuit_gates(circuit), single_gate)
+    end
     return circuit
 end
 
-function Base.push!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
-    for gate in gates
-        push!(circuit, gate)
+"""
+    append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
+
+Appends one or more `circuits_to_append` to the `base_circuit`.
+
+The `circuits_to_append` cannot contain more qubits than the `base_circuit`.
+
+# Examples
+```jldoctest
+julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> append_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──Z──
+          
+
+
+
+julia> append_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──*──
+       |  
+q[2]:──X──
+          
+
+
+
+julia> append!(base, append_1, append_2)
+
+julia> print(base)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X────Z────*──
+                 |  
+q[2]:────────────X──
+                    
+
+
+```
+"""
+function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
+    for circuit in circuits_to_append
+        if base_circuit.qubit_count < circuit.qubit_count
+            throw(ErrorException("the circuit to append has more qubits "*
+                "($(circuit.qubit_count)) than the base circuit "*
+                "($(base_circuit.qubit_count) qubits)"))
+        else
+            append!(base_circuit.gates, circuit.gates)
+        end
     end
-    return circuit
+end
+
+"""
+    prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
+
+Prepends one or more `circuits_to_prepend` to the `base_circuit`.
+
+The order of the `circuits_to_prepend` is maintained (i.e. `circuits_to_prepend[1]` will
+appear leftmost in `base_circuit`). The `circuits_to_prepend` cannot contain more qubits
+than the `base_circuit`.
+
+# Examples
+```jldoctest
+julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> prepend_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
+Quantum Circuit Object:
+   qubit_count: 1 
+q[1]:──Z──
+          
+
+
+
+julia> prepend_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──*──
+       |  
+q[2]:──X──
+          
+
+
+
+julia> prepend!(base, prepend_1, prepend_2)
+
+julia> print(base)
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──Z────*────X──
+            |       
+q[2]:───────X───────
+                    
+
+
+```
+"""
+function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
+    for circuit in reverse(circuits_to_prepend)
+        if base_circuit.qubit_count < circuit.qubit_count
+            throw(ErrorException("the circuit to prepend has more qubits "*
+                "($(circuit.qubit_count)) than the base circuit "*
+                "($(base_circuit.qubit_count) qubits)"))
+        else
+            prepend!(base_circuit.gates, circuit.gates)
+        end
+    end
 end
 
 
@@ -187,7 +323,7 @@ false
 """
 function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
     for gate in get_circuit_gates(circuit)
-        if gate isa gate_type
+        if is_gate_type(gate, gate_type)
             return true
         end
     end
@@ -209,13 +345,18 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
 
-    if isempty(gate_params)
-        return gates_display_symbols[typeof(gate)]
-    else
-        symbol_specs=gates_display_symbols[typeof(gate)]
+    targets=get_connected_qubits(gate)
 
-        symbol_gate=symbol_specs[1]
-        fields=symbol_specs[2:end]
+    num_targets=length(targets)
+    num_params=length(gate_params)
+
+    if isempty(gate_params)
+        return gates_display_symbols[get_gate_type(gate)]
+    else
+        symbol_specs=gates_display_symbols[get_gate_type(gate)]
+
+        symbol_gate=symbol_specs[num_targets]
+        fields=symbol_specs[num_targets+1:end]
         repetitions=length(fields)
     
         # create format specifier of correct precision
@@ -231,12 +372,19 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
         end
     
         # construct label using gate_params
-        return [formatter(str_label_with_precision,parameter_values...)]
+        label_with_params=formatter(str_label_with_precision,parameter_values...)
+
+        if num_targets==1
+            return [label_with_params]
+        else
+            return vcat(symbol_specs[1:end-num_params-1],label_with_params)
+        end
     end
     
 end
 
 gates_display_symbols=Dict(
+    Identity    =>["I"],
     SigmaX      =>["X"],
     SigmaY      =>["Y"],
     SigmaZ      =>["Z"],
@@ -262,9 +410,10 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[typeof(gate)]
+get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[get_gate_type(gate)]
 
 gates_instruction_symbols=Dict(
+    Identity    =>"i",
     SigmaX      =>"x",
     SigmaY      =>"y",
     SigmaZ      =>"z",
@@ -299,7 +448,7 @@ Removes the last gate from `circuit.gates`.
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, [hadamard(1),sigma_x(2)])
+julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -492,7 +641,9 @@ end
 """
     simulate(circuit::QuantumCircuit)
 
-Simulates and returns the wavefunction of the quantum device after running `circuit`. 
+Simulates and returns the wavefunction of the quantum device after running `circuit`, 
+assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
+`ψ=fock(0,2^get_num_qubits(circuit))`. 
 
 Employs the approach described in Listing 5 of
 [Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
@@ -542,7 +693,8 @@ end
 """
     simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results.
+Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results. 
+The distribution of measured states corresponds to the coefficients in the resulting state Ket. 
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
@@ -591,7 +743,6 @@ julia> simulate_shots(c, 99)
 ```
 """
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
-    # return simulateShots(c, shots_count)
     ψ = simulate(c)
     amplitudes = adjoint.(ψ) .* ψ
     weights = Float32[]
@@ -630,7 +781,7 @@ is 50% and the probability of measuring 11 is also 50%.
 ```jldoctest get_circuit_measurement_probabilities
 julia> circuit = QuantumCircuit(qubit_count=2);
 
-julia> push!(circuit, [hadamard(1), sigma_x(2)])
+julia> push!(circuit, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──H───────
@@ -675,7 +826,8 @@ end
 """
     inv(circuit::QuantumCircuit)
 
-Return a `QuantumCircuit` which is the inverse of the input `circuit`.
+Return a `QuantumCircuit` which is the inverse of the input `circuit`. 
+Each gate is replaced by it's corresponding inverse, and the order of gates is reversed.
 
 # Examples
 ```jldoctest
@@ -726,7 +878,7 @@ The dictionary keys are the instruction_symbol of the gates while the values are
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count=2);
 
-julia> push!(c, [hadamard(1), hadamard(2)]);
+julia> push!(c, hadamard(1), hadamard(2));
 
 julia> push!(c, control_x(1, 2));
 
@@ -769,7 +921,7 @@ Returns the number of gates in the `circuit`.
 ```jldoctest
 julia> c = QuantumCircuit(qubit_count=2);
 
-julia> push!(c, [hadamard(1), hadamard(2)]);
+julia> push!(c, hadamard(1), hadamard(2));
 
 julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:
@@ -787,3 +939,127 @@ julia> get_num_gates(c)
 ```
 """
 get_num_gates(circuit::QuantumCircuit)::Integer=length(get_circuit_gates(circuit))
+
+"""
+    permute_qubits!(circuit::QuantumCircuit,
+        qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
+Modifies a `circuit` by moving the gates to other qubits based on a `qubit_mapping`.
+
+The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
+qubits. The key indicates which target qubit to change while the associated value specifies
+the new qubit. All the keys in the dictionary must also be present as values and vice versa.
+
+For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)` is valid.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=3);
+
+julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──X────────────
+                    
+q[2]:───────H───────
+                    
+q[3]:────────────Y──                    
+
+
+
+julia> permute_qubits!(c, Dict(1=>3, 3=>1))
+
+julia> show(c)
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:────────────Y──
+                    
+q[2]:───────H───────
+                    
+q[3]:──X────────────
+                    
+
+
+```
+"""
+function permute_qubits!(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
+    assert_qubit_mapping_is_valid(qubit_mapping, get_num_qubits(circuit))
+    unsafe_permute_qubits!(circuit, qubit_mapping)
+end
+
+function assert_qubit_mapping_is_valid(qubit_mapping::AbstractDict{T,T},
+    qubit_count::Integer) where T<:Integer
+
+    sorted_keys = sort(collect(keys(qubit_mapping)))
+    sorted_values = sort(collect(values(qubit_mapping)))
+    if sorted_keys != sorted_values
+        throw(ErrorException("the qubit mapping is invalid"))
+    end
+    if last(sorted_keys) < 1 || first(sorted_keys) > qubit_count
+        throw(ErrorException("the qubit mapping has a value that does not fit in the "*
+            "circuit"))
+    end
+end
+
+function unsafe_permute_qubits!(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+
+    gates_list = get_circuit_gates(circuit)
+    for (i_gate, gate) in enumerate(gates_list)
+        moved_gate = move_gate(gate, qubit_mapping)
+        circuit.gates[i_gate] = moved_gate
+    end
+end
+
+"""
+    permute_qubits(circuit::QuantumCircuit,
+        qubit_mapping::AbstractDict{T,T})::QuantumCircuit where T<:Integer
+
+Returns a `QuantumCircuit` that is a copy of `circuit` but where the gates have been moved
+to other qubits based on a `qubit_mapping`.
+
+The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
+qubits. The key indicates which target qubit to change while the associated value specifies
+the new qubit. All the keys in the dictionary must also be present as values and vice versa.
+
+For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)` is valid.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count=3);
+
+julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:──X────────────
+                    
+q[2]:───────H───────
+                    
+q[3]:────────────Y──
+                    
+
+
+
+julia> permute_qubits(c, Dict(1=>3, 3=>1))
+Quantum Circuit Object:
+   qubit_count: 3 
+q[1]:────────────Y──
+                    
+q[2]:───────H───────
+                    
+q[3]:──X────────────
+                    
+
+
+
+```
+"""
+function permute_qubits(circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T})::QuantumCircuit where T<:Integer
+
+    circuit_copy = deepcopy(circuit)
+    permute_qubits!(circuit_copy, qubit_mapping)
+    return circuit_copy
+end

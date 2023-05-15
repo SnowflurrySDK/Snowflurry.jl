@@ -21,13 +21,16 @@ export
     Bra,
     Ket,
     AbstractOperator,
+    IdentityOperator,
     DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
     SparseOperator,
+    SwapLikeOperator,
     MultiBodySystem,
     QuantumCircuit,
     AbstractGate,
+    AbstractControlledGate,
     AnyonQPU,
     VirtualQPU,
     Client,
@@ -46,7 +49,10 @@ export
     CastUniversalToRzRxRzTranspiler,
     SimplifyRxGatesTranspiler,
     SimplifyRzGatesTranspiler,
+    SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
+    TrivialTranspiler,
+    RemoveSwapBySwappingGates,
 
     # Functions
     commute, 
@@ -71,7 +77,12 @@ export
     get_num_qubits,
     get_num_bodies,
     get_connected_qubits,
+    get_target_qubits,
+    get_control_qubits,
     get_gate_parameters,
+    is_gate_type,
+    get_gate_type,
+    move_gate,
     normalize!,
     get_measurement_probabilities,
     genlaguerre,
@@ -89,6 +100,8 @@ export
     compare_circuits,
     circuit_contains_gate_type,
     compare_kets,
+    permute_qubits!,
+    permute_qubits,
    
     transpile,
     get_status_type,
@@ -97,11 +110,14 @@ export
     serialize_job,
     submit_circuit,
     get_client,
+    print_connectivity,
     get_host,
     get_status,
     get_result,
-    get_native_gate_types,
+    is_native_gate,
+    is_native_circuit,
     run_job,
+    transpile_and_run_job,
     MockRequestor,
     HTTPRequestor,
     get_request,
@@ -110,7 +126,13 @@ export
     get_transpiler,
     apply_gate!,
 
+    get_pauli,
+    get_quantum_circuit,
+    get_negative_exponent,
+    get_imaginary_exponent,
+
     # Gates
+    identity_gate,
     sigma_x,
     sigma_y,
     sigma_z,
@@ -143,9 +165,10 @@ include("core/qobj.jl")
 include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
+include("core/pauli.jl")
+include("core/transpile.jl")
 include("anyon/qpu_interface.jl")
 include("anyon/anyon.jl")
-include("core/transpile.jl")
 
 
 

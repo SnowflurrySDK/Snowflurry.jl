@@ -10,6 +10,8 @@ DocTestSetup = :(using Snowflake, SnowflakePlots)
 QuantumCircuit
 push!
 pop!
+append!
+prepend!
 simulate
 simulate_shots
 get_measurement_probabilities(circuit::QuantumCircuit)
@@ -20,12 +22,15 @@ serialize_job
 transpile
 compare_circuits
 circuit_contains_gate_type
+permute_qubits!
+permute_qubits
 ```
 
 ## Quantum Gates
 ```@docs
 AbstractGate
 eye
+identity_gate
 sigma_p
 sigma_m
 sigma_x
@@ -55,6 +60,9 @@ Base.:*(M::AbstractGate, x::Ket)
 apply_gate!
 get_operator
 inv(gate::AbstractGate)
+is_gate_type
+get_gate_type
+move_gate
 ```
 
 ## Quantum Processing Unit
@@ -67,6 +75,7 @@ submit_circuit
 get_status
 get_result
 run_job
+transpile_and_run_job
 get_transpiler
 SequentialTranspiler
 ```
@@ -122,6 +131,18 @@ compare_kets
 ### Visualization
 
 The [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) package provides multiple visualization tools for Snowflake.jl. Please see the documentation of [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) for more details. 
+
+## Pauli Simulator
+Snowflake provides tools for the efficient storage and manipulation of Pauli group elements.
+
+```@docs
+Snowflake.PauliGroupElement
+get_pauli
+Base.:*(p1::Snowflake.PauliGroupElement, p2::Snowflake.PauliGroupElement)
+get_quantum_circuit
+get_negative_exponent
+get_imaginary_exponent
+```
 
 
 ```@meta

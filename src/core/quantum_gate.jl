@@ -68,12 +68,215 @@ Underlying data ComplexF64:
 
 ```
 
+To enable printout of a circuit containing our new gate type, a symbol 
+must be defined as follows.
+```jldoctest gate_struct
+julia> Snowflake.gates_display_symbols[X45]=["X45"];
+
+```
+
+If this gate is to be sent as an instruction to a hardware QPU, 
+an instruction string must be defined.
+```jldoctest gate_struct
+julia> Snowflake.gates_instruction_symbols[X45]="x45";
+
+```
+
+A circuit containing this gate can now be constructed:
+```jldoctest gate_struct
+julia> circuit=QuantumCircuit(qubit_count=2,gates=[x_45_gate])
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:──X45──
+
+q[2]:───────
+```
+
 """
 abstract type AbstractGate end
 
+abstract type AbstractControlledGate<:AbstractGate end
+
 get_connected_qubits(gate::AbstractGate)=[gate.target]
 
-get_gate_parameters(gate::AbstractGate)=Dict()
+get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
+
+"""
+    is_gate_type(gate::AbstractGate, type::Type)::Bool 
+
+Determines if a `gate` is of the specified `type`.
+
+!!! warning "Use is_gate_type instead of isa!"
+    For `AbstractGate` objects, `is_gate_type` should be used instead of `isa`. The
+    utilization of `isa` could lead to unexpected behavior (e.g. if a gate has been moved).
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> is_gate_type(gate, Snowflake.SigmaX)
+true
+
+julia> is_gate_type(gate, Snowflake.SigmaY)
+false
+
+```
+"""
+is_gate_type(gate::AbstractGate, type::Type)::Bool = isa(gate, type)
+
+"""
+    get_gate_type(gate::AbstractGate)::Type
+
+Returns the type of a `gate`.
+
+!!! warning "Use get_gate_type instead of typeof!"
+    For `AbstractGate` objects, `get_gate_type` should be used instead of `typeof`. The
+    utilization of `typeof` could lead to unexpected behavior (e.g. if a gate has been
+    moved).
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> get_gate_type(gate)
+Snowflake.SigmaX
+
+```
+"""
+get_gate_type(gate::AbstractGate)::Type = typeof(gate)
+
+struct MovedGate <:AbstractGate
+    original_gate::AbstractGate
+    connected_qubits::Vector{Int}
+end
+
+struct MovedControlledGate <:AbstractControlledGate
+    original_gate::AbstractControlledGate
+    connected_qubits::Vector{Int}
+end
+
+MovedGate(gate::AbstractControlledGate, connected_qubits::Vector{Int}) = 
+    MovedControlledGate(gate,connected_qubits)
+
+UnionMovedGates=Union{MovedGate,MovedControlledGate}
+
+function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
+    old_connected_qubits=get_connected_qubits(gate.original_gate)
+    old_control_qubits=get_control_qubits(gate.original_gate)
+
+    return [gate.connected_qubits[i] 
+        for (i,num) in enumerate(old_connected_qubits) 
+            if num in old_control_qubits
+        ]
+end
+
+get_control_qubits(gate::AbstractGate)=
+    throw(NotImplementedError(:get_control_qubits,gate))
+
+function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
+    old_connected_qubits=get_connected_qubits(gate.original_gate)
+    old_target_qubits=get_target_qubits(gate.original_gate)
+
+    return [gate.connected_qubits[i] 
+        for (i,num) in enumerate(old_connected_qubits) 
+            if num in old_target_qubits
+        ]
+end
+
+get_target_qubits(gate::AbstractGate)=
+    throw(NotImplementedError(:get_target_qubits,gate))
+
+function get_operator(gate::UnionMovedGates, T::Type{<:Complex}=ComplexF64)
+    return get_operator(gate.original_gate, T)
+end
+
+Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
+
+Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate), gate.connected_qubits)
+
+get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
+
+function is_gate_type(gate::UnionMovedGates, type::Type)::Bool
+    return is_gate_type(gate.original_gate, type)
+end
+
+get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
+
+get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
+
+"""
+    move_gate(gate::AbstractGate,
+        qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+
+Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
+on `qubit_mapping`.
+
+The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
+qubits. The key indicates which target qubit to change while the associated value specifies
+the new qubit.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1)
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [1]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+julia> move_gate(gate, Dict(1=>2))
+Gate Object: Snowflake.SigmaX
+Connected_qubits	: [2]
+Operator:
+(2,2)-element Snowflake.AntiDiagonalOperator:
+Underlying data type: ComplexF64:
+    .    1.0 + 0.0im
+    1.0 + 0.0im    .
+
+
+```
+"""
+function move_gate(gate::AbstractGate,
+    qubit_mapping::AbstractDict{T,T}
+    )::AbstractGate where {T<:Integer}
+
+    old_connected_qubits = get_connected_qubits(gate)
+    new_connected_qubits = Int[]
+    found_move = false
+    for (i_qubit, old_qubit) in enumerate(old_connected_qubits)
+        if haskey(qubit_mapping, old_qubit)
+            if !found_move
+                new_connected_qubits = deepcopy(old_connected_qubits)
+                found_move = true
+            end
+            new_connected_qubits[i_qubit] = qubit_mapping[old_qubit]
+        end
+    end
+    if found_move
+        return MovedGate(gate, new_connected_qubits)
+    else
+        return gate
+    end
+end
 
 struct NotImplementedError{ArgsT} <: Exception
     name::Symbol
@@ -117,6 +320,261 @@ function apply_gate!(state::Ket, gate::AbstractGate)
     operator=get_operator(gate,type_in_ket)
 
     apply_operator!(state,operator,connected_qubits)
+end
+
+# specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
+# `phase` argument adds a phase offset to swapped coefficients. 
+# adapted from https://github.com/qulacs/qulacs, method SWAP_gate_parallel_unroll()
+function apply_operator!(
+    state::Ket,
+    op::SwapLikeOperator,
+    connected_qubits::Vector{<:Integer}
+    )
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+    
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    (target_qubit_index_0,target_qubit_index_1)=
+        Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
+
+    loop_dim = div(dim,4)
+
+    mask_0 = UInt64(1) << target_qubit_index_0
+    mask_1 = UInt64(1) << target_qubit_index_1
+    
+    mask = mask_0 + mask_1
+
+    min_qubit_index = minimum([target_qubit_index_0, target_qubit_index_1])
+    max_qubit_index = maximum([target_qubit_index_0, target_qubit_index_1])
+    
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    if (target_qubit_index_0 == 0 || target_qubit_index_1 == 0)
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index_0 = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask_0;
+            basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+            @inbounds temp = state.data[basis_index_0+1]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
+            @inbounds state.data[basis_index_1+1] = temp*op.phase
+        end
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)    
+            basis_index_0 = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask_0
+            basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+            @inbounds temp0 = state.data[basis_index_0+1]
+            @inbounds temp1 = state.data[basis_index_0+2]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
+            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]*op.phase
+            @inbounds state.data[basis_index_1+1] = temp0*op.phase
+            @inbounds state.data[basis_index_1+2] = temp1*op.phase
+        end
+    end
+end
+
+# optimized application of ControlX gate on state Ket.  
+# adapted from https://github.com/qulacs/qulacs, method CNOT_gate_parallel_unroll()
+function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+
+    loop_dim = div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-target_qubit 
+    control_qubit_index=qubit_count-control_qubit 
+    
+    target_mask = UInt64(1) << target_qubit_index
+    control_mask = UInt64(1) << control_qubit_index
+
+    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
+    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1;
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    if target_qubit_index == 0
+        # swap neighboring two basis
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index = ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            @inbounds temp = state.data[basis_index+1]
+            @inbounds state.data[basis_index+1] = state.data[basis_index+2]
+            @inbounds state.data[basis_index+2] = temp
+        end
+    elseif (control_qubit_index == 0)
+        # no neighboring swap
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index_0 =(state_index & low_mask) + 
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+            @inbounds temp = state.data[basis_index_0+1]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
+            @inbounds state.data[basis_index_1+1] = temp
+        end
+    else
+        # a,a+1 is swapped to a^m, a^m+1, respectively
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)
+            basis_index_0 =(state_index & low_mask) + 
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+            @inbounds temp0 = state.data[basis_index_0+1]
+            @inbounds temp1 = state.data[basis_index_0+2]
+            @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
+            @inbounds state.data[basis_index_0+2] = state.data[basis_index_1+2]
+            @inbounds state.data[basis_index_1+1] = temp0
+            @inbounds state.data[basis_index_1+2] = temp1
+        end
+    end
+end
+
+# optimized application of ControlZ gate on state Ket.  
+# adapted from https://github.com/qulacs/qulacs, method CZ_gate_parallel_unroll()
+function apply_control_z!(state::Ket,control_qubit::Int,target_qubit::Int)
+    qubit_count = get_num_qubits(state)
+
+    dim=2^qubit_count
+
+    loop_dim = div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=qubit_count-target_qubit 
+    control_qubit_index=qubit_count-control_qubit 
+    
+    target_mask = UInt64(1) << target_qubit_index
+    control_mask = UInt64(1) << control_qubit_index
+
+    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
+    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1;
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    mask = target_mask + control_mask
+
+    if target_qubit_index == 0 || control_qubit_index == 0
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask
+            @inbounds state.data[basis_index+1] *= -1
+        end
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)
+            basis_index = (state_index & low_mask) +
+                ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + mask
+            @inbounds state.data[basis_index+1] *= -1
+            @inbounds state.data[basis_index+2] *= -1
+        end
+    end
+end
+
+# optimized application of Toffoli gate on state Ket.  
+# adapted from https://github.com/qulacs/qulacs, 
+# method multi_qubit_control_single_qubit_dense_matrix_gate_unroll()
+function apply_toffoli!(state::Ket,control_qubits::Vector{Int},target_qubit::Int)
+    qubit_count = get_num_qubits(state)
+
+    dim=UInt64(2^qubit_count)
+
+    @assert length(control_qubits)==2 ("Received $(length(control_qubits)) control qubits instead of 2.")
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=UInt64(qubit_count-target_qubit)
+    
+    control_qubit_index_list=Vector{UInt64}([qubit_count-t for t in reverse(control_qubits)])
+    control_qubit_index_count=UInt64(2)
+    
+    sort_array=Vector{UInt64}(undef, control_qubit_index_count+1)
+    mask_array=Vector{UInt64}(undef, control_qubit_index_count+1)
+
+    create_shift_mask_list_from_list_and_value_buf!(
+        control_qubit_index_list,
+        control_qubit_index_count, 
+        target_qubit_index, 
+        sort_array,
+        mask_array
+    )
+
+    target_mask = (UInt64(1) << target_qubit_index)
+
+    control_mask=create_control_mask(
+        control_qubit_index_list::Vector{UInt64}, 
+        control_qubit_index_count::UInt64)
+
+    insert_index_list_count = control_qubit_index_count + 1
+    loop_dim = dim >> insert_index_list_count
+
+    if target_qubit_index == 0
+        for state_index in UnitRange{UInt64}(UInt64(0),loop_dim-1)
+            basis_0 = state_index
+            for cursor in 1:Int(insert_index_list_count)
+                basis_0 = (basis_0 & mask_array[cursor]) +
+                          ((basis_0 & (~mask_array[cursor])) << 1)
+            end
+            basis_0 += control_mask;
+
+            @inbounds temp = state.data[basis_0+1]
+            @inbounds state.data[basis_0+1] = state.data[basis_0+2]
+            @inbounds state.data[basis_0+2] = temp
+        end
+
+    elseif (sort_array[1] == 0)
+        for state_index in UnitRange{UInt64}(UInt64(0),loop_dim-1)
+            basis_0 = state_index
+            for cursor in 1:Int(insert_index_list_count)
+                basis_0 = (basis_0 & mask_array[cursor]) +
+                          ((basis_0 & (~mask_array[cursor])) << 1)
+            end
+            basis_0 += control_mask
+            basis_1 = basis_0 + target_mask
+
+            @inbounds temp = state.data[basis_0+1]
+            @inbounds state.data[basis_0+1] = state.data[basis_1+1]
+            @inbounds state.data[basis_1+1] = temp
+        end
+
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)
+            # create base index
+            basis_0 = state_index
+            for cursor in 1:Int(insert_index_list_count)
+                basis_0 = (basis_0 & mask_array[cursor]) +
+                          ((basis_0 & (~mask_array[cursor])) << 1)
+            end
+            basis_0 += control_mask
+            basis_1 = basis_0 + target_mask
+            
+            @inbounds temp0 = state.data[basis_0+1]
+            @inbounds temp1 = state.data[basis_0+2]
+            @inbounds state.data[basis_0+1] = state.data[basis_1+1]
+            @inbounds state.data[basis_0+2] = state.data[basis_1+2]
+            @inbounds state.data[basis_1+1] = temp0
+            @inbounds state.data[basis_1+2] = temp1        
+        end
+    end
 end
 
 # specialization for single target dense gate (size N=2, for N=2^target_count)
@@ -166,7 +624,7 @@ end
 function apply_operator!(
     state::Ket,
     operator::DenseOperator{N},
-    connected_qubit::Vector{<:Integer}) where N 
+    connected_qubits::Vector{<:Integer}) where N 
 
     qubit_count = get_num_qubits(state)
 
@@ -176,8 +634,8 @@ function apply_operator!(
 
     # the bitwise implementation assumes target numbering starting at 0,
     # with first qubit on the rightmost side
-    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubit)])
-    target_qubit_index_count=UInt64(length(connected_qubit))
+    target_qubit_index_list=Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
+    target_qubit_index_count=UInt64(length(connected_qubits))
     
     sort_array=Vector{UInt64}(undef, target_qubit_index_count)
     mask_array=Vector{UInt64}(undef, target_qubit_index_count)
@@ -213,16 +671,16 @@ function apply_operator!(
 
         # compute matrix-vector multiply
         for y in 0:(matrix_dim-1)
-            buffer_list[y+1] = 0
+            @inbounds buffer_list[y+1] = 0
             for x in 0:matrix_dim-1
-                buffer_list[y+1] += matrix[Int(x * matrix_dim + y +1)] *
+                @inbounds buffer_list[y+1] += matrix[Int(x * matrix_dim + y +1)] *
                  state.data[Int(basis_0 ⊻ matrix_mask_list[x+1] +1)]
             end
         end
 
         # set result
         for y in  0:(matrix_dim-1)
-            state.data[Int(basis_0 ⊻ matrix_mask_list[y+1]+1)] = buffer_list[y+1];
+            @inbounds state.data[Int(basis_0 ⊻ matrix_mask_list[y+1]+1)] = buffer_list[y+1];
         end
 
     end
@@ -274,7 +732,7 @@ function apply_operator!(
     
     # the bitwise implementation assumes target numbering starting at 0,
     # with first qubit on the rightmost side
-    target_qubit_index_list=Vector{Int64}([qubit_count-t for t in reverse(connected_qubits)])
+    target_qubit_index_list=Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
     target_qubit_index_count=UInt64(log2(N))
     
     diagonal_in_matrix=operator.data
@@ -305,7 +763,7 @@ function apply_operator!(
 
         # compute matrix-vector multiply
         for y in 0:(matrix_dim-1)
-            state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
+            @inbounds state.data[(basis_0 ⊻ matrix_mask_list[y+1])+1] *= diagonal_in_matrix[y+1];
         end
 
     end
@@ -326,7 +784,7 @@ function apply_operator!(
     # with first qubit on the rightmost side
     target_qubit_index=qubit_count-connected_qubit[1]
     
-    offdiagonal=operator.data
+    anti_diagonal=operator.data
 
     loop_dim = div(dim, 2);
     mask = (UInt64(1) << target_qubit_index);
@@ -334,27 +792,28 @@ function apply_operator!(
     mask_high = ~mask_low;
     
     if target_qubit_index==0 # (qubit_count-1)
-        for basis_index in StepRange(0,2,(dim-2))
-            temp = state.data[basis_index+1]
-            state.data[basis_index+1] = offdiagonal[1]*state.data[basis_index + 2]
-            state.data[basis_index+2] = offdiagonal[2]*temp
+        for basis_index in StepRange(0,2,dim-2)
+            @inbounds temp = state.data[basis_index+1]
+            @inbounds state.data[basis_index+1] = anti_diagonal[1]*state.data[basis_index + 2]
+            @inbounds state.data[basis_index+2] = anti_diagonal[2]*temp
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
             basis_index_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
             basis_index_1 = basis_index_0 + mask
 
-            temp0 = state.data[basis_index_0+1];
-            temp1 = state.data[basis_index_0 + 2];
-            state.data[basis_index_0+1] = offdiagonal[1]*state.data[basis_index_1+1];
-            state.data[basis_index_0+2] = offdiagonal[1]*state.data[basis_index_1 + 2];
-            state.data[basis_index_1+1] = offdiagonal[2]*temp0;
-            state.data[basis_index_1+2] = offdiagonal[2]*temp1;
+            @inbounds temp0 = state.data[basis_index_0+1];
+            @inbounds temp1 = state.data[basis_index_0 + 2];
+            @inbounds state.data[basis_index_0+1] = anti_diagonal[1]*state.data[basis_index_1+1];
+            @inbounds state.data[basis_index_0+2] = anti_diagonal[1]*state.data[basis_index_1 + 2];
+            @inbounds state.data[basis_index_1+1] = anti_diagonal[2]*temp0;
+            @inbounds state.data[basis_index_1+2] = anti_diagonal[2]*temp1;
         end
     end
 end
 
-
+# IdentityOperator leaves the state Ket unchanged
+apply_operator!(state::Ket,op::IdentityOperator,connected_qubits::Vector{<:Integer})=nothing
 
 # Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
 function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qubit_index::UInt64)
@@ -362,7 +821,7 @@ function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qub
     return temp_basis + basis_index % basis_mask
 end
 
-function create_matrix_mask_list(qubit_index_list::Vector{Int64},qubit_index_count::UInt64,matrix_dim::UInt64)
+function create_matrix_mask_list(qubit_index_list::Vector{UInt64},qubit_index_count::UInt64,matrix_dim::UInt64)
     mask_list=zeros(UInt64,matrix_dim)
 
     for cursor in 0:(matrix_dim-1)
@@ -378,7 +837,7 @@ function create_matrix_mask_list(qubit_index_list::Vector{Int64},qubit_index_cou
 end
 
 function create_shift_mask_list_from_list_buf!(
-    target_qubit_index_list::Vector{Int64},
+    target_qubit_index_list::Vector{UInt64},
     dst_array::Vector{UInt64},
     dst_mask::Vector{UInt64}
     )
@@ -396,6 +855,44 @@ function create_shift_mask_list_from_list_buf!(
 
 end
 
+function create_shift_mask_list_from_list_and_value_buf!(
+    control_qubit_index_list::Vector{UInt64},
+    control_qubit_index_count::UInt64, 
+    target_qubit::UInt64, 
+    dst_array::Vector{UInt64},
+    dst_mask::Vector{UInt64}
+    )
+
+    #copy using mutation, not assignment, so dst_array still points to array in caller's scope
+    for (i,control) in enumerate(control_qubit_index_list)
+        dst_array[i]=control 
+    end
+
+    dst_array[control_qubit_index_count+1] = target_qubit
+
+    #sort the copy, so the initial array can be used in the original order
+    sort!(dst_array)
+
+    for (i,target) in enumerate(dst_array)
+        dst_mask[i]=(UInt64(1)<<target)-1 
+    end
+end
+
+# adapted from https://github.com/qulacs/qulacs, method create_control_mask()
+# unlike the qulacs implementation, Snowflake always assumes the 
+# control must be in state 1 to trigger the operator
+function create_control_mask(
+    qubit_index_list::Vector{UInt64}, 
+    size::UInt64)
+
+    mask = UInt64(0)
+    
+    for cursor in 1:size
+        mask⊻=(UInt64(1) << qubit_index_list[cursor])
+    end
+
+    return mask;
+end
 
 # Single Qubit Gates
 """
@@ -503,15 +1000,38 @@ T^\\dagger = \\begin{bmatrix}
 pi_8_dagger(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.0, exp(-im*pi/4.0)])
 
 """
-    eye()
+    eye(),
+    eye(size::Integer)
 
-Return the identity `Operator`, which is defined as:
+Return the identity matrix as a `DenseOperator`, which is defined as:
 ```math
 I = \\begin{bmatrix}
     1 & 0 \\\\
     0 & 1
     \\end{bmatrix}.
 ```
+
+Calling eye(size) will produce an identity matrix `DenseOperator` 
+of dimensions (size,size).
+
+# Examples
+```jldoctest
+julia> eye()
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im
+
+julia> eye(4)
+(4, 4)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+
+```
+
 """
 eye(T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, 2, 2))
 eye(size::Integer, T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I, size, size))
@@ -670,12 +1190,11 @@ Return the `DiagonalOperator` that applies a phase shift `phi`.
 The `DiagonalOperator` is defined as:
 ```math
 P(\\phi) = \\begin{bmatrix}
-    i & 0 \\\\[0.5em]      
+    1 & 0 \\\\[0.5em]      
     0 & e^{i\\phi}
 \\end{bmatrix}.
 ```
 """ 
-
 phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*phi)])
 
 """
@@ -756,9 +1275,7 @@ iSWAP = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, im, 0.0] [0.0, im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
-)
+iswap(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(im))
 
 """
     swap()
@@ -773,9 +1290,7 @@ iSWAP = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-swap(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
-)
+swap(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(1.0))
 
 """
     toffoli()
@@ -818,9 +1333,7 @@ iSWAP^\\dagger = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-iswap_dagger(T::Type{<:Complex}=ComplexF64) = DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, -im, 0.0] [0.0, -im, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]],
-)
+iswap_dagger(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(-im))
 
 """
     sigma_x(target)
@@ -1157,7 +1670,13 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-struct ControlZ <: AbstractGate
+get_control_qubits(gate::AbstractControlledGate)=
+    throw(NotImplementedError(:get_control_qubits,gate))
+
+get_target_qubits(gate::AbstractControlledGate)=
+    throw(NotImplementedError(:get_target_qubits,gate))
+
+struct ControlZ <: AbstractControlledGate
     control::Int
     target::Int
 end
@@ -1165,6 +1684,10 @@ end
 get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
 get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
+
+get_control_qubits(gate::ControlZ)=[gate.control]
+
+get_target_qubits(gate::ControlZ)=[gate.target]
 
 """
     control_x(control_qubit, target_qubit)
@@ -1178,7 +1701,7 @@ function control_x(control_qubit::Integer, target_qubit::Integer)
     return ControlX(control_qubit,target_qubit)
 end
 
-struct ControlX <: AbstractGate
+struct ControlX <: AbstractControlledGate
     control::Int
     target::Int
 end
@@ -1186,6 +1709,10 @@ end
 get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
 get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
+
+get_control_qubits(gate::ControlX)=[gate.control]
+
+get_target_qubits(gate::ControlX)=[gate.target]
 
 """
     iswap(qubit_1, qubit_2)
@@ -1249,7 +1776,7 @@ function toffoli(
     return Toffoli(control_qubit_1, control_qubit_2, target_qubit)
 end
 
-struct Toffoli <: AbstractGate
+struct Toffoli <: AbstractControlledGate
     control_1::Int
     control_2::Int
     target::Int
@@ -1258,6 +1785,38 @@ end
 get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
 get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
+
+get_control_qubits(gate::Toffoli)=[gate.control_1, gate.control_2]
+
+get_target_qubits(gate::Toffoli)=[gate.target]
+
+# optimized application of ControlX, ControlZ or Toffoli gate without calling operator 
+# (it is hard-coded in apply_control_x!, apply_control_z! or apply_toffoli!, respectively)
+function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ,Toffoli})
+    qubit_count = get_num_qubits(state)
+    
+    connected_qubits=get_connected_qubits(gate)
+
+    if any(t -> t>qubit_count ,connected_qubits)
+        throw(DomainError(connected_qubits,
+            "Not enough qubits in the Ket for the targets in gate"))
+    end
+
+    control_qubits=get_control_qubits(gate)
+
+    target_qubits=get_target_qubits(gate)
+    @assert length(target_qubits)==1
+
+    if get_gate_type(gate)==ControlX
+        @assert length(control_qubits)==1
+        apply_control_x!(state,control_qubits[1],target_qubits[1])
+    elseif get_gate_type(gate)==ControlZ
+        @assert length(control_qubits)==1
+        apply_control_z!(state,control_qubits[1],target_qubits[1])
+    else
+        apply_toffoli!(state,control_qubits,target_qubits[1])
+    end
+end
 
 """
     iswap_dagger(qubit_1, qubit_2)
@@ -1281,6 +1840,21 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
+
+"""
+    identity_gate(target)
+
+Return the Identity `Gate`, which applies the [`identity_gate()`](@ref) `IdentityOperator` to the target qubit.
+"""
+identity_gate(target::Integer) = Identity(target)
+
+struct Identity <: AbstractGate
+    target::Integer
+end
+
+get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{T}()
+
+get_connected_qubits(gate::Identity)=[gate.target]
 
 """
     Base.:*(M::AbstractGate, x::Ket)
@@ -1400,9 +1974,8 @@ function Base.show(io::IO, gate::AbstractGate)
     parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
-        show_gate(io, typeof(gate), targets, get_operator(gate))
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate))
     else
-        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
+        show_gate(io, get_gate_type(gate), targets, get_operator(gate), parameters)
     end
 end
-

@@ -36,6 +36,10 @@ Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},
 # default output is Ket{ComplexF64}
 Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer}=Ket(Vector{S}(x))
 
+# overload constructor to enable initialization from Complex{Integer}-valued array
+# default output is Ket{ComplexF64}
+Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Complex{Int}}=Ket(Vector{S}(x))
+
 function Base.show(io::IO, x::Ket)
     println(io, "$(length(x.data))-element Ket{$(eltype(x.data))}:")
     for val in x.data
@@ -236,7 +240,39 @@ DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 # so that an input of type DenseOperator is not copied
 DenseOperator(op::DenseOperator) = op
 
-DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,ComplexF64}(m))
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,T}(m))
+
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
+
+struct SwapLikeOperator{T<:Complex}<:AbstractOperator
+    phase::T
+end
+
+# Constructor from Real phase value, or other numeric types.
+SwapLikeOperator(phase::T) where {T<:Real} = SwapLikeOperator(Complex{T}(phase))
+
+# Constructor from Complex{Int} or Complex{Bool} such as `im`
+SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Complex{Bool}} = 
+    SwapLikeOperator(S(phase))
+
+# Constructor from Integer-valued phase
+# default output is Operator{ComplexF64}
+SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SwapLikeOperator(S(phase))
+
+# Cast SwapLikeOperator to DenseOperator
+DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
+    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, op.phase, 0.0] [0.0, op.phase, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+)
+
+get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
+
+struct IdentityOperator{T<:Complex}<: AbstractOperator end
+
+IdentityOperator(T::Type=ComplexF64)=IdentityOperator{T}()
+
+DenseOperator(::IdentityOperator{T}) where {T<:Complex}=eye(T)
+
+get_matrix(op::IdentityOperator)=get_matrix(DenseOperator(op))
 
 """
 
@@ -374,6 +410,9 @@ Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
 Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
     AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
+Base.adjoint(A::SwapLikeOperator) = typeof(A)(adjoint(A.phase))
+
+Base.adjoint(A::IdentityOperator) = A
 
 """
     is_hermitian(A::AbstractOperator)
@@ -408,7 +447,8 @@ is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
 is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
 is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
 
-Base.:*(alpha::Number, x::Ket) = Ket(alpha * x.data)
+Base.:*(s::Number, x::Ket) = Ket(s*x.data)
+Base.:*(x::Ket,s::Number) = Base.:*(s,x)
 Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 
@@ -420,6 +460,10 @@ Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox
 Base.:isapprox(x::SparseOperator, y::SparseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::SwapLikeOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x.phase, y.phase, atol=atol)
+
+Base.:isapprox(x::SwapLikeOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), y, atol=atol)
+Base.:isapprox(x::AbstractOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x, DenseOperator(y), atol=atol)
 
 
 Base.:-(x::Ket) = -1.0 * x
@@ -439,33 +483,48 @@ Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOper
 # specializations
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,T}) where {N,T<:Complex} =
     DenseOperator(A.data*B.data)
+Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
+    DenseOperator(promote(A.data,B.data)[1]*promote(A.data,B.data)[2])
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
 Base.:*(A::SparseOperator, B::SparseOperator) = SparseOperator(A.data*B.data)
 
-Base.:*(s::Number, A::AbstractOperator) = typeof(A)(s*A.data)
+Base.:*(s::Number, A::DenseOperator) = DenseOperator(s*A.data)
+Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
 Base.:*(s::Number, A::SparseOperator) = SparseOperator(s*A.data)
+Base.:*(s::Number, A::SwapLikeOperator) = s*DenseOperator(A)
+Base.:*(s::Number, A::IdentityOperator) = s*DenseOperator(A)
 
+
+Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
 
 # generic cases
 Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
 Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOperator(B)
 
 # specializations
+Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
+    DenseOperator(+(promote(A.data,B.data)...))
+
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:SparseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)+DenseOperator(B)
 
 
 # specializations
+Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
+    DenseOperator(-(promote(A.data,B.data)...))
+
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:SparseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)-DenseOperator(B)
 
 Base.length(x::Union{Ket, Bra}) = length(x.data)
 
@@ -579,7 +638,11 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
+
 expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
+expected_value(A::AbstractOperator, psi::Ket)::Complex = (Bra(psi)*(DenseOperator(A)*psi))
+expected_value(A::DenseOperator, psi::Ket)::Complex = (Bra(psi)*(A*psi))
+
 
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
@@ -587,6 +650,8 @@ Base.:size(M::AbstractOperator) = size(M.data)
 # specializations
 Base.:size(M::DiagonalOperator)     = (length(M.data),length(M.data))
 Base.:size(M::AntiDiagonalOperator) = (length(M.data),length(M.data))
+Base.:size(M::SwapLikeOperator) = (4,4)
+Base.:size(M::IdentityOperator) = (2,2)
 
 
 # iterator for Ket object
@@ -756,6 +821,25 @@ function Base.show(io::IO, x::SparseOperator)
     Base.print_array(io,x.data)
 end
 
+
+function Base.show(io::IO, x::SwapLikeOperator)
+    println(io, "$(size(x))-element Snowflake.SwapLikeOperator:")
+    println(io, "Underlying data $(eltype(x.phase)):")
+    (nrow, ncol) = size(x)
+
+    println(io, "Equivalent DenseOperator:")
+    denseop=DenseOperator(x)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
+            if j == 1
+                print(io, "$(denseop.data[i, j])")
+            else
+                print(io, "    $(denseop.data[i, j])")
+            end
+        end
+        println(io)
+    end
+end
 
 function Base.show(io::IO, x::DiagonalOperator)
     println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.DiagonalOperator:")
@@ -957,7 +1041,7 @@ end
 """
     fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
 
-Returns the `i`th fock basis of a Hilbert space with size `hspace_size` as a Ket.
+Returns the `i`th Fock basis of a Hilbert space with size `hspace_size` as a Ket.
 
 The Ket contains values of type `T`, which by default is ComplexF64.
 # Examples

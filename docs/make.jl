@@ -12,7 +12,22 @@ DocMeta.setdocmeta!(
         ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
         requestor=MockRequestor(request_checker,post_checker)
-        client = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token",requestor=requestor);
+        client = Client(
+            host="http://example.anyonsys.com",
+            user="test_user",
+            access_token="not_a_real_access_token",
+            requestor=requestor
+        );
+        requestor_transpilation=MockRequestor(
+            request_checker,
+            post_checker_transpiled
+        )
+        client_anyon = Client(
+            host="http://example.anyonsys.com",
+            user="test_user",
+            access_token="not_a_real_access_token",
+            requestor=requestor_transpilation
+        );
     end; 
     recursive = true
 )
@@ -24,10 +39,9 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Quantum Computing With Snowflake" => ["Basics" => "qc/basics.md"],
-        "Examples" => "examples/index.md",
-        #"Simulating Quantum Systems" => "simulating_quantum_systems.md",            
+        "Tutorials" => "tutorials/index.md",
         "Library" => "library.md",
+        "Developing" => "development.md",
     ],
     doctestfilters = [uuid_regex],
     strict = true,
