@@ -638,10 +638,7 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-
 expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
-expected_value(A::AbstractOperator, psi::Ket)::Complex = (Bra(psi)*(DenseOperator(A)*psi))
-expected_value(A::DenseOperator, psi::Ket)::Complex = (Bra(psi)*(A*psi))
 
 
 # generic case

@@ -99,7 +99,6 @@ Base.getindex(A::AbstractOperator, m::Int64, n::Int64)
 sparse
 eigen
 tr
-expected_value
 kron
 MultiBodySystem
 commute
