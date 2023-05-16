@@ -333,17 +333,20 @@ end
 
 abstract type AbstractQPU end
 
-get_metadata(qpu::AbstractQPU) = 
+get_metadata(qpu::AbstractQPU) =
     throw(NotImplementedError(:get_metadata,qpu))
 
-is_native_gate(qpu::AbstractQPU,::AbstractGate) = 
+is_native_gate(qpu::AbstractQPU,::AbstractGate) =
     throw(NotImplementedError(:is_native_gate,qpu))
 
 is_native_circuit(qpu::AbstractQPU,::QuantumCircuit) =
     throw(NotImplementedError(:is_native_circuit,qpu))
 
-get_transpiler(qpu::AbstractQPU)=
+get_transpiler(qpu::AbstractQPU) =
     throw(NotImplementedError(:get_transpiler,qpu))
+
+run_job(qpu::AbstractQPU, circuit::QuantumCircuit, num_repetitions::Integer) =
+    throw(NotImplementedError(:run_job,qpu))
 
 """
     VirtualQPU
