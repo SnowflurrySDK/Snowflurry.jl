@@ -341,6 +341,11 @@ end
 
 formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
 
+# TODO(#226): delete on completion
+function get_display_symbol(gate::GatePlacement;precision::Integer=4)
+    return get_display_symbol(get_gate(gate), precision=precision)
+end
+
 function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)

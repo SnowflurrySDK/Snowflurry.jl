@@ -104,6 +104,95 @@ get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 get_num_connected_qubits(gate::AbstractGate)=length(get_connected_qubits(gate))
 
 """
+    GatePlacement
+
+An object representing an `AbstractGate` inside `QuantumCircuit`.
+
+# Examples
+```jldoctest
+julia> gate_placement = GatePlacement(iswap(1, 2), [1, 2])
+GatePlacement:
+    Gate: ISwap
+    Connected qubits: [1, 2]
+```
+
+
+```jldoctest
+julia> gate_placement = GatePlacement(universal(1, pi/2, -pi/2, pi/2), [3])
+GatePlacement:
+    Gate: Universal(theta=1.5708, phi=-1.5708, lambda=1.5708)
+    Connected qubits: [3]
+```
+"""
+struct GatePlacement <: AbstractGate
+    gate::AbstractGate
+    connected_qubits::Vector{Int}
+
+    function GatePlacement(gate::AbstractGate, connected_qubits::Vector{Int})
+        if get_num_connected_qubits(gate) != length(connected_qubits)
+            throw(DomainError(connected_qubits,
+                "The connected qubits and the gate's number of connected qubits do not match"))
+        end
+
+        return new(gate, connected_qubits)
+    end
+end
+
+function Base.show(io::IO, gate_placement::GatePlacement)
+    Base.println(io, "GatePlacement:")
+
+    Base.print(io, "    Gate: ", get_gate_type(gate_placement.gate).name.name)
+
+    parameters = get_gate_parameters(gate_placement.gate)
+    if !isempty(parameters)
+        Base.print(io, "(")
+
+        separator = ""
+        for (parameter, value) in parameters
+            Base.print(io, separator, parameter, "=", @sprintf("%.4f", value))
+            separator = ", "
+        end
+
+        Base.print(io, ")")
+    end
+
+    Base.println(io)
+
+    Base.println(io, "    Connected qubits: ", gate_placement.connected_qubits)
+end
+
+function get_gate(gate::GatePlacement)::AbstractGate
+    return gate.gate
+end
+
+function get_connected_qubits(gate::GatePlacement)::AbstractVector{Int}
+    return gate.connected_qubits
+end
+
+# TODO(#226): delete on completion
+function get_gate_parameters(gate::GatePlacement)::Dict{String,Real}
+    return get_gate_parameters(get_gate(gate))
+end
+
+# TODO(#226): delete on completion
+function get_instruction_symbol(gate::GatePlacement)
+    return get_instruction_symbol(get_gate(gate))
+end
+
+# TODO(#226): delete on completion
+function get_gate_type(gate::GatePlacement)
+    return get_gate_type(get_gate(gate))
+end
+
+# TODO(#226): delete on completion
+is_gate_type(gate::GatePlacement, type::Type)::Bool = is_gate_type(gate.gate, type)
+
+# TODO(#226): delete on completion
+function get_operator(gate::GatePlacement, T::Type{<:Complex}=ComplexF64)::AbstractOperator
+    return get_operator(get_gate(gate), T)
+end
+
+"""
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
 
 Determines if a `gate` is of the specified `type`.
