@@ -79,3 +79,23 @@ function request_checker(url::String,access_token::String)
 
     throw(NotImplementedError(:get_request,url))
 end
+
+stubStatusResponse(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":\"$status\"}}")
+stubFailedStatusResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
+stubResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":\"100\"}}")
+stubFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
+stubCancelledResultResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
+
+# Returns a function that will yield the given responses in order as it's
+# repeatedly called.
+function stub_response_sequence(response_sequence::Vector{HTTP.Response})
+  idx = 0
+
+  return function(url::String, access_token::String)
+    if idx >= length(response_sequence)
+      throw(ErrorException("too many requests; response sequence exhausted"))
+    end
+    idx += 1
+    return response_sequence[idx]
+  end
+end
