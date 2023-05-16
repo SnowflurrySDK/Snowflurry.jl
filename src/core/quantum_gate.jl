@@ -101,6 +101,8 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
+get_num_connected_qubits(gate::AbstractGate)=length(get_connected_qubits(gate))
+
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
 

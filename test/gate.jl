@@ -4,6 +4,25 @@ using LinearAlgebra
 
 include("test_functions.jl")
 
+@testset "get_num_connected_qubits" begin
+    struct MockConnectedQubitGate <: AbstractGate
+        connected_qubits::Vector{Int}
+    end
+
+    Snowflake.get_connected_qubits(gate::MockConnectedQubitGate) = return gate.connected_qubits
+
+    function test_num_connected_qubits(connected_qubits::Vector{Int}, expected_num_connected_qubits)
+        @test get_num_connected_qubits(MockConnectedQubitGate(connected_qubits)) == expected_num_connected_qubits
+    end
+
+    test_num_connected_qubits(Vector{Int}([]), 0)
+    test_num_connected_qubits([1], 1)
+    test_num_connected_qubits([5], 1)
+    test_num_connected_qubits([1, 2], 2)
+    test_num_connected_qubits([5, 3], 2)
+    test_num_connected_qubits([7,3,4,5,6,99], 6)
+end
+
 @testset "apply_gate" begin
     ψ_0 = fock(0,2)
     ψ_0_to_update = fock(0,2)

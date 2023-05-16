@@ -77,6 +77,7 @@ export
     get_num_qubits,
     get_num_bodies,
     get_connected_qubits,
+    get_num_connected_qubits,
     get_target_qubits,
     get_control_qubits,
     get_gate_parameters,
