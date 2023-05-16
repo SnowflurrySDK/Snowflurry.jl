@@ -5,7 +5,8 @@ using Snowflake
 
 A data structure to represent a Anyon System's QPU.  
 # Fields
-- `client       ::Client` -- Client to the QPU server.
+- `client                  ::Client` -- Client to the QPU server.
+- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 
 
 # Example
@@ -20,10 +21,11 @@ Quantum Processing Unit:
 ```
 """
 struct AnyonQPU <: AbstractQPU
-    client        ::Client
+    client                  ::Client
+    status_request_throttle ::Function
 
-    AnyonQPU(client::Client) = new(client)
-    AnyonQPU(; host::String, user::String, access_token::String) = new(Client(host=host, user=user, access_token=access_token))
+    AnyonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle)
+    AnyonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle)
 end
 
 const line_connectivity_label="linear"
@@ -107,14 +109,12 @@ function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,St
 end
 
 """
-    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu), status_request_throttle::Function=status_request_throttle)
+    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a key-word argument.
 The transpiled circuit is then run on the AnyonQPU, repeatedly for the
 specified number of repetitions (num_repetitions).
-An optional request throttle can be passed to control the cadence with which
-requests for job status are sent to the `QPU` service.
 
 Returns the histogram of the completed circuit calculations, or an error
 message.
@@ -134,8 +134,7 @@ function transpile_and_run_job(
     qpu::AnyonQPU,
     circuit::QuantumCircuit,
     num_repetitions::Integer;
-    transpiler::Transpiler=get_transpiler(qpu),
-    status_request_throttle::Function=status_request_throttle
+    transpiler::Transpiler=get_transpiler(qpu)
     )::Dict{String,Int}
 
     
@@ -147,16 +146,14 @@ function transpile_and_run_job(
         throw(DomainError(qpu, message))
     end
 
-    return run_job(qpu,transpiled_circuit,num_repetitions,status_request_throttle=status_request_throttle)
+    return run_job(qpu,transpiled_circuit,num_repetitions)
 end
 
 """
-    run_job(qpu::AnyonQPU, circuit::QuantumCircuit, num_repetitions::Integer; status_request_throttle::Function=status_request_throttle)
+    run_job(qpu::AnyonQPU, circuit::QuantumCircuit, num_repetitions::Integer)
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
 number of repetitions (num_repetitions).
-An optional request throttle can be passed to control the cadence with which
-requests for job status are sent to the `QPU` service.
 
 Returns the histogram of the completed circuit calculations, or an error
 message.
@@ -175,15 +172,14 @@ Dict{String, Int64} with 1 entry:
 function run_job(
     qpu::AnyonQPU,
     circuit::QuantumCircuit,
-    num_repetitions::Integer;
-    status_request_throttle::Function=status_request_throttle
+    num_repetitions::Integer
     )::Dict{String,Int}
     
     client=get_client(qpu)
 
     circuitID=submit_circuit(client,circuit,num_repetitions)
 
-    status=poll_for_status(client,circuitID,status_request_throttle)
+    status=poll_for_status(client,circuitID,qpu.status_request_throttle)
     
     status_type=get_status_type(status)
 
@@ -200,7 +196,7 @@ function run_job(
 end
 
 # 100ms between queries to host by default
-const status_request_throttle = (seconds=0.1) -> sleep(seconds)
+const default_status_request_throttle = (seconds=0.1) -> sleep(seconds)
 
 function poll_for_status(client::Client, circuitID::String, request_throttle::Function)::Status
     status=get_status(client,circuitID)
