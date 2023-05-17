@@ -9,7 +9,7 @@ Snowflake is an open source Julia-based software library for implementing quantu
 
 # Installation
 
-The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in contributing, head right over to our [Contributing to Snowflake page](./docs/src/contributing.md).
+The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in contributing, head right over to our [Contributing to Snowflake page](./CONTRIBUTING.md).
 
 ### Installing Julia
 
@@ -152,7 +152,7 @@ See what we have planned by looking at the [Snowflake Github Project](https://gi
 
 # Snowflake Contributors Community
 
-We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to contribute page](./docs/src/contributing.md).
+We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to contribute page](./CONTRIBUTING.md).
 
 We are dedicated to cultivating an open and inclusive community to build software for near term quantum computers. Please read our code of conduct for the rules of engagement within our community.
 
