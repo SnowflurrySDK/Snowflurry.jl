@@ -34,8 +34,11 @@ done | sort | uniq -f 1 | {
                 ;;
             ./* | ../* | *)
                 link_root=`dirname $fname`
-                # target_file="./`realpath --relative-to=. \"$link_root/$link\"`"
-                target_file="./$link_root/$link"
+
+                # Since we'll be looking for a file in a filesystem, remove URL
+                # queries and fragments.
+                clean_link=`echo "$link" | sed -e 's,[?#].*,,'`
+                target_file="./$link_root/$clean_link"
                 if [ ! -e "$target_file" ] ; then
                     echo 1>&2 "404 error: file: $fname link: $link"
                     failure="1"
