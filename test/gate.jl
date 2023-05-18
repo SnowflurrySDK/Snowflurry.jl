@@ -67,17 +67,33 @@ end
 
         test_show(
             GatePlacement(iswap(1, 2), [1, 2]),
-            """GatePlacement:
-                Gate: ISwap
-                Connected qubits: [1, 2]
+            """Gate Object: Snowflake.ISwap
+            Connected_qubits	: [1, 2]
+            Operator:
+            (4, 4)-element Snowflake.SwapLikeOperator:
+            Underlying data ComplexF64:
+            Equivalent DenseOperator:
+            1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
             """
         )
 
         test_show(
             GatePlacement(universal(1, pi/2, -pi/2, pi/2), [3]),
-            """GatePlacement:
-                Gate: Universal(theta=1.5708, phi=-1.5708, lambda=1.5708)
-                Connected qubits: [3]
+            """Gate Object: Snowflake.Universal
+            Parameters: 
+            theta	: 1.5707963267948966
+            phi	: -1.5707963267948966
+            lambda	: 1.5707963267948966
+            
+            Connected_qubits	: [3]
+            Operator:
+            (2, 2)-element Snowflake.DenseOperator:
+            Underlying data ComplexF64:
+            0.7071067811865476 + 0.0im    -4.329780281177466e-17 - 0.7071067811865475im
+            4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
             """
         )
     end

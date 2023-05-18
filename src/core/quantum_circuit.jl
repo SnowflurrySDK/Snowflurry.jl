@@ -19,9 +19,9 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
-    gates::Vector{AbstractGate} = Vector{AbstractGate}([])
+    gates::Vector{GatePlacement} = Vector{GatePlacement}([])
     
-    function QuantumCircuit(qubit_count::Int,gates::Vector{<:AbstractGate})    
+    function QuantumCircuit(qubit_count::Int,gates::Vector{GatePlacement})    
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
     
         c=new(qubit_count,[])
@@ -35,7 +35,7 @@ end
 
 
 get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
-get_circuit_gates(circuit::QuantumCircuit)=circuit.gates
+get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{GatePlacement}=circuit.gates
 
 """
     push!(circuit::QuantumCircuit, gates::AbstractGate...)
@@ -84,7 +84,7 @@ q[2]:───────X────X─────────H──
 
 ```
 """
-function Base.push!(circuit::QuantumCircuit, gates::AbstractGate...)
+function Base.push!(circuit::QuantumCircuit, gates::GatePlacement...)
     for single_gate in gates
         ensure_gate_is_in_circuit(circuit, single_gate)
         push!(get_circuit_gates(circuit), single_gate)
@@ -864,7 +864,7 @@ q[2]:──X─────────────────
 """
 function Base.inv(circuit::QuantumCircuit)
 
-    inverse_gates = Vector{AbstractGate}( 
+    inverse_gates = Vector{GatePlacement}( 
         [Base.inv(g) for g in reverse(get_circuit_gates(circuit))] 
     )
 

@@ -412,7 +412,7 @@ end
     Snowflake.gates_instruction_symbols[MultiParamMultiTargetGate]="mm"
 
 
-    circuit=QuantumCircuit(qubit_count=5,gates=[MultiParamMultiTargetGate(1,3,5,π,π/3)])
+    circuit=QuantumCircuit(qubit_count=5,gates=[GatePlacement(MultiParamMultiTargetGate(1,3,5,π,π/3), [1,3, 5])])
 
     transpiler=SwapQubitsForLineConnectivityTranspiler()
 
@@ -576,7 +576,7 @@ end
     struct UnknownCastToCZGate <: AbstractGate end
     gate = UnknownCastToCZGate()
 
-    @test_throws NotImplementedError Snowflake.cast_to_cz(gate)
+    @test_throws NotImplementedError Snowflake.cast_to_cz(gate, [1,2])
 end
 
 @testset "cast_to_cz: swap" begin
