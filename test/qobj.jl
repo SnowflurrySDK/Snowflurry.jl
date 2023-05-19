@@ -1,6 +1,21 @@
 using Snowflake
 using Test
 
+@testset "ket2dm" begin
+    @testset "ensure type consistency" begin
+        function test_consistent_type(dtype)
+            ψ = Ket{dtype}([dtype(1.0), dtype(2.0)])
+
+            ρ = ket2dm(ψ)
+
+            @test typeof(ρ) == DenseOperator{2, dtype}
+        end
+
+        test_consistent_type(ComplexF32)
+        test_consistent_type(ComplexF64)
+    end
+end
+
 @testset "simple_bra_ket" begin
     Ψ_0 = spin_up()
     Ψ_1 = spin_down()
