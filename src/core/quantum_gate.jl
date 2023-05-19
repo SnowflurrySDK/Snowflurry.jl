@@ -434,6 +434,9 @@ function apply_gate!(state::Ket, gate::AbstractGate)
     apply_operator!(state,operator,connected_qubits)
 end
 
+# TODO(#226): delete on completion
+apply_gate!(state::Ket, gate::GatePlacement) = apply_gate!(state::Ket, get_gate(gate))
+
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
 # `phase` argument adds a phase offset to swapped coefficients. 
 # adapted from https://github.com/qulacs/qulacs, method SWAP_gate_parallel_unroll()
