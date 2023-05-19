@@ -29,7 +29,7 @@ function sesolve(
         ψ_0::Ket{S}, 
         t_range::StepRangeLen; 
         e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{S}} where {S<:Complex}
+    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
     Hamiltonian(t)=H
     sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops)
 end
@@ -39,12 +39,12 @@ function sesolve(
         ψ_0::Ket{S}, 
         t_range::StepRangeLen; 
         e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{S}} where {S<:Complex}
+    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
     dpsi_dt(t,ψ) = -im*H(t)*ψ
     y=rungekutta2(dpsi_dt, ψ_0, t_range)
     n_t = length(t_range)
     n_o = length(e_ops)
-    observable=zeros(S,n_t, n_o) 
+    observable=zeros(n_t, n_o) 
     for iob in 1:n_o
         for i_t in 1:n_t
             observable[i_t, iob] = real(expected_value(e_ops[iob], y[i_t]))
