@@ -92,11 +92,30 @@ function mesolve(
     t::StepRangeLen; 
     c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
     e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Matrix{<:Real}
-    drho_dt(t,ρ) = -im*commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
+)::Matrix{<:Real}
     n_t = length(t)
     n_o = length(e_ops)
     observable=zeros(n_t, n_o) 
+
+    if length(c_ops) == 0
+        eigenvalues, eigenvectors = eigen(ρ_0)
+
+        n, _ = size(ρ_0)
+        for i in 1:n
+            eigenvalue = eigenvalues[i]
+            eigenvector = eigenvectors[i, :]
+            
+            @assert imag(eigenvalue) ≈ 0
+            
+            if real(eigenvalue) ≉ 0
+                _, observable_i = sesolve(H, Ket(eigenvector), t, e_ops=e_ops)
+                observable += observable_i * real(eigenvalue)
+            end
+        end
+        return observable
+    end
+
+    drho_dt(t,ρ) = -im*commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
 
     ρ = ρ_0
     for i_ob in 1:n_o

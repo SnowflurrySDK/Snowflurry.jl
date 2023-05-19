@@ -43,4 +43,24 @@ end
         test_relaxation(ComplexF64, Γ, t)
         test_relaxation(ComplexF32, Γ, t)
     end
+
+    @testset "equivalent to sesolve" begin
+        function test_sesolve_rabi(dtype, ω, t)
+            ψ_0 = spin_up(dtype)
+            H = dtype(ω/2.0)*sigma_x(dtype)
+            e_ops = [sigma_z(dtype)]
+            ψ_sesolve , prob_sesolve = sesolve(H, ψ_0, t,e_ops=e_ops)
+
+            ρ_0 = ket2dm(ψ_0)
+            c_ops = Vector{DenseOperator{2, dtype}}([])
+            prob_mesolve = mesolve(H, ρ_0, t, e_ops=e_ops, c_ops=c_ops)
+
+            @test prob_sesolve ≈ prob_mesolve
+        end
+
+        ω = 2.0 * pi
+        t = 0.0:0.01:1.0
+        test_sesolve_rabi(ComplexF64, ω, t)
+        test_sesolve_rabi(ComplexF32, ω, t)
+    end
 end
