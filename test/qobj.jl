@@ -16,6 +16,19 @@ using Test
     end
 end
 
+@testset "anticommute" begin
+    @testset "ensure type consistency" begin
+        function test_consistent_type(a, b, expectedType)
+            value = anticommute(a, b)
+            @test typeof(value) == expectedType
+        end
+
+        for dtype in (ComplexF64, ComplexF32)
+            test_consistent_type(sigma_x(dtype), sigma_x(dtype), DiagonalOperator{2, dtype})
+        end
+    end
+end
+
 @testset "simple_bra_ket" begin
     Ψ_0 = spin_up()
     Ψ_1 = spin_down()
