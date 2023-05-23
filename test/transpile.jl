@@ -412,7 +412,7 @@ end
     Snowflake.gates_instruction_symbols[MultiParamMultiTargetGate]="mm"
 
 
-    circuit=QuantumCircuit(qubit_count=5,gates=[GatePlacement(MultiParamMultiTargetGate(1,3,5,π,π/3), [1,3, 5])])
+    circuit=QuantumCircuit(qubit_count=5,gates=[PlacedGate(MultiParamMultiTargetGate(1,3,5,π,π/3), [1,3, 5])])
 
     transpiler=SwapQubitsForLineConnectivityTranspiler()
 

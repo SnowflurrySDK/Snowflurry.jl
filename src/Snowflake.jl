@@ -31,7 +31,7 @@ export
     QuantumCircuit,
     AbstractGate,
     AbstractControlledGate,
-    GatePlacement,
+    PlacedGate,
     AnyonQPU,
     VirtualQPU,
     Client,

@@ -19,9 +19,9 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
-    gates::Vector{GatePlacement} = Vector{GatePlacement}([])
+    gates::Vector{PlacedGate} = Vector{PlacedGate}([])
     
-    function QuantumCircuit(qubit_count::Int,gates::Vector{GatePlacement})    
+    function QuantumCircuit(qubit_count::Int,gates::Vector{PlacedGate})    
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
     
         c=new(qubit_count,[])
@@ -35,7 +35,7 @@ end
 
 
 get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
-get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{GatePlacement}=circuit.gates
+get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{PlacedGate}=circuit.gates
 
 """
     push!(circuit::QuantumCircuit, gates::AbstractGate...)
@@ -84,7 +84,7 @@ q[2]:───────X────X─────────H──
 
 ```
 """
-function Base.push!(circuit::QuantumCircuit, gates::GatePlacement...)
+function Base.push!(circuit::QuantumCircuit, gates::PlacedGate...)
     for single_gate in gates
         ensure_gate_is_in_circuit(circuit, single_gate)
         push!(get_circuit_gates(circuit), single_gate)
@@ -342,7 +342,7 @@ end
 formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
 
 # TODO(#226): delete on completion
-function get_display_symbol(gate::GatePlacement;precision::Integer=4)
+function get_display_symbol(gate::PlacedGate;precision::Integer=4)
     return get_display_symbol(get_gate(gate), precision=precision)
 end
 
@@ -864,7 +864,7 @@ q[2]:──X─────────────────
 """
 function Base.inv(circuit::QuantumCircuit)
 
-    inverse_gates = Vector{GatePlacement}( 
+    inverse_gates = Vector{PlacedGate}( 
         [Base.inv(g) for g in reverse(get_circuit_gates(circuit))] 
     )
 

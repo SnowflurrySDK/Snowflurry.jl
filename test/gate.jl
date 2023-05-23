@@ -23,7 +23,7 @@ include("test_functions.jl")
     test_num_connected_qubits([7,3,4,5,6,99], 6)
 end
 
-@testset "GatePlacement" begin
+@testset "PlacedGate" begin
     struct MockNumConnectedQubit <: AbstractGate
         num_connected_qubits::Int
     end
@@ -33,7 +33,7 @@ end
     @testset "constructor" begin
 
         function test_domain_error_on_mismatched_connected_qubits(num_connected_qubits::Int, connected_qubits::Vector{Int})
-            @test_throws DomainError GatePlacement(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
+            @test_throws DomainError PlacedGate(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
         end
 
         test_domain_error_on_mismatched_connected_qubits(1, Vector{Int}([]))
@@ -45,7 +45,7 @@ end
 
 
         function test_success(num_connected_qubits::Int, connected_qubits::Vector{Int})
-            placed_gate = GatePlacement(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
+            placed_gate = PlacedGate(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
         end
 
         test_success(0, Vector{Int}([]))
@@ -57,7 +57,7 @@ end
     end
 
     @testset "show" begin
-        function test_show(gate_placement::GatePlacement, expected::String)
+        function test_show(gate_placement::PlacedGate, expected::String)
             io = IOBuffer()
 
             Base.show(io, gate_placement)
@@ -66,7 +66,7 @@ end
         end
 
         test_show(
-            GatePlacement(iswap(1, 2), [1, 2]),
+            PlacedGate(iswap(1, 2), [1, 2]),
             """Gate Object: Snowflake.ISwap
             Connected_qubits	: [1, 2]
             Operator:
@@ -81,7 +81,7 @@ end
         )
 
         test_show(
-            GatePlacement(universal(1, pi/2, -pi/2, pi/2), [3]),
+            PlacedGate(universal(1, pi/2, -pi/2, pi/2), [3]),
             """Gate Object: Snowflake.Universal
             Parameters: 
             theta	: 1.5707963267948966
@@ -100,7 +100,7 @@ end
 
     @testset "getters" begin
         function test_getters(gate::AbstractGate, connected_qubits::Vector{Int})
-            placed_gate = GatePlacement(gate, connected_qubits)
+            placed_gate = PlacedGate(gate, connected_qubits)
 
             @test get_connected_qubits(placed_gate) == connected_qubits
             @test get_gate(placed_gate) == gate
