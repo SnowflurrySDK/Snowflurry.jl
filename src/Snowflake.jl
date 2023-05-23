@@ -59,7 +59,6 @@ export
     commute, 
     anticommute, 
     get_gate,
-    get_connected_qubits,
     get_embed_operator,
     get_matrix,
     get_display_symbol,
