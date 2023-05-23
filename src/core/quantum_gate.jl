@@ -612,13 +612,6 @@ function apply_operator!(
     end
 end
 
-function apply_operator!(
-    state::Ket,
-    operator::SparseOperator,
-    connected_qubit::Vector{<:Integer})
-    @warn "apply_operator! is not implemented for SparseOperator. Try using DenseOperator instead."
-end
-
 # specialization for multiple target dense gate (size N>=4, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method multi_qubit_dense_matrix_gate_parallel()
 function apply_operator!(

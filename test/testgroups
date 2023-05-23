@@ -8,7 +8,6 @@ circuit
 submit_circuit
 qpu_interface
 abstract_operator
-sparse_operator
 dense_gate
 diagonal_operator
 diagonal_gate
