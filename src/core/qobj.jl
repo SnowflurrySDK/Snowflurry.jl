@@ -141,6 +141,8 @@ struct Bra{T<:Complex}
     Bra(x::Ket{T}) where {T<:Complex} = new{T}(adjoint(x.data))
     # This constructor is used when a Bra is multiplied by an AbstractOperator
     Bra(x::LinearAlgebra.Adjoint{T, SVector{N,T}}) where {N,T<:Complex} = new{T}(x) 
+    # This constructor is used when a Bra is multiplied by a SparseOperator or initialized with adjoint of vector
+    Bra(x::LinearAlgebra.Adjoint{T, Vector{T}}) where {T<:Complex} = new{T}(x) 
 end
 
 function Base.show(io::IO, x::Bra)
@@ -151,6 +153,47 @@ function Base.show(io::IO, x::Bra)
 end
 
 abstract type AbstractOperator end
+
+"""
+A structure representing a quantum operator with a sparse (CSR) matrix representation.
+
+# Examples
+```jldoctest
+julia> z = SparseOperator([1.0 0.0;0.0 -1.0])
+(2, 2)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    .
+.              -1.0 + 0.0im
+```
+"""
+
+struct SparseOperator{T<:Complex}<:AbstractOperator
+    data::  SparseMatrixCSC{T, Int64}
+end
+# Constructor from Real-valued Matrix
+SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.sparse(Complex.(x)))
+# Constructor from Complex-valued Matrix
+SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sparse(x))
+# Constructor from Integer-valued Matrix
+# default output is Operator{ComplexF64}
+SparseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SparseOperator(Matrix{S}(x))
+
+
+"""
+    sparse(x::AbstractOperator)
+
+Returns a SparseOperator representation of x.
+
+# Examples
+```jldoctest
+julia> z = sparse(sigma_z())
+(2, 2)-element Snowflake.SparseOperator:
+Underlying data ComplexF64:
+ 1.0 + 0.0im        ⋅     
+      ⋅       -1.0 + 0.0im
+
+"""
+SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
 """
 A structure representing a quantum operator with a full (dense) matrix representation.
@@ -364,7 +407,6 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 
 Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
-
 Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
     AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
@@ -402,7 +444,8 @@ false
 ```
 """
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
-is_hermitian(A::DenseOperator)    = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
 
 Base.:*(s::Number, x::Ket) = Ket(s*x.data)
 Base.:*(x::Ket,s::Number) = Base.:*(s,x)
@@ -414,12 +457,14 @@ Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = is
 
 # specializations
 Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:isapprox(x::SparseOperator, y::SparseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
 Base.:isapprox(x::SwapLikeOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x.phase, y.phase, atol=atol)
 
 Base.:isapprox(x::SwapLikeOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), y, atol=atol)
 Base.:isapprox(x::AbstractOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x, DenseOperator(y), atol=atol)
+
 
 Base.:-(x::Ket) = -1.0 * x
 Base.:-(x::Ket, y::Ket) = Ket(x.data - y.data)
@@ -428,7 +473,9 @@ Base.:+(x::Ket, y::Ket) = Ket(x.data + y.data)
 Base.:*(x::Ket, y::Bra) = DenseOperator(x.data * y.data)
 
 Base.:*(M::AbstractOperator, x::Ket) = Ket(Vector(DenseOperator(M).data * x.data))
+Base.:*(M::SparseOperator, x::Ket) = Ket(M.data * x.data)
 Base.:*(x::Bra, M::AbstractOperator) = Bra(x.data * DenseOperator(M).data)
+Base.:*(x::Bra, M::SparseOperator) = Bra(x.data * M.data)
 
 # generic cases
 Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOperator(B)
@@ -442,12 +489,15 @@ Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex}
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
+Base.:*(A::SparseOperator, B::SparseOperator) = SparseOperator(A.data*B.data)
 
 Base.:*(s::Number, A::DenseOperator) = DenseOperator(s*A.data)
 Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
 Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
+Base.:*(s::Number, A::SparseOperator) = SparseOperator(s*A.data)
 Base.:*(s::Number, A::SwapLikeOperator) = s*DenseOperator(A)
 Base.:*(s::Number, A::IdentityOperator) = s*DenseOperator(A)
+
 
 Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
 
@@ -460,6 +510,7 @@ Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Com
     DenseOperator(+(promote(A.data,B.data)...))
 
 Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
+Base.:+(A::T, B::T) where {T<:SparseOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
 Base.:+(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)+DenseOperator(B)
@@ -470,6 +521,7 @@ Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Com
     DenseOperator(-(promote(A.data,B.data)...))
 
 Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
+Base.:-(A::T, B::T) where {T<:SparseOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
 Base.:-(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)-DenseOperator(B)
@@ -535,9 +587,9 @@ julia> eigenvector_1 = F.vectors[:, 1]
 ```
 """
 LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
-
 # specializations
 LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
+LinearAlgebra.eigen(A::SparseOperator;kwargs...) = Arpack.eigs(A.data;kwargs...)
 
 """
     tr(A::AbstractOperator)
@@ -559,8 +611,8 @@ julia> trace = tr(I)
 ```
 """
 LinearAlgebra.tr(A::AbstractOperator)=LinearAlgebra.tr(DenseOperator(A))
-
 LinearAlgebra.tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
+
 
 """
     expected_value(A::AbstractOperator, psi::Ket)
@@ -586,8 +638,8 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-expected_value(A::AbstractOperator, psi::Ket)::Complex = (Bra(psi)*(DenseOperator(A)*psi))
-expected_value(A::DenseOperator, psi::Ket)::Complex = (Bra(psi)*(A*psi))
+expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
+
 
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
@@ -650,6 +702,8 @@ Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(DenseOperator(x), Den
 
 Base.kron(x::DenseOperator, y::DenseOperator) = DenseOperator(kron(x.data, y.data))
 
+Base.kron(x::SparseOperator, y::SparseOperator) = SparseOperator(kron(x.data, y.data))
+
 
 """
 A structure representing a quantum multi-body system.
@@ -705,11 +759,11 @@ Underlying data ComplexF64:
 
 ```
 """
-function get_embed_operator(op::DenseOperator, target_body_index::Int, system::MultiBodySystem)
+function get_embed_operator(op::T, target_body_index::Int, system::MultiBodySystem) where {T<:Union{DenseOperator, SparseOperator}}
     n_body = length(system.hilbert_space_structure)
     @assert target_body_index <= n_body
 
-    result = DenseOperator(
+    result = T(
         Matrix{eltype(op.data)}(
             I,
             system.hilbert_space_structure[1],
@@ -726,11 +780,12 @@ function get_embed_operator(op::DenseOperator, target_body_index::Int, system::M
             result = kron(result, op)
         else
             n_hilbert = system.hilbert_space_structure[i_body]
-            result = kron(result, DenseOperator(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
+            result = kron(result, T(Matrix{eltype(op.data)}(I, n_hilbert, n_hilbert)))
         end
     end
     return result
 end
+
 
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
     get_embed_operator(DenseOperator(op), target_body_index, system)
@@ -739,6 +794,7 @@ get_matrix(op::AbstractOperator) =
     throw(NotImplementedError(:get_matrix,op))
 
 get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+get_matrix(op::SparseOperator{T}) where {T<:Complex} = convert(Matrix{T},op.data)
 
 function Base.show(io::IO, x::DenseOperator)
     println(io, "$(size(x.data))-element Snowflake.DenseOperator:")
@@ -755,6 +811,13 @@ function Base.show(io::IO, x::DenseOperator)
         println(io)
     end
 end
+
+function Base.show(io::IO, x::SparseOperator)
+    println(io, "$(size(x.data))-element Snowflake.SparseOperator:")
+    println(io, "Underlying data $(eltype(x.data)):")
+    Base.print_array(io,x.data)
+end
+
 
 function Base.show(io::IO, x::SwapLikeOperator)
     println(io, "$(size(x))-element Snowflake.SwapLikeOperator:")

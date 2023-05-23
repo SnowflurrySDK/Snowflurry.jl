@@ -9,6 +9,8 @@ using Base: String
 using Printf
 using StaticArrays
 using LinearAlgebra
+using SparseArrays #SparseMatrixCSC
+using Arpack #provides eigen value decomposition for sparse matrices
 import StatsBase
 
 
@@ -23,6 +25,7 @@ export
     DenseOperator,
     DiagonalOperator,
     AntiDiagonalOperator,
+    SparseOperator,
     SwapLikeOperator,
     MultiBodySystem,
     QuantumCircuit,
@@ -66,6 +69,7 @@ export
     destroy,
     number_op,
     is_hermitian,
+    sparse,
     eigen,
     ket2dm,
     fock_dm,
