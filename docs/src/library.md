@@ -96,6 +96,7 @@ Base.adjoint
 is_hermitian
 Base.exp(A::AbstractOperator)
 Base.getindex(A::AbstractOperator, m::Int64, n::Int64)
+expected_value(A::AbstractOperator, psi::Ket)
 sparse
 eigen
 tr
