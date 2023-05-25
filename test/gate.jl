@@ -5,14 +5,14 @@ using LinearAlgebra
 include("test_functions.jl")
 
 @testset "get_num_connected_qubits" begin
-    struct MockConnectedQubitGate <: AbstractGateSymbol
+    struct MockConnectedQubitGateSymbol <: AbstractGateSymbol
         connected_qubits::Vector{Int}
     end
 
-    Snowflake.get_connected_qubits(gate::MockConnectedQubitGate) = return gate.connected_qubits
+    Snowflake.get_connected_qubits(gate::MockConnectedQubitGateSymbol) = return gate.connected_qubits
 
     function test_num_connected_qubits(connected_qubits::Vector{Int}, expected_num_connected_qubits)
-        @test get_num_connected_qubits(MockConnectedQubitGate(connected_qubits)) == expected_num_connected_qubits
+        @test get_num_connected_qubits(MockConnectedQubitGateSymbol(connected_qubits)) == expected_num_connected_qubits
     end
 
     test_num_connected_qubits(Vector{Int}([]), 0)
@@ -484,30 +484,30 @@ end
     inverse_iden = inv(iden)
     @test get_connected_qubits(iden)==get_connected_qubits(inverse_iden)
 
-    struct UnknownGate <: AbstractGateSymbol
+    struct UnknownGateSymbol <: AbstractGateSymbol
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownGate) = DenseOperator([1 2; 3 4])
+    Snowflake.get_operator(gate::UnknownGateSymbol) = DenseOperator([1 2; 3 4])
 
-    unknown_gate=UnknownGate("na")
+    unknown_gate=UnknownGateSymbol("na")
     @test_throws NotImplementedError inv(unknown_gate)
 
-    struct UnknownHermitianGate <: AbstractGateSymbol
+    struct UnknownHermitianGateSymbol <: AbstractGateSymbol
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownHermitianGate) = DenseOperator([1 im; -im 1])
+    Snowflake.get_operator(gate::UnknownHermitianGateSymbol) = DenseOperator([1 im; -im 1])
 
-    unknown_hermitian_gate = UnknownHermitianGate("na")
+    unknown_hermitian_gate = UnknownHermitianGateSymbol("na")
 
     # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 
-    struct UnknownControlledGate <: AbstractControlledGateSymbol end
+    struct UnknownControlledGateSymbol <: AbstractControlledGateSymbol end
 
-    @test_throws NotImplementedError get_target_qubits(UnknownControlledGate())
-    @test_throws NotImplementedError get_control_qubits(UnknownControlledGate())
+    @test_throws NotImplementedError get_target_qubits(UnknownControlledGateSymbol())
+    @test_throws NotImplementedError get_control_qubits(UnknownControlledGateSymbol())
 
 end
 

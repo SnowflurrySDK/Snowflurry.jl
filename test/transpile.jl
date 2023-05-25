@@ -386,7 +386,7 @@ end
 
 @testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
 
-    struct MultiParamMultiTargetGate <: Snowflake.AbstractGateSymbol
+    struct MultiParamMultiTargetGateSymbol <: Snowflake.AbstractGateSymbol
         target_1::Int
         target_2::Int
         target_3::Int
@@ -394,9 +394,9 @@ end
         phi::Real
     end
 
-    Snowflake.get_connected_qubits(gate::MultiParamMultiTargetGate)=[gate.target_1,gate.target_2,gate.target_3]
-    Snowflake.get_gate_parameters(gate::MultiParamMultiTargetGate)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
-    Snowflake.get_operator(gate::MultiParamMultiTargetGate, T::Type{<:Complex}=ComplexF64) = DenseOperator(
+    Snowflake.get_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflake.get_gate_parameters(gate::MultiParamMultiTargetGateSymbol)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
+    Snowflake.get_operator(gate::MultiParamMultiTargetGateSymbol, T::Type{<:Complex}=ComplexF64) = DenseOperator(
         T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
         0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
         0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
@@ -407,12 +407,12 @@ end
         0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.phi) 0.0]
     )
 
-    Snowflake.gates_display_symbols[MultiParamMultiTargetGate]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
+    Snowflake.gates_display_symbols[MultiParamMultiTargetGateSymbol]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
 
-    Snowflake.gates_instruction_symbols[MultiParamMultiTargetGate]="mm"
+    Snowflake.gates_instruction_symbols[MultiParamMultiTargetGateSymbol]="mm"
 
 
-    circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGate(1,3,5,π,π/3), [1,3, 5])])
+    circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])])
 
     transpiler=SwapQubitsForLineConnectivityTranspiler()
 
@@ -573,10 +573,10 @@ end
 end
 
 @testset "cast_to_cz: unkown gate" begin
-    struct UnknownCastToCZGate <: AbstractGateSymbol end
-    gate = UnknownCastToCZGate()
+    struct UnknownCastToCZGateSymbol <: AbstractGateSymbol end
+    symbol = UnknownCastToCZGateSymbol()
 
-    @test_throws NotImplementedError Snowflake.cast_to_cz(gate, [1,2])
+    @test_throws NotImplementedError Snowflake.cast_to_cz(symbol, [1,2])
 end
 
 @testset "cast_to_cz: swap" begin
