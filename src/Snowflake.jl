@@ -30,7 +30,7 @@ export
     MultiBodySystem,
     QuantumCircuit,
     AbstractGateSymbol,
-    AbstractControlledGate,
+    AbstractControlledGateSymbol,
     Gate,
     AnyonQPU,
     VirtualQPU,

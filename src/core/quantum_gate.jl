@@ -101,7 +101,7 @@ q[2]:───────
 """
 abstract type AbstractGateSymbol end
 
-abstract type AbstractControlledGate<:AbstractGateSymbol end
+abstract type AbstractControlledGateSymbol<:AbstractGateSymbol end
 
 get_connected_qubits(gate::AbstractGateSymbol)=[gate.target]
 
@@ -285,12 +285,12 @@ struct MovedGate <:AbstractGateSymbol
     connected_qubits::Vector{Int}
 end
 
-struct MovedControlledGate <:AbstractControlledGate
-    original_gate::AbstractControlledGate
+struct MovedControlledGate <:AbstractControlledGateSymbol
+    original_gate::AbstractControlledGateSymbol
     connected_qubits::Vector{Int}
 end
 
-MovedGate(gate::AbstractControlledGate, connected_qubits::Vector{Int}) = 
+MovedGate(gate::AbstractControlledGateSymbol, connected_qubits::Vector{Int}) = 
     MovedControlledGate(gate,connected_qubits)
 
 UnionMovedGates=Union{MovedGate,MovedControlledGate}
@@ -1785,13 +1785,13 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-get_control_qubits(gate::AbstractControlledGate)=
+get_control_qubits(gate::AbstractControlledGateSymbol)=
     throw(NotImplementedError(:get_control_qubits,gate))
 
-get_target_qubits(gate::AbstractControlledGate)=
+get_target_qubits(gate::AbstractControlledGateSymbol)=
     throw(NotImplementedError(:get_target_qubits,gate))
 
-struct ControlZ <: AbstractControlledGate
+struct ControlZ <: AbstractControlledGateSymbol
     control::Int
     target::Int
 end
@@ -1816,7 +1816,7 @@ function control_x(control_qubit::Integer, target_qubit::Integer)
     return Gate(ControlX(control_qubit,target_qubit), [control_qubit, target_qubit])
 end
 
-struct ControlX <: AbstractControlledGate
+struct ControlX <: AbstractControlledGateSymbol
     control::Int
     target::Int
 end
@@ -1891,7 +1891,7 @@ function toffoli(
     return Gate(Toffoli(control_qubit_1, control_qubit_2, target_qubit), [control_qubit_1, control_qubit_2, target_qubit])
 end
 
-struct Toffoli <: AbstractControlledGate
+struct Toffoli <: AbstractControlledGateSymbol
     control_1::Int
     control_2::Int
     target::Int
