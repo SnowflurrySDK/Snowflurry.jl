@@ -303,7 +303,7 @@ function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
 end
 
 """
-    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGateSymbol})::Bool
+    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
 
 Determined whether or not a type of gate is present in a circuit.
 
@@ -321,7 +321,7 @@ julia> circuit_contains_gate_type(circuit, Snowflake.ControlZ)
 false
 ```
 """
-function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGateSymbol})::Bool
+function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, gate_type)
             return true
@@ -873,7 +873,7 @@ function Base.inv(circuit::QuantumCircuit)
 end
 
 """
-    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
 
 Returns a dictionary listing the number of gates of each type found in the `circuit`.
 
@@ -904,7 +904,7 @@ Dict{String, Int64} with 2 entries:
 
 ```
 """
-function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
     for gate in get_circuit_gates(circuit)
         instruction_symbol=get_instruction_symbol(gate)

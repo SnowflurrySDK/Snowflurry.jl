@@ -27,7 +27,7 @@ end
 
 
 function test_operator_implementation(
-    op_type::Type{<:AbstractOperator};
+    op_type::Type{<: AbstractOperator};
     dim::Union{Integer,Nothing}=2,
     label="",
     values::Vector{<:Number}=[1.,2.,3.,4.])

@@ -115,7 +115,7 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::Gate
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<:AbstractGateSymbol}, target::Int)::Gate
+function compress_to_universal(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate
     
     combined_op=eye()
 
@@ -1145,7 +1145,7 @@ function remap_qubits_to_consecutive(connected_qubits::Vector{Int})::Tuple{Vecto
 end
 
 function remap_connections_using_swaps(
-    gates_block::Vector{<:AbstractGateSymbol},
+    gates_block::Vector{<: AbstractGateSymbol},
     connected_qubits::Vector{Int},
     consecutive_mapping::Vector{Int}
     )::Vector{AbstractGateSymbol}
@@ -1410,7 +1410,7 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<:AbstractGateSymbol}, target::Int)::Gate
+function compress_to_rz(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate
     
     combined_op=eye()
 

@@ -101,7 +101,7 @@ q[2]:───────
 """
 abstract type AbstractGateSymbol end
 
-abstract type AbstractControlledGateSymbol<:AbstractGateSymbol end
+abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
 get_connected_qubits(gate::AbstractGateSymbol)=[gate.target]
 
@@ -280,12 +280,12 @@ Snowflake.SigmaX
 """
 get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
 
-struct MovedGate <:AbstractGateSymbol
+struct MovedGate <: AbstractGateSymbol
     original_gate::AbstractGateSymbol
     connected_qubits::Vector{Int}
 end
 
-struct MovedControlledGate <:AbstractControlledGateSymbol
+struct MovedControlledGate <: AbstractControlledGateSymbol
     original_gate::AbstractControlledGateSymbol
     connected_qubits::Vector{Int}
 end

@@ -504,7 +504,7 @@ end
     # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 
-    struct UnknownControlledGate<:AbstractControlledGateSymbol end
+    struct UnknownControlledGate <: AbstractControlledGateSymbol end
 
     @test_throws NotImplementedError get_target_qubits(UnknownControlledGate())
     @test_throws NotImplementedError get_control_qubits(UnknownControlledGate())

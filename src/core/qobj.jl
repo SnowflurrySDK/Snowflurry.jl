@@ -218,7 +218,7 @@ Underlying data ComplexF64:
 
 ```
 """
-struct DenseOperator{N,T<:Complex}<:AbstractOperator
+struct DenseOperator{N,T<:Complex} <: AbstractOperator
     data::SMatrix{N,N,T}
 end
 
@@ -244,7 +244,7 @@ DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{
 
 DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
 
-struct SwapLikeOperator{T<:Complex}<:AbstractOperator
+struct SwapLikeOperator{T<:Complex} <: AbstractOperator
     phase::T
 end
 
@@ -266,7 +266,7 @@ DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
 
 get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
 
-struct IdentityOperator{T<:Complex}<: AbstractOperator end
+struct IdentityOperator{T<:Complex} <: AbstractOperator end
 
 IdentityOperator(T::Type=ComplexF64)=IdentityOperator{T}()
 
@@ -326,7 +326,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
+struct DiagonalOperator{N,T<:Complex} <: AbstractOperator
     data::SVector{N,T}
 end
 
@@ -361,7 +361,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-struct AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
+struct AntiDiagonalOperator{N,T<:Complex} <: AbstractOperator
     data::SVector{N,T}
 
     function AntiDiagonalOperator(

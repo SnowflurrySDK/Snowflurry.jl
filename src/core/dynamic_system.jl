@@ -28,7 +28,7 @@ function sesolve(
         H::AbstractOperator, 
         ψ_0::Ket{S}, 
         t_range::StepRangeLen; 
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+        e_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
     )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
     Hamiltonian(t)=H
     sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops)
@@ -38,7 +38,7 @@ function sesolve(
         H::Function, 
         ψ_0::Ket{S}, 
         t_range::StepRangeLen; 
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+        e_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
     )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
     dpsi_dt(t,ψ) = -im*H(t)*ψ
     y=rungekutta2(dpsi_dt, ψ_0, t_range)
@@ -79,8 +79,8 @@ function mesolve(
     H::AbstractOperator, 
     ρ_0::AbstractOperator, 
     t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+    c_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
+    e_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
     )::Matrix{<:Real}
     Hamiltonian(t) = H
     mesolve(Hamiltonian, ρ_0, t; c_ops=c_ops, e_ops=e_ops)
@@ -90,8 +90,8 @@ function mesolve(
     H::Function, 
     ρ_0::AbstractOperator, 
     t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+    c_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
+    e_ops::Vector{T} where {T <: AbstractOperator}=(T)[], 
 )::Matrix{<:Real}
     n_t = length(t)
     n_o = length(e_ops)
