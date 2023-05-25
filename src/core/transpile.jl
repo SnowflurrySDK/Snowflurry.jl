@@ -115,7 +115,7 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::PlacedGate
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<:AbstractGate}, target::Int)::PlacedGate
+function compress_to_universal(gates::Vector{<:AbstractGateSymbol}, target::Int)::PlacedGate
     
     combined_op=eye()
 
@@ -140,11 +140,11 @@ set_of_rz_gates=[
     PhaseShift
 ]
 
-is_multi_target(gate::AbstractGate) = length(get_connected_qubits(gate))>1
+is_multi_target(gate::AbstractGateSymbol) = length(get_connected_qubits(gate))>1
 
-is_not_rz_gate(gate::AbstractGate) = !(get_gate_type(gate) in set_of_rz_gates)
+is_not_rz_gate(gate::AbstractGateSymbol) = !(get_gate_type(gate) in set_of_rz_gates)
 
-is_multi_target_or_not_rz(gate::AbstractGate)= is_multi_target(gate) || is_not_rz_gate(gate)
+is_multi_target_or_not_rz(gate::AbstractGateSymbol)= is_multi_target(gate) || is_not_rz_gate(gate)
 
 function find_and_compress_blocks(
     circuit::QuantumCircuit,
@@ -363,11 +363,11 @@ function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit
     return find_and_compress_blocks(circuit,is_multi_target,compress_to_universal)
 end
 
-function cast_to_cz(gate::AbstractGate, _::Vector{Int})
+function cast_to_cz(gate::AbstractGateSymbol, _::Vector{Int})
     throw(NotImplementedError(:cast_to_cz,gate))
 end
 
-function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{AbstractGate}
+function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{AbstractGateSymbol}
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
@@ -492,7 +492,7 @@ function cast_to_cz(::ISwap, connected_qubits::Vector{Int})::AbstractVector{Plac
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    return Vector{AbstractGate}([
+    return Vector{AbstractGateSymbol}([
         y_minus_90(q1),
         x_minus_90(q2),
         control_z(q1, q2),
@@ -561,7 +561,7 @@ function cast_to_cx(gate::Toffoli, connected_qubits::Vector{Int})::AbstractVecto
     t(q) = pi_8(q)
     t_dag(q) = pi_8_dagger(q)
 
-    return Vector{AbstractGate}([
+    return Vector{AbstractGateSymbol}([
         h(q3),
         cnot(q2,q3),
         t_dag(q3),
@@ -639,7 +639,7 @@ CastToPhaseShiftAndHalfRotationXTranspiler()=CastToPhaseShiftAndHalfRotationXTra
 function simplify_rz_gate(
     target::Int,
     phase_angle::Real; 
-    atol=1e-6)::Union{AbstractGate,Nothing}
+    atol=1e-6)::Union{AbstractGateSymbol,Nothing}
     
     phase_angle=phase_angle%(2*π)
 
@@ -670,7 +670,7 @@ end
 function simplify_rx_gate(
     target::Int,
     theta::Real; 
-    atol=1e-6)::Union{AbstractGate,Nothing}
+    atol=1e-6)::Union{AbstractGateSymbol,Nothing}
     
     if isapprox(theta,π/2,atol=atol) 
         return x_90(target)
@@ -698,7 +698,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal, target::Int;at
     phi     =params["phi"]
     lambda  =params["lambda"]
 
-    gate_array=Vector{AbstractGate}([])
+    gate_array=Vector{AbstractGateSymbol}([])
 
     if !(isapprox(lambda,0.,atol=atol))
         push!(
@@ -847,7 +847,7 @@ function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{PlacedGate}
     β=params["phi"]+π/2
     δ=params["lambda"]-π/2
    
-    gate_array=Vector{AbstractGate}([])
+    gate_array=Vector{AbstractGateSymbol}([])
 
     push!(gate_array,phase_shift(target,δ))
 
@@ -942,14 +942,14 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
     return output_circuit
 end
 
-function cast_rx_to_rz_and_half_rotation_x(gate::RotationX)::Vector{AbstractGate}
+function cast_rx_to_rz_and_half_rotation_x(gate::RotationX)::Vector{AbstractGateSymbol}
     params=get_gate_parameters(gate)
    
     target=get_connected_qubits(gate)[1]
 
     theta   =params["theta"]
 
-    gate_array=Vector{AbstractGate}([])
+    gate_array=Vector{AbstractGateSymbol}([])
 
     push!(gate_array,z_90(target))
     push!(gate_array,x_90(target))
@@ -1145,10 +1145,10 @@ function remap_qubits_to_consecutive(connected_qubits::Vector{Int})::Tuple{Vecto
 end
 
 function remap_connections_using_swaps(
-    gates_block::Vector{<:AbstractGate},
+    gates_block::Vector{<:AbstractGateSymbol},
     connected_qubits::Vector{Int},
     consecutive_mapping::Vector{Int}
-    )::Vector{AbstractGate}
+    )::Vector{AbstractGateSymbol}
 
     for (previous_qubit_num,current_qubit_num) in zip(connected_qubits,consecutive_mapping)
 
@@ -1410,7 +1410,7 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PlacedGate
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<:AbstractGate}, target::Int)::PlacedGate
+function compress_to_rz(gates::Vector{<:AbstractGateSymbol}, target::Int)::PlacedGate
     
     combined_op=eye()
 
@@ -1539,7 +1539,7 @@ function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::Quantu
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count=qubit_count)
     qubit_mapping = Dict{Int,Int}()
-    reverse_transpiled_gates = AbstractGate[]
+    reverse_transpiled_gates = AbstractGateSymbol[]
 
     for gate in reverse(gates)
         if is_gate_type(gate, Swap)
@@ -1581,7 +1581,7 @@ end
 
 SimplifyTrivialGatesTranspiler()=SimplifyTrivialGatesTranspiler(1e-6)
 
-function is_trivial_gate(gate::AbstractGate;atol=1e-6)::Bool
+function is_trivial_gate(gate::AbstractGateSymbol;atol=1e-6)::Bool
     
     params=get_gate_parameters(gate)
 

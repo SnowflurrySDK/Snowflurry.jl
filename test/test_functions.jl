@@ -1,7 +1,7 @@
 using Snowflake
 using LinearAlgebra
 
-function test_inverse(gate::AbstractGate)
+function test_inverse(gate::AbstractGateSymbol)
     inverse_gate=inv(gate)
     target_count=length(get_connected_qubits(gate))
 

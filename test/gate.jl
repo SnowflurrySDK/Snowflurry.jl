@@ -5,7 +5,7 @@ using LinearAlgebra
 include("test_functions.jl")
 
 @testset "get_num_connected_qubits" begin
-    struct MockConnectedQubitGate <: AbstractGate
+    struct MockConnectedQubitGate <: AbstractGateSymbol
         connected_qubits::Vector{Int}
     end
 
@@ -24,7 +24,7 @@ include("test_functions.jl")
 end
 
 @testset "PlacedGate" begin
-    struct MockNumConnectedQubit <: AbstractGate
+    struct MockNumConnectedQubit <: AbstractGateSymbol
         num_connected_qubits::Int
     end
 
@@ -99,7 +99,7 @@ end
     end
 
     @testset "getters" begin
-        function test_getters(gate::AbstractGate, connected_qubits::Vector{Int})
+        function test_getters(gate::AbstractGateSymbol, connected_qubits::Vector{Int})
             placed_gate = PlacedGate(gate, connected_qubits)
 
             @test get_connected_qubits(placed_gate) == connected_qubits
@@ -484,7 +484,7 @@ end
     inverse_iden = inv(iden)
     @test get_connected_qubits(iden)==get_connected_qubits(inverse_iden)
 
-    struct UnknownGate <: AbstractGate
+    struct UnknownGate <: AbstractGateSymbol
         instruction_symbol::String
     end
     
@@ -493,7 +493,7 @@ end
     unknown_gate=UnknownGate("na")
     @test_throws NotImplementedError inv(unknown_gate)
 
-    struct UnknownHermitianGate <: AbstractGate
+    struct UnknownHermitianGate <: AbstractGateSymbol
         instruction_symbol::String
     end
     
@@ -501,7 +501,7 @@ end
 
     unknown_hermitian_gate = UnknownHermitianGate("na")
 
-    # test fallback implementation of inv(::AbstractGate)
+    # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 
     struct UnknownControlledGate<:AbstractControlledGate end

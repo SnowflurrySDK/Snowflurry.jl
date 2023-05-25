@@ -29,7 +29,7 @@ export
     SwapLikeOperator,
     MultiBodySystem,
     QuantumCircuit,
-    AbstractGate,
+    AbstractGateSymbol,
     AbstractControlledGate,
     PlacedGate,
     AnyonQPU,

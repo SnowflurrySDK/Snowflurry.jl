@@ -28,7 +28,7 @@ permute_qubits
 
 ## Quantum Gates
 ```@docs
-AbstractGate
+AbstractGateSymbol
 PlacedGate
 eye
 identity_gate
@@ -57,10 +57,10 @@ iswap
 swap
 toffoli
 iswap_dagger
-Base.:*(M::AbstractGate, x::Ket)
+Base.:*(M::AbstractGateSymbol, x::Ket)
 apply_gate!
 get_operator
-inv(gate::AbstractGate)
+inv(gate::AbstractGateSymbol)
 is_gate_type
 get_gate_type
 move_gate

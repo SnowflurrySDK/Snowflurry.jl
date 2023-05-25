@@ -104,7 +104,7 @@ function assert_exponents_are_in_the_field(imaginary_exponent::Integer,
 end
 
 """
-    get_pauli(gate::AbstractGate, num_qubits::Integer; imaginary_exponent::Integer=0,
+    get_pauli(gate::AbstractGateSymbol, num_qubits::Integer; imaginary_exponent::Integer=0,
         negative_exponent::Integer=0)::PauliGroupElement
 
 Returns a `PauliGroupElement` given a `gate` and the number of qubits.
@@ -130,7 +130,7 @@ Pauli Group Element:
 
 ```
 """
-function get_pauli(gate::AbstractGate, target::Int, num_qubits::Integer; imaginary_exponent::Integer=0,
+function get_pauli(gate::AbstractGateSymbol, target::Int, num_qubits::Integer; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
     if target > num_qubits

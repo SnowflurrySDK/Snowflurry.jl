@@ -1,13 +1,13 @@
 """
-    AbstractGate
+    AbstractGateSymbol
 
-A `Gate` is an instantiation of an `AbstractGate`, which can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
-`AbstractGate` is useful to dispatch all `Gates` to default implementation of functions such as get_connected_qubits(). 
+A `Gate` is an instantiation of an `AbstractGateSymbol`, which can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
+`AbstractGateSymbol` is useful to dispatch all `Gates` to default implementation of functions such as get_connected_qubits(). 
 Those functions are then specialized for `Gates` requiring a different implementation. 
 
-`AbstractGate` is an abstract type, which means that it cannot be instantiated. 
-Instead, each concrete type of `Gate` is a struct which is a subtype of `AbstractGate`.
-Each descendant of `AbstractGate` must have at least the following fields:
+`AbstractGateSymbol` is an abstract type, which means that it cannot be instantiated. 
+Instead, each concrete type of `Gate` is a struct which is a subtype of `AbstractGateSymbol`.
+Each descendant of `AbstractGateSymbol` must have at least the following fields:
 - `target::Int`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
 - `parameter::Real`: for parameterized gates, determines which operation is applied (e.g. rotation angles), i.e., is used in the construction of the matrix used in the application of its `Operator`.
 
@@ -16,7 +16,7 @@ A struct must be defined for each new gate type, such as the following X_45 gate
 applies a 45° rotation about the X axis:
 
 ```jldoctest gate_struct
-julia> struct X45 <: AbstractGate
+julia> struct X45 <: AbstractGateSymbol
             target::Int
        end;
 
@@ -99,20 +99,20 @@ q[2]:───────
 ```
 
 """
-abstract type AbstractGate end
+abstract type AbstractGateSymbol end
 
-abstract type AbstractControlledGate<:AbstractGate end
+abstract type AbstractControlledGate<:AbstractGateSymbol end
 
-get_connected_qubits(gate::AbstractGate)=[gate.target]
+get_connected_qubits(gate::AbstractGateSymbol)=[gate.target]
 
-get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
+get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
-get_num_connected_qubits(gate::AbstractGate)=length(get_connected_qubits(gate))
+get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(gate))
 
 """
     PlacedGate
 
-An object representing an `AbstractGate` inside `QuantumCircuit`.
+An object representing an `AbstractGateSymbol` inside `QuantumCircuit`.
 
 # Examples
 ```jldoctest
@@ -146,11 +146,11 @@ Underlying data ComplexF64:
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
 ```
 """
-struct PlacedGate <: AbstractGate
-    gate::AbstractGate
+struct PlacedGate <: AbstractGateSymbol
+    gate::AbstractGateSymbol
     connected_qubits::Vector{Int}
 
-    function PlacedGate(gate::AbstractGate, connected_qubits::Vector{Int})
+    function PlacedGate(gate::AbstractGateSymbol, connected_qubits::Vector{Int})
         if get_num_connected_qubits(gate) != length(connected_qubits)
             throw(DomainError(connected_qubits,
                 "The connected qubits and the gate's number of connected qubits do not match"))
@@ -172,7 +172,7 @@ function Base.show(io::IO, gate::PlacedGate)
     end
 end
 
-function get_gate(gate::PlacedGate)::AbstractGate
+function get_gate(gate::PlacedGate)::AbstractGateSymbol
     return gate.gate
 end
 
@@ -221,12 +221,12 @@ end
 
 
 """
-    is_gate_type(gate::AbstractGate, type::Type)::Bool 
+    is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool 
 
 Determines if a `gate` is of the specified `type`.
 
 !!! warning "Use is_gate_type instead of isa!"
-    For `AbstractGate` objects, `is_gate_type` should be used instead of `isa`. The
+    For `AbstractGateSymbol` objects, `is_gate_type` should be used instead of `isa`. The
     utilization of `isa` could lead to unexpected behavior (e.g. if a gate has been moved).
 
 # Examples
@@ -249,15 +249,15 @@ false
 
 ```
 """
-is_gate_type(gate::AbstractGate, type::Type)::Bool = isa(gate, type)
+is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool = isa(gate, type)
 
 """
-    get_gate_type(gate::AbstractGate)::Type
+    get_gate_type(gate::AbstractGateSymbol)::Type
 
 Returns the type of a `gate`.
 
 !!! warning "Use get_gate_type instead of typeof!"
-    For `AbstractGate` objects, `get_gate_type` should be used instead of `typeof`. The
+    For `AbstractGateSymbol` objects, `get_gate_type` should be used instead of `typeof`. The
     utilization of `typeof` could lead to unexpected behavior (e.g. if a gate has been
     moved).
 
@@ -278,10 +278,10 @@ Snowflake.SigmaX
 
 ```
 """
-get_gate_type(gate::AbstractGate)::Type = typeof(gate)
+get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
 
-struct MovedGate <:AbstractGate
-    original_gate::AbstractGate
+struct MovedGate <:AbstractGateSymbol
+    original_gate::AbstractGateSymbol
     connected_qubits::Vector{Int}
 end
 
@@ -305,7 +305,7 @@ function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
         ]
 end
 
-get_control_qubits(gate::AbstractGate)=
+get_control_qubits(gate::AbstractGateSymbol)=
     throw(NotImplementedError(:get_control_qubits,gate))
 
 function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
@@ -318,7 +318,7 @@ function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
         ]
 end
 
-get_target_qubits(gate::AbstractGate)=
+get_target_qubits(gate::AbstractGateSymbol)=
     throw(NotImplementedError(:get_target_qubits,gate))
 
 function get_operator(gate::UnionMovedGates, T::Type{<:Complex}=ComplexF64)
@@ -340,8 +340,8 @@ get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
 get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
 
 """
-    move_gate(gate::AbstractGate,
-        qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGate
+    move_gate(gate::AbstractGateSymbol,
+        qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGateSymbol
 
 Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
 on `qubit_mapping`.
@@ -417,7 +417,7 @@ julia> print(ψ_0)
 
 ```
 """
-function apply_gate!(state::Ket, gate::AbstractGate)
+function apply_gate!(state::Ket, gate::AbstractGateSymbol)
     qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
@@ -1457,7 +1457,7 @@ Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOp
 """
 sigma_x(target::Integer) = PlacedGate(SigmaX(target), [target])
 
-struct SigmaX <: AbstractGate
+struct SigmaX <: AbstractGateSymbol
     target::Integer
 end
 
@@ -1488,7 +1488,7 @@ Return the Pauli-Y `Gate`, which applies the [`sigma_y()`](@ref) `Operator` to t
 """
 sigma_y(target::Integer) = PlacedGate(SigmaY(target), [target])
 
-struct SigmaY <: AbstractGate
+struct SigmaY <: AbstractGateSymbol
     target::Int
 end
 
@@ -1502,7 +1502,7 @@ Return the Pauli-Z `Gate`, which applies the [`sigma_z()`](@ref) `Operator` to t
 """
 sigma_z(target::Integer) = PlacedGate(SigmaZ(target), [target])
 
-struct SigmaZ <: AbstractGate
+struct SigmaZ <: AbstractGateSymbol
     target::Int
 end
 
@@ -1515,7 +1515,7 @@ Return the Hadamard `Gate`, which applies the [`hadamard()`](@ref) `Operator` to
 """
 hadamard(target::Integer) = PlacedGate(Hadamard(target), [target])
 
-struct Hadamard <: AbstractGate
+struct Hadamard <: AbstractGateSymbol
     target::Int
 end
 
@@ -1528,7 +1528,7 @@ Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`
 """
 pi_8(target::Integer) = PlacedGate(Pi8(target), [target])
 
-struct Pi8 <: AbstractGate
+struct Pi8 <: AbstractGateSymbol
     target::Integer
 end
 
@@ -1544,7 +1544,7 @@ Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which app
 """
 pi_8_dagger(target::Integer) = PlacedGate(Pi8Dagger(target), [target])
 
-struct Pi8Dagger <: AbstractGate
+struct Pi8Dagger <: AbstractGateSymbol
     target::Int
 end
 
@@ -1560,7 +1560,7 @@ Return a `Gate` that applies a 90° rotation about the X axis as defined by the 
 """
 x_90(target::Integer) = PlacedGate(X90(target), [target])
 
-struct X90 <: AbstractGate
+struct X90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1575,7 +1575,7 @@ Return a `Gate` that applies a -90° rotation about the X axis as defined by the
 """
 x_minus_90(target::Integer) = PlacedGate(XM90(target), [target])
 
-struct XM90 <: AbstractGate
+struct XM90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1590,7 +1590,7 @@ Return a `Gate` that applies a 90° rotation about the Y axis as defined by the 
 """
 y_90(target::Integer) = PlacedGate(Y90(target), [target])
 
-struct Y90 <: AbstractGate
+struct Y90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1605,7 +1605,7 @@ Return a `Gate` that applies a -90° rotation about the Y axis as defined by the
 """
 y_minus_90(target::Integer) = PlacedGate(YM90(target), [target])
 
-struct YM90 <: AbstractGate
+struct YM90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1620,7 +1620,7 @@ Return a `Gate` that applies a 90° rotation about the Z axis as defined by the 
 """
 z_90(target::Integer) = PlacedGate(Z90(target), [target])
 
-struct Z90 <: AbstractGate
+struct Z90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1635,7 +1635,7 @@ Return a `Gate` that applies a -90° rotation about the Z axis as defined by the
 """
 z_minus_90(target::Integer) = PlacedGate(ZM90(target), [target])
 
-struct ZM90 <: AbstractGate
+struct ZM90 <: AbstractGateSymbol
     target::Int
 end
 
@@ -1653,7 +1653,7 @@ The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
 rotation(target::Integer, theta::Real, phi::Real) = PlacedGate(Rotation(target, theta, phi), [target])
 
-struct Rotation <: AbstractGate
+struct Rotation <: AbstractGateSymbol
     target::Int
     theta::Real
     phi::Real
@@ -1680,7 +1680,7 @@ The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
 rotation_x(target::Integer, theta::Real) = PlacedGate(RotationX(target, theta), [target])
 
-struct RotationX <: AbstractGate
+struct RotationX <: AbstractGateSymbol
     target::Int
     theta::Real
 end
@@ -1700,7 +1700,7 @@ The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
 rotation_y(target::Integer, theta::Real) = PlacedGate(RotationY(target, theta), [target])
 
-struct RotationY <: AbstractGate
+struct RotationY <: AbstractGateSymbol
     target::Int
     theta::Real
 end
@@ -1718,7 +1718,7 @@ Return a `Gate` that applies a phase shift `phi` to the `target` qubit as define
 """ 
 phase_shift(target::Integer, phi::Real) = PlacedGate(PhaseShift(target, phi), [target])
 
-struct PhaseShift <: AbstractGate
+struct PhaseShift <: AbstractGateSymbol
     target::Integer
     phi::Real
 end
@@ -1739,7 +1739,7 @@ The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
 universal(target::Integer, theta::Real, phi::Real, lambda::Real) = PlacedGate(Universal(target, theta, phi, lambda), [target])
 
-struct Universal <: AbstractGate
+struct Universal <: AbstractGateSymbol
     target::Int
     theta::Real
     phi::Real
@@ -1841,7 +1841,7 @@ function iswap(qubit_1, qubit_2)
     return PlacedGate(ISwap(qubit_1, qubit_2), [qubit_1, qubit_2])
 end
 
-struct ISwap <: AbstractGate
+struct ISwap <: AbstractGateSymbol
     target_1::Int
     target_2::Int
 end
@@ -1864,7 +1864,7 @@ function swap(qubit_1, qubit_2)
     return PlacedGate(Swap(qubit_1, qubit_2), [qubit_1, qubit_2])
 end
 
-struct Swap <: AbstractGate
+struct Swap <: AbstractGateSymbol
     target_1::Int
     target_2::Int
 end
@@ -1945,7 +1945,7 @@ function iswap_dagger(qubit_1::Integer, qubit_2::Integer)
     return PlacedGate(ISwapDagger(qubit_1,qubit_2), [qubit_1, qubit_2])
 end
 
-struct ISwapDagger <: AbstractGate
+struct ISwapDagger <: AbstractGateSymbol
     target_1::Int
     target_2::Int
 end
@@ -1963,7 +1963,7 @@ Return the Identity `Gate`, which applies the [`identity_gate()`](@ref) `Identit
 """
 identity_gate(target::Integer) = PlacedGate(Identity(target), [target])
 
-struct Identity <: AbstractGate
+struct Identity <: AbstractGateSymbol
     target::Integer
 end
 
@@ -1972,7 +1972,7 @@ get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{T}
 get_connected_qubits(gate::Identity)=[gate.target]
 
 """
-    Base.:*(M::AbstractGate, x::Ket)
+    Base.:*(M::AbstractGateSymbol, x::Ket)
 
 Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 
@@ -1992,16 +1992,16 @@ julia> ψ_1 = sigma_x(1)*ψ_0
 
 ```
 """
-Base.:*(M::AbstractGate, x::Ket) = get_transformed_state(x, M) 
+Base.:*(M::AbstractGateSymbol, x::Ket) = get_transformed_state(x, M) 
 
-function get_transformed_state(state::Ket, gate::AbstractGate)
+function get_transformed_state(state::Ket, gate::AbstractGateSymbol)
     transformed_state = deepcopy(state)
     apply_gate!(transformed_state, gate)
     return transformed_state
 end
 
 """
-    inv(gate::AbstractGate)
+    inv(gate::AbstractGateSymbol)
 
 Return a `Gate` which is the inverse of the input `gate`.
 
@@ -2039,7 +2039,7 @@ Underlying data ComplexF64:
 
 ```
 """
-function Base.inv(gate::AbstractGate)
+function Base.inv(gate::AbstractGateSymbol)
     if is_hermitian(get_operator(gate))
         return gate
     end
@@ -2082,7 +2082,7 @@ function show_gate(
     show(io, "text/plain", op)
 end
 
-function Base.show(io::IO, gate::AbstractGate)
+function Base.show(io::IO, gate::AbstractGateSymbol)
     targets = get_connected_qubits(gate)
 
     parameters = get_gate_parameters(gate)

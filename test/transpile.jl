@@ -386,7 +386,7 @@ end
 
 @testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
 
-    struct MultiParamMultiTargetGate <: Snowflake.AbstractGate
+    struct MultiParamMultiTargetGate <: Snowflake.AbstractGateSymbol
         target_1::Int
         target_2::Int
         target_3::Int
@@ -573,7 +573,7 @@ end
 end
 
 @testset "cast_to_cz: unkown gate" begin
-    struct UnknownCastToCZGate <: AbstractGate end
+    struct UnknownCastToCZGate <: AbstractGateSymbol end
     gate = UnknownCastToCZGate()
 
     @test_throws NotImplementedError Snowflake.cast_to_cz(gate, [1,2])
