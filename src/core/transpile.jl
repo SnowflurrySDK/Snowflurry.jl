@@ -86,7 +86,7 @@ end
 struct CompressSingleQubitGatesTranspiler<:Transpiler end
 
 # convert a single-target gate to a Universal gate
-function as_universal_gate(target::Integer,op::AbstractOperator)::PlacedGate
+function as_universal_gate(target::Integer,op::AbstractOperator)::Gate
     @assert size(op)==(2,2)
     
     matrix=get_matrix(op)
@@ -115,7 +115,7 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::PlacedGate
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<:AbstractGateSymbol}, target::Int)::PlacedGate
+function compress_to_universal(gates::Vector{<:AbstractGateSymbol}, target::Int)::Gate
     
     combined_op=eye()
 
@@ -372,7 +372,7 @@ function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{Abstr
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    return Vector{PlacedGate}([
+    return Vector{Gate}([
         y_minus_90(q2),
         control_z(q1, q2),
         y_minus_90(q1),
@@ -431,12 +431,12 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     return output
 end
 
-function cast_to_cz(::ControlX, connected_qubits::Vector{Int})::AbstractVector{PlacedGate}
+function cast_to_cz(::ControlX, connected_qubits::Vector{Int})::AbstractVector{Gate}
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    return Vector{PlacedGate}([
+    return Vector{Gate}([
         hadamard(q2),
         control_z(q1, q2),
         hadamard(q2),
@@ -487,7 +487,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     return output
 end
 
-function cast_to_cz(::ISwap, connected_qubits::Vector{Int})::AbstractVector{PlacedGate}
+function cast_to_cz(::ISwap, connected_qubits::Vector{Int})::AbstractVector{Gate}
     @assert length(connected_qubits) == 2
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
@@ -550,7 +550,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     return output
 end
 
-function cast_to_cx(gate::Toffoli, connected_qubits::Vector{Int})::AbstractVector{PlacedGate}
+function cast_to_cx(gate::Toffoli, connected_qubits::Vector{Int})::AbstractVector{Gate}
     @assert length(connected_qubits) == 3
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
@@ -840,7 +840,7 @@ end
 
 # Cast a Universal gate as U=Rz(β)Rx(γ)Rz(δ)
 # See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
-function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{PlacedGate}
+function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
     params=get_gate_parameters(gate)
    
     γ=params["theta"]
@@ -1389,7 +1389,7 @@ end
 struct CompressRzGatesTranspiler<:Transpiler end
 
 # construct a PhaseShift gate from an input Operator
-function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PlacedGate
+function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate
     @assert size(op)==(2,2) ("Received multi-target Operator: $op")
     
     matrix=get_matrix(op)
@@ -1410,7 +1410,7 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PlacedGate
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<:AbstractGateSymbol}, target::Int)::PlacedGate
+function compress_to_rz(gates::Vector{<:AbstractGateSymbol}, target::Int)::Gate
     
     combined_op=eye()
 

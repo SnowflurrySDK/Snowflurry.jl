@@ -29,7 +29,7 @@ permute_qubits
 ## Quantum Gates
 ```@docs
 AbstractGateSymbol
-PlacedGate
+Gate
 eye
 identity_gate
 sigma_p

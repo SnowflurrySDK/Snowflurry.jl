@@ -142,7 +142,7 @@ function get_pauli(gate::AbstractGateSymbol, target::Int, num_qubits::Integer; i
         GF(2)(negative_exponent))
 end
 
-function get_pauli(gate::PlacedGate, num_qubits::Integer; imaginary_exponent::Integer=0,
+function get_pauli(gate::Gate, num_qubits::Integer; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 1
