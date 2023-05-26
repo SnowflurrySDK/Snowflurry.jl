@@ -53,6 +53,33 @@ function sesolve(
     return (y, observable)
 end
 
+function sesolve_2(
+    H::Function, 
+    ψ_0::Ket{S} where {S<:Complex}, 
+    tspan::Tuple{Float64,Float64}
+    )
+    
+    function Hamiltonian!(dψ_v,ψ_v,p,t)
+        mul!(dψ_v,-im*H(t).data,ψ_v)
+    end
+
+    prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
+    sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+    
+    
+    # t_range=sol.t
+    # n_t = length(t_range)
+    # n_o = length(e_ops)
+    # observable=zeros(n_t, n_o) 
+
+    # for iob in 1:n_o
+    #     for i_t in 1:n_t
+    #         observable[i_t, iob] = real(expected_value(e_ops[iob], y[i_t]))
+    #     end
+    # end        
+    # return (y, observable)
+end
+
 """
     mesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
 
