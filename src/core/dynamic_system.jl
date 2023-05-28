@@ -25,59 +25,82 @@ and returns the final state Ket, and a Vector of observables evaluated at each t
 
 """
 function sesolve(
-        H::AbstractOperator, 
-        ψ_0::Ket{S}, 
-        t_range::StepRangeLen; 
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
-    Hamiltonian(t)=H
-    sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops)
+    H::AbstractOperator, 
+    ψ_0::Ket{S} where {S<:Complex}, 
+    tspan::Tuple{Float64,Float64}
+)
+        dψ_dt = -im*sparse(H).data
+        function Hamiltonian!(dψ_v,ψ_v,p,t)
+            mul!(dψ_v,dψ_dt,ψ_v)
+            nothing
+        end
+        prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
+        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        y=Vector{typeof(ψ_0)}()
+        for v in sol.u
+            push!(y,Ket(v))
+        end
+        return (t=sol.t,u=y)
 end
 
-function sesolve(
-        H::Function, 
-        ψ_0::Ket{S}, 
-        t_range::StepRangeLen; 
+function sesolve_eops(
+        H::AbstractOperator, 
+        ψ_0::Ket{S} where {S<:Complex}, 
+        tspan::Tuple{Float64,Float64};
         e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
-    dpsi_dt(t,ψ) = -im*H(t)*ψ
-    y=rungekutta2(dpsi_dt, ψ_0, t_range)
-    n_t = length(t_range)
+    )
+    sol=sesolve(H,ψ_0,tspan)
+
+    n_t = length(sol.t)
     n_o = length(e_ops)
     observable=zeros(n_t, n_o) 
     for iob in 1:n_o
         for i_t in 1:n_t
-            observable[i_t, iob] = real(expected_value(e_ops[iob], y[i_t]))
+            observable[i_t, iob] = real(expected_value(e_ops[iob], sol.u[i_t]))
         end
     end        
-    return (y, observable)
+    return (t=sol.t,u=sol.u,e=observable)
 end
 
-function sesolve_2(
+function sesolve(
+            H::Function, 
+            ψ_0::Ket{S} where {S<:Complex}, 
+            tspan::Tuple{Float64,Float64}
+        )    
+        function Hamiltonian!(dψ_v,ψ_v,p,t)
+            mul!(dψ_v,-im*H(t).data,ψ_v)
+            nothing
+        end
+
+        prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
+        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+
+        y=Vector{typeof(ψ_0)}()
+        for v in sol.u
+            push!(y,Ket(v))
+        end
+        return (t=sol.t,u=y)
+end
+
+function sesolve_eops(
     H::Function, 
     ψ_0::Ket{S} where {S<:Complex}, 
-    tspan::Tuple{Float64,Float64}
-    )
+    tspan::Tuple{Float64,Float64};
+    e_ops::Vector{T} where {T<:AbstractOperator},
+    )    
     
-    function Hamiltonian!(dψ_v,ψ_v,p,t)
-        mul!(dψ_v,-im*H(t).data,ψ_v)
-    end
+    sol=sesolve(H,ψ_0,tspan)
 
-    prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
-    sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
-    
-    
-    # t_range=sol.t
-    # n_t = length(t_range)
-    # n_o = length(e_ops)
-    # observable=zeros(n_t, n_o) 
+    n_t = length(sol.t)
+    n_o = length(e_ops)
+    observable=zeros(n_t, n_o) 
+    for iob in 1:n_o
+        for i_t in 1:n_t
+            observable[i_t, iob] = real(expected_value(e_ops[iob], sol.u[i_t]))
+        end
+    end        
 
-    # for iob in 1:n_o
-    #     for i_t in 1:n_t
-    #         observable[i_t, iob] = real(expected_value(e_ops[iob], y[i_t]))
-    #     end
-    # end        
-    # return (y, observable)
+    return (t=sol.t,u=sol.u,e=observable)
 end
 
 """
@@ -103,71 +126,43 @@ and returns a Vector of observables evaluated at each time step.
 - `c_ops` -- list of collapse operators ``L_i``'s.
 """
 function mesolve(
-    H::AbstractOperator, 
-    ρ_0::AbstractOperator, 
-    t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Matrix{<:Real}
-    Hamiltonian(t) = H
-    mesolve(Hamiltonian, ρ_0, t; c_ops=c_ops, e_ops=e_ops)
-end
-
-function mesolve(
     H::Function, 
-    ρ_0::AbstractOperator, 
-    t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-)::Matrix{<:Real}
-    n_t = length(t)
-    n_o = length(e_ops)
-    observable=zeros(n_t, n_o) 
+    ρ_0::T, 
+    tspan::Tuple{Float64,Float64}; 
+    c_ops::Vector{T},
+    ) where {T<:DenseOperator}
 
     if length(c_ops) == 0
-        eigenvalues, eigenvectors = eigen(ρ_0)
-
-        n, _ = size(ρ_0)
-        for i in 1:n
-            eigenvalue = eigenvalues[i]
-            eigenvector = eigenvectors[i, :]
-            
-            @assert imag(eigenvalue) ≈ 0
-            
-            if real(eigenvalue) ≉ 0
-                _, observable_i = sesolve(H, Ket(eigenvector), t, e_ops=e_ops)
-                observable += observable_i * real(eigenvalue)
-            end
-        end
-        return observable
+        @warn "You have speciefied no collapse operator for the Master Equation. In such case, we suggest using the Shrodigner eq. solvers."
     end
 
-    drho_dt(t,ρ) = -im*commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
-
-    ρ = ρ_0
-    for i_ob in 1:n_o
-        observable[1, i_ob] = real(tr(e_ops[i_ob]*ρ))
+    drho_dt(t,ρ) = -im*(commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops]))
+    function Hamiltonian(ρ,p,t)
+        return drho_dt(t,DenseOperator(ρ)).data
     end
+    prob = OrdinaryDiffEq.ODEProblem(Hamiltonian,ρ_0.data,tspan)
+    sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+end
 
-    for i_t in 1:n_t-1
-        h = t[i_t+1] - t[i_t]
-        ρ_1 = ρ+h/2.0*drho_dt(t[i_t], ρ)
-        ρ+= h * drho_dt(t[i_t]+ h/2.0, ρ_1)
+ function mesolve_eops(
+    H::Function, 
+    ρ_0::T, 
+    tspan::Tuple{Float64,Float64}; 
+    c_ops::Vector{T}, 
+    e_ops::Vector{T}, 
+    ) where {T<:DenseOperator}
+    if length(c_ops) == 0
+        @warn "You have speciefied no collapse operator for the Master Equation. In such case, we suggest using the Shrodigner eq. solvers."
+    end
+    sol = mesolve(H,ρ_0,tspan,c_ops=c_ops)
+    n_t = length(sol.t)
+    n_o = length(e_ops)
+    observable=zeros(n_t, n_o) 
+    for i_t in 1:n_t
         for i_ob in 1:n_o
-                observable[i_t+1, i_ob] = real(tr(e_ops[i_ob]*ρ))
+                observable[i_t, i_ob] = real(tr(e_ops[i_ob].data*sol.u[i_t]))
         end    
     end
-    return observable
+    return (t=sol.t,u=sol.u,e=observable)
 end
 
-function rungekutta2(f::Function, y0::Ket{T}, t::StepRangeLen)::Vector{Ket{T}} where {T<:Complex}
-    n = length(t)
-    y = Vector{Ket{T}}(undef, n)
-    y[1] = y0
-    for i in 1:n-1
-        h = T(t[i+1] - t[i])
-        y_1 = y[i]+T(h/2.0)*f(T(t[i]), y[i])
-        y[i+1] = y[i] + h * f(T(t[i]+ h/2.0), y_1)
-    end
-    return y
-end
