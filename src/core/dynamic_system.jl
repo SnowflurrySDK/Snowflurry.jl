@@ -128,7 +128,7 @@ and returns a Vector of observables evaluated at each time step.
 function mesolve(
     H::Function, 
     ρ_0::T, 
-    tspan::Tuple{Float64,Float64}; 
+    tspan::Tuple{Number,Number}; 
     c_ops::Vector{T},
     ) where {T<:DenseOperator}
 
@@ -136,12 +136,24 @@ function mesolve(
         @warn "You have speciefied no collapse operator for the Master Equation. In such case, we suggest using the Shrodigner eq. solvers."
     end
 
-    drho_dt(t,ρ) = -im*(commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops]))
-    function Hamiltonian(ρ,p,t)
+    drho_dt(t,ρ) = -im*(commute(H(t),ρ))+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
+    
+    function Lindblad(ρ,p,t)
         return drho_dt(t,DenseOperator(ρ)).data
     end
-    prob = OrdinaryDiffEq.ODEProblem(Hamiltonian,ρ_0.data,tspan)
-    sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+
+    function Shrodinger(ρ,p,t)
+        return (-im*(commute(H(t),DenseOperator(ρ)))).data
+    end
+
+    if length(c_ops) == 0
+        prob=OrdinaryDiffEq.ODEProblem(Shrodinger,ρ_0.data,tspan)
+        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+    else
+        prob=OrdinaryDiffEq.ODEProblem(Lindblad,ρ_0.data,tspan)
+        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+    end
+    
 end
 
  function mesolve_eops(
@@ -150,7 +162,7 @@ end
     tspan::Tuple{Float64,Float64}; 
     c_ops::Vector{T}, 
     e_ops::Vector{T}, 
-    ) where {T<:DenseOperator}
+    ) where {T<:AbstractOperator}
     if length(c_ops) == 0
         @warn "You have speciefied no collapse operator for the Master Equation. In such case, we suggest using the Shrodigner eq. solvers."
     end
