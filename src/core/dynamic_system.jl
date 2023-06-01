@@ -1,7 +1,6 @@
 """
-    sesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
-    sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[])
-
+    sesolve(H::AbstractOperator, ψ_0::Ket, tspan::Tuple{Float64,Float64}; kwargs...)
+    sesolve(H::Function, ψ_0::Ket, tspan::Tuple{Float64,Float64}; kwargs...)
 Solves the Shrodinger equation:
 
 ``\\frac{d \\Psi}{d t}=-i \\hat{H}\\Psi``
@@ -12,22 +11,20 @@ and returns the final state Ket, and a Vector of observables evaluated at each t
 - `H` -- the Hamiltonian operator (of any subtype of `AbstractOperator`) or a 
         function that returns the Hamiltonian as a function of time.
 - `ψ_0` -- initital state (`Ket`) of a quantum system
-- `t_range` -- time interval for which the system has to be simulated. 
+- `tspan` -- time interval for which the system has to be simulated. 
         For instance: 
-            t_range=0:10 evaluates the output using time 
-            steps: 0,1,2,...,10. 
-            t_range=0:0.01:1 evaluates the output using 
-            time steps: 0,0.01,0.02,...,1.0 
-
+            tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
+- `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 - `e_ops` -- list of operators for which the expected value 
     (the observables) will be evaluated at each time step in t_range. 
 
-
+   
 """
 function sesolve(
     H::AbstractOperator, 
     ψ_0::Ket{S} where {S<:Complex}, 
-    tspan::Tuple{Float64,Float64}
+    tspan::Tuple{Float64,Float64};
+    kwargs...
 )
         dψ_dt = -im*sparse(H).data
         function Hamiltonian!(dψ_v,ψ_v,p,t)
@@ -35,7 +32,7 @@ function sesolve(
             nothing
         end
         prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
-        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
         y=Vector{typeof(ψ_0)}()
         for v in sol.u
             push!(y,Ket(v))
@@ -47,9 +44,9 @@ function sesolve_eops(
         H::AbstractOperator, 
         ψ_0::Ket{S} where {S<:Complex}, 
         tspan::Tuple{Float64,Float64};
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
+        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], kwargs...
     )
-    sol=sesolve(H,ψ_0,tspan)
+    sol=sesolve(H,ψ_0,tspan; kwargs...)
 
     n_t = length(sol.t)
     n_o = length(e_ops)
@@ -65,15 +62,16 @@ end
 function sesolve(
             H::Function, 
             ψ_0::Ket{S} where {S<:Complex}, 
-            tspan::Tuple{Float64,Float64}
+            tspan::Tuple{Float64,Float64};
+            kwargs...
         )    
         function Hamiltonian!(dψ_v,ψ_v,p,t)
-            mul!(dψ_v,-im*H(t).data,ψ_v)
+            mul!(dψ_v,sparse(-im*H(t)).data,ψ_v)
             nothing
         end
 
         prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,ψ_0.data,tspan)
-        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
 
         y=Vector{typeof(ψ_0)}()
         for v in sol.u
@@ -87,9 +85,10 @@ function sesolve_eops(
     ψ_0::Ket{S} where {S<:Complex}, 
     tspan::Tuple{Float64,Float64};
     e_ops::Vector{T} where {T<:AbstractOperator},
+    kwargs...
     )    
     
-    sol=sesolve(H,ψ_0,tspan)
+    sol=sesolve(H,ψ_0,tspan; kwargs...)
 
     n_t = length(sol.t)
     n_o = length(e_ops)
@@ -130,6 +129,7 @@ function mesolve(
     ρ_0::T, 
     tspan::Tuple{Number,Number}; 
     c_ops::Vector{T},
+    kwargs...
     ) where {T<:DenseOperator}
 
     if length(c_ops) == 0
@@ -148,10 +148,10 @@ function mesolve(
 
     if length(c_ops) == 0
         prob=OrdinaryDiffEq.ODEProblem(Shrodinger,ρ_0.data,tspan)
-        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
     else
         prob=OrdinaryDiffEq.ODEProblem(Lindblad,ρ_0.data,tspan)
-        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        return OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
     end
     
 end
@@ -162,11 +162,12 @@ end
     tspan::Tuple{Float64,Float64}; 
     c_ops::Vector{T}, 
     e_ops::Vector{T}, 
+    kwargs...
     ) where {T<:AbstractOperator}
     if length(c_ops) == 0
         @warn "You have speciefied no collapse operator for the Master Equation. In such case, we suggest using the Shrodigner eq. solvers."
     end
-    sol = mesolve(H,ρ_0,tspan,c_ops=c_ops)
+    sol = mesolve(H,ρ_0,tspan,c_ops=c_ops; kwargs...)
     n_t = length(sol.t)
     n_o = length(e_ops)
     observable=zeros(n_t, n_o) 

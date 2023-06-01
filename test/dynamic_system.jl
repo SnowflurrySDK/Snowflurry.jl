@@ -4,7 +4,7 @@ using Test
 @testset "Rabi Flip Shrodinger" begin
     ψ_0 = spin_up()
     ω = 2.0*pi #Rabi frequency
-    H = ω/2.0*sigma_x()
+    H(t) = ω/2.0*sigma_x()
     tspan = (0.0,1.0)
     t, ψ , prob = sesolve_eops(H, ψ_0, tspan,e_ops=[sigma_z()])
     @test last(prob) ≈ 1.0 atol=1.e-4
@@ -15,7 +15,7 @@ end
     ω = 2.0*pi #Rabi frequency
     H = ComplexF32(ω/2.0)*sigma_x(ComplexF32)
     tspan = (0.0,1.0)
-    t, ψ , prob = sesolve_eops(H, ψ_0, tspan,e_ops=[sigma_z()])
+    t, ψ , prob = sesolve_eops(H, ψ_0, tspan,e_ops=[sigma_z()], dt=1.0/(3.0*ω), adaptive=false)
     @test last(prob) ≈ 1.0 atol=1.e-4
     @test typeof(ψ)==Vector{Ket{ComplexF32}}
 end
@@ -31,7 +31,6 @@ end
             t_, ρ, prob = mesolve_eops(H,ρ_0, t,  c_ops=[DenseOperator(c_op)], e_ops=[projection])
             @test prob ≈ exp.(-Γ*collect(t_)) atol=1.e-4
         end
-
         t = (0.0,1.0)
         Γ = 0.5
         test_relaxation(ComplexF64, Γ, t)
