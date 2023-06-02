@@ -641,6 +641,7 @@ julia> expected_value(A, ψ)
 expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
 
 
+
 # generic case
 Base.:size(M::AbstractOperator) = size(M.data)
 

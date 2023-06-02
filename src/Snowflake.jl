@@ -30,6 +30,8 @@ export
     SparseOperator,
     SwapLikeOperator,
     MultiBodySystem,
+    ShrodingerProblem,
+    LindbladProblem,
     QuantumCircuit,
     AbstractGate,
     AbstractControlledGate,
