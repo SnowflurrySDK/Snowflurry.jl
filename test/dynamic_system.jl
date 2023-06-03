@@ -43,25 +43,3 @@ end
 
 
 end
-
-#     @testset "equivalent to sesolve" begin
-#         function test_sesolve_rabi(dtype, ω, t)
-#             ψ_0 = spin_up(dtype)
-#             H(t) = DenseOperator(dtype(ω/2.0)*sigma_x(dtype))
-#             e_ops = [DenseOperator(sigma_z(dtype))]
-#             t_, ψ, prob_sesolve = sesolve_eops(H, ψ_0, t,e_ops=e_ops, dt=0.1, adaptive=false)
-
-#             ρ_0 = ket2dm(ψ_0)
-#             c_ops = Vector{DenseOperator{2, dtype}}([])
-#             t_, ρ, prob_mesolve = mesolve_eops(H, ρ_0, t, e_ops=e_ops, c_ops=c_ops, dt=0.1, adaptive=false)
-
-#             @test prob_sesolve ≈ prob_mesolve  atol=1.e-3
-#         end
-
-#         ω = 2.0 * pi
-#         t = (0.0,1.0)
-#         test_sesolve_rabi(ComplexF64, ω, t)
-#         test_sesolve_rabi(ComplexF32, ω, t)
-#     end
-
-# end
