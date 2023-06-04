@@ -20,7 +20,7 @@ Base.@kwdef struct ShrodingerProblem{T<:AbstractOperator, S<:Complex}
 end
 
 """
-    A LindbladProblem is a structure that is defined to solve the Lindblad master equation in time-domain using mesolve(). 
+    A LindbladProblem is a structure that is defined to solve the Lindblad master equation in time-domain using lindblad_solve(). 
 
 **Fields**
 - `H` -- a function that retrurns the  Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
@@ -89,7 +89,7 @@ end
 
 
 """
-        mesolve(problem::LindbladProblem;kwargs...)
+        lindblad_solve(problem::LindbladProblem;kwargs...)
 
 Solves the Lindblad Master equation:
 
@@ -101,7 +101,7 @@ and returns a Vector of observables evaluated at each time step.
 - `problem` -- An object of type LindbladProblem that defines the problem to be solved. 
 - `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options)..
 """
-function mesolve(
+function lindblad_solve(
     problem::LindbladProblem;
     kwargs...
     )

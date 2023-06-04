@@ -31,11 +31,11 @@ end
             c_op =DenseOperator(sqrt(dtype(Γ))*sigma_m(dtype))
 
             problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=[c_op])
-            t, ρ, prob = mesolve(problem)
+            t, ρ, prob = lindblad_solve(problem)
             @test prob ≈ exp.(-Γ*collect(t)) atol=1.e-4
 
             problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=(DenseOperator{2,dtype})[])
-            @test_throws DomainError mesolve(problem)
+            @test_throws DomainError lindblad_solve(problem)
         end
         test_relaxation(ComplexF64)
         test_relaxation(ComplexF32)
