@@ -101,6 +101,30 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
+struct ControlledGate <: AbstractControlledGate
+    kernel::AbstractOperator
+    control::Int
+    target::Int
+end
+
+# returns an equivalent size 4 DenseOperator built using the kernel
+function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
+    op=get_matrix(eye(4))
+    
+    op[3,3]=gate.kernel[1,1]
+    op[3,4]=gate.kernel[1,2]
+    op[4,3]=gate.kernel[2,1]
+    op[4,4]=gate.kernel[2,2]
+
+    return DenseOperator(convert(Matrix{T},op))
+end
+
+get_connected_qubits(gate::ControlledGate)=[gate.control, gate.target]
+
+get_control_qubits(gate::ControlledGate)=[gate.control]
+
+get_target_qubits(gate::ControlledGate)=[gate.target]
+
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
 
@@ -320,6 +344,23 @@ function apply_gate!(state::Ket, gate::AbstractGate)
     operator=get_operator(gate,type_in_ket)
 
     apply_operator!(state,operator,connected_qubits)
+end
+
+function apply_gate!(state::Ket, gate::ControlledGate)
+    qubit_count = get_num_qubits(state)
+    
+    connected_qubits=get_connected_qubits(gate)
+
+    if any(t -> t>qubit_count ,connected_qubits)
+        throw(DomainError(connected_qubits,
+            "Not enough qubits in the Ket for the targets in gate"))
+    end
+
+    control_qubits=get_control_qubits(gate)
+
+    target_qubits=get_target_qubits(gate)
+
+    apply_controlled_gate!(state,DenseOperator(gate.kernel),control_qubits[1],target_qubits[1])
 end
 
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
@@ -575,6 +616,95 @@ function apply_toffoli!(state::Ket,control_qubits::Vector{Int},target_qubit::Int
             @inbounds state.data[basis_1+2] = temp1        
         end
     end
+end
+
+# specialization for single-target single-control dense gate
+# adapted from https://github.com/qulacs/qulacs, method single_qubit_control_single_qubit_dense_matrix_gate_unroll()
+function apply_controlled_gate!(
+    state::Ket,
+    kernel::DenseOperator{2},
+    control_qubit::Int,
+    target_qubit::Int)
+    
+    qubit_count = get_num_qubits(state)
+
+    dim=UInt64(2^qubit_count)
+
+    loop_dim=div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index=UInt64(qubit_count-target_qubit)
+    
+    control_qubit_index=UInt64(qubit_count-control_qubit)
+
+    target_mask  = UInt64(1) << target_qubit_index
+    control_mask = UInt64(1) << control_qubit_index
+    
+    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
+    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+
+    low_mask = min_qubit_mask - 1
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask
+    high_mask = ~(max_qubit_mask - 1)
+
+    matrix=kernel.data
+
+    if (target_qubit_index == 0)
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index =
+                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+
+            # fetch values
+            cval0 = state.data[basis_index+1]
+            cval1 = state.data[basis_index+2]
+
+            # set values
+            state.data[basis_index+1] = matrix[1] * cval0 + matrix[3] * cval1
+            state.data[basis_index+2] = matrix[2] * cval0 + matrix[4] * cval1
+        end
+    
+    elseif (control_qubit_index == 0) 
+        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+            basis_index_0 =
+                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+
+            # fetch values
+            cval0 = state.data[basis_index_0+1]
+            cval1 = state.data[basis_index_1+1]
+
+            # set values
+            state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
+            state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
+        end
+
+    else
+        for state_index in StepRange{UInt64}(0,2,loop_dim-1)
+            basis_index_0 =
+                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
+                ((state_index & high_mask) << 2) + control_mask
+            basis_index_1 = basis_index_0 + target_mask
+
+            # fetch values
+            cval0 = state.data[basis_index_0+1]
+            cval1 = state.data[basis_index_1+1]
+            cval2 = state.data[basis_index_0+2]
+            cval3 = state.data[basis_index_1+2]
+
+            # set values
+            state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
+            state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
+            state.data[basis_index_0+2] = matrix[1] * cval2 + matrix[3] * cval3
+            state.data[basis_index_1+2] = matrix[2] * cval2 + matrix[4] * cval3
+        end
+    end
+
 end
 
 # specialization for single target dense gate (size N=2, for N=2^target_count)

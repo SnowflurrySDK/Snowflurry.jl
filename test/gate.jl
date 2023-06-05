@@ -205,6 +205,15 @@ end
 
     @test_throws DomainError control_x(1,10)*ψ_input
     
+    # ControlX as ControlledGate
+
+    cnot_kernel_1_2=ControlledGate(sigma_x(),1,2)
+    cnot_kernel_2_1=ControlledGate(sigma_x(),2,1)
+
+    @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
+    @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
+
+    @test typeof(cnot_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
 
     # ControlZ
     ψ_input=Ket([1.,2.,3.,4.])
@@ -218,6 +227,16 @@ end
     @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
 
     @test_throws DomainError control_x(1,10)*ψ_input
+
+    # ControlZ as ControlledGate
+
+    cz_kernel_1_2=ControlledGate(sigma_z(),1,2)
+    cz_kernel_2_1=ControlledGate(sigma_z(),2,1)
+
+    @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
+    @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
+
+    @test typeof(cz_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
 
     #Toffoli
     ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
@@ -237,6 +256,45 @@ end
     @test typeof(toffoli(1,2,3)*ψ_input_32)==Ket{ComplexF32}
 
     @test_throws DomainError toffoli(1,2,10)*ψ_input
+
+    # ControlledHadamard as ControlledGate
+    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(),1,2)
+    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(),2,1)
+
+    # ControlledHadamard as Dense AbstractControlledGate
+    struct ControlledHadamard <: AbstractControlledGate
+        control::Int
+        target::Int
+    end
+    
+    control_hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(
+        T[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, sqrt(2)/2, sqrt(2)/2] [
+                0.0,
+                0.0,
+                sqrt(2)/2,
+                -sqrt(2)/2,
+        ]],
+    )
+
+    Snowflake.get_operator(gate::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
+    
+    Snowflake.get_connected_qubits(gate::ControlledHadamard)=[gate.control, gate.target]
+    
+    Snowflake.get_control_qubits(gate::ControlledHadamard)=[gate.control]
+    
+    Snowflake.get_target_qubits(gate::ControlledHadamard)=[gate.target]
+
+    controlled_hadamard_dense_1_2=ControlledHadamard(1,2)
+    controlled_hadamard_dense_2_1=ControlledHadamard(2,1)
+  
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+    
+    @test controlled_hadamard_kernel_1_2*ψ_input ≈ controlled_hadamard_dense_1_2*ψ_input
+    @test controlled_hadamard_kernel_2_1*ψ_input ≈ controlled_hadamard_dense_2_1*ψ_input
+
+    @test typeof(controlled_hadamard_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+
 
 end
 
