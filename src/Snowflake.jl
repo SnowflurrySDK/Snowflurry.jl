@@ -11,7 +11,9 @@ using StaticArrays
 using LinearAlgebra
 using SparseArrays #SparseMatrixCSC
 using Arpack #provides eigen value decomposition for sparse matrices
+
 import StatsBase
+import OrdinaryDiffEq
 
 
 
@@ -28,6 +30,8 @@ export
     SparseOperator,
     SwapLikeOperator,
     MultiBodySystem,
+    ShrodingerProblem,
+    LindbladProblem,
     QuantumCircuit,
     AbstractGate,
     AbstractControlledGate,
@@ -89,7 +93,7 @@ export
     moyal,
     wigner, 
     sesolve,
-    mesolve,
+    lindblad_solve,
     tr,
     get_operator,
     simulate,

@@ -123,8 +123,10 @@ create
 destroy
 number_op
 coherent
+ShrodingerProblem{T<:AbstractOperator, S<:Complex}
+LindbladProblem{T<:DenseOperator}
 sesolve
-mesolve
+lindblad_solve
 compare_kets
 ```
 

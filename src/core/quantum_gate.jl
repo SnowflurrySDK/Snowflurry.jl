@@ -945,7 +945,7 @@ Return the spin-\$\\frac{1}{2}\$ raising `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_p(T::Type{<:Complex}=ComplexF64) = 0.5*(sigma_x(T)+im*sigma_y(T))
+sigma_p(T::Type{<:Complex}=ComplexF64) = T(0.5)*(sigma_x(T)+im*sigma_y(T))
 
 """
     sigma_m()
@@ -958,7 +958,7 @@ Return the spin-\$\\frac{1}{2}\$ lowering `Operator`, which is defined as:
     \\end{bmatrix}.
 ```
 """
-sigma_m(T::Type{<:Complex}=ComplexF64) = 0.5*(sigma_x(T)-im*sigma_y(T))
+sigma_m(T::Type{<:Complex}=ComplexF64) = T(0.5)*(sigma_x(T)-im*sigma_y(T))
 
 """
     hadamard()
@@ -971,7 +971,7 @@ H = \\frac{1}{\\sqrt{2}}\\begin{bmatrix}
     \\end{bmatrix}.
 ```
 """
-hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(1.0 / sqrt(2.0) * T[[1.0, 1.0] [1.0, -1.0]])
+hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(T(1.0 / sqrt(2.0)) * T[[1.0, 1.0] [1.0, -1.0]])
 
 """
     pi_8()

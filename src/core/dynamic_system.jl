@@ -1,60 +1,95 @@
-"""
-    sesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
-    sesolve(H::Function, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{Operator}=(Operator)[])
 
+"""
+    ShrodingerProblem is a structure that is defined to solve the shrodinger equation in time-domain using sesolve(). 
+
+**Fields**
+- `H` -- a function that retrurns the  Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
+- `init_state` -- initital state (`Ket`) of a quantum system
+- `tspan` -- time interval for which the system has to be simulated. 
+        For instance: 
+            tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
+- `e_ops` -- list of operators for which the expected value 
+    (the observables) will be evaluated at each time step in t_range. 
+
+"""
+Base.@kwdef struct ShrodingerProblem{T<:AbstractOperator, S<:Complex}
+    H::Function
+    init_state::Ket{S}
+    tspan::Tuple{Float64,Float64}
+    e_ops::Vector{T}
+end
+
+"""
+    A LindbladProblem is a structure that is defined to solve the Lindblad master equation in time-domain using lindblad_solve(). 
+
+**Fields**
+- `H` -- a function that retrurns the  Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
+- `init_state` -- initital state density matrix (`DenseOperator`) of a quantum system
+- `tspan` -- time interval for which the system has to be simulated. 
+        For instance: 
+            tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
+- `e_ops` -- list of operators (type DenseOperator) for which the expected value 
+    (the observables) will be evaluated at each time step in t_range. 
+
+- `c_ops` -- list of collapse operators (type DenseOperator). 
+"""
+Base.@kwdef struct LindbladProblem{T<:DenseOperator}
+    H::Function
+    init_state::T
+    tspan::Tuple{Float64,Float64}
+    e_ops::Vector{T}
+    c_ops::Vector{T}
+end
+
+"""
+    sesolve(problem::ShrodingerProblem; kwargs...)
 Solves the Shrodinger equation:
 
 ``\\frac{d \\Psi}{d t}=-i \\hat{H}\\Psi``
 
-and returns the final state Ket, and a Vector of observables evaluated at each time step. 
+and returns a tuple correponding the time instance vector, the corresponding wavefunction Ket, and a Vector of observables evaluated at each time step. 
 
 **Fields**
-- `H` -- the Hamiltonian operator (of any subtype of `AbstractOperator`) or a 
-        function that returns the Hamiltonian as a function of time.
-- `ψ_0` -- initital state (`Ket`) of a quantum system
-- `t_range` -- time interval for which the system has to be simulated. 
-        For instance: 
-            t_range=0:10 evaluates the output using time 
-            steps: 0,1,2,...,10. 
-            t_range=0:0.01:1 evaluates the output using 
-            time steps: 0,0.01,0.02,...,1.0 
-
-- `e_ops` -- list of operators for which the expected value 
-    (the observables) will be evaluated at each time step in t_range. 
-
-
+- `problem` -- An object of type ShrodingerProblem that defines the problem to be solved. 
+- `is_hamiltonian_static` -- A Bool variable indicating whether the Hamiltonian operator changes with time or not. Default value is false. If true, the solver can have significant performance boost.
+- `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 """
 function sesolve(
-        H::AbstractOperator, 
-        ψ_0::Ket{S}, 
-        t_range::StepRangeLen; 
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
-    Hamiltonian(t)=H
-    sesolve(Hamiltonian, ψ_0, t_range; e_ops=e_ops)
-end
-
-function sesolve(
-        H::Function, 
-        ψ_0::Ket{S}, 
-        t_range::StepRangeLen; 
-        e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Tuple{Vector{Ket{S}},Matrix{<:Real}} where {S<:Complex}
-    dpsi_dt(t,ψ) = -im*H(t)*ψ
-    y=rungekutta2(dpsi_dt, ψ_0, t_range)
-    n_t = length(t_range)
-    n_o = length(e_ops)
-    observable=zeros(n_t, n_o) 
-    for iob in 1:n_o
-        for i_t in 1:n_t
-            observable[i_t, iob] = real(expected_value(e_ops[iob], y[i_t]))
+    problem::ShrodingerProblem;
+    is_hamiltonian_static::Bool = false,
+    kwargs...
+)
+        
+        dψ_dt_0 = -im*sparse(problem.H(0)).data
+        function Hamiltonian!(dψ_v,ψ_v,p,t)
+            if (is_hamiltonian_static)
+                mul!(dψ_v,dψ_dt_0,ψ_v)
+            else
+                mul!(dψ_v,sparse(-im*problem.H(t)).data,ψ_v)
+            end
+            nothing
         end
-    end        
-    return (y, observable)
+        prob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,problem.init_state.data,problem.tspan)
+        sol=OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+        y=Vector{typeof(problem.init_state)}()
+        for v in sol.u
+            push!(y,Ket(v))
+        end
+        
+        n_t = length(sol.t)
+        n_o = length(problem.e_ops)
+        observable=zeros(n_t, n_o) 
+        for iob in 1:n_o
+            for i_t in 1:n_t
+                observable[i_t, iob] = real(expected_value(problem.e_ops[iob], y[i_t]))
+            end
+        end        
+        return (t=sol.t,u=y,e=observable)
 end
 
+
 """
-    mesolve(H::AbstractOperator, ψ_0::Ket, t_range::StepRangeLen; e_ops::Vector{AbstractOperator}=(AbstractOperator)[])
+        lindblad_solve(problem::LindbladProblem;kwargs...)
 
 Solves the Lindblad Master equation:
 
@@ -63,84 +98,34 @@ Solves the Lindblad Master equation:
 and returns a Vector of observables evaluated at each time step.
 
 **Fields**
-- `H` -- the Hamiltonian operator (of any subtype of `AbstractOperator`).
-- `ψ_0` -- initital state (Ket) of a quantum system
-- `t_range` -- time interval for which the system has to be simulated. 
-        For instance: 
-            t_range=0:10 evaluates the output using time 
-            steps: 0,1,2,...,10. 
-            t_range=0:0.01:1 evaluates the output using 
-            time steps: 0,0.01,0.02,...,1.0 
-- `e_ops` -- list of operators for which the expected value 
-        (the observables) will be evaluated at each time step in t_range. 
-- `c_ops` -- list of collapse operators ``L_i``'s.
+- `problem` -- An object of type LindbladProblem that defines the problem to be solved. 
+- `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options)..
 """
-function mesolve(
-    H::AbstractOperator, 
-    ρ_0::AbstractOperator, 
-    t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    )::Matrix{<:Real}
-    Hamiltonian(t) = H
-    mesolve(Hamiltonian, ρ_0, t; c_ops=c_ops, e_ops=e_ops)
-end
+function lindblad_solve(
+    problem::LindbladProblem;
+    kwargs...
+    )
 
-function mesolve(
-    H::Function, 
-    ρ_0::AbstractOperator, 
-    t::StepRangeLen; 
-    c_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-    e_ops::Vector{T} where {T<:AbstractOperator}=(T)[], 
-)::Matrix{<:Real}
-    n_t = length(t)
-    n_o = length(e_ops)
+    if length(problem.c_ops) == 0
+        throw(DomainError(problem.c_ops,"No collapse operator was provided. Try using sesolve()."))
+    end
+
+    drho_dt(t,ρ) = -im*(commute(problem.H(t),ρ))+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in problem.c_ops])
+    
+    function Lindblad(ρ,p,t)
+        return drho_dt(t,DenseOperator(ρ)).data
+    end
+
+    prob=OrdinaryDiffEq.ODEProblem(Lindblad,problem.init_state.data,problem.tspan)
+    sol= OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false));kwargs...) #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+
+    n_t = length(sol.t)
+    n_o = length(problem.e_ops)
     observable=zeros(n_t, n_o) 
-
-    if length(c_ops) == 0
-        eigenvalues, eigenvectors = eigen(ρ_0)
-
-        n, _ = size(ρ_0)
-        for i in 1:n
-            eigenvalue = eigenvalues[i]
-            eigenvector = eigenvectors[i, :]
-            
-            @assert imag(eigenvalue) ≈ 0
-            
-            if real(eigenvalue) ≉ 0
-                _, observable_i = sesolve(H, Ket(eigenvector), t, e_ops=e_ops)
-                observable += observable_i * real(eigenvalue)
-            end
-        end
-        return observable
-    end
-
-    drho_dt(t,ρ) = -im*commute(H(t),ρ)+sum([A*ρ*A'-0.5*anticommute(A'*A,ρ) for A in c_ops])
-
-    ρ = ρ_0
-    for i_ob in 1:n_o
-        observable[1, i_ob] = real(tr(e_ops[i_ob]*ρ))
-    end
-
-    for i_t in 1:n_t-1
-        h = t[i_t+1] - t[i_t]
-        ρ_1 = ρ+h/2.0*drho_dt(t[i_t], ρ)
-        ρ+= h * drho_dt(t[i_t]+ h/2.0, ρ_1)
+    for i_t in 1:n_t
         for i_ob in 1:n_o
-                observable[i_t+1, i_ob] = real(tr(e_ops[i_ob]*ρ))
+                observable[i_t, i_ob] = real(tr(problem.e_ops[i_ob].data*sol.u[i_t]))
         end    
     end
-    return observable
-end
-
-function rungekutta2(f::Function, y0::Ket{T}, t::StepRangeLen)::Vector{Ket{T}} where {T<:Complex}
-    n = length(t)
-    y = Vector{Ket{T}}(undef, n)
-    y[1] = y0
-    for i in 1:n-1
-        h = T(t[i+1] - t[i])
-        y_1 = y[i]+T(h/2.0)*f(T(t[i]), y[i])
-        y[i+1] = y[i] + h * f(T(t[i]+ h/2.0), y_1)
-    end
-    return y
+    return (t=sol.t,u=sol.u,e=observable)
 end
