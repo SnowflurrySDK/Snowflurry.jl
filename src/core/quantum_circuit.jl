@@ -341,6 +341,41 @@ end
 
 formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
 
+function format_label(
+    symbol_specs::Vector{String},
+    num_targets::Int,
+    gate_params::Dict{String,<:Real};
+    precision::Integer=4,
+    )::Vector{String}
+
+    num_params=length(gate_params)
+
+    symbol_gate=symbol_specs[num_targets]
+    fields=symbol_specs[num_targets+1:end]
+    repetitions=length(fields)
+
+    # create format specifier of correct precision
+    precisionStr=string("%.",precision,"f")
+    precisionArray=[precisionStr for _ in 1:repetitions]
+    str_label_with_precision=formatter(symbol_gate,precisionArray...)
+
+    # construct array of values in the order found in fields
+    parameter_values=Vector{Real}([])
+
+    for key in fields
+        push!(parameter_values,gate_params[key])
+    end
+
+    # construct label using gate_params
+    label_with_params=formatter(str_label_with_precision,parameter_values...)
+
+    if num_targets==1
+        return [label_with_params]
+    else
+        return vcat(symbol_specs[1:end-num_params-1],label_with_params)
+    end
+end
+
 function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
@@ -348,40 +383,39 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
     targets=get_connected_qubits(gate)
 
     num_targets=length(targets)
-    num_params=length(gate_params)
 
     if isempty(gate_params)
         return gates_display_symbols[get_gate_type(gate)]
     else
         symbol_specs=gates_display_symbols[get_gate_type(gate)]
 
-        symbol_gate=symbol_specs[num_targets]
-        fields=symbol_specs[num_targets+1:end]
-        repetitions=length(fields)
-    
-        # create format specifier of correct precision
-        precisionStr=string("%.",precision,"f")
-        precisionArray=[precisionStr for _ in 1:repetitions]
-        str_label_with_precision=formatter(symbol_gate,precisionArray...)
-    
-        # construct array of values in the order found in fields
-        parameter_values=Vector{Real}([])
-    
-        for key in fields
-            push!(parameter_values,gate_params[key])
-        end
-    
-        # construct label using gate_params
-        label_with_params=formatter(str_label_with_precision,parameter_values...)
-
-        if num_targets==1
-            return [label_with_params]
-        else
-            return vcat(symbol_specs[1:end-num_params-1],label_with_params)
-        end
+        format_label(symbol_specs,num_targets,gate_params;precision=precision)
+        
     end
     
 end
+
+operator_to_gate_mapping=Dict(
+    sigma_x     => SigmaX,
+    sigma_y     => SigmaY,
+    sigma_z     => SigmaZ,
+    hadamard    => Hadamard,
+    pi_8        => Pi8,
+    pi_8_dagger => Pi8Dagger,
+    x_90        => X90,
+    x_minus_90  => XM90,
+    y_90        => Y90,
+    y_minus_90  => YM90,
+    z_90        => Z90,
+    z_minus_90  => ZM90,
+    rotation    => Rotation,
+    rotation_x  => RotationX,
+    rotation_y  => RotationY,
+    phase_shift => PhaseShift,                
+    universal   => Universal,
+)
+
+const control_display_symbol ="*"
 
 gates_display_symbols=Dict(
     Identity    =>["I"],
@@ -402,11 +436,11 @@ gates_display_symbols=Dict(
     RotationY   =>["Ry(%s)","theta"],
     PhaseShift  =>["P(%s)" ,"phi"  ],
     Universal   =>["U(θ=%s,ϕ=%s,λ=%s)","theta","phi","lambda"],
-    ControlZ    =>["*", "Z"],
-    ControlX    =>["*", "X"],
+    ControlZ    =>[control_display_symbol, "Z"],
+    ControlX    =>[control_display_symbol, "X"],
     ISwap       =>["x", "x"],
     ISwapDagger =>["x†", "x†"],
-    Toffoli     =>["*", "*", "X"],
+    Toffoli     =>[control_display_symbol, control_display_symbol, "X"],
     Swap       =>["☒", "☒"],
 )
 

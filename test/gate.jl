@@ -207,13 +207,14 @@ end
     
     # ControlX as ControlledGate
 
-    cnot_kernel_1_2=ControlledGate(sigma_x(),1,2)
-    cnot_kernel_2_1=ControlledGate(sigma_x(),2,1)
+    cnot_kernel_1_2=ControlledGate(:sigma_x,[1,2])
+    cnot_kernel_2_1=ControlledGate(:sigma_x,[2,1])
 
     @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
     @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
 
     @test typeof(cnot_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(cnot_kernel_1_2) ==["*", "X"]
 
     # ControlZ
     ψ_input=Ket([1.,2.,3.,4.])
@@ -230,13 +231,14 @@ end
 
     # ControlZ as ControlledGate
 
-    cz_kernel_1_2=ControlledGate(sigma_z(),1,2)
-    cz_kernel_2_1=ControlledGate(sigma_z(),2,1)
+    cz_kernel_1_2=ControlledGate(:sigma_z,[1,2])
+    cz_kernel_2_1=ControlledGate(:sigma_z,[2,1])
 
     @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
     @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
 
     @test typeof(cz_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(cz_kernel_1_2) ==["*", "Z"]
 
     #Toffoli
     ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
@@ -258,8 +260,8 @@ end
     @test_throws DomainError toffoli(1,2,10)*ψ_input
 
     # ControlledHadamard as ControlledGate
-    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(),1,2)
-    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(),2,1)
+    controlled_hadamard_kernel_1_2=ControlledGate(:hadamard,[1,2])
+    controlled_hadamard_kernel_2_1=ControlledGate(:hadamard,[2,1])
 
     # ControlledHadamard as Dense AbstractControlledGate
     struct ControlledHadamard <: AbstractControlledGate
@@ -299,16 +301,67 @@ end
     @test controlled_hadamard_kernel_2_1*ψ_input ≈ controlled_hadamard_dense_2_1*ψ_input
 
     @test typeof(controlled_hadamard_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(controlled_hadamard_kernel_1_2) ==["*", "H"]
 
     @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
 
     # Neither target nor control is last qubit
-    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(),2,3)
+    controlled_hadamard_kernel_2_3=ControlledGate(:hadamard,[2,3])
     controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
 
     ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
     
     @test controlled_hadamard_kernel_2_3*ψ_input ≈ controlled_hadamard_dense_2_3*ψ_input
+
+    # circumventing casting to DenseOperator not allowed  
+    @test_throws NotImplementedError Snowflake.apply_controlled_gate!(
+        Ket([1,2]),
+        DiagonalOperator([-1.,1.]),
+        [1,2]
+    )
+
+    # DenseOperator{N} with N>2 not implemented
+    @test_throws NotImplementedError Snowflake.apply_controlled_gate!(
+        Ket([1,2]),
+        DenseOperator(reshape([v for v in 1:16],4,4)),
+        [1,2]
+    )
+
+end
+
+@testset "ControlledGate" begin
+    connected_qubits=[1,2]
+
+    test_cases=[
+        [:sigma_x,      ["*", "X"]],
+        [:sigma_y,      ["*", "Y"]],
+        [:sigma_z,      ["*", "Z"]],
+        [:hadamard,     ["*", "H"]],
+        [:pi_8,         ["*", "T"]],
+        [:pi_8_dagger,  ["*", "T†"]],
+        [:x_90,         ["*", "X_90"]],
+        [:x_minus_90,   ["*", "X_m90"]],
+        [:y_90,         ["*", "Y_90"]],
+        [:y_minus_90,   ["*", "Y_m90"]],
+        [:z_90,         ["*", "Z_90"]],
+        [:z_minus_90,   ["*", "Z_m90"]],
+    ]
+
+    for (sym,labels) in test_cases
+        @test get_display_symbol(ControlledGate(sym,connected_qubits))==labels
+    end
+
+    test_cases_params=[
+        [:rotation,     [pi,pi/2],  ["*", "R(θ=3.1416,ϕ=1.5708)"]],
+        [:rotation_x,   [pi/3],     ["*", "Rx(1.0472)"]],
+        [:rotation_y,   [pi/4],     ["*", "Ry(0.7854)"]],
+        [:phase_shift,  [pi/7],     ["*", "P(0.4488)"]],
+        [:universal,    [pi/3,pi/12,pi/4],["*", "U(θ=1.0472,ϕ=0.2618,λ=0.7854)"]],
+    ]
+
+    for (sym,params,labels) in test_cases_params
+        @test get_display_symbol(ControlledGate(sym,connected_qubits,params))==labels
+    end
 
 end
 

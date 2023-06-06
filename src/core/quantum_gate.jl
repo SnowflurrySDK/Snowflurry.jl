@@ -101,26 +101,103 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 
 get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
-struct ControlledGate <: AbstractControlledGate
+"""
+    ControlledGate{T<:AbstractOperator}
+
+The `ControlledGate` object allows the construction of a controlled gate using a 
+single-target `Operator` (the `kernel`) and the corresponding control and target qubits, 
+specified in field `connected_qubit` as `[control_qubit,target_qubit]`.
+
+# Examples
+Whereas a Hadamard Gate with `target=1` is constructed by calling `hadamard(target)`, a 
+controlled Hadamard gate with `control=1` and `target=2` is constructed using:
+
+```jldoctest controlled_hadamard
+julia> controlled_hadamard=ControlledGate(:hadamard,[1,2])
+Gate Object: ControlledGate{Snowflake.Hadamard}
+Connected_qubits	: [1, 2]
+Operator:
+(4, 4)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.7071067811865475 + 0.0im    0.7071067811865475 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.7071067811865475 + 0.0im    -0.7071067811865475 + 0.0im
+
+```
+
+It can then be used in a `QuantumCircuit` as any other Gate:
+
+```jldoctest controlled_hadamard
+julia> circuit=QuantumCircuit(qubit_count=2,gates=[controlled_hadamard])
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──*──
+       |  
+q[2]:──H──
+          
+```
+
+
+
+"""
+struct ControlledGate{G<:AbstractGate}<:AbstractControlledGate
     kernel::AbstractOperator
-    control::Int
-    target::Int
+    connected_qubits::Vector{Int}
+
+    function ControlledGate(
+        kernel_symbol::Symbol,
+        connected_qubits::Vector{Int},
+        params::Vector{<:Real};
+        precision::Integer=4)
+
+        @assert length(connected_qubits)==2 "Not implemented for multi-control kernel Operators"
+
+        @assert connected_qubits[1]!=connected_qubits[2] "Control and target qubit must be different, received $connected_qubits"
+
+        kernel_handle=eval(kernel_symbol) #returns function object
+
+        kernel=eval(kernel_symbol)(params...) #calls function, returns Operator
+
+        kernel_gate_type=operator_to_gate_mapping[kernel_handle]
+
+        # create new display symbol using existing symbol for kernel Operator
+
+        symbol_specs=gates_display_symbols[kernel_gate_type]      
+        num_params=length(params)
+        gate_params=Dict{String,Real}() 
+        
+        for (field,param) in zip(symbol_specs[end-num_params+1:end],params)
+            gate_params[field]=param
+        end
+
+        gates_display_symbols[ControlledGate{kernel_gate_type}]=[
+            control_display_symbol,
+            format_label(
+                symbol_specs,
+                1, 
+                gate_params;
+                precision=precision
+            )[1]
+        ]
+        
+        new{kernel_gate_type}(kernel,connected_qubits)
+    end
+
+    ControlledGate(kernel_symbol::Symbol,connected_qubits::Vector{Int})=
+        ControlledGate(kernel_symbol,connected_qubits,Vector{Float64}())
 end
 
 # returns an equivalent size 4 DenseOperator built using the kernel
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
     op=get_matrix(eye(4))
     
-    op[3:4,3:4]=gate.kernel
+    op[3:4,3:4]=get_matrix(gate.kernel)
 
     return DenseOperator(convert(Matrix{T},op))
 end
 
-get_connected_qubits(gate::ControlledGate)=[gate.control, gate.target]
-
-get_control_qubits(gate::ControlledGate)=[gate.control]
-
-get_target_qubits(gate::ControlledGate)=[gate.target]
+get_connected_qubits(gate::ControlledGate)=gate.connected_qubits
 
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
@@ -353,11 +430,7 @@ function apply_gate!(state::Ket, gate::ControlledGate)
             "Not enough qubits in the Ket for the targets in gate"))
     end
 
-    control_qubits=get_control_qubits(gate)
-
-    target_qubits=get_target_qubits(gate)
-
-    apply_controlled_gate!(state,DenseOperator(gate.kernel),control_qubits[1],target_qubits[1])
+    apply_controlled_gate!(state,DenseOperator(gate.kernel),connected_qubits)
 end
 
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
@@ -620,8 +693,14 @@ end
 function apply_controlled_gate!(
     state::Ket,
     kernel::DenseOperator{2},
-    control_qubit::Int,
-    target_qubit::Int)
+    connected_qubits::Vector{Int}
+    )
+
+    @assert length(connected_qubits)==2 ("Received too many connected_qubits for"
+        *" this operator: exected 2, got $(length(connected_qubits))")
+
+    control_qubit=connected_qubits[1]
+    target_qubit=connected_qubits[2]
     
     qubit_count = get_num_qubits(state)
 
@@ -703,6 +782,12 @@ function apply_controlled_gate!(
     end
 
 end
+
+apply_controlled_gate!(
+    state::Ket,
+    kernel::AbstractOperator,
+    connected_qubits::Vector{Int}
+    ) = throw(NotImplementedError(:apply_controlled_gate!,kernel))
 
 # specialization for single target dense gate (size N=2, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()
