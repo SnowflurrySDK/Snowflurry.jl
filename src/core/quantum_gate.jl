@@ -104,12 +104,12 @@ get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 """
     ControlledGate{T<:AbstractOperator}
 
-The `ControlledGate` object allows the construction of a controlled gate using a 
+The `ControlledGate` object allows the construction of a controlled `Gate` using a 
 single-target `Operator` (the `kernel`) and the corresponding control and target qubits, 
-specified in field `connected_qubit` as `[control_qubit,target_qubit]`.
+specified as `[control_qubit,target_qubit]`.
 
 # Examples
-Whereas a Hadamard Gate with `target=1` is constructed by calling `hadamard(target)`, a 
+Whereas a `Hadamard` Gate with `target=1` is constructed by calling `hadamard(target)`, a 
 controlled Hadamard gate with `control=1` and `target=2` is constructed using:
 
 ```jldoctest controlled_hadamard
@@ -126,7 +126,7 @@ Underlying data ComplexF64:
 
 ```
 
-It can then be used in a `QuantumCircuit` as any other Gate:
+It can then be used in a `QuantumCircuit` as any other `Gate`:
 
 ```jldoctest controlled_hadamard
 julia> circuit=QuantumCircuit(qubit_count=2,gates=[controlled_hadamard])
