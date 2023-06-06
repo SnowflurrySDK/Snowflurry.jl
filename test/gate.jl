@@ -287,6 +287,11 @@ end
     controlled_hadamard_dense_1_2=ControlledHadamard(1,2)
     controlled_hadamard_dense_2_1=ControlledHadamard(2,1)
   
+    @test get_operator(controlled_hadamard_kernel_1_2) ≈ get_operator(controlled_hadamard_dense_1_2)
+
+    @test get_operator(controlled_hadamard_kernel_1_2) isa DenseOperator{4, ComplexF64}
+    @test get_operator(controlled_hadamard_kernel_1_2,ComplexF32) isa DenseOperator{4, ComplexF32}
+
     ψ_input=Ket([1.,2.,3.,4.])
     ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
     
@@ -295,6 +300,15 @@ end
 
     @test typeof(controlled_hadamard_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
 
+    @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
+
+    # Neither target nor control is last qubit
+    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(),2,3)
+    controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
+
+    ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
+    
+    @test controlled_hadamard_kernel_2_3*ψ_input ≈ controlled_hadamard_dense_2_3*ψ_input
 
 end
 
