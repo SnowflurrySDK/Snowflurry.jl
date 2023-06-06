@@ -111,10 +111,7 @@ end
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
     op=get_matrix(eye(4))
     
-    op[3,3]=gate.kernel[1,1]
-    op[3,4]=gate.kernel[1,2]
-    op[4,3]=gate.kernel[2,1]
-    op[4,4]=gate.kernel[2,2]
+    op[3:4,3:4]=gate.kernel
 
     return DenseOperator(convert(Matrix{T},op))
 end
