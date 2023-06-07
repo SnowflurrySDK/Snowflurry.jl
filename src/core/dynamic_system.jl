@@ -1,10 +1,10 @@
 
 """
-    ShrodingerProblem is a structure that is defined to solve the shrodinger equation in time-domain using sesolve(). 
+    ShrodingerProblem is a structure that is defined to solve the Shrodinger equation in time-domain using sesolve(). 
 
 **Fields**
-- `H` -- a function that retrurns the  Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
-- `init_state` -- initital state (`Ket`) of a quantum system
+- `H` -- a function that returns the Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
+- `init_state` -- initial state (`Ket`) of a quantum system
 - `tspan` -- time interval for which the system has to be simulated. 
         For instance: 
             tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
@@ -23,8 +23,8 @@ end
     A LindbladProblem is a structure that is defined to solve the Lindblad master equation in time-domain using lindblad_solve(). 
 
 **Fields**
-- `H` -- a function that retrurns the  Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
-- `init_state` -- initital state density matrix (`DenseOperator`) of a quantum system
+- `H` -- a function that returns the Hamiltonian operator (of any subtype of `AbstractOperator`) as a function of time.
+- `init_state` -- initial state density matrix (`DenseOperator`) of a quantum system
 - `tspan` -- time interval for which the system has to be simulated. 
         For instance: 
             tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
@@ -47,7 +47,7 @@ Solves the Shrodinger equation:
 
 ``\\frac{d \\Psi}{d t}=-i \\hat{H}\\Psi``
 
-and returns a tuple correponding the time instance vector, the corresponding wavefunction Ket, and a Vector of observables evaluated at each time step. 
+and returns a tuple corresponding the time-instance vector, the corresponding wavefunction `Ket`, and a Vector of observables evaluated at each time step. 
 
 **Fields**
 - `problem` -- An object of type ShrodingerProblem that defines the problem to be solved. 
@@ -99,7 +99,7 @@ and returns a Vector of observables evaluated at each time step.
 
 **Fields**
 - `problem` -- An object of type LindbladProblem that defines the problem to be solved. 
-- `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options)..
+- `kwargs` -- list of keyword arguments to be passed to the ODE solver. See (https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 """
 function lindblad_solve(
     problem::LindbladProblem;
@@ -124,7 +124,7 @@ function lindblad_solve(
     observable=zeros(n_t, n_o) 
     for i_t in 1:n_t
         for i_ob in 1:n_o
-                observable[i_t, i_ob] = real(tr(problem.e_ops[i_ob].data*sol.u[i_t]))
+            observable[i_t, i_ob] = real(tr(problem.e_ops[i_ob].data*sol.u[i_t]))
         end    
     end
     return (t=sol.t,u=sol.u,e=observable)
