@@ -12,7 +12,7 @@ Each descendant of `AbstractGate` must have at least the following fields:
 - `parameter::Real`: for parameterized gates, determines which operation is applied (e.g. rotation angles), i.e., is used in the construction of the matrix used in the application of its `Operator`.
 
 # Examples
-A struct must be defined for each new gate type, such as the following X_45 gate which
+A struct must be defined for each new `Gate` type, such as the following X_45 `Gate` which
 applies a 45° rotation about the X axis:
 
 ```jldoctest gate_struct
@@ -22,9 +22,15 @@ julia> struct X45 <: AbstractGate
 
 ```
 
-For convenience, a constructor can be defined:
+A `Gate` constructor must be defined as:
 ```jldoctest gate_struct
 julia> x_45(target::Integer) = X45(target);
+
+```
+
+along with an `Operator` constructor, with default precision `ComplexF64`, defined as:
+```jldoctest gate_struct
+julia> x_45(T::Type{<:Complex}=ComplexF64)=rotation_x(π/4, T);
 
 ```
 
@@ -41,7 +47,7 @@ julia> inv(gate::X45) = rotation_x(gate.target, -π/4);
 
 ```
 
-An instance of the X_45 gate can now be created:
+An instance of the `X_45` `Gate` can now be created, along with its inverse:
 ```jldoctest gate_struct
 julia> x_45_gate = x_45(1)
 Gate Object: X45
@@ -68,21 +74,21 @@ Underlying data ComplexF64:
 
 ```
 
-To enable printout of a circuit containing our new gate type, a symbol 
+To enable printout of a `QuantumCircuit` containing our new `Gate` type, a display symbol 
 must be defined as follows.
 ```jldoctest gate_struct
 julia> Snowflake.gates_display_symbols[X45]=["X45"];
 
 ```
 
-If this gate is to be sent as an instruction to a hardware QPU, 
-an instruction string must be defined.
+If this `Gate` is to be sent as an instruction to a hardware QPU, 
+an instruction `String` must be defined.
 ```jldoctest gate_struct
 julia> Snowflake.gates_instruction_symbols[X45]="x45";
 
 ```
 
-A circuit containing this gate can now be constructed:
+A circuit containing this `Gate` can now be constructed:
 ```jldoctest gate_struct
 julia> circuit=QuantumCircuit(qubit_count=2,gates=[x_45_gate])
 Quantum Circuit Object:
@@ -91,6 +97,32 @@ q[1]:──X45──
 
 q[2]:───────
 ```
+
+Lastly, to enable the construction of a `ControlledGate{X45}` made with this 
+`Gate` as a kernel, the `Dict` variable `operator_to_gate_mapping` must be updated, with 
+the constructor function `x_45` as `key` and the `Gate` type as `value`:
+```jldoctest gate_struct
+julia> Snowflake.operator_to_gate_mapping[x_45]=X45;
+
+```
+
+A `ControlledGate{X45}` is then constructed using:
+```jldoctest gate_struct
+julia> control=1; target=2;
+
+julia> ControlledGate(x_45,[control, target])
+Gate Object: ControlledGate{X45}
+Connected_qubits	: [1, 2]
+Operator:
+(4, 4)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.9238795325112867 + 0.0im    0.0 - 0.3826834323650898im
+0.0 + 0.0im    0.0 + 0.0im    0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
+
+```
+
 
 """
 abstract type AbstractGate end
@@ -110,12 +142,12 @@ specified as `[control_qubit,target_qubit]`.
 
 # Examples
 Whereas a `Hadamard` Gate with `target=1` is constructed by calling `hadamard(target)`, a 
-controlled Hadamard gate is constructed using the `Symbol`
-pertaining to the `hadamard()` `Function`, i.e.: `:hadamard`. For instance, the construction 
+controlled Hadamard gate is constructed using the `hadamard()` `Function`, and by specifying
+a `connected_qubits=[control, target]`. For instance, the construction 
 of a `ControlledGate{Hadamard}` with `control=1` and `target=2` is performed by calling:
 
 ```jldoctest controlled_hadamard
-julia> controlled_hadamard=ControlledGate(:hadamard,[1,2])
+julia> controlled_hadamard=ControlledGate(hadamard,[1,2])
 Gate Object: ControlledGate{Snowflake.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
@@ -142,29 +174,31 @@ q[2]:──H──
 ```
 
 
-
 """
 struct ControlledGate{G<:AbstractGate}<:AbstractControlledGate
     kernel::AbstractOperator
     connected_qubits::Vector{Int}
 
     function ControlledGate(
-        kernel_symbol::Symbol,
-        connected_qubits::Vector{Int},
-        params::Vector{<:Real};
+        kernel_handle::Function,
+        connected_qubits::Vector{Int};
+        params::Vector{<:Real}=Vector{Float64}(),
         precision::Integer=4)
 
         @assert length(connected_qubits)==2 "Not implemented for multi-control kernel Operators"
 
         @assert connected_qubits[1]!=connected_qubits[2] "Control and target qubit must be different, received $connected_qubits"
 
-        kernel_handle=eval(kernel_symbol) #returns function object
+        @assert haskey(operator_to_gate_mapping,kernel_handle) "Function $kernel_handle is not associated with a Gate constructor"
 
-        kernel=eval(kernel_symbol)(params...) #calls function, returns Operator
+        # calls function, returns Operator
+        kernel=kernel_handle(params...) 
 
-        kernel_gate_type=operator_to_gate_mapping[kernel_handle]
+        # Gate type associated with this operator is used to distinguish between 
+        # ControlledGate types and to assign a display symbol to them
+        kernel_gate_type=operator_to_gate_mapping[kernel_handle]  
 
-        # create new display symbol using existing symbol for kernel Operator
+        # build new display symbol using existing symbol pertaining to kernel
 
         symbol_specs=gates_display_symbols[kernel_gate_type]      
         num_params=length(params)
@@ -186,9 +220,6 @@ struct ControlledGate{G<:AbstractGate}<:AbstractControlledGate
         
         new{kernel_gate_type}(kernel,connected_qubits)
     end
-
-    ControlledGate(kernel_symbol::Symbol,connected_qubits::Vector{Int})=
-        ControlledGate(kernel_symbol,connected_qubits,Vector{Float64}())
 end
 
 # returns an equivalent size 4 DenseOperator built using the kernel

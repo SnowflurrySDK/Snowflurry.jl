@@ -55,7 +55,7 @@ end
     circuit = QuantumCircuit(qubit_count = 2)
     push!(circuit, hadamard(1))
     push!(circuit, control_x(1, 2))  
-    push!(circuit, ControlledGate(:hadamard,[1,2])) 
+    push!(circuit, ControlledGate(hadamard,[1,2])) 
 
     @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
@@ -263,23 +263,23 @@ end
     connected_qubits=[2,1]
 
     gate_list=[
-        ControlledGate( :sigma_x,   connected_qubits),
-        ControlledGate( :sigma_y,   connected_qubits),
-        ControlledGate( :sigma_z,   connected_qubits),
-        ControlledGate( :hadamard,  connected_qubits),
-        ControlledGate( :pi_8,      connected_qubits),
-        ControlledGate( :pi_8_dagger,   connected_qubits),
-        ControlledGate( :x_90,      connected_qubits),
-        ControlledGate( :x_minus_90,connected_qubits),
-        ControlledGate( :y_90,      connected_qubits),
-        ControlledGate( :y_minus_90,connected_qubits),
-        ControlledGate( :z_90,      connected_qubits),
-        ControlledGate( :z_minus_90,connected_qubits),
-        ControlledGate( :rotation,      connected_qubits,[pi,pi/2]),
-        ControlledGate( :rotation_x,    connected_qubits,[pi/3]),
-        ControlledGate( :rotation_y,    connected_qubits,[pi/4]),
-        ControlledGate( :phase_shift,   connected_qubits,[pi/7]),
-        ControlledGate( :universal,     connected_qubits,[pi/3,pi/12,pi/4]),
+        ControlledGate( sigma_x,   connected_qubits),
+        ControlledGate( sigma_y,   connected_qubits),
+        ControlledGate( sigma_z,   connected_qubits),
+        ControlledGate( hadamard,  connected_qubits),
+        ControlledGate( pi_8,      connected_qubits),
+        ControlledGate( pi_8_dagger,   connected_qubits),
+        ControlledGate( x_90,      connected_qubits),
+        ControlledGate( x_minus_90,connected_qubits),
+        ControlledGate( y_90,      connected_qubits),
+        ControlledGate( y_minus_90,connected_qubits),
+        ControlledGate( z_90,      connected_qubits),
+        ControlledGate( z_minus_90,connected_qubits),
+        ControlledGate( rotation,      connected_qubits; params=[pi,pi/2]),
+        ControlledGate( rotation_x,    connected_qubits; params=[pi/3]),
+        ControlledGate( rotation_y,    connected_qubits; params=[pi/4]),
+        ControlledGate( phase_shift,   connected_qubits; params=[pi/7]),
+        ControlledGate( universal,     connected_qubits; params=[pi/3,pi/12,pi/4]),
     ]
 
     circuit=QuantumCircuit(qubit_count=2,gates=gate_list)
