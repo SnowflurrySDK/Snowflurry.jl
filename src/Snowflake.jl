@@ -58,6 +58,7 @@ export
     CompressRzGatesTranspiler,
     TrivialTranspiler,
     RemoveSwapBySwappingGates,
+    CastControlledGatesToNativeTranspiler,
 
     # Functions
     commute, 

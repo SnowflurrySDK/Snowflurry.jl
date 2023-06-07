@@ -962,3 +962,11 @@ end
     @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
     @test simulate(circuit) ≈ simulate(transpiled_circuit)
 end
+
+@testset "CastControlledGatesToNativeTranspiler" begin
+    
+    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard,[1,2])])
+
+    @test_throws NotImplementedError transpile(CastControlledGatesToNativeTranspiler(), circuit)
+
+end
