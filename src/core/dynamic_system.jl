@@ -12,11 +12,11 @@
     (the observables) will be evaluated at each time step in t_range. 
 
 """
-Base.@kwdef struct ShrodingerProblem{T<:AbstractOperator, S<:Complex}
+Base.@kwdef struct ShrodingerProblem
     H::Function
-    init_state::Ket{S}
-    tspan::Tuple{Float64,Float64}
-    e_ops::Vector{T}
+    init_state::Ket
+    tspan::Tuple{<:Real,<:Real}
+    e_ops::Vector{AbstractOperator}
 end
 
 """
@@ -28,17 +28,17 @@ end
 - `tspan` -- time interval for which the system has to be simulated. 
         For instance: 
             tspan=(0.0,1.0) evaluates the output from t=0.0 to t=1.0
-- `e_ops` -- list of operators (type DenseOperator) for which the expected value 
+- `e_ops` -- list of operators (any subtype of `AbstractOperator`) for which the expected value 
     (the observables) will be evaluated at each time step in t_range. 
 
-- `c_ops` -- list of collapse operators (type DenseOperator). 
+- `c_ops` -- list of collapse operators (any subtype of `AbstractOperator`). 
 """
-Base.@kwdef struct LindbladProblem{T<:DenseOperator}
+Base.@kwdef struct LindbladProblem
     H::Function
-    init_state::T
-    tspan::Tuple{Float64,Float64}
-    e_ops::Vector{T}
-    c_ops::Vector{T}
+    init_state::DenseOperator
+    tspan::Tuple{<:Real,<:Real}
+    e_ops::Vector{AbstractOperator}
+    c_ops::Vector{AbstractOperator}
 end
 
 """
@@ -124,7 +124,7 @@ function lindblad_solve(
     observable=zeros(n_t, n_o) 
     for i_t in 1:n_t
         for i_ob in 1:n_o
-            observable[i_t, i_ob] = real(tr(problem.e_ops[i_ob].data*sol.u[i_t]))
+            observable[i_t, i_ob] = real(tr(problem.e_ops[i_ob]*DenseOperator(sol.u[i_t])))
         end    
     end
     return (t=sol.t,u=sol.u,e=observable)

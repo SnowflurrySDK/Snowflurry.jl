@@ -19,27 +19,41 @@ using Test
 end
 
 
-@testset "Master Equation" begin
-    @testset "relaxation" begin
-        function test_relaxation(dtype)
-            tspan = (0.0,1.0)
-            Γ = 0.5
-            Ψ_0 = spin_up(dtype)
-            H(t) = DenseOperator(dtype(0.0)*sigma_x(dtype))
-            projection = Ψ_0*Ψ_0'
-            ρ_0=ket2dm(Ψ_0)
-            c_op =DenseOperator(sqrt(dtype(Γ))*sigma_m(dtype))
+@testset "Master Equation:relaxation" begin
+    function test_relaxation(dtype)
+        tspan = (0.0,1.0)
+        Γ = 0.5
+        Ψ_0 = spin_up(dtype)
+        H(t) = DenseOperator(dtype(0.0)*sigma_x(dtype))
+        projection = Ψ_0*Ψ_0'
+        ρ_0=ket2dm(Ψ_0)
+        c_op =DenseOperator(sqrt(dtype(Γ))*sigma_m(dtype))
 
-            problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=[c_op])
-            t, ρ, prob = lindblad_solve(problem)
-            @test prob ≈ exp.(-Γ*collect(t)) atol=1.e-4
+        problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=[c_op])
+        t, ρ, prob = lindblad_solve(problem)
+        @test prob ≈ exp.(-Γ*collect(t)) atol=1.e-4
 
-            problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=(DenseOperator{2,dtype})[])
-            @test_throws DomainError lindblad_solve(problem)
-        end
-        test_relaxation(ComplexF64)
-        test_relaxation(ComplexF32)
+        problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=(DenseOperator{2,dtype})[])
+        @test_throws DomainError lindblad_solve(problem)
     end
+    test_relaxation(ComplexF64)
+    test_relaxation(ComplexF32)
+end
 
+@testset "Master Equation:relaxation AbstractOperator" begin
+    function test_relaxation(dtype)
+        tspan = (0.0,1.0)
+        Γ = 0.5
+        Ψ_0 = spin_up(dtype)
+        H(t) = DenseOperator(dtype(0.0)*sigma_x(dtype))
+        projection = DiagonalOperator(dtype[1.,0.])
+        ρ_0=ket2dm(Ψ_0)
+        c_op_anti_diag=AntiDiagonalOperator(dtype[0.,sqrt(2.)/2.])
 
+        problem=LindbladProblem(H=H,init_state=ρ_0, tspan=tspan, e_ops=[projection], c_ops=[c_op_anti_diag])
+        t, ρ, prob = lindblad_solve(problem)
+        @test prob ≈ exp.(-Γ*collect(t)) atol=1.e-4
+    end
+    test_relaxation(ComplexF64)
+    test_relaxation(ComplexF32)
 end
