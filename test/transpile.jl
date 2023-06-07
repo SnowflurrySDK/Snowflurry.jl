@@ -942,7 +942,7 @@ gates_in_output=[9,8]
 end
 
 @testset "remove_swap_by_swapping_gates" begin
-    transpiler = RemoveSwapBySwappingGates()
+    transpiler = RemoveSwapBySwappingGatesTranspiler()
 
     circuit =
         QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),

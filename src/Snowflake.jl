@@ -57,7 +57,7 @@ export
     SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
     TrivialTranspiler,
-    RemoveSwapBySwappingGates,
+    RemoveSwapBySwappingGatesTranspiler,
     CastControlledGatesToNativeTranspiler,
 
     # Functions

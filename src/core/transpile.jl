@@ -1510,10 +1510,10 @@ struct TrivialTranspiler<:Transpiler end
 
 transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 
 
-struct RemoveSwapBySwappingGates <: Transpiler end
+struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
 
 """
-    transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Removes the `Swap` gates from the `circuit` assuming all-to-all connectivity.
 
@@ -1527,7 +1527,7 @@ gate.
 
 # Examples
 ```jldoctest
-julia> transpiler = RemoveSwapBySwappingGates();
+julia> transpiler = RemoveSwapBySwappingGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count=2, gates=[hadamard(1), swap(1,2), sigma_x(2)])
 Quantum Circuit Object:
@@ -1551,7 +1551,7 @@ q[2]:──H────X──
 
 ```
 """
-function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     gates = get_circuit_gates(circuit)
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count=qubit_count)
