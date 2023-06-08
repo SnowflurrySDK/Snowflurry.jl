@@ -149,7 +149,13 @@ Underlying data ComplexF64:
 struct Gate{GateType} <: AbstractGateSymbol where GateType <: AbstractGateSymbol
     gate::GateType
     connected_qubits::Vector{Int}
+end
 
+function Base.convert(::Type{Gate{AbstractGateSymbol}}, gate::Gate{GateType}) where GateType <: AbstractGateSymbol
+    return Gate{AbstractGateSymbol}(
+        Base.convert(AbstractGateSymbol, gate.gate),
+        gate.connected_qubits,
+    )
 end
 
 function Gate(gate::GateType, connected_qubits::Vector{Int}) where GateType <: AbstractGateSymbol

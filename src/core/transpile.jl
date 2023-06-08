@@ -115,7 +115,7 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::Gate{Universal
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate{Universal}
+function compress_to_universal(gates::Vector{Gate{AbstractGateSymbol}}, target::Int)::Gate{Universal}
     
     combined_op=eye()
 
@@ -247,7 +247,7 @@ function find_and_compress_blocks(
 
                 block=blocks_per_target[target][block_index]
 
-                gates_block=[gates[i] for i in block]
+                gates_block::Vector{Gate{AbstractGateSymbol}} = [ convert(Gate, gates[i]) for i in block]
 
                 if length(block)>1
                     push!(output_circuit, compression_function(gates_block, target))
