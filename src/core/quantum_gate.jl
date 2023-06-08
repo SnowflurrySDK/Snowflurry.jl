@@ -7,9 +7,10 @@ Those functions are then specialized for `Gates` requiring a different implement
 
 `AbstractGateSymbol` is an abstract type, which means that it cannot be instantiated. 
 Instead, each concrete type of `Gate` is a struct which is a subtype of `AbstractGateSymbol`.
-Each descendant of `AbstractGateSymbol` must have at least the following fields:
-- `target::Int`: the qubit number to which the `Gate` is applied. Some gates have multiple targets.
-- `parameter::Real`: for parameterized gates, determines which operation is applied (e.g. rotation angles), i.e., is used in the construction of the matrix used in the application of its `Operator`.
+Each descendant of `AbstractGateSymbol` must implement at least the following methods:
+
+- `get_operator(gate::AbstractGateSymbol, T::Type{<:Complex}=ComplexF64})::AbstractOperator`
+- `get_num_connected_qubits(gate::AbstractGateSymbol)::Integer`
 
 # Examples
 A struct must be defined for each new gate type, such as the following X_45 gate which
@@ -17,9 +18,7 @@ applies a 45° rotation about the X axis:
 
 ```jldoctest gate_struct
 julia> struct X45 <: AbstractGateSymbol
-            target::Int
        end;
-
 ```
 
 We need to define how many connected qubits our new gate has.
@@ -30,8 +29,7 @@ julia> Snowflake.get_num_connected_qubits(::X45) = 1
 
 For convenience, a constructor can be defined:
 ```jldoctest gate_struct
-julia> x_45(target::Integer) = Gate(X45(target), [target]);
-
+julia> x_45(target::Integer) = Gate(X45(), [target]);
 ```
 
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
