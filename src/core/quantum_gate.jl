@@ -114,7 +114,7 @@ An object that specifies an `AbstractGateSymbol` and its placement inside a `Qua
 
 # Examples
 ```jldoctest
-julia> gate_placement = Gate(iswap(1, 2), [1, 2])
+julia> gate = Gate(iswap(1, 2), [1, 2])
 Gate Object: Snowflake.ISwap
 Connected_qubits	: [1, 2]
 Operator:
@@ -129,7 +129,7 @@ Equivalent DenseOperator:
 
 
 ```jldoctest
-julia> gate_placement = Gate(universal(1, pi/2, -pi/2, pi/2), [3])
+julia> gate = Gate(universal(3, pi/2, -pi/2, pi/2), [3])
 Gate Object: Snowflake.Universal
 Parameters:
 theta	: 1.5707963267948966
@@ -1868,7 +1868,7 @@ struct Swap <: AbstractGateSymbol
 end
 
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
-
+still unclear
 get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
 
 """
