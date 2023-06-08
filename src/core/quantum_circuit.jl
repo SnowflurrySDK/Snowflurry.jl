@@ -21,7 +21,7 @@ Base.@kwdef struct QuantumCircuit
     qubit_count::Int
     gates::Vector{Gate} = Vector{Gate}([])
     
-    function QuantumCircuit(qubit_count::Int,gates::Vector{Gate})    
+    function QuantumCircuit(qubit_count::Int,gates::Vector{GateType}) where GateType <: Gate
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
     
         c=new(qubit_count,[])

@@ -146,18 +146,19 @@ Underlying data ComplexF64:
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
 ```
 """
-struct Gate <: AbstractGateSymbol
-    gate::AbstractGateSymbol
+struct Gate{GateType} <: AbstractGateSymbol where GateType <: AbstractGateSymbol
+    gate::GateType
     connected_qubits::Vector{Int}
 
-    function Gate(gate::AbstractGateSymbol, connected_qubits::Vector{Int})
-        if get_num_connected_qubits(gate) != length(connected_qubits)
-            throw(DomainError(connected_qubits,
-                "The connected qubits and the gate's number of connected qubits do not match"))
-        end
+end
 
-        return new(gate, connected_qubits)
+function Gate(gate::GateType, connected_qubits::Vector{Int}) where GateType <: AbstractGateSymbol
+    if get_num_connected_qubits(gate) != length(connected_qubits)
+        throw(DomainError(connected_qubits,
+            "The connected qubits and the gate's number of connected qubits do not match"))
     end
+
+    return Gate{GateType}(gate, connected_qubits)
 end
 
 function Base.show(io::IO, gate::Gate)
@@ -428,7 +429,7 @@ julia> print(ψ_0)
 
 ```
 """
-function apply_gate!(state::Ket, gate::AbstractGateSymbol)
+function apply_gate!(state::Ket, gate::Gate)
     qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
@@ -444,9 +445,6 @@ function apply_gate!(state::Ket, gate::AbstractGateSymbol)
 
     apply_operator!(state,operator,connected_qubits)
 end
-
-# TODO(#226): delete on completion
-apply_gate!(state::Ket, gate::Gate) = apply_gate!(state::Ket, get_gate(gate))
 
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
 # `phase` argument adds a phase offset to swapped coefficients. 
@@ -1881,7 +1879,6 @@ struct Swap <: AbstractGateSymbol
 end
 
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
-still unclear
 get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
 
 """
