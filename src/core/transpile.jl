@@ -698,7 +698,7 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal, target::Int;at
     phi     =params["phi"]
     lambda  =params["lambda"]
 
-    gate_array=Vector{AbstractGateSymbol}([])
+    gate_array=Vector{Gate}([])
 
     if !(isapprox(lambda,0.,atol=atol))
         push!(
@@ -847,7 +847,7 @@ function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
     β=params["phi"]+π/2
     δ=params["lambda"]-π/2
    
-    gate_array=Vector{AbstractGateSymbol}([])
+    gate_array=Vector{Gate}([])
 
     push!(gate_array,phase_shift(target,δ))
 
@@ -949,7 +949,7 @@ function cast_rx_to_rz_and_half_rotation_x(gate::RotationX)::Vector{AbstractGate
 
     theta   =params["theta"]
 
-    gate_array=Vector{AbstractGateSymbol}([])
+    gate_array=Vector{Gate}([])
 
     push!(gate_array,z_90(target))
     push!(gate_array,x_90(target))
