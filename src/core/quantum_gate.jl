@@ -101,12 +101,14 @@ abstract type AbstractGateSymbol end
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
+# TODO(#226): delete on completion
 get_connected_qubits(gate::AbstractGateSymbol)=[gate.target]
 
 get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
 get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(gate))
 
+# TODO(#226): `Gate` should not inherit from `AbstractGateSymbol` after completion
 """
     Gate
 
@@ -217,7 +219,7 @@ function get_control_qubits(gate::Gate)
 end
 
 
-
+# TODO(#226): delete on completion
 """
     is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool 
 
@@ -249,6 +251,8 @@ false
 """
 is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool = isa(gate, type)
 
+
+# TODO(#226): delete on completion
 """
     get_gate_type(gate::AbstractGateSymbol)::Type
 
@@ -278,21 +282,26 @@ Snowflake.SigmaX
 """
 get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
 
+# TODO(#226): delete on completion
 struct MovedGate <: AbstractGateSymbol
     original_gate::AbstractGateSymbol
     connected_qubits::Vector{Int}
 end
 
+# TODO(#226): delete on completion
 struct MovedControlledGate <: AbstractControlledGateSymbol
     original_gate::AbstractControlledGateSymbol
     connected_qubits::Vector{Int}
 end
 
+# TODO(#226): delete on completion
 MovedGate(gate::AbstractControlledGateSymbol, connected_qubits::Vector{Int}) = 
     MovedControlledGate(gate,connected_qubits)
 
+# TODO(#226): delete on completion
 UnionMovedGates=Union{MovedGate,MovedControlledGate}
 
+# TODO(#226): delete on completion
 function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
     old_connected_qubits=get_connected_qubits(gate.original_gate)
     old_control_qubits=get_control_qubits(gate.original_gate)
@@ -306,6 +315,7 @@ end
 get_control_qubits(gate::AbstractGateSymbol)=
     throw(NotImplementedError(:get_control_qubits,gate))
 
+# TODO(#226): delete on completion
 function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
     old_connected_qubits=get_connected_qubits(gate.original_gate)
     old_target_qubits=get_target_qubits(gate.original_gate)
@@ -325,14 +335,17 @@ end
 
 Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
 
+# TODO(#226): delete on completion
 Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate), gate.connected_qubits)
 
 get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
 
+# TODO(#226): delete on completion
 function is_gate_type(gate::UnionMovedGates, type::Type)::Bool
     return is_gate_type(gate.original_gate, type)
 end
 
+# TODO(#226): delete on completion
 get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
 
 get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
