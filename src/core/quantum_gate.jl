@@ -110,7 +110,7 @@ get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(g
 """
     Gate
 
-An object representing an `AbstractGateSymbol` inside `QuantumCircuit`.
+An object that specifies an `AbstractGateSymbol` and its placement inside a `QuantumCircuit`. The placement is the same as the target qubits on which the gate operates.
 
 # Examples
 ```jldoctest
