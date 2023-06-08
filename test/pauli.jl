@@ -22,6 +22,9 @@ using Snowflake
     @test_throws ErrorException get_pauli(sigma_x(1), num_qubits, negative_exponent=2)
     @test_throws ErrorException get_pauli(sigma_x(1), num_qubits, imaginary_exponent=-1)
     @test_throws ErrorException get_pauli(sigma_x(1), num_qubits, imaginary_exponent=2)
+
+    @test_throws NotImplementedError get_pauli(x_90(1), num_qubits)
+    @test_throws NotImplementedError get_pauli(QuantumCircuit(qubit_count=2,gates=[hadamard(1)]))
 end
 
 @testset "multiply_paulis" begin
