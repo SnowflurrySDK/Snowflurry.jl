@@ -167,9 +167,16 @@ Underlying data ComplexF64:
 ```
 """
 
-struct SparseOperator{T<:Complex}<:AbstractOperator
+struct SparseOperator{N,T<:Complex}<:AbstractOperator
     data::  SparseMatrixCSC{T, Int64}
 end
+
+function SparseOperator(x::SparseArrays.SparseMatrixCSC{T,Int64}) where {T<:Complex}
+    @assert size(x)[1]==size(x)[2] "Input Matrix is not square"
+ 
+    SparseOperator{size(x)[1],T}(x)
+end
+
 # Constructor from Real-valued Matrix
 SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.sparse(Complex.(x)))
 # Constructor from Complex-valued Matrix
@@ -178,6 +185,7 @@ SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sp
 # default output is Operator{ComplexF64}
 SparseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SparseOperator(Matrix{S}(x))
 
+get_matrix(op::SparseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
 
 """
     sparse(x::AbstractOperator)
@@ -244,6 +252,8 @@ DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{
 
 DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
 
+get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+
 struct SwapLikeOperator{T<:Complex}<:AbstractOperator
     phase::T
 end
@@ -266,11 +276,11 @@ DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
 
 get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
 
-struct IdentityOperator{T<:Complex}<: AbstractOperator end
+struct IdentityOperator{N,T<:Complex}<: AbstractOperator end
 
-IdentityOperator(T::Type=ComplexF64)=IdentityOperator{T}()
+IdentityOperator(T::Type=ComplexF64)=IdentityOperator{2,T}()
 
-DenseOperator(::IdentityOperator{T}) where {T<:Complex}=eye(T)
+DenseOperator(::IdentityOperator{2,T}) where {T<:Complex}=eye(T)
 
 get_matrix(op::IdentityOperator)=get_matrix(DenseOperator(op))
 
@@ -483,13 +493,44 @@ Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOper
 # specializations
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,T}) where {N,T<:Complex} =
     DenseOperator(A.data*B.data)
+
+Base.:*(A::DenseOperator, B::DenseOperator) =
+    throw(DimensionMismatch(
+        "Cannot multiply Operators of dissimilar sizes."*
+        " A has size $(size(A)) and B has size $(size(B))."))
+Base.:+(A::DenseOperator, B::DenseOperator) =
+    throw(DimensionMismatch("Cannot sum Operators of dissimilar sizes."*
+        " A has size $(size(A)) and B has size $(size(B))."))
+Base.:-(A::DenseOperator, B::DenseOperator) =
+    throw(DimensionMismatch("Cannot take difference of Operators of dissimilar sizes."*
+        " A has size $(size(A)) and B has size $(size(B))."))
+
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
-    DenseOperator(promote(A.data,B.data)[1]*promote(A.data,B.data)[2])
+    DenseOperator( *(promote(A.data,B.data)...) )
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
-Base.:*(A::SparseOperator, B::SparseOperator) = SparseOperator(A.data*B.data)
+Base.:*(A::SparseOperator{N,T}, B::SparseOperator{N,T}) where {N,T<:Complex} = 
+    SparseOperator{N,T}(A.data*B.data)
+
+Base.:*(A::IdentityOperator, B::IdentityOperator) = A
+function Base.:*(A::IdentityOperator, B::AbstractOperator)
+    if size(A)!=size(B)
+        throw(DimensionMismatch("Cannot multiply Operators of dissimilar sizes."*
+        " A has size $(size(A)) and B has size $(size(B))."))
+    end
+
+    if typeof(A[1,1]) != typeof(B[1,1])
+        # build promoted DenseOperator
+        output_type=typeof(promote(A[1,1],B[1,1])[1])
+
+        return DenseOperator(convert(Matrix{output_type},get_matrix(B)))
+    else
+        return B
+    end
+end
+Base.:*(A::AbstractOperator, B::IdentityOperator) = B*A
 
 Base.:*(s::Number, A::DenseOperator) = DenseOperator(s*A.data)
 Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
@@ -793,9 +834,6 @@ get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBo
 
 get_matrix(op::AbstractOperator) = 
     throw(NotImplementedError(:get_matrix,op))
-
-get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
-get_matrix(op::SparseOperator{T}) where {T<:Complex} = convert(Matrix{T},op.data)
 
 function Base.show(io::IO, x::DenseOperator)
     println(io, "$(size(x.data))-element Snowflake.DenseOperator:")
