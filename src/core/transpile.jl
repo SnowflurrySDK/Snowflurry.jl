@@ -1389,7 +1389,7 @@ end
 struct CompressRzGatesTranspiler<:Transpiler end
 
 # construct a PhaseShift gate from an input Operator
-function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate
+function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate{PhaseShift}
     @assert size(op)==(2,2) ("Received multi-target Operator: $op")
     
     matrix=get_matrix(op)
@@ -1410,7 +1410,7 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate
+function compress_to_rz(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate{PhaseShift}
     
     combined_op=eye()
 
