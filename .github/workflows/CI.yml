@@ -39,6 +39,7 @@ jobs:
         run: >
           julia --project=. -e 
           'using Pkg;
+          Pkg.precompile();
           Pkg.instantiate()'
       
       - name: Test Snowflake
