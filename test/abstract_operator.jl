@@ -103,6 +103,13 @@ end
         ]
 
         for op1 in size_4_operators
+            for op2 in size_4_operators
+                math_operations(op1,op2)
+            end
+        end
+
+        #DimensionMismatch
+        for op1 in size_4_operators
             for op2 in size_2_operators
                 math_operations(op1,op2)
                 math_operations(op2,op1)
