@@ -575,10 +575,10 @@ function Base.:*(A::IdentityOperator, B::AbstractOperator)
     end
 
     if typeof(A[1,1]) != typeof(B[1,1])
-        # build promoted DenseOperator
+        # build promoted Operator of same type as input
         output_type=typeof(promote(A[1,1],B[1,1])[1])
 
-        return DenseOperator(convert(Matrix{output_type},get_matrix(B)))
+        return output_type(1.0)*B
     else
         return B
     end
