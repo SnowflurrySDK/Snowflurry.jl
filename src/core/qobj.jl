@@ -155,18 +155,22 @@ end
 abstract type AbstractOperator end
 
 """
-A structure representing a quantum operator with a sparse (CSR) matrix representation.
+    SparseOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing a quantum operator with a sparse (CSR) matrix representation, with element type T.
+The equivalent dense matrix would have size NxN.
+!!! warning "apply_operator() is not implemented for this operator type. Try using DenseOperator instead."
 
 # Examples
 ```jldoctest
-julia> z = SparseOperator([1.0 0.0;0.0 -1.0])
-(2, 2)-element Snowflake.DenseOperator:
+julia> z = SparseOperator([-1.0 1.0;0.0 -1.0])
+(2, 2)-element Snowflake.SparseOperator:
 Underlying data ComplexF64:
-1.0 + 0.0im    .
-.              -1.0 + 0.0im
+ -1.0 + 0.0im   1.0 + 0.0im
+       ⋅       -1.0 + 0.0im
+
 ```
 """
-
 struct SparseOperator{N,T<:Complex}<:AbstractOperator
     data::  SparseMatrixCSC{T, Int64}
 end
@@ -204,7 +208,9 @@ Underlying data ComplexF64:
 SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
 """
-A structure representing a quantum operator with a full (dense) matrix representation.
+    DenseOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing a quantum operator with a full (dense) matrix representation of size NxN and containing elements of type T.
 
 # Examples
 ```jldoctest
@@ -254,15 +260,37 @@ DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N
 
 get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
 
-struct SwapLikeOperator{T<:Complex}<:AbstractOperator
+"""
+    SwapLikeOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing a quantum operator performing a "swap" operation, with element type T.
+A `phase` value is applied to the swapped qubit coefficients.
+This operator is always of size 4x4.
+
+For example, the iswap `Operator` can be built using a `phase=0.0 + 1.0im` by calling:
+```jldoctest
+julia> SwapLikeOperator(0.0 + 1.0im)
+(4, 4)-element Snowflake.SwapLikeOperator:
+Underlying data ComplexF64:
+Equivalent DenseOperator:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+
+```
+"""
+struct SwapLikeOperator{N,T<:Complex}<:AbstractOperator
     phase::T
 end
 
-# Constructor from Real phase value, or other numeric types.
-SwapLikeOperator(phase::T) where {T<:Real} = SwapLikeOperator(Complex{T}(phase))
+SwapLikeOperator(phase::T) where {T<:Complex} = SwapLikeOperator{4,T}(phase)
 
-# Constructor from Complex{Int} or Complex{Bool} such as `im`
-SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Complex{Bool}} = 
+# Constructor from Real phase value, or other numeric types.
+SwapLikeOperator(phase::T) where {T<:Real} = SwapLikeOperator{4,Complex{T}}(Complex{T}(phase))
+
+# Constructor from Complex{Int} or Complex{Bool} such as Complex(1) or `im` 
+SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Union{Complex{Bool},Complex{Int}}} = 
     SwapLikeOperator(S(phase))
 
 # Constructor from Integer-valued phase
@@ -270,12 +298,29 @@ SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Complex{Bool}
 SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SwapLikeOperator(S(phase))
 
 # Cast SwapLikeOperator to DenseOperator
-DenseOperator(op::SwapLikeOperator{T}) where {T<:Complex}=DenseOperator(
+DenseOperator(op::SwapLikeOperator{N,T}) where {N,T<:Complex}=DenseOperator(
     T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, op.phase, 0.0] [0.0, op.phase, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
 )
 
 get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
 
+"""
+    IdentityOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing the identity quantum operator, with element type T.
+This operator is always of size 2x2.
+
+# Example
+```jldoctest
+julia> iden=IdentityOperator()
+(2, 2)-element Snowflake.IdentityOperator:
+Underlying data ComplexF64:
+Equivalent DenseOperator:
+1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im
+
+```
+"""
 struct IdentityOperator{N,T<:Complex}<: AbstractOperator end
 
 IdentityOperator(T::Type=ComplexF64)=IdentityOperator{2,T}()
@@ -316,7 +361,11 @@ julia> Y[2,2]
 Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i,j]
 
 """
-A structure representing a diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the diagonal).
+
+    DiagonalOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing a diagonal quantum `Operator` (i.e. a complex matrix of element type T, with non-zero elements all lying on the diagonal).
+The equivalent dense matrix would have size NxN.
 
 # Examples
 ```jldoctest
@@ -359,7 +408,11 @@ function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) w
 end
 
 """
-A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matrix, with non-zero elements all lying on the cross-diagonal).
+
+    AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
+
+A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matrix of element type T, with non-zero elements all lying on the cross-diagonal).
+The equivalent dense matrix would have size NxN.
 
 # Examples
 ```jldoctest
@@ -861,6 +914,25 @@ end
 function Base.show(io::IO, x::SwapLikeOperator)
     println(io, "$(size(x))-element Snowflake.SwapLikeOperator:")
     println(io, "Underlying data $(eltype(x.phase)):")
+    (nrow, ncol) = size(x)
+
+    println(io, "Equivalent DenseOperator:")
+    denseop=DenseOperator(x)
+    for i in range(1, stop = nrow)
+        for j in range(1, stop = ncol)
+            if j == 1
+                print(io, "$(denseop.data[i, j])")
+            else
+                print(io, "    $(denseop.data[i, j])")
+            end
+        end
+        println(io)
+    end
+end
+
+function Base.show(io::IO, x::IdentityOperator)
+    println(io, "$(size(x))-element Snowflake.IdentityOperator:")
+    println(io, "Underlying data $(typeof(x[1,1])):")
     (nrow, ncol) = size(x)
 
     println(io, "Equivalent DenseOperator:")

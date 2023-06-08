@@ -92,6 +92,9 @@ Bra
 DiagonalOperator
 AntiDiagonalOperator
 DenseOperator
+SwapLikeOperator
+IdentityOperator
+SparseOperator
 Base.adjoint
 is_hermitian
 Base.exp(A::AbstractOperator)
