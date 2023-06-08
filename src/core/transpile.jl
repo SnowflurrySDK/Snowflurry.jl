@@ -86,7 +86,7 @@ end
 struct CompressSingleQubitGatesTranspiler<:Transpiler end
 
 # convert a single-target gate to a Universal gate
-function as_universal_gate(target::Integer,op::AbstractOperator)::Gate
+function as_universal_gate(target::Integer,op::AbstractOperator)::Gate{Universal}
     @assert size(op)==(2,2)
     
     matrix=get_matrix(op)
@@ -115,7 +115,7 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::Gate
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate
+function compress_to_universal(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate{Universal}
     
     combined_op=eye()
 
