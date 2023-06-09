@@ -394,17 +394,20 @@ function get_display_symbol(gate::ControlledGate;precision::Integer=4)
     # build new display symbol using existing symbol pertaining to kernel
     symbol_specs=get_display_symbol(gate.kernel,precision=precision)
 
+    num_kernel_qubits=length(gate.kernel_qubits)
+    
     gate_params=get_gate_parameters(gate)
 
-    return [
-        control_display_symbol,
-        format_label(
-            symbol_specs,
-            1, # only implemented for single target kernel
-            gate_params;
-            precision=precision
-        )[1]
-    ]
+    return vcat(
+        [control_display_symbol for _ in 1:length(gate.control_qubits)],
+        [
+            format_label(
+                symbol_specs,
+                num_kernel_qubits,
+                gate_params;
+                precision=precision
+            )...
+        ])
 end
 
 const control_display_symbol ="*"

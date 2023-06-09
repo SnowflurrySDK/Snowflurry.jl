@@ -103,7 +103,7 @@ In addition, a `ControlledGate{X45}` can be constructed using:
 ```jldoctest gate_struct
 julia> control=1; target=2;
 
-julia> ControlledGate(x_45,[control, target])
+julia> ControlledGate(x_45,control, target)
 Gate Object: ControlledGate{X45}
 Connected_qubits	: [1, 2]
 Operator:
@@ -129,18 +129,21 @@ get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 """
     ControlledGate{G<:AbstractGate}<:AbstractGate
 
-The `ControlledGate` object allows the construction of a controlled `Gate` using a 
-single-target `Operator` (the `kernel`) and the corresponding control and target qubits, 
-specified as `[control_qubit,target_qubit]`.
+The `ControlledGate` object allows the construction of a controlled `Gate` using an `Operator` 
+(the `kernel`) and the corresponding control and target qubits, 
+specified as `control_qubit::Int` `target_qubit::Int` for single-target single-control, or
+`control_qubit::Vector{Int}` `target_qubit::{Int}` in the general case.
+In the case of single-control single-target `ControlledGate`, `apply_gate()` dispatches to 
+an optimized routine, otherwise the fall-back case casts a equivalent `DenseOperator` and 
+applies it. 
 
 # Examples
 Whereas a `Hadamard` Gate with `target=1` is constructed by calling `hadamard(target)`, a 
-controlled Hadamard gate is constructed using the `hadamard()` `Function`, and by specifying
-a `connected_qubits=[control, target]`. For instance, the construction 
+controlled Hadamard gate is constructed using the `hadamard()` `Function`. For instance, the construction 
 of a `ControlledGate{Hadamard}` with `control=1` and `target=2` is performed by calling:
 
 ```jldoctest controlled_hadamard
-julia> controlled_hadamard=ControlledGate(hadamard,[1,2])
+julia> controlled_hadamard=ControlledGate(hadamard,1,2)
 Gate Object: ControlledGate{Snowflake.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
@@ -166,39 +169,78 @@ q[2]:──H──
           
 ```
 
+In general, a `ControlledGate` with an arbitraty number of targets and controls can be 
+constructed. For instance, the following constructs the equivalent of a `Toffoli` `Gate`, 
+but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=[3]`:
+
+```jldoctest 
+julia> toffoli_as_controlled_gate=ControlledGate(sigma_x,[1,2],[3])
+Gate Object: ControlledGate{Snowflake.SigmaX}
+Connected_qubits	: [1, 2, 3]
+Operator:
+(8, 8)-element Snowflake.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+```
+
 
 """
 struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
     kernel::GateType
     connected_qubits::Vector{Int}
+    control_qubits::Vector{Int}
+    kernel_qubits::Vector{Int}
 
     function ControlledGate(
         kernel_handle::Function,
-        connected_qubits::Vector{Int};
+        control_qubits::Vector{Int},
+        kernel_qubits::Vector{Int};
         params::Vector{<:Real}=Vector{Float64}()
         )
 
-        @assert length(connected_qubits)==2 "Not implemented for multi-control kernel Operators"
+        connected_qubits=vcat(control_qubits,kernel_qubits)
 
-        @assert connected_qubits[1]!=connected_qubits[2] "Control and target qubit must be different, received $connected_qubits"
+        @assert length(connected_qubits)==
+            length(unique(connected_qubits)) "Control and kernel qubits must all be distinct."*
+            " Received control_qubits: $control_qubits, target_qubits $kernel_qubits"
 
         # calls function, returns Gate
-        kernel=kernel_handle(connected_qubits[2], params...) 
+        kernel=kernel_handle(kernel_qubits..., params...) 
         
-        new{typeof(kernel)}(kernel,connected_qubits)
+        new{typeof(kernel)}(kernel,connected_qubits,control_qubits,kernel_qubits)
     end
+
+    ControlledGate(
+        kernel_handle::Function,
+        control_qubit::Int,
+        kernel_qubit::Int;
+        params::Vector{<:Real}=Vector{Float64}())=
+            ControlledGate(kernel_handle,[control_qubit],[kernel_qubit];params=params)
 end
 
-# returns an equivalent size 4 DenseOperator built using the kernel
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
-    op=get_matrix(eye(4))
+
+    num_connected_qubits=length(gate.connected_qubits)
+    num_kernel_qubits  =length(gate.kernel_qubits)
     
-    op[3:4,3:4]=get_matrix(get_operator(gate.kernel))
+    op=get_matrix(eye(2^num_connected_qubits))
+    
+    op[end-(2^num_kernel_qubits)+1:end,end-(2^num_kernel_qubits)+1:end]=
+        get_matrix(get_operator(gate.kernel))
 
     return DenseOperator(convert(Matrix{T},op))
 end
 
 get_connected_qubits(gate::ControlledGate)=gate.connected_qubits
+
+get_control_qubits(gate::ControlledGate)=gate.control_qubits
 
 get_gate_parameters(gate::ControlledGate)=get_gate_parameters(gate.kernel)
 
@@ -433,7 +475,11 @@ function apply_gate!(state::Ket, gate::ControlledGate)
             "Not enough qubits in the Ket for the targets in gate"))
     end
 
-    apply_controlled_gate!(state,DenseOperator(get_operator(gate.kernel)),connected_qubits)
+    apply_controlled_gate_operator!(
+        state,
+        get_operator(gate),
+        DenseOperator(get_operator(gate.kernel)),
+        connected_qubits)
 end
 
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
@@ -693,8 +739,9 @@ end
 
 # specialization for single-target single-control dense gate
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_control_single_qubit_dense_matrix_gate_unroll()
-function apply_controlled_gate!(
+function apply_controlled_gate_operator!(
     state::Ket,
+    full_operator::DenseOperator{4},
     kernel::DenseOperator{2},
     connected_qubits::Vector{Int}
     )
@@ -739,12 +786,12 @@ function apply_controlled_gate!(
                 ((state_index & high_mask) << 2) + control_mask
 
             # fetch values
-            cval0 = state.data[basis_index+1]
-            cval1 = state.data[basis_index+2]
+            @inbounds cval0 = state.data[basis_index+1]
+            @inbounds cval1 = state.data[basis_index+2]
 
             # set values
-            state.data[basis_index+1] = matrix[1] * cval0 + matrix[3] * cval1
-            state.data[basis_index+2] = matrix[2] * cval0 + matrix[4] * cval1
+            @inbounds state.data[basis_index+1] = matrix[1] * cval0 + matrix[3] * cval1
+            @inbounds state.data[basis_index+2] = matrix[2] * cval0 + matrix[4] * cval1
         end
     
     elseif (control_qubit_index == 0) 
@@ -755,12 +802,12 @@ function apply_controlled_gate!(
             basis_index_1 = basis_index_0 + target_mask
 
             # fetch values
-            cval0 = state.data[basis_index_0+1]
-            cval1 = state.data[basis_index_1+1]
+            @inbounds cval0 = state.data[basis_index_0+1]
+            @inbounds cval1 = state.data[basis_index_1+1]
 
             # set values
-            state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
-            state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
+            @inbounds state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
+            @inbounds state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
         end
 
     else
@@ -771,26 +818,34 @@ function apply_controlled_gate!(
             basis_index_1 = basis_index_0 + target_mask
 
             # fetch values
-            cval0 = state.data[basis_index_0+1]
-            cval1 = state.data[basis_index_1+1]
-            cval2 = state.data[basis_index_0+2]
-            cval3 = state.data[basis_index_1+2]
+            @inbounds cval0 = state.data[basis_index_0+1]
+            @inbounds cval1 = state.data[basis_index_1+1]
+            @inbounds cval2 = state.data[basis_index_0+2]
+            @inbounds cval3 = state.data[basis_index_1+2]
 
             # set values
-            state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
-            state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
-            state.data[basis_index_0+2] = matrix[1] * cval2 + matrix[3] * cval3
-            state.data[basis_index_1+2] = matrix[2] * cval2 + matrix[4] * cval3
+            @inbounds state.data[basis_index_0+1] = matrix[1] * cval0 + matrix[3] * cval1
+            @inbounds state.data[basis_index_1+1] = matrix[2] * cval0 + matrix[4] * cval1
+            @inbounds state.data[basis_index_0+2] = matrix[1] * cval2 + matrix[3] * cval3
+            @inbounds state.data[basis_index_1+2] = matrix[2] * cval2 + matrix[4] * cval3
         end
     end
-
 end
 
-apply_controlled_gate!(
+# fall-back to apply_operator! using the equivalent dense full_operator
+apply_controlled_gate_operator!(
     state::Ket,
+    full_operator::DenseOperator,
+    kernel::DenseOperator,
+    connected_qubits::Vector{Int}
+    ) = apply_operator!(state,full_operator,connected_qubits)
+
+apply_controlled_gate_operator!(
+    state::Ket,
+    full_operator::DenseOperator{4},
     kernel::AbstractOperator,
     connected_qubits::Vector{Int}
-    ) = throw(NotImplementedError(:apply_controlled_gate!,kernel))
+    ) = throw(NotImplementedError(:apply_controlled_gate_operator!,kernel))
 
 # specialization for single target dense gate (size N=2, for N=2^target_count)
 # adapted from https://github.com/qulacs/qulacs, method single_qubit_dense_matrix_gate_parallel_unroll()

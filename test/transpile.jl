@@ -963,10 +963,10 @@ end
     @test simulate(circuit) ≈ simulate(transpiled_circuit)
 end
 
-@testset "CastControlledGatesToNativeTranspiler" begin
+@testset "UnsupportedGatesTranspiler" begin
     
-    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard,[1,2])])
+    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard,1,2)])
 
-    @test_throws NotImplementedError transpile(CastControlledGatesToNativeTranspiler(), circuit)
+    @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
 
 end

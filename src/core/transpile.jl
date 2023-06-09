@@ -1718,15 +1718,15 @@ function transpile(
     return output
 end
 
-struct CastControlledGatesToNativeTranspiler<:Transpiler end
+struct UnsupportedGatesTranspiler<:Transpiler end
 
 function transpile(
-    transpiler_stage::CastControlledGatesToNativeTranspiler, 
+    ::UnsupportedGatesTranspiler, 
     circuit::QuantumCircuit)::QuantumCircuit
 
     for gate in get_circuit_gates(circuit)
         if gate isa ControlledGate
-            throw(NotImplementedError(:CastControlledGatesToNativeTranspiler,gate))
+            throw(NotImplementedError(:Transpiler,gate))
         end
     end
 
