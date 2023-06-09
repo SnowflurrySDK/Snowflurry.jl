@@ -384,36 +384,28 @@ function get_display_symbol(gate::AbstractGate;precision::Integer=4)
 
     num_targets=length(targets)
 
-    if isempty(gate_params)
-        return gates_display_symbols[get_gate_type(gate)]
-    else
-        symbol_specs=gates_display_symbols[get_gate_type(gate)]
+    symbol_specs=gates_display_symbols[get_gate_type(gate)]
 
-        format_label(symbol_specs,num_targets,gate_params;precision=precision)
-        
-    end
-    
+    return format_label(symbol_specs,num_targets,gate_params;precision=precision)
 end
 
-operator_to_gate_mapping=Dict(
-    sigma_x     => SigmaX,
-    sigma_y     => SigmaY,
-    sigma_z     => SigmaZ,
-    hadamard    => Hadamard,
-    pi_8        => Pi8,
-    pi_8_dagger => Pi8Dagger,
-    x_90        => X90,
-    x_minus_90  => XM90,
-    y_90        => Y90,
-    y_minus_90  => YM90,
-    z_90        => Z90,
-    z_minus_90  => ZM90,
-    rotation    => Rotation,
-    rotation_x  => RotationX,
-    rotation_y  => RotationY,
-    phase_shift => PhaseShift,                
-    universal   => Universal,
-)
+function get_display_symbol(gate::ControlledGate;precision::Integer=4)
+
+    # build new display symbol using existing symbol pertaining to kernel
+    symbol_specs=get_display_symbol(gate.kernel)
+
+    gate_params=get_gate_parameters(gate)
+
+    return [
+        control_display_symbol,
+        format_label(
+            symbol_specs,
+            1, # only implemented for single target kernel
+            gate_params;
+            precision=precision
+        )[1]
+    ]
+end
 
 const control_display_symbol ="*"
 

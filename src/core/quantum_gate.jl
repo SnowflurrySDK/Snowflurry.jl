@@ -96,17 +96,10 @@ Quantum Circuit Object:
 q[1]:──X45──
 
 q[2]:───────
-```
-
-Lastly, to enable the construction of a `ControlledGate{X45}` made with this 
-`Gate` as a kernel, the `Dict` variable `operator_to_gate_mapping` must be updated, with 
-the constructor function `x_45` as `key` and the `Gate` type as `value`:
-```jldoctest gate_struct
-julia> Snowflake.operator_to_gate_mapping[x_45]=X45;
 
 ```
 
-A `ControlledGate{X45}` is then constructed using:
+In addition, a `ControlledGate{X45}` can be constructed using:
 ```jldoctest gate_struct
 julia> control=1; target=2;
 
@@ -134,7 +127,7 @@ get_connected_qubits(gate::AbstractGate)=[gate.target]
 get_gate_parameters(gate::AbstractGate)=Dict{String,Real}()
 
 """
-    ControlledGate{G<:AbstractGate}<:AbstractControlledGate
+    ControlledGate{G<:AbstractGate}<:AbstractGate
 
 The `ControlledGate` object allows the construction of a controlled `Gate` using a 
 single-target `Operator` (the `kernel`) and the corresponding control and target qubits, 
@@ -175,8 +168,8 @@ q[2]:──H──
 
 
 """
-struct ControlledGate{G<:AbstractGate}<:AbstractControlledGate
-    kernel::AbstractOperator
+struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
+    kernel::GateType
     connected_qubits::Vector{Int}
 
     function ControlledGate(
@@ -189,36 +182,10 @@ struct ControlledGate{G<:AbstractGate}<:AbstractControlledGate
 
         @assert connected_qubits[1]!=connected_qubits[2] "Control and target qubit must be different, received $connected_qubits"
 
-        @assert haskey(operator_to_gate_mapping,kernel_handle) "Function $kernel_handle is not associated with a Gate constructor"
-
-        # calls function, returns Operator
-        kernel=kernel_handle(params...) 
-
-        # Gate type associated with this operator is used to distinguish between 
-        # ControlledGate types and to assign a display symbol to them
-        kernel_gate_type=operator_to_gate_mapping[kernel_handle]  
-
-        # build new display symbol using existing symbol pertaining to kernel
-
-        symbol_specs=gates_display_symbols[kernel_gate_type]      
-        num_params=length(params)
-        gate_params=Dict{String,Real}() 
+        # calls function, returns Gate
+        kernel=kernel_handle(connected_qubits[2], params...) 
         
-        for (field,param) in zip(symbol_specs[end-num_params+1:end],params)
-            gate_params[field]=param
-        end
-
-        gates_display_symbols[ControlledGate{kernel_gate_type}]=[
-            control_display_symbol,
-            format_label(
-                symbol_specs,
-                1, 
-                gate_params;
-                precision=precision
-            )[1]
-        ]
-        
-        new{kernel_gate_type}(kernel,connected_qubits)
+        new{typeof(kernel)}(kernel,connected_qubits)
     end
 end
 
@@ -226,12 +193,14 @@ end
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
     op=get_matrix(eye(4))
     
-    op[3:4,3:4]=get_matrix(gate.kernel)
+    op[3:4,3:4]=get_matrix(get_operator(gate.kernel))
 
     return DenseOperator(convert(Matrix{T},op))
 end
 
 get_connected_qubits(gate::ControlledGate)=gate.connected_qubits
+
+get_gate_parameters(gate::ControlledGate)=get_gate_parameters(gate.kernel)
 
 """
     is_gate_type(gate::AbstractGate, type::Type)::Bool 
@@ -464,7 +433,7 @@ function apply_gate!(state::Ket, gate::ControlledGate)
             "Not enough qubits in the Ket for the targets in gate"))
     end
 
-    apply_controlled_gate!(state,DenseOperator(gate.kernel),connected_qubits)
+    apply_controlled_gate!(state,DenseOperator(get_operator(gate.kernel)),connected_qubits)
 end
 
 # specialization of a Swap-like gates without using the gate's operator (it is hard-coded).
