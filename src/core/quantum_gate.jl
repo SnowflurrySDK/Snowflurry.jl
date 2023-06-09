@@ -175,8 +175,8 @@ struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
     function ControlledGate(
         kernel_handle::Function,
         connected_qubits::Vector{Int};
-        params::Vector{<:Real}=Vector{Float64}(),
-        precision::Integer=4)
+        params::Vector{<:Real}=Vector{Float64}()
+        )
 
         @assert length(connected_qubits)==2 "Not implemented for multi-control kernel Operators"
 

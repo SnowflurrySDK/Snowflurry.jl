@@ -353,16 +353,27 @@ end
 
     # parameterized Gates
     test_cases_params=[
-        [rotation,     [pi,pi/2],  ["*", "R(θ=3.1416,ϕ=1.5708)"]],
-        [rotation_x,   [pi/3],     ["*", "Rx(1.0472)"]],
-        [rotation_y,   [pi/4],     ["*", "Ry(0.7854)"]],
-        [phase_shift,  [pi/7],     ["*", "P(0.4488)"]],
-        [universal,    [pi/3,pi/12,pi/4],["*", "U(θ=1.0472,ϕ=0.2618,λ=0.7854)"]],
+        [rotation,     [pi,pi/2],  ["theta","phi"], ["*", "R(θ=3.1416,ϕ=1.5708)"]],
+        [rotation_x,   [pi/3],     ["theta"],       ["*", "Rx(1.0472)"]],
+        [rotation_y,   [pi/4],     ["theta"],       ["*", "Ry(0.7854)"]],
+        [phase_shift,  [pi/7],     ["phi"],         ["*", "P(0.4488)"]],
+        [universal,    [pi/3,pi/12,pi/4],["theta","phi","lambda"], ["*", "U(θ=1.0472,ϕ=0.2618,λ=0.7854)"]],
     ]
 
-    for (func,params,labels) in test_cases_params
-        @test get_display_symbol(ControlledGate(func,connected_qubits;params=params))==labels
+    for (func,params,param_keys,labels) in test_cases_params
+        c_gate=ControlledGate(func,connected_qubits;params=params)
+        @test get_display_symbol(c_gate)==labels
+        params_in_gate=get_gate_parameters(c_gate)
+
+        for (k,v) in zip(param_keys,params)
+            @test params_in_gate[k]==v
+        end
     end
+
+    #test precision
+    @test get_display_symbol(
+        ControlledGate(rotation,connected_qubits;params=[pi,pi/2]),precision=2
+        )==["*", "R(θ=3.14,ϕ=1.57)"]
 
 end
 

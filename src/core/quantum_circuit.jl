@@ -392,7 +392,7 @@ end
 function get_display_symbol(gate::ControlledGate;precision::Integer=4)
 
     # build new display symbol using existing symbol pertaining to kernel
-    symbol_specs=get_display_symbol(gate.kernel)
+    symbol_specs=get_display_symbol(gate.kernel,precision=precision)
 
     gate_params=get_gate_parameters(gate)
 
