@@ -148,25 +148,25 @@ Underlying data ComplexF64:
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
 ```
 """
-struct Gate{GateType} <: AbstractGateSymbol where GateType <: AbstractGateSymbol
-    gate::GateType
+struct Gate{SymbolType} <: AbstractGateSymbol where SymbolType <: AbstractGateSymbol
+    symbol::SymbolType
     connected_qubits::Vector{Int}
 end
 
-function Base.convert(::Type{Gate{AbstractGateSymbol}}, gate::Gate{GateType}) where GateType <: AbstractGateSymbol
+function Base.convert(::Type{Gate{AbstractGateSymbol}}, gate::Gate{SymbolType}) where SymbolType <: AbstractGateSymbol
     return Gate{AbstractGateSymbol}(
-        Base.convert(AbstractGateSymbol, gate.gate),
+        Base.convert(AbstractGateSymbol, gate.symbol),
         gate.connected_qubits,
     )
 end
 
-function Gate(gate::GateType, connected_qubits::Vector{Int}) where GateType <: AbstractGateSymbol
-    if get_num_connected_qubits(gate) != length(connected_qubits)
+function Gate(symbol::SymbolType, connected_qubits::Vector{Int}) where SymbolType <: AbstractGateSymbol
+    if get_num_connected_qubits(symbol) != length(connected_qubits)
         throw(DomainError(connected_qubits,
             "The connected qubits and the gate's number of connected qubits do not match"))
     end
 
-    return Gate{GateType}(gate, connected_qubits)
+    return Gate{SymbolType}(symbol, connected_qubits)
 end
 
 function Base.show(io::IO, gate::Gate)
@@ -181,8 +181,8 @@ function Base.show(io::IO, gate::Gate)
     end
 end
 
-function get_gate(gate::Gate)::AbstractGateSymbol
-    return gate.gate
+function get_gate_symbol(gate::Gate)::AbstractGateSymbol
+    return gate.symbol
 end
 
 function get_connected_qubits(gate::Gate)::AbstractVector{Int}
@@ -191,40 +191,40 @@ end
 
 # TODO(#226): delete on completion
 function get_gate_parameters(gate::Gate)::Dict{String,Real}
-    return get_gate_parameters(get_gate(gate))
+    return get_gate_parameters(get_gate_symbol(gate))
 end
 
 # TODO(#226): delete on completion
 function get_instruction_symbol(gate::Gate)
-    return get_instruction_symbol(get_gate(gate))
+    return get_instruction_symbol(get_gate_symbol(gate))
 end
 
 # TODO(#226): delete on completion
 function get_gate_type(gate::Gate)
-    return get_gate_type(get_gate(gate))
+    return get_gate_type(get_gate_symbol(gate))
 end
 
 # TODO(#226): delete on completion
-is_gate_type(gate::Gate, type::Type)::Bool = is_gate_type(gate.gate, type)
+is_gate_type(gate::Gate, type::Type)::Bool = is_gate_type(gate.symbol, type)
 
 # TODO(#226): delete on completion
 function get_operator(gate::Gate, T::Type{<:Complex}=ComplexF64)::AbstractOperator
-    return get_operator(get_gate(gate), T)
+    return get_operator(get_gate_symbol(gate), T)
 end
 
 # TODO(#226): delete on completion
 function Base.inv(gate::Gate)::Gate
-    return Gate(inv(get_gate(gate)), get_connected_qubits(gate))
+    return Gate(inv(get_gate_symbol(gate)), get_connected_qubits(gate))
 end
 
 # TODO(#226): delete on completion
 function get_target_qubits(gate::Gate)
-    return get_target_qubits(get_gate(gate))
+    return get_target_qubits(get_gate_symbol(gate))
 end
 
 # TODO(#226): delete on completion
 function get_control_qubits(gate::Gate)
-    return get_control_qubits(get_gate(gate))
+    return get_control_qubits(get_gate_symbol(gate))
 end
 
 
@@ -407,7 +407,7 @@ function move_gate(gate::Gate,
         end
     end
 
-    return Gate(MovedGate(get_gate(gate), new_connected_qubits), new_connected_qubits)
+    return Gate(MovedGate(get_gate_symbol(gate), new_connected_qubits), new_connected_qubits)
 end
 
 struct NotImplementedError{ArgsT} <: Exception

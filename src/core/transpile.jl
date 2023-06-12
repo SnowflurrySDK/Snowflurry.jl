@@ -421,8 +421,8 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for placement in get_circuit_gates(circuit)
-        if is_gate_type(get_gate(placement), Swap)
-            push!(output, cast_to_cz(get_gate(placement), get_connected_qubits(placement))...)
+        if is_gate_type(get_gate_symbol(placement), Swap)
+            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
         else
             push!(output, placement)
         end
@@ -478,7 +478,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
 
     for placement in get_circuit_gates(circuit)
         if is_gate_type(placement, ControlX)
-            push!(output, cast_to_cz(get_gate(placement), get_connected_qubits(placement))...)
+            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
         else
             push!(output, placement)
         end
@@ -541,7 +541,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
 
     for placement in get_circuit_gates(circuit)
         if is_gate_type(placement, ISwap)
-            push!(output, cast_to_cz(get_gate(placement), get_connected_qubits(placement))...)
+            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
         else
             push!(output, placement)
         end
@@ -621,7 +621,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
 
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, Toffoli)
-            push!(output, cast_to_cx(get_gate(gate),get_connected_qubits(gate))...)
+            push!(output, cast_to_cx(get_gate_symbol(gate),get_connected_qubits(gate))...)
         else
             push!(output, gate)
         end
@@ -825,9 +825,9 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
             push!(output_circuit,placement)
         else
             if !(is_gate_type(placement, Universal))
-                gate=get_gate(as_universal_gate(targets[1],get_operator(placement)))
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(placement)))
             else
-                gate=get_gate(placement)
+                gate=get_gate_symbol(placement)
             end
 
             gate_array=cast_to_phase_shift_and_half_rotation_x(gate, targets[1];atol=atol)
@@ -929,9 +929,9 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
             push!(output_circuit,placement)
         else
             if !(is_gate_type(placement, Universal))
-                gate=get_gate(as_universal_gate(targets[1],get_operator(placement)))
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(placement)))
             else
-                gate=get_gate(placement)
+                gate=get_gate_symbol(placement)
             end
 
             gate_array=cast_to_rz_rx_rz(gate, targets[1])
@@ -1007,7 +1007,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
     for gate in gates
         
         if is_gate_type(gate, RotationX)
-            gate_array=cast_rx_to_rz_and_half_rotation_x(get_gate(gate))
+            gate_array=cast_rx_to_rz_and_half_rotation_x(get_gate_symbol(gate))
             push!(output_circuit, gate_array...)
         else
             push!(output_circuit,gate)

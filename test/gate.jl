@@ -103,7 +103,7 @@ end
             gate = Gate(symbol, connected_qubits)
 
             @test get_connected_qubits(gate) == connected_qubits
-            @test get_gate(gate) == symbol
+            @test get_gate_symbol(gate) == symbol
         end
 
         test_getters(hadamard(3), [3])

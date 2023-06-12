@@ -86,7 +86,7 @@ function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
     for gate in get_circuit_gates(circuit)
          connected_qubits = get_connected_qubits(gate)
         @assert length(connected_qubits) == 1
-        new_pauli = unsafe_get_pauli(get_gate(gate), connected_qubits[1], num_qubits, GF(2)(0), GF(2)(0))
+        new_pauli = unsafe_get_pauli(get_gate_symbol(gate), connected_qubits[1], num_qubits, GF(2)(0), GF(2)(0))
         pauli = new_pauli*pauli
     end
     return pauli
@@ -146,7 +146,7 @@ function get_pauli(gate::Gate, num_qubits::Integer; imaginary_exponent::Integer=
     negative_exponent::Integer=0)::PauliGroupElement
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 1
-    return get_pauli(get_gate(gate), connected_qubits[1], num_qubits; imaginary_exponent=imaginary_exponent, negative_exponent=negative_exponent)
+    return get_pauli(get_gate_symbol(gate), connected_qubits[1], num_qubits; imaginary_exponent=imaginary_exponent, negative_exponent=negative_exponent)
 end
 
 function unsafe_get_pauli(::Identity, ::Int, num_qubits::Integer,
@@ -383,7 +383,7 @@ function Base.show(io::IO, pauli::PauliGroupElement)
     for gate in get_circuit_gates(displayable_pauli.circuit)
         connected_qubits = get_connected_qubits(gate)
         @assert length(connected_qubits) == 1
-        print_pauli_gate(io, get_gate(gate), connected_qubits[1])
+        print_pauli_gate(io, get_gate_symbol(gate), connected_qubits[1])
     end
     println(io)
     println(io)

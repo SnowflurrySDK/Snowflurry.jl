@@ -58,7 +58,7 @@ export
     # Functions
     commute, 
     anticommute, 
-    get_gate,
+    get_gate_symbol,
     get_embed_operator,
     get_matrix,
     get_display_symbol,
