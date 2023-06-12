@@ -16,6 +16,7 @@ test_label=string(label," constructors")
 
     # default constructor 
     op=IdentityOperator()
+    println(op)
 
     @test tr(op)==LinearAlgebra.tr(get_matrix(op))
 

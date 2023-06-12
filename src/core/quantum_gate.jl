@@ -1852,7 +1852,7 @@ struct Identity <: AbstractGate
     target::Integer
 end
 
-get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{T}()
+get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{2,T}()
 
 get_connected_qubits(gate::Identity)=[gate.target]
 
