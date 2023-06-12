@@ -35,6 +35,7 @@ export
     QuantumCircuit,
     AbstractGate,
     AbstractControlledGate,
+    ControlledGate,
     AnyonQPU,
     VirtualQPU,
     Client,
@@ -56,7 +57,8 @@ export
     SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
     TrivialTranspiler,
-    RemoveSwapBySwappingGates,
+    RemoveSwapBySwappingGatesTranspiler,
+    UnsupportedGatesTranspiler,
 
     # Functions
     commute, 

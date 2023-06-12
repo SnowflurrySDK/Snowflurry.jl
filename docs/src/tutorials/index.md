@@ -45,7 +45,7 @@ In this tutorial, we demonstrate entanglement by generating a Bell state.
 
 Code: [tutorials/entanglement\_demonstration.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/entanglement_demonstration.jl)
 
-Documentation: [Entanglement demonstration tutorial](./introductory/entanglement_demonstration.md)
+Documentation: [Entanglement demonstration tutorial](./introductory/entanglement_demonstration_.bak)
 
 ## Advanced tutorials
 

@@ -16,7 +16,7 @@ using Test
 end
 
 @testset "push_pop_gate" begin
-    c = QuantumCircuit(qubit_count = 2)
+    c = QuantumCircuit(qubit_count = 3)
     print(c)
     push!(c, hadamard(1))
     @test length(get_circuit_gates(c)) == 1
@@ -28,6 +28,11 @@ end
 
     push!(c, control_x(1, 2))
     @test length(get_circuit_gates(c)) == 2
+
+    print(c)
+
+    push!(c, ControlledGate(swap(2,3),[1]))
+    @test length(get_circuit_gates(c)) == 3
 
     print(c)
 
@@ -54,13 +59,18 @@ end
 @testset "gate type in circuit" begin
     circuit = QuantumCircuit(qubit_count = 2)
     push!(circuit, hadamard(1))
-    push!(circuit, control_x(1, 2))   
+    push!(circuit, control_x(1, 2))  
+    push!(circuit, ControlledGate(hadamard(2),[1])) 
 
     @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
+    @test circuit_contains_gate_type(circuit, Snowflake.ControlledGate{Snowflake.Hadamard})
+
     @test !circuit_contains_gate_type(circuit, Snowflake.ControlZ)
     @test !circuit_contains_gate_type(circuit, Snowflake.Swap)
     @test !circuit_contains_gate_type(circuit, Snowflake.SigmaX)
+    @test !circuit_contains_gate_type(circuit, Snowflake.ControlledGate{Snowflake.RotationX})
+
 end
 
 
