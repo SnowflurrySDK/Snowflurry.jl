@@ -115,19 +115,16 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::Universal
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{<:AbstractGate})::Universal
+# does not assert gates having common target
+function unsafe_compress_to_universal(gates::Vector{<:AbstractGate})::Universal
     
     combined_op=eye()
     targets=get_connected_qubits(gates[1])
-
-    @assert length(targets)==1 ("Received gate with multiple targets: $(gates[1])")
 
     common_target=targets[1]
 
     for gate in gates
         targets=get_connected_qubits(gate)
-        @assert length(targets)==1 ("Received gate with multiple targets: $gate")
-        @assert targets[1]==common_target ("Gates in array do not share common target")
 
         combined_op=get_operator(gate)*combined_op
     end
@@ -364,7 +361,7 @@ true
 ```
 """
 function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit   
-    return find_and_compress_blocks(circuit,is_multi_target,compress_to_universal)
+    return find_and_compress_blocks(circuit,is_multi_target,unsafe_compress_to_universal)
 end
 
 function cast_to_cz(gate::AbstractGate)
@@ -1418,19 +1415,16 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::PhaseShift
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<:AbstractGate})::PhaseShift
+# Warning: does not assert gates having common target
+function unsafe_compress_to_rz(gates::Vector{<:AbstractGate})::PhaseShift
     
     combined_op=eye()
     targets=get_connected_qubits(gates[1])
-
-    @assert length(targets)==1 ("Received gate with multiple targets: $(gates[1])")
 
     common_target=targets[1]
 
     for gate in gates
         targets=get_connected_qubits(gate)
-        @assert length(targets)==1 ("Received gate with multiple targets: $gate")
-        @assert targets[1]==common_target ("Gates in array do not share common target")
 
         combined_op=get_operator(gate)*combined_op
     end
@@ -1503,7 +1497,7 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
         return circuit
     end
     
-    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,compress_to_rz)
+    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,unsafe_compress_to_rz)
 end
 
 struct TrivialTranspiler<:Transpiler end

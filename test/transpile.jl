@@ -856,7 +856,7 @@ end
     @test length(get_circuit_gates(transpiled_circuit))==0
 end
 
-@testset "compress_to_rz" begin
+@testset "unsafe_compress_to_rz" begin
     target=1
     qubit_count=1
 
