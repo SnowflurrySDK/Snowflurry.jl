@@ -965,7 +965,7 @@ end
 
 @testset "UnsupportedGatesTranspiler" begin
     
-    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard,1,2)])
+    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard(2),1)])
 
     @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
 

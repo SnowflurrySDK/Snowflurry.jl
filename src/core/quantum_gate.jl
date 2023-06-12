@@ -103,7 +103,7 @@ In addition, a `ControlledGate{X45}` can be constructed using:
 ```jldoctest gate_struct
 julia> control=1; target=2;
 
-julia> ControlledGate(x_45,control, target)
+julia> ControlledGate(x_45(target),control)
 Gate Object: ControlledGate{X45}
 Connected_qubits	: [1, 2]
 Operator:
@@ -143,7 +143,7 @@ controlled Hadamard gate is constructed using the `hadamard()` `Function`. For i
 of a `ControlledGate{Hadamard}` with `control=1` and `target=2` is performed by calling:
 
 ```jldoctest controlled_hadamard
-julia> controlled_hadamard=ControlledGate(hadamard,1,2)
+julia> controlled_hadamard=ControlledGate(hadamard(2),1)
 Gate Object: ControlledGate{Snowflake.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
@@ -174,7 +174,7 @@ constructed. For instance, the following constructs the equivalent of a `Toffoli
 but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=[3]`:
 
 ```jldoctest 
-julia> toffoli_as_controlled_gate=ControlledGate(sigma_x,[1,2],[3])
+julia> toffoli_as_controlled_gate=ControlledGate(sigma_x(3),[1,2])
 Gate Object: ControlledGate{Snowflake.SigmaX}
 Connected_qubits	: [1, 2, 3]
 Operator:
@@ -199,11 +199,13 @@ struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
     kernel_qubits::Vector{Int}
 
     function ControlledGate(
-        kernel_handle::Function,
+        kernel::AbstractGate,
         control_qubits::Vector{Int},
-        kernel_qubits::Vector{Int};
-        params::Vector{<:Real}=Vector{Float64}()
         )
+
+        @assert !(kernel isa ControlledGate) "Recursive construction of ControlledGate{ControlledGate} is not allowed"
+
+        kernel_qubits=get_connected_qubits(kernel)
 
         connected_qubits=vcat(control_qubits,kernel_qubits)
 
@@ -211,18 +213,11 @@ struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
             length(unique(connected_qubits)) "Control and kernel qubits must all be distinct."*
             " Received control_qubits: $control_qubits, target_qubits $kernel_qubits"
 
-        # calls function, returns Gate
-        kernel=kernel_handle(kernel_qubits..., params...) 
-        
+
         new{typeof(kernel)}(kernel,connected_qubits,control_qubits,kernel_qubits)
     end
 
-    ControlledGate(
-        kernel_handle::Function,
-        control_qubit::Int,
-        kernel_qubit::Int;
-        params::Vector{<:Real}=Vector{Float64}())=
-            ControlledGate(kernel_handle,[control_qubit],[kernel_qubit];params=params)
+    ControlledGate(kernel::AbstractGate,control_qubit::Int)=ControlledGate(kernel,[control_qubit])
 end
 
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 

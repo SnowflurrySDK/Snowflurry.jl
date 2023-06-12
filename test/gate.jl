@@ -207,8 +207,8 @@ end
     
     # ControlX as ControlledGate
 
-    cnot_kernel_1_2=ControlledGate(sigma_x,1,2)
-    cnot_kernel_2_1=ControlledGate(sigma_x,2,1)
+    cnot_kernel_1_2=ControlledGate(sigma_x(2),1)
+    cnot_kernel_2_1=ControlledGate(sigma_x(1),2)
 
     @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
     @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
@@ -231,8 +231,8 @@ end
 
     # ControlZ as ControlledGate
 
-    cz_kernel_1_2=ControlledGate(sigma_z,1,2)
-    cz_kernel_2_1=ControlledGate(sigma_z,2,1)
+    cz_kernel_1_2=ControlledGate(sigma_z(2),1)
+    cz_kernel_2_1=ControlledGate(sigma_z(1),2)
 
     @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
     @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
@@ -261,12 +261,12 @@ end
 
     # Toffoli as ControlledGate
 
-    toffoli_kernel_1_2_3=ControlledGate(sigma_x,[1,2],[3])
-    toffoli_kernel_2_1_3=ControlledGate(sigma_x,[2,1],[3])
-    toffoli_kernel_1_3_2=ControlledGate(sigma_x,[1,3],[2])
-    toffoli_kernel_3_1_2=ControlledGate(sigma_x,[3,1],[2])
-    toffoli_kernel_2_3_1=ControlledGate(sigma_x,[2,3],[1])
-    toffoli_kernel_3_2_1=ControlledGate(sigma_x,[3,2],[1])
+    toffoli_kernel_1_2_3=ControlledGate(sigma_x(3),[1,2])
+    toffoli_kernel_2_1_3=ControlledGate(sigma_x(3),[2,1])
+    toffoli_kernel_1_3_2=ControlledGate(sigma_x(2),[1,3])
+    toffoli_kernel_3_1_2=ControlledGate(sigma_x(2),[3,1])
+    toffoli_kernel_2_3_1=ControlledGate(sigma_x(1),[2,3])
+    toffoli_kernel_3_2_1=ControlledGate(sigma_x(1),[3,2])
 
     @test ψ_1_2_3 ≈ toffoli_kernel_1_2_3*ψ_input
     @test ψ_1_2_3 ≈ toffoli_kernel_2_1_3*ψ_input
@@ -279,8 +279,8 @@ end
     @test get_display_symbol(toffoli_kernel_1_2_3) ==["*", "*", "X"]
 
     # ControlledHadamard as ControlledGate
-    controlled_hadamard_kernel_1_2=ControlledGate(hadamard,1,2)
-    controlled_hadamard_kernel_2_1=ControlledGate(hadamard,2,1)
+    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(2),1)
+    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(1),2)
 
     # ControlledHadamard as Dense AbstractControlledGate
     struct ControlledHadamard <: AbstractControlledGate
@@ -325,7 +325,7 @@ end
     @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
 
     # Neither target nor control is last qubit
-    controlled_hadamard_kernel_2_3=ControlledGate(hadamard,2,3)
+    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(3),2)
     controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
 
     ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
@@ -390,7 +390,7 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=ControlledGate(func,control_qubits,target_qubits)
+            c_gate=ControlledGate(func(target_qubits...),control_qubits)
             @test get_display_symbol(c_gate)==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
@@ -414,7 +414,7 @@ end
         ]
 
         for (func,params,param_keys,labels) in test_cases_params
-            c_gate=ControlledGate(func,control_qubits,target_qubits;params=params)
+            c_gate=ControlledGate(func(target_qubits...,params...),control_qubits)
             @test get_display_symbol(c_gate)==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
@@ -433,7 +433,7 @@ end
 
         #test label precision
         @test get_display_symbol(
-            ControlledGate(rotation,control_qubits,target_qubits;params=[pi,pi/2]),precision=2
+            ControlledGate(rotation(target_qubits...,[pi,pi/2]...),control_qubits),precision=2
             ) == make_labels(num_controls, ["R(θ=3.14,ϕ=1.57)"])
     end
 
@@ -444,6 +444,8 @@ end
         DiagonalOperator([-1.,1.]),
         [1,2]
     )
+
+    @test_throws AssertionError ControlledGate(ControlledGate(sigma_x(2),[1]),[3])
 end
 
 @testset "ControlledGate multi-control dual-target" begin
@@ -474,7 +476,7 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=ControlledGate(func,control_qubits,target_qubits)
+            c_gate=ControlledGate(func(target_qubits...),control_qubits)
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
 
