@@ -842,7 +842,7 @@ apply_controlled_gate_operator!(
 
 apply_controlled_gate_operator!(
     state::Ket,
-    full_operator::DenseOperator{4},
+    full_operator::DenseOperator,
     kernel::AbstractOperator,
     connected_qubits::Vector{Int}
     ) = throw(NotImplementedError(:apply_controlled_gate_operator!,kernel))

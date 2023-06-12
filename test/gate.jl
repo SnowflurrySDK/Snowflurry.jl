@@ -436,6 +436,14 @@ end
             ControlledGate(rotation,control_qubits,target_qubits;params=[pi,pi/2]),precision=2
             ) == make_labels(num_controls, ["R(θ=3.14,ϕ=1.57)"])
     end
+
+    # circumventing casting to DenseOperator not allowed  
+    @test_throws NotImplementedError Snowflake.apply_controlled_gate_operator!(
+        Ket([v for v in 1:8]),
+        eye(8),
+        DiagonalOperator([-1.,1.]),
+        [1,2]
+    )
 end
 
 @testset "ControlledGate multi-control dual-target" begin
