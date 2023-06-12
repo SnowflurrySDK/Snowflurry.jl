@@ -572,7 +572,7 @@ end
     end
 end
 
-@testset "cast_to_cz: unkown gate" begin
+@testset "cast_to_cz: unknown gate" begin
     struct UnknownCastToCZGateSymbol <: AbstractGateSymbol end
     symbol = UnknownCastToCZGateSymbol()
 
