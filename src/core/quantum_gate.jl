@@ -487,20 +487,31 @@ function apply_operator!(
     )
     qubit_count = get_num_qubits(state)
 
-    dim=2^qubit_count
+    control_qubit=connected_qubits[1]
+    target_qubit=connected_qubits[2]
     
-    # the bitwise implementation assumes target numbering starting at 0,
-    # with first qubit on the rightmost side
-    (target_qubit_index_0,target_qubit_index_1)=
-        Vector{UInt64}([qubit_count-t for t in reverse(connected_qubits)])
+    (target_qubit_index_0,
+        target_qubit_index_1,
+        mask_0,
+        mask_1,
+        low_mask, 
+        mid_mask, 
+        high_mask,
+        loop_dim)=create_masks_dual_targets(qubit_count,control_qubit,target_qubit)
 
-    loop_dim = div(dim,4)
-
-    mask_0 = UInt64(1) << target_qubit_index_0
-    mask_1 = UInt64(1) << target_qubit_index_1
-    
     mask = mask_0 + mask_1
 
+
+    min_qubit_index = minimum([target_qubit_index_0, target_qubit_index_1])
+    max_qubit_index = maximum([target_qubit_index_0, target_qubit_index_1])
+    
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+    low_mask = min_qubit_mask - 1
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    
     min_qubit_index = minimum([target_qubit_index_0, target_qubit_index_1])
     max_qubit_index = maximum([target_qubit_index_0, target_qubit_index_1])
     
@@ -512,20 +523,18 @@ function apply_operator!(
 
     if (target_qubit_index_0 == 0 || target_qubit_index_1 == 0)
         for state_index in UnitRange{UInt64}(0,loop_dim-1)
-            basis_index_0 = (state_index & low_mask) +
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + mask_0;
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,mask_0)
             basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+
             @inbounds temp = state.data[basis_index_0+1]
             @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
             @inbounds state.data[basis_index_1+1] = temp*op.phase
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)    
-            basis_index_0 = (state_index & low_mask) +
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + mask_0
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,mask_0)
             basis_index_1 = basis_index_0 ⊻ mask # bitwise XOR
+
             @inbounds temp0 = state.data[basis_index_0+1]
             @inbounds temp1 = state.data[basis_index_0+2]
             @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]*op.phase
@@ -541,30 +550,24 @@ end
 function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
     qubit_count = get_num_qubits(state)
 
-    dim=2^qubit_count
+    (target_qubit_index_0,
+        target_qubit_index_1,
+        mask_0,
+        mask_1,
+        low_mask, 
+        mid_mask, 
+        high_mask,
+        loop_dim)=create_masks_dual_targets(qubit_count,control_qubit,target_qubit)
 
-    loop_dim = div(dim,4)
+    control_qubit_index=target_qubit_index_0
+    target_qubit_index =target_qubit_index_1
 
-    # the bitwise implementation assumes target numbering starting at 0,
-    # with first qubit on the rightmost side
-    target_qubit_index=qubit_count-target_qubit 
-    control_qubit_index=qubit_count-control_qubit 
-    
-    target_mask = UInt64(1) << target_qubit_index
-    control_mask = UInt64(1) << control_qubit_index
-
-    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
-    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
-
-    min_qubit_mask = UInt64(1) << min_qubit_index
-    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
-    low_mask = min_qubit_mask - 1;
-    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
-    high_mask = ~(max_qubit_mask - 1)
+    control_mask=mask_0
+    target_mask=mask_1
 
     if target_qubit_index == 0
         # swap neighboring two basis
-        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
             basis_index = ((state_index & mid_mask) << 1) +
                 ((state_index & high_mask) << 2) + control_mask
             @inbounds temp = state.data[basis_index+1]
@@ -573,11 +576,10 @@ function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
         end
     elseif (control_qubit_index == 0)
         # no neighboring swap
-        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
-            basis_index_0 =(state_index & low_mask) + 
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + control_mask
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
             basis_index_1 = basis_index_0 + target_mask
+
             @inbounds temp = state.data[basis_index_0+1]
             @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
             @inbounds state.data[basis_index_1+1] = temp
@@ -585,10 +587,9 @@ function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
     else
         # a,a+1 is swapped to a^m, a^m+1, respectively
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
-            basis_index_0 =(state_index & low_mask) + 
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + control_mask
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
             basis_index_1 = basis_index_0 + target_mask
+
             @inbounds temp0 = state.data[basis_index_0+1]
             @inbounds temp1 = state.data[basis_index_0+2]
             @inbounds state.data[basis_index_0+1] = state.data[basis_index_1+1]
@@ -604,41 +605,32 @@ end
 function apply_control_z!(state::Ket,control_qubit::Int,target_qubit::Int)
     qubit_count = get_num_qubits(state)
 
-    dim=2^qubit_count
+    (target_qubit_index_0,
+        target_qubit_index_1,
+        mask_0,
+        mask_1,
+        low_mask, 
+        mid_mask, 
+        high_mask,
+        loop_dim)=create_masks_dual_targets(qubit_count,control_qubit,target_qubit)
 
-    loop_dim = div(dim,4)
+    control_qubit_index=target_qubit_index_0
 
-    # the bitwise implementation assumes target numbering starting at 0,
-    # with first qubit on the rightmost side
-    target_qubit_index=qubit_count-target_qubit 
-    control_qubit_index=qubit_count-control_qubit 
-    
-    target_mask = UInt64(1) << target_qubit_index
-    control_mask = UInt64(1) << control_qubit_index
+    control_mask=mask_0
+    target_mask=mask_1
 
-    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
-    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
+    if target_qubit_index_1 == 0 || control_qubit_index == 0
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
+            basis_index = basis_index_0+target_mask
 
-    min_qubit_mask = UInt64(1) << min_qubit_index
-    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
-    low_mask = min_qubit_mask - 1;
-    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
-    high_mask = ~(max_qubit_mask - 1)
-
-    mask = target_mask + control_mask
-
-    if target_qubit_index == 0 || control_qubit_index == 0
-        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
-            basis_index = (state_index & low_mask) +
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + mask
             @inbounds state.data[basis_index+1] *= -1
         end
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
-            basis_index = (state_index & low_mask) +
-                ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + mask
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
+            basis_index = basis_index_0+target_mask
+
             @inbounds state.data[basis_index+1] *= -1
             @inbounds state.data[basis_index+2] *= -1
         end
@@ -749,36 +741,26 @@ function apply_controlled_gate_operator!(
     
     qubit_count = get_num_qubits(state)
 
-    dim=UInt64(2^qubit_count)
+    (target_qubit_index_0,
+        target_qubit_index_1,
+        mask_0,
+        mask_1,
+        low_mask, 
+        mid_mask, 
+        high_mask,
+        loop_dim)=create_masks_dual_targets(qubit_count,control_qubit,target_qubit)
 
-    loop_dim=div(dim,4)
+    control_qubit_index=target_qubit_index_0
+    target_qubit_index =target_qubit_index_1
 
-    # the bitwise implementation assumes target numbering starting at 0,
-    # with first qubit on the rightmost side
-    target_qubit_index=UInt64(qubit_count-target_qubit)
-    
-    control_qubit_index=UInt64(qubit_count-control_qubit)
-
-    target_mask  = UInt64(1) << target_qubit_index
-    control_mask = UInt64(1) << control_qubit_index
-    
-    min_qubit_index =minimum([control_qubit_index, target_qubit_index])
-    max_qubit_index =maximum([control_qubit_index, target_qubit_index])
-
-    min_qubit_mask = UInt64(1) << min_qubit_index
-    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
-
-    low_mask = min_qubit_mask - 1
-    mid_mask = (max_qubit_mask - 1) ⊻ low_mask
-    high_mask = ~(max_qubit_mask - 1)
+    control_mask=mask_0
+    target_mask=mask_1
 
     matrix=kernel.data
 
     if (target_qubit_index == 0)
-        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
-            basis_index =
-                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + control_mask
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
 
             # fetch values
             @inbounds cval0 = state.data[basis_index+1]
@@ -790,10 +772,8 @@ function apply_controlled_gate_operator!(
         end
     
     elseif (control_qubit_index == 0) 
-        for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
-            basis_index_0 =
-                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + control_mask
+        for state_index in UnitRange{UInt64}(0,loop_dim-1)
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
             basis_index_1 = basis_index_0 + target_mask
 
             # fetch values
@@ -807,9 +787,7 @@ function apply_controlled_gate_operator!(
 
     else
         for state_index in StepRange{UInt64}(0,2,loop_dim-1)
-            basis_index_0 =
-                (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                ((state_index & high_mask) << 2) + control_mask
+            basis_index_0=get_basis_index_0(state_index,low_mask,mid_mask,high_mask,control_mask)
             basis_index_1 = basis_index_0 + target_mask
 
             # fetch values
@@ -864,7 +842,7 @@ function apply_operator!(
     
     matrix=operator.data
 
-    for state_index in UnitRange{UInt64}(UInt64(0),UInt64(loop_dim-1))
+    for state_index in UnitRange{UInt64}(0,loop_dim-1)
         basis_0 =(state_index & mask_low) + ((state_index & mask_high) << 1)
         basis_1 = basis_0 + mask
 
@@ -1157,6 +1135,44 @@ function create_control_mask(
     end
 
     return mask;
+end
+
+function create_masks_dual_targets(qubit_count::Int,control_qubit::Int,target_qubit::Int)
+    dim=2^qubit_count
+    loop_dim = div(dim,4)
+
+    # the bitwise implementation assumes target numbering starting at 0,
+    # with first qubit on the rightmost side
+    target_qubit_index_1=qubit_count-target_qubit 
+    target_qubit_index_0=qubit_count-control_qubit 
+
+    mask_0 = UInt64(1) << target_qubit_index_0
+    mask_1 = UInt64(1) << target_qubit_index_1
+
+    min_qubit_index = minimum([target_qubit_index_0, target_qubit_index_1])
+    max_qubit_index = maximum([target_qubit_index_0, target_qubit_index_1])
+
+    min_qubit_mask = UInt64(1) << min_qubit_index
+    max_qubit_mask = UInt64(1) << (max_qubit_index - 1)
+
+    low_mask = min_qubit_mask - 1
+    mid_mask = (max_qubit_mask - 1) ⊻ low_mask # bitwise XOR
+    high_mask = ~(max_qubit_mask - 1)
+
+    return (target_qubit_index_0,
+        target_qubit_index_1,
+        mask_0,
+        mask_1,
+        low_mask, 
+        mid_mask, 
+        high_mask,
+        loop_dim)
+end
+
+function get_basis_index_0(state_index::UInt64,low_mask::UInt64,mid_mask::UInt64,high_mask::UInt64,mask_0::UInt64)::UInt64
+    return (state_index & low_mask) + 
+        ((state_index & mid_mask) << 1) +
+        ((state_index & high_mask) << 2) + mask_0
 end
 
 # Single Qubit Gates
