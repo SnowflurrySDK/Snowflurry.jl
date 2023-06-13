@@ -1,6 +1,7 @@
 using Snowflake
-using JSON
+using Base64
 using HTTP
+using JSON
 
 Base.@kwdef struct Status
     type::String
@@ -23,7 +24,7 @@ abstract type Requestor end
 
 get_request(requestor::Requestor,::String,::String,::String) = 
     throw(NotImplementedError(:get_request,requestor))
-post_request(requestor::Requestor,::String,::String,::String) = 
+post_request(requestor::Requestor,::String,::String,::String,::String) = 
     throw(NotImplementedError(:post_request,requestor))
 
 struct HTTPRequestor<:Requestor end
@@ -49,9 +50,17 @@ const possible_status_list=[
     cancelled_status,
 ]
 
+function BasicAuthorization(
+    user::String,
+    password::String
+  )::String
+  return "Basic " * base64encode(user * ":" * password)
+end
+
 function post_request(
     ::HTTPRequestor,
     url::String,
+    user::String,
     access_token::String,
     body::String
     )::HTTP.Response
@@ -59,7 +68,7 @@ function post_request(
     return HTTP.post(
         url, 
         headers=Dict(
-            "Authorization"=>"Bearer $access_token",
+            "Authorization"=>BasicAuthorization(user, access_token),
             "Content-Type"=>"application/json"
             ),
         body=body,
@@ -69,39 +78,39 @@ end
 function post_request(
     mock_requester::MockRequestor,
     url::String,
+    user::String,
     access_token::String,
     body::String
     )::HTTP.Response
 
-    return mock_requester.post_checker(url,access_token,body)
-
+    return mock_requester.post_checker(url,user,access_token,body)
 end
-
 
 function get_request(
     ::HTTPRequestor,
     url::String,
+    user::String,
     access_token::String,
     )::HTTP.Response
 
     return HTTP.get(
         url, 
         headers=Dict(
-            "Authorization"=>"Bearer $access_token",
+            "Authorization"=>BasicAuthorization(user, access_token),
             "Content-Type"=>"application/json"
             ),
     )
 end
 
 function get_request(
-    mock_requester::MockRequestor,
+    mock_requestor::MockRequestor,
     url::String,
-    access_token::String
+    user::String,
+    access_token::String,
     )::HTTP.Response
 
-    return mock_requester.request_checker(url,access_token)
+    return mock_requestor.request_checker(url,user,access_token)
 end
-
 
 """
     serialize_job(circuit::QuantumCircuit,repetitions::Integer)
@@ -225,6 +234,7 @@ function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::
     response=post_request(
         get_requestor(client),
         path_url,
+        client.user,
         client.access_token,
         circuit_json)
 
@@ -266,6 +276,7 @@ function get_status(client::Client,circuitID::String)::Status
     response=get_request(
         get_requestor(client),
         path_url,
+        client.user,
         client.access_token
         )
 
@@ -279,7 +290,11 @@ function get_status(client::Client,circuitID::String)::Status
     end
 
     if body["status"]["type"]==failed_status
-        return Status(type=body["status"]["type"],message=body["message"])
+        try
+            return Status(type=failed_status,message=body["message"])
+        catch
+            return Status(type=failed_status,message=string(body))
+        end
     else
         return Status(type=body["status"]["type"])
     end
@@ -313,18 +328,18 @@ function get_result(client::Client,circuitID::String)::Dict{String, Int}
     response=get_request(
         get_requestor(client),
         path_url,
+        client.user,
         client.access_token
         )
 
     body=JSON.parse(read_response_body(response.body))
 
     histogram=Dict{String,Int}()
-    
     @assert haskey(body,"histogram")
 
     # convert from Dict{String,String} to Dict{String,Int}
     for (key,val) in body["histogram"]
-        histogram[key]=parse(Int, val)
+        histogram[key]=Int(val)
     end
 
     return histogram
