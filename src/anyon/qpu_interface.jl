@@ -27,7 +27,10 @@ get_request(requestor::Requestor,::String,::String,::String) =
 post_request(requestor::Requestor,::String,::String,::String,::String) =
     throw(NotImplementedError(:post_request,requestor))
 
-struct HTTPRequestor<:Requestor end
+struct HTTPRequestor<:Requestor
+    http_implementation::Dict{String, Function}
+end
+
 struct MockRequestor<:Requestor 
     request_checker::Function
     post_checker::Function
@@ -58,14 +61,14 @@ function BasicAuthorization(
 end
 
 function post_request(
-    ::HTTPRequestor,
+    requestor::HTTPRequestor,
     url::String,
     user::String,
     access_token::String,
     body::String
     )::HTTP.Response
 
-    return HTTP.post(
+    return requestor.http_implementation["POST"](
         url, 
         headers=Dict(
             "Authorization"=>BasicAuthorization(user, access_token),
@@ -87,13 +90,13 @@ function post_request(
 end
 
 function get_request(
-    ::HTTPRequestor,
+    requestor::HTTPRequestor,
     url::String,
     user::String,
     access_token::String,
     )::HTTP.Response
 
-    return HTTP.get(
+    return requestor.http_implementation["GET"](
         url, 
         headers=Dict(
             "Authorization"=>BasicAuthorization(user, access_token),
@@ -184,7 +187,10 @@ Base.@kwdef struct Client
     host::String
     user::String
     access_token::String
-    requestor::Requestor=HTTPRequestor()
+    requestor::Requestor=HTTPRequestor(Dict{String, Function}(
+        "GET"=> HTTP.get,
+        "POST"=> HTTP.post
+    ))
 end
 
 function Base.show(io::IO, client::Client)

@@ -217,6 +217,31 @@ end
     @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
 end
 
+@testset "HTTPRequestor" begin
+    test_post = stub_response_sequence([
+        stubCircuitSubmittedResponse()
+    ])
+    test_get = stub_response_sequence([
+        stubStatusResponse("succeeded"),
+        stubResult(),
+    ])
+
+    # Use dependency injection to keep from hitting the network stack.
+    requestor = HTTPRequestor(Dict{String, Function}(
+        "GET" => test_get,
+        "POST" => test_post,
+    ))
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    qpu = AnyonQPU(test_client, status_request_throttle=no_throttle)
+
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
+    num_repetitions = 100
+    histogram = run_job(qpu, circuit, num_repetitions)
+    expected = Dict{String, Int}("001" => 100)
+
+    @test histogram == expected
+end
+
 @testset "transpile_and_run_job on AnyonQPU" begin
 
     requestor=MockRequestor(request_checker,post_checker)
