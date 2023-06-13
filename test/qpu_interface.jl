@@ -140,12 +140,12 @@ end
     @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
-@testset "Construct AnyonQPU" begin
+@testset "Construct AnyonYukonQPU" begin
     host = "host"
     user = "user"
     token = "token"
 
-    qpu = AnyonQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
+    qpu = AnyonYukonQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
     client = get_client(qpu)
 
     @test client.host == host
@@ -155,13 +155,13 @@ end
     print_connectivity(qpu)
 end
 
-@testset "run_job on AnyonQPU" begin
+@testset "run_job on AnyonYukonQPU" begin
 
     requestor=MockRequestor(request_checker,post_checker)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
     num_repetitions=100
-    qpu=AnyonQPU(test_client, status_request_throttle=no_throttle)
-    println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
+    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
+    println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu)==test_client
     
     #test basic submission, no transpilation
@@ -180,7 +180,7 @@ end
         stubResult()
       ]),
       post_checker)
-    qpu = AnyonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
+    qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
     histogram=run_job(qpu, circuit, num_repetitions)
     @test histogram==Dict("001"=>num_repetitions)
     @test !haskey(histogram, "error_msg")
@@ -195,7 +195,7 @@ end
         stubFailureResult()
       ]),
       post_checker)
-    qpu = AnyonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
+    qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
     @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
 
     #verify that run_job throws an error if the job was cancelled
@@ -208,16 +208,16 @@ end
         stubCancelledResultResponse()
       ]),
       post_checker)
-    qpu = AnyonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
+    qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
     @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
 end
 
-@testset "transpile_and_run_job on AnyonQPU" begin
+@testset "transpile_and_run_job on AnyonYukonQPU" begin
 
     requestor=MockRequestor(request_checker,post_checker)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
     num_repetitions=100
-    qpu=AnyonQPU(test_client, status_request_throttle=no_throttle)
+    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
 
     # submit circuit with qubit_count_circuit>qubit_count_qpu
     circuit = QuantumCircuit(qubit_count = 10)
@@ -231,10 +231,10 @@ end
         num_repetitions;
         transpiler=TrivialTranspiler()
     )
-    # using AnyonQPU default transpiler
+    # using AnyonYukonQPU default transpiler
     requestor=MockRequestor(request_checker,post_checker_toffoli)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    qpu=AnyonQPU(test_client, status_request_throttle=no_throttle)
+    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
 
     histogram=transpile_and_run_job(qpu, circuit, num_repetitions)
     

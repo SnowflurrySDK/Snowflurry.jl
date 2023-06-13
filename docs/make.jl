@@ -39,7 +39,14 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Tutorials" => "tutorials/index.md",
+        "Tutorials" => [
+            "Basics"=>"tutorials/basics.md"
+            "Virtual QPU" =>"tutorials/run_circuit_virtual.md"
+            "Real hardware" =>"tutorials/run_circuit_anyon.md"
+        ],
+        "Advanced Examples" => [
+            "Asynchronous Jobs"=>"tutorials/advanced/async_jobs.md"
+        ],
         "Library" => "library.md",
         "Developing" => "development.md",
     ],
