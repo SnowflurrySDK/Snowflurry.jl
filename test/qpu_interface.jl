@@ -227,10 +227,7 @@ end
     ])
 
     # Use dependency injection to keep from hitting the network stack.
-    requestor = HTTPRequestor(Dict{String, Function}(
-        "GET" => test_get,
-        "POST" => test_post,
-    ))
+    requestor = HTTPRequestor(test_get, test_post)
     test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
     qpu = AnyonQPU(test_client, status_request_throttle=no_throttle)
 

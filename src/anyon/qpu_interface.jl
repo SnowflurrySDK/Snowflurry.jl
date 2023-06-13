@@ -28,7 +28,8 @@ post_request(requestor::Requestor,::String,::String,::String,::String) =
     throw(NotImplementedError(:post_request,requestor))
 
 struct HTTPRequestor<:Requestor
-    http_implementation::Dict{String, Function}
+    getter::Function
+    poster::Function
 end
 
 struct MockRequestor<:Requestor 
@@ -68,7 +69,7 @@ function post_request(
     body::String
     )::HTTP.Response
 
-    return requestor.http_implementation["POST"](
+    return requestor.poster(
         url, 
         headers=Dict(
             "Authorization"=>BasicAuthorization(user, access_token),
@@ -96,7 +97,7 @@ function get_request(
     access_token::String,
     )::HTTP.Response
 
-    return requestor.http_implementation["GET"](
+    return requestor.getter(
         url, 
         headers=Dict(
             "Authorization"=>BasicAuthorization(user, access_token),
@@ -187,10 +188,7 @@ Base.@kwdef struct Client
     host::String
     user::String
     access_token::String
-    requestor::Requestor=HTTPRequestor(Dict{String, Function}(
-        "GET"=> HTTP.get,
-        "POST"=> HTTP.post
-    ))
+    requestor::Requestor=HTTPRequestor(HTTP.get, HTTP.post)
 end
 
 function Base.show(io::IO, client::Client)
