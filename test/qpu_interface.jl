@@ -26,14 +26,15 @@ end
     non_impl_requestor=NonImplementedRequestor()
     body=""
     
-    @test_throws NotImplementedError get_request(non_impl_requestor,host,access_token,body) 
-    @test_throws NotImplementedError post_request(non_impl_requestor,host,access_token,body) 
+    @test_throws NotImplementedError get_request(non_impl_requestor,host,user,access_token)
+    @test_throws NotImplementedError post_request(non_impl_requestor,host,user,access_token,body)
     
     #### request from :get_status
    
     @test_throws NotImplementedError get_request(
         requestor,
         "erroneous_url",
+        user,
         access_token
     )
 
@@ -44,6 +45,7 @@ end
     response=get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID,
+        user,
         access_token
     )
 
@@ -52,6 +54,7 @@ end
     @test_throws NotImplementedError get_request(
         requestor,
         host*"/"*string(Snowflake.path_circuits,"wrong_ending"),
+        user,
         access_token
     )
 
@@ -62,6 +65,7 @@ end
     response=get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*Snowflake.path_results,
+        user,
         access_token
     )
 
@@ -70,6 +74,7 @@ end
     @test_throws NotImplementedError get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*string(Snowflake.path_results,"wrong_ending"),
+        user,
         access_token
     )
 
@@ -157,17 +162,17 @@ end
 
 @testset "run_job on AnyonQPU" begin
 
-    requestor=MockRequestor(request_checker,post_checker)
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    requestor = MockRequestor(request_checker,post_checker)
+    test_client = Client(host=host,user=user,access_token=access_token,requestor=requestor)
     num_repetitions=100
-    qpu=AnyonQPU(test_client, status_request_throttle=no_throttle)
+    qpu = AnyonQPU(test_client, status_request_throttle=no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
-    @test get_client(qpu)==test_client
-    
+    @test get_client(qpu) == test_client
+
     #test basic submission, no transpilation
-    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    histogram=run_job(qpu, circuit, num_repetitions)
-    @test histogram==Dict("001"=>num_repetitions)
+    circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(3), control_z(2,1)])
+    histogram = run_job(qpu, circuit ,num_repetitions)
+    @test histogram == Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")
 
     #verify that run_job blocks until a 'long-running' job completes

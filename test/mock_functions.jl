@@ -5,7 +5,7 @@ host="http://example.anyonsys.com"
 user="test_user"
 access_token="not_a_real_access_token"
 
-function post_checker(url::String,access_token::String,body::String)
+function post_checker(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflake.path_circuits
     expected_access_token=access_token
@@ -20,7 +20,7 @@ function post_checker(url::String,access_token::String,body::String)
     )
 end
 
-function post_checker_transpiled(url::String,access_token::String,body::String)
+function post_checker_transpiled(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflake.path_circuits
     expected_access_token=access_token
@@ -35,7 +35,7 @@ function post_checker_transpiled(url::String,access_token::String,body::String)
     )
 end
 
-function post_checker_toffoli(url::String,access_token::String,body::String)
+function post_checker_toffoli(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflake.path_circuits
     expected_access_token=access_token
@@ -50,7 +50,7 @@ function post_checker_toffoli(url::String,access_token::String,body::String)
     )
 end
 
-function request_checker(url::String,access_token::String)
+function request_checker(url::String,user::String,access_token::String)
     myregex=Regex("(.*)(/$(Snowflake.path_circuits)/)(.*)")
     match_obj=match(myregex,url)
 
@@ -91,7 +91,7 @@ stubCancelledResultResponse() = HTTP.Response(200, [], body="{\"status\":{\"type
 function stub_response_sequence(response_sequence::Vector{HTTP.Response})
   idx = 0
 
-  return function(url::String, access_token::String)
+  return function(url::String, user::String, access_token::String)
     if idx >= length(response_sequence)
       throw(ErrorException("too many requests; response sequence exhausted"))
     end
