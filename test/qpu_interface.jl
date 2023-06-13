@@ -171,7 +171,7 @@ end
 
     #test basic submission, no transpilation
     circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(3), control_z(2,1)])
-    histogram = run_job(qpu, circuit ,num_repetitions)
+    histogram = run_job(qpu, circuit, num_repetitions)
     @test histogram == Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")
 
@@ -261,7 +261,7 @@ end
         @test is_native_gate(qpu,gate)
     end
        
-    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit, num_repetitions)
    
     @test histogram==Dict("001"=>num_repetitions)
 
