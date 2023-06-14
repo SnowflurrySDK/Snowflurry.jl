@@ -135,7 +135,7 @@ q[2]:─────
 
 
 julia> serialize_job(c,10)
-"{\\\"num_repetitions\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"shot_count\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -145,7 +145,7 @@ function serialize_job(circuit::QuantumCircuit,repetitions::Integer)::String
         "circuit"=>Dict{String,Any}(
                 "operations"=>Vector{Dict{String,Any}}()
             ),
-        "num_repetitions"=>repetitions
+        "shot_count"=>repetitions
     )
 
     for gate in get_circuit_gates(circuit)
@@ -216,10 +216,10 @@ get_requestor(client::Client)   =client.requestor
 
 
 """
-    submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer)
+    submit_circuit(client::Client,circuit::QuantumCircuit,shot_count::Integer)
 
 Submit a circuit to a `Client` of `QPU` service, requesting a number of 
-repetitions (num_repetitions). Returns circuitID.  
+repetitions (shot_count). Returns circuitID.
 
 # Example
 
@@ -229,9 +229,9 @@ julia> submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),cont
 
 ```
 """
-function submit_circuit(client::Client,circuit::QuantumCircuit,num_repetitions::Integer)::String
+function submit_circuit(client::Client,circuit::QuantumCircuit,shot_count::Integer)::String
 
-    circuit_json=serialize_job(circuit,num_repetitions)
+    circuit_json=serialize_job(circuit,shot_count)
   
     path_url=get_host(client)*"/"*path_circuits
     
@@ -365,7 +365,7 @@ is_native_circuit(qpu::AbstractQPU,::QuantumCircuit) =
 get_transpiler(qpu::AbstractQPU) =
     throw(NotImplementedError(:get_transpiler,qpu))
 
-run_job(qpu::AbstractQPU, circuit::QuantumCircuit, num_repetitions::Integer) =
+run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
     throw(NotImplementedError(:run_job,qpu))
 
 """
@@ -420,12 +420,12 @@ function read_response_body(body::Vector{UInt8})::String
 end
 
 """
-    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer;transpiler::Transpiler=get_transpiler(qpu))
 
-This method first transpiles the input circuit using either the default transpiler, 
-or any other transpiler passed as a key-word argument.  
-The transpiled circuit is then run on a `QPU` simulator, repeatedly for the specified 
-number of repetitions (num_repetitions). Returns the histogram of the 
+This method first transpiles the input circuit using either the default transpiler,
+or any other transpiler passed as a key-word argument.
+The transpiled circuit is then run on a `QPU` simulator, repeatedly for the specified
+number of repetitions (shot_count). Returns the histogram of the
 completed circuit calculations, or an error message.
 
 # Example
@@ -441,7 +441,7 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::VirtualQPU, 
     circuit::QuantumCircuit,
-    num_repetitions::Integer;
+    shot_count::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
     )::Dict{String,Int}
 
@@ -449,14 +449,14 @@ function transpile_and_run_job(
 
     is_native_circuit(qpu,transpiled_circuit)
 
-    return run_job(qpu,transpiled_circuit,num_repetitions)
+    return run_job(qpu,transpiled_circuit,shot_count)
 end
 
 """
-    run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer)
+    run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer)
 
-Run a circuit computation on a `QPU` simulator, repeatedly for the specified 
-number of repetitions (num_repetitions). Returns the histogram of the 
+Run a circuit computation on a `QPU` simulator, repeatedly for the specified
+number of repetitions (shot_count). Returns the histogram of the
 completed circuit calculations.
 
 # Example
@@ -469,9 +469,9 @@ Dict{String, Int64} with 1 entry:
 
 ```
 """
-function run_job(qpu::VirtualQPU, circuit::QuantumCircuit,num_repetitions::Integer)::Dict{String,Int}
+function run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer)::Dict{String,Int}
     
-    data=simulate_shots(circuit, num_repetitions)
+    data=simulate_shots(circuit, shot_count)
     
     histogram=Dict{String,Int}()
 
