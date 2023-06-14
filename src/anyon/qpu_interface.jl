@@ -54,10 +54,10 @@ const possible_status_list=[
     cancelled_status,
 ]
 
-function BasicAuthorization(
+function encode_to_basic_authorization(
     user::String,
     password::String
-  )::String
+    )::String
   return "Basic " * base64encode(user * ":" * password)
 end
 
@@ -72,7 +72,7 @@ function post_request(
     return requestor.poster(
         url, 
         headers=Dict(
-            "Authorization"=>BasicAuthorization(user, access_token),
+            "Authorization"=>encode_to_basic_authorization(user, access_token),
             "Content-Type"=>"application/json"
             ),
         body=body,
@@ -100,7 +100,7 @@ function get_request(
     return requestor.getter(
         url, 
         headers=Dict(
-            "Authorization"=>BasicAuthorization(user, access_token),
+            "Authorization"=>encode_to_basic_authorization(user, access_token),
             "Content-Type"=>"application/json"
             ),
     )
