@@ -145,15 +145,25 @@ end
     @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
-@testset "unexpected job status" begin
+@testset "job status" begin
+    # We don't expect a POST during this test. Returning nothing should cause a
+    # failure if a POST is attempted
+    test_post = () -> Nothing
+
+    test_get = stub_response_sequence([
+        # Simulate a response for a failed job.
+        stubFailedStatusResponse()
+    ])
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    status = get_status(test_client, "circuitID not used in this test")
+    @test get_status_type(status) == "failed"
+    @test get_status_message(status) == "mocked"
+
     test_get = stub_response_sequence([
         # Simulate a response containing an invalid job status.
         stubStatusResponse("not a valid status")
     ])
-
-    # We don't expect a POST during this test. Returning nothing should cause a
-    # failure if a POST is attempted
-    test_post = () -> Nothing
 
     requestor = HTTPRequestor(test_get, test_post)
     test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)

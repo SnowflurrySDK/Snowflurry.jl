@@ -297,8 +297,8 @@ function get_status(client::Client,circuitID::String)::Status
         return Status(type=body["status"]["type"])
     end
 
-    message = if haskey(body, "message")
-        body["message"]
+    message = if haskey(body["status"], "message")
+        body["status"]["message"]
     else
         "no failure information available. raw response: '$(string(body))'"
     end
