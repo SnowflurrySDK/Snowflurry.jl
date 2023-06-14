@@ -344,7 +344,7 @@ function get_result(client::Client,circuitID::String)::Dict{String, Int}
 
     # convert from Dict{String,String} to Dict{String,Int}
     for (key,val) in body["histogram"]
-        histogram[key]=parse(Int, val)
+        histogram[key]=round(Int, val)
     end
 
     return histogram

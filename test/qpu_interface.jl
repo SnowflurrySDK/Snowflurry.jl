@@ -60,7 +60,7 @@ end
 
     #### request from :get_result
 
-    expected_response=HTTP.Response(200, [],body="{\"histogram\":{\"001\":\"100\"}}") 
+    expected_response=HTTP.Response(200, [],body="{\"histogram\":{\"001\":100}}") 
 
     response=get_request(
         requestor,
