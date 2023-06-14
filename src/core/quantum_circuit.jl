@@ -241,9 +241,9 @@ q[1]:──X────Y──
 
 julia> c1 = QuantumCircuit(qubit_count = 1, gates=[phase_shift(1,π)])
 Quantum Circuit Object:
-   qubit_count: 1 
-q[1]:──P(3.1416)──
-                  
+   qubit_count: 1  
+q[1]:──Rz(3.1416)──
+                   
 
 
 
