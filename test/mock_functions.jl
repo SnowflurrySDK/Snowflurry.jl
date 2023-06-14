@@ -56,7 +56,7 @@ function request_checker(url::String,user::String,access_token::String)
         if !isnothing(match_obj)
             # caller is :get_result
             return HTTP.Response(200, [], 
-                body="{\"histogram\":{\"001\":\"100\"}}"
+                body="{\"histogram\":{\"001\":100}}"
             ) 
         else
             myregex=Regex("(.*)(/$(Snowflake.path_circuits)/)([^/]*)\$")
@@ -76,7 +76,7 @@ end
 
 stubStatusResponse(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":\"$status\"}}")
 stubFailedStatusResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
-stubResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":\"100\"}}")
+stubResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":100}}")
 stubFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
 stubCancelledResultResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
 stubCircuitSubmittedResponse() = HTTP.Response(200, [], body="{\"circuitID\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\"}")
