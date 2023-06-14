@@ -68,7 +68,7 @@ move_gate
 
 ## Quantum Processing Unit
 ```@docs
-AnyonQPU
+AnyonYukonQPU
 VirtualQPU
 Client
 get_host
@@ -127,10 +127,6 @@ create
 destroy
 number_op
 coherent
-ShrodingerProblem{T<:AbstractOperator, S<:Complex}
-LindbladProblem{T<:DenseOperator}
-sesolve
-lindblad_solve
 compare_kets
 ```
 

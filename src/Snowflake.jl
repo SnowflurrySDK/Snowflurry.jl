@@ -13,7 +13,7 @@ using SparseArrays #SparseMatrixCSC
 using Arpack #provides eigen value decomposition for sparse matrices
 
 import StatsBase
-import OrdinaryDiffEq
+
 
 
 
@@ -30,13 +30,11 @@ export
     SparseOperator,
     SwapLikeOperator,
     MultiBodySystem,
-    ShrodingerProblem,
-    LindbladProblem,
     QuantumCircuit,
     AbstractGate,
     AbstractControlledGate,
     ControlledGate,
-    AnyonQPU,
+    AnyonYukonQPU,
     VirtualQPU,
     Client,
     Status,
@@ -94,8 +92,6 @@ export
     genlaguerre,
     moyal,
     wigner, 
-    sesolve,
-    lindblad_solve,
     tr,
     get_operator,
     simulate,
@@ -168,7 +164,6 @@ export
     
 
 include("core/qobj.jl")
-include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/pauli.jl")

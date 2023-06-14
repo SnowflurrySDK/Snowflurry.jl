@@ -424,8 +424,8 @@ end
 
 end
 
-@testset "AnyonQPU: transpilation of native gates" begin            
-    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+@testset "AnyonYukonQPU: transpilation of native gates" begin            
+    qpu=AnyonYukonQPU(;host=host,user=user,access_token=access_token)
 
     qubit_count=1
     target=1
@@ -487,8 +487,8 @@ end
     end
 end
 
-@testset "AnyonQPU: transpilation of a Ghz circuit" begin
-    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+@testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
+    qpu=AnyonYukonQPU(;host=host,user=user,access_token=access_token)
 
     qubit_count=5
     
