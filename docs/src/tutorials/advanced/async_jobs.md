@@ -12,9 +12,9 @@ In this tutorial we will learn how to run jobs asynchronously using [Julia tasks
 
 ## Julia tasks
 
-Practical applications of quantum computing typically involve   both classical and quantum computation. A quantum processor is indeed a hardware accelerator in this paradigm. In such scenarios, it might take sometime for the quantum computer to run the circuit that was submitted to it.
+Practical applications of quantum computing typically involve both classical and quantum computation. A quantum processor is indeed a hardware accelerator in this paradigm. In such scenarios, it might take some time for the quantum computer to run the circuit that was submitted to it.
 
-In many cases it is desirable to be able to continue with some classical computation while the program waits for the quantum hardware to complete its task. This is an example of  asynchronous programming. We recommend you consult with [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with this concept.
+In many cases, it is desirable to be able to continue with some classical computation while the program waits for the quantum hardware to complete its task. This is an example of asynchronous programming. We recommend you consult [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with this concept.
 
 In `Snowflake`, communicating with a quantum processor will [yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution every time it waits for a response from the quantum computer. This gives you the opportunity to perform work while the quantum computer is running your job.
 
@@ -23,7 +23,7 @@ In `Snowflake`, communicating with a quantum processor will [yield](https://docs
 
 To provide maximum flexibility, Snowflake does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
 
-We will start by importing Snowflake, building our circuit, and defining our QPU as demonstrated in [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
+We will start by importing Snowflake, building our circuit, and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
 
 
 ```jldoctest asynchronous_job; output = false
@@ -49,7 +49,7 @@ Quantum Processing Unit:
    connectivity_type:  linear
 ```
 
-Next we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
+Next, we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
 
 ```jldoctest asynchronous_job; output = false, setup = :(qpu = VirtualQPU()), filter = r".*"
 num_repetitions = 200

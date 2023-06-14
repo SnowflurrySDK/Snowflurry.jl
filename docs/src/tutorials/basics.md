@@ -38,7 +38,7 @@ q[2]:
      
 
 ```
-We have not yet added any quantum operation to our circuit and  it looks empty! So, let's make this circuit a bit more interesting.
+We have not yet added any quantum operation to our circuit and it looks empty! So, let's add some quantum operations!
 
 !!! note
 	In Snowflake, we assume all qubits are initialized to be in state 0 (ground state). 
@@ -90,7 +90,7 @@ q[2]:───────X──
 ```
 Voila! You just made your first quantum circuit with `Snowflake` that does something interesting:
 
-It puts a two-qubit register in a maximally-entangled quantum state ($\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$). This sate is one of the four celebrated  [Bell State](https://en.wikipedia.org/wiki/Bell_state) or the EPR states. These states do not have classical counterparts and are are among the building blocks of many interesting ideas in quantum computing and quantum communication.
+It puts a two-qubit register in a maximally-entangled quantum state ($\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$). This state is one of the four celebrated [Bell State](https://en.wikipedia.org/wiki/Bell_state) or the EPR states. These states do not have classical counterparts and are are among the building blocks of many interesting ideas in quantum computing and quantum communication.
 
 ## Circuit Simulation
 You can verify what your circuit will ideally do on a real computer by simulating the circuit on your own local machine:
@@ -109,7 +109,7 @@ The output of `simulate` function is a `Ket` object. `Ket` is a complex vector t
 ## Histogram
 In the previous section, we used the `simulate` function to calculate the wavefunction of a two-qubit quantum register, after the circuit, `c`, is applied to it. However, in the real world, we do not have direct access to the wavefunction of a quantum register. Rather, we need to run the quantum circuit many many times (shots) on the quantum processor and measure the qubits states at the end of each shot. The result of each shot is a bitstring that tells us which qubits were measured to be in state `0` and which qubits were measured to be in state `1`. The probability of getting a bitstring then depends on the wavefunction. 
 
-We can indeed mimick this behaviour in our simulations as well.  This can be achieved by using the `plot_histogram` function from the [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) library.  For example, we can generate a histogram which shows the measurement
+We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) library. For example, we can generate a histogram which shows the measurement
 output distribution after taking running the circuit `c` for a given number of shots, let's say 100 times, on a quantum
 computer simulator:
 
