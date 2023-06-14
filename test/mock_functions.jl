@@ -75,7 +75,7 @@ function request_checker(url::String,user::String,access_token::String)
 end
 
 stubStatusResponse(status::String) = HTTP.Response(200, [], body="{\"status\":{\"type\":\"$status\"}}")
-stubFailedStatusResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"},\"message\":\"mocked\"}")
+stubFailedStatusResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\",\"message\":\"mocked\"}}")
 stubResult() = HTTP.Response(200, [], body="{\"histogram\":{\"001\":100}}")
 stubFailureResult() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"failed\"}}")
 stubCancelledResultResponse() = HTTP.Response(200, [], body="{\"status\":{\"type\":\"cancelled\"}}")
