@@ -293,15 +293,16 @@ function get_status(client::Client,circuitID::String)::Status
         throw(ArgumentError("Server returned unrecognized status type: $(body["status"]["type"])"))
     end
 
-    if body["status"]["type"]==failed_status
-        try
-            return Status(type=failed_status,message=body["message"])
-        catch
-            return Status(type=failed_status,message=string(body))
-        end
-    else
+    if body["status"]["type"] != failed_status
         return Status(type=body["status"]["type"])
     end
+
+    message = if haskey(body, "message")
+        body["message"]
+    else
+        "no failure information available. raw response: '$(string(body))'"
+    end
+    return Status(type=failed_status,message=message)
 end
 
 """
