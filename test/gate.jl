@@ -276,10 +276,10 @@ end
     @test get_gate_parameters(ry)==Dict("theta"=>-pi/2)
 
     p = phase_shift(1, pi/4)
-    @test get_instruction_symbol(p) == "p"
-    @test get_display_symbol(p) ==["P(0.7854)"]
+    @test get_instruction_symbol(p) == "rz"
+    @test get_display_symbol(p) ==["Rz(0.7854)"]
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
-    @test get_gate_parameters(p)==Dict("phi"=>pi/4)
+    @test get_gate_parameters(p)==Dict("lambda"=>pi/4)
 
 
     u = universal(1, pi/2, -pi/2, pi/2)
@@ -313,6 +313,16 @@ end
 
     @test_throws DomainError control_x(1,10)*ψ_input
     
+    # ControlX as ControlledGate
+
+    cnot_kernel_1_2=ControlledGate(sigma_x(2),1)
+    cnot_kernel_2_1=ControlledGate(sigma_x(1),2)
+
+    @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
+    @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
+
+    @test typeof(cnot_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(cnot_kernel_1_2) ==["*", "X"]
 
     # ControlZ
     ψ_input=Ket([1.,2.,3.,4.])
@@ -326,6 +336,17 @@ end
     @test typeof(control_x(1,2)*ψ_input_32)==Ket{ComplexF32}
 
     @test_throws DomainError control_x(1,10)*ψ_input
+
+    # ControlZ as ControlledGate
+
+    cz_kernel_1_2=ControlledGate(sigma_z(2),1)
+    cz_kernel_2_1=ControlledGate(sigma_z(1),2)
+
+    @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
+    @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
+
+    @test typeof(cz_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(cz_kernel_1_2) ==["*", "Z"]
 
     #Toffoli
     ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
@@ -346,6 +367,237 @@ end
 
     @test_throws DomainError toffoli(1,2,10)*ψ_input
 
+    # Toffoli as ControlledGate
+
+    toffoli_kernel_1_2_3=ControlledGate(sigma_x(3),[1,2])
+    toffoli_kernel_2_1_3=ControlledGate(sigma_x(3),[2,1])
+    toffoli_kernel_1_3_2=ControlledGate(sigma_x(2),[1,3])
+    toffoli_kernel_3_1_2=ControlledGate(sigma_x(2),[3,1])
+    toffoli_kernel_2_3_1=ControlledGate(sigma_x(1),[2,3])
+    toffoli_kernel_3_2_1=ControlledGate(sigma_x(1),[3,2])
+
+    @test ψ_1_2_3 ≈ toffoli_kernel_1_2_3*ψ_input
+    @test ψ_1_2_3 ≈ toffoli_kernel_2_1_3*ψ_input
+    @test ψ_1_3_2 ≈ toffoli_kernel_1_3_2*ψ_input
+    @test ψ_1_3_2 ≈ toffoli_kernel_3_1_2*ψ_input
+    @test ψ_2_3_1 ≈ toffoli_kernel_2_3_1*ψ_input
+    @test ψ_2_3_1 ≈ toffoli_kernel_3_2_1*ψ_input
+
+    @test typeof(toffoli_kernel_1_2_3*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(toffoli_kernel_1_2_3) ==["*", "*", "X"]
+
+    # ControlledHadamard as ControlledGate
+    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(2),1)
+    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(1),2)
+
+    # ControlledHadamard as Dense AbstractControlledGate
+    struct ControlledHadamard <: AbstractControlledGate
+        control::Int
+        target::Int
+    end
+    
+    control_hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(
+        T[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, sqrt(2)/2, sqrt(2)/2] [
+                0.0,
+                0.0,
+                sqrt(2)/2,
+                -sqrt(2)/2,
+        ]],
+    )
+
+    Snowflake.get_operator(gate::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
+    
+    Snowflake.get_connected_qubits(gate::ControlledHadamard)=[gate.control, gate.target]
+    
+    Snowflake.get_control_qubits(gate::ControlledHadamard)=[gate.control]
+    
+    Snowflake.get_target_qubits(gate::ControlledHadamard)=[gate.target]
+
+    controlled_hadamard_dense_1_2=ControlledHadamard(1,2)
+    controlled_hadamard_dense_2_1=ControlledHadamard(2,1)
+  
+    @test get_operator(controlled_hadamard_kernel_1_2) ≈ get_operator(controlled_hadamard_dense_1_2)
+
+    @test get_operator(controlled_hadamard_kernel_1_2) isa DenseOperator{4, ComplexF64}
+    @test get_operator(controlled_hadamard_kernel_1_2,ComplexF32) isa DenseOperator{4, ComplexF32}
+
+    ψ_input=Ket([1.,2.,3.,4.])
+    ψ_input_32=Ket(ComplexF32[1.,2.,3.,4.])
+    
+    @test controlled_hadamard_kernel_1_2*ψ_input ≈ controlled_hadamard_dense_1_2*ψ_input
+    @test controlled_hadamard_kernel_2_1*ψ_input ≈ controlled_hadamard_dense_2_1*ψ_input
+
+    @test typeof(controlled_hadamard_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
+    @test get_display_symbol(controlled_hadamard_kernel_1_2) ==["*", "H"]
+
+    @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
+
+    # Neither target nor control is last qubit
+    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(3),2)
+    controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
+
+    ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
+    
+    @test controlled_hadamard_kernel_2_3*ψ_input ≈ controlled_hadamard_dense_2_3*ψ_input
+
+    # circumventing casting to DenseOperator not allowed  
+    @test_throws NotImplementedError Snowflake.apply_controlled_gate_operator!(
+        Ket([1,2]),
+        eye(4),
+        DiagonalOperator([-1.,1.]),
+        [1,2]
+    )
+
+end
+
+struct DenseGate<:AbstractGate
+    connected_qubits::Vector{Int}
+    operator::DenseOperator
+end
+
+Snowflake.get_connected_qubits(gate::DenseGate)=gate.connected_qubits
+Snowflake.get_operator(gate::DenseGate,T::Type{<:Complex}=ComplexF64)=gate.operator
+
+function make_labels(num_controls::Int,labels::Vector{String})
+    vcat(
+        [Snowflake.control_display_symbol for _ in 1:num_controls], 
+        labels
+    )
+end
+
+@testset "ControlledGate multi-control single-target" begin
+    qubit_count=4
+
+    test_cases=[
+        #control_qubits, target_qubits 
+        ([1],            [4]),
+        ([1,2],          [3]),
+        ([1,3],          [2]),
+        ([1,2,3],        [4]),
+        ([1,2,4],        [3]),
+        ([1,3,4],        [2]),
+    ]
+
+    for (control_qubits,target_qubits) in test_cases
+
+        num_controls=length(control_qubits)
+
+        c_gate_config=[
+            [sigma_x,      make_labels(num_controls, ["X"])],
+            [sigma_y,      make_labels(num_controls, ["Y"])],
+            [sigma_z,      make_labels(num_controls, ["Z"])],
+            [hadamard,     make_labels(num_controls, ["H"])],
+            [pi_8,         make_labels(num_controls, ["T"])],
+            [pi_8_dagger,  make_labels(num_controls, ["T†"])],
+            [x_90,         make_labels(num_controls, ["X_90"])],
+            [x_minus_90,   make_labels(num_controls, ["X_m90"])],
+            [y_90,         make_labels(num_controls, ["Y_90"])],
+            [y_minus_90,   make_labels(num_controls, ["Y_m90"])],
+            [z_90,         make_labels(num_controls, ["Z_90"])],
+            [z_minus_90,   make_labels(num_controls, ["Z_m90"])],
+        ]
+
+        for (func,labels) in c_gate_config
+            c_gate=ControlledGate(func(target_qubits...),control_qubits)
+            @test get_display_symbol(c_gate)==labels
+            @test control_qubits==get_control_qubits(c_gate)
+            @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
+
+            @test get_gate_parameters(c_gate)==Dict{String, Real}()
+
+            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
+
+            @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
+        end
+
+        # parameterized Gates
+        test_cases_params=[
+            [rotation,     [pi,pi/2],  ["theta","phi"], make_labels(num_controls, ["R(θ=3.1416,ϕ=1.5708)"])],
+            [rotation_x,   [pi/3],     ["theta"],       make_labels(num_controls, ["Rx(1.0472)"])],
+            [rotation_y,   [pi/4],     ["theta"],       make_labels(num_controls, ["Ry(0.7854)"])],
+            [phase_shift,  [pi/7],     ["lambda"],      make_labels(num_controls, ["Rz(0.4488)"])],
+            [universal,    [pi/3,pi/12,pi/4],["theta","phi","lambda"], 
+                make_labels(num_controls, ["U(θ=1.0472,ϕ=0.2618,λ=0.7854)"])],
+        ]
+
+        for (func,params,param_keys,labels) in test_cases_params
+            c_gate=ControlledGate(func(target_qubits...,params...),control_qubits)
+            @test get_display_symbol(c_gate)==labels
+            @test control_qubits==get_control_qubits(c_gate)
+            @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
+
+            params_in_gate=get_gate_parameters(c_gate)
+
+            for (k,v) in zip(param_keys,params)
+                @test params_in_gate[k]==v
+            end
+
+            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
+
+            @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
+        end
+
+        #test label precision
+        @test get_display_symbol(
+            ControlledGate(rotation(target_qubits...,[pi,pi/2]...),control_qubits),precision=2
+            ) == make_labels(num_controls, ["R(θ=3.14,ϕ=1.57)"])
+    end
+
+    # circumventing casting to DenseOperator not allowed  
+    @test_throws NotImplementedError Snowflake.apply_controlled_gate_operator!(
+        Ket([v for v in 1:8]),
+        eye(8),
+        DiagonalOperator([-1.,1.]),
+        [1,2]
+    )
+
+    @test_throws AssertionError ControlledGate(ControlledGate(sigma_x(2),[1]),[3])
+end
+
+@testset "ControlledGate multi-control dual-target" begin
+    qubit_count=6
+
+    test_cases=[
+        #control_qubits, target_qubits 
+        ([1],            [3,4]),
+        ([1],            [4,3]),
+        ([1,2],          [3,4]),
+        ([1,3],          [2,4]),
+        ([1,2,3],        [4,5]),
+        ([1,2,3],        [5,4]),
+        ([1,2,4],        [3,5]),
+        ([2,3,4],        [1,5]),
+    ]
+
+    for (control_qubits,target_qubits) in test_cases
+
+        num_controls=length(control_qubits)
+
+        c_gate_config=[
+            [control_x,     make_labels(num_controls, [Snowflake.control_display_symbol, "X"])],
+            [control_z,     make_labels(num_controls, [Snowflake.control_display_symbol, "Z"])],
+            [swap,          make_labels(num_controls, ["☒", "☒"])],
+            [iswap,         make_labels(num_controls, ["x", "x"])],
+            [iswap_dagger,  make_labels(num_controls, ["x†", "x†"])],
+        ]
+
+        for (func,labels) in c_gate_config
+            c_gate=ControlledGate(func(target_qubits...),control_qubits)
+            @test control_qubits==get_control_qubits(c_gate)
+            @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
+
+            @test get_display_symbol(c_gate)==labels
+
+            @test get_gate_parameters(c_gate)==Dict{String, Real}()
+
+            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
+
+            @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
+        end
+    end
 end
 
 @testset "adjoint_gates" begin

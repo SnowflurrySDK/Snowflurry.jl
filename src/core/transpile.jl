@@ -42,24 +42,24 @@ q[2]:─────────────────────────
 julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
 Quantum Circuit Object:
    qubit_count: 3 
-q[1]:──X────Y─────────P(1.0472)──  
+q[1]:──X────Y─────────Rz(1.0472)──
 
-q[2]:────────────*───────────────
-                 |               
-q[3]:────────────X───────────────
-                                 
+q[2]:────────────*────────────────
+                 |                
+q[3]:────────────X────────────────
+                                  
 
 
 
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
-q[1]:──P(-2.0944)───────
-                        
-q[2]:────────────────*──
-                     |  
-q[3]:────────────────X──
-                        
+q[1]:──Rz(-2.0944)───────
+                         
+q[2]:─────────────────*──
+                      |  
+q[3]:─────────────────X──
+                         
 
 
 
@@ -115,9 +115,13 @@ function as_universal_gate(target::Integer,op::AbstractOperator)::Gate{Universal
 end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
-function compress_to_universal(gates::Vector{Gate}, target::Int)::Gate{Universal}
+# does not assert gates having common target
+function unsafe_compress_to_universal(gates::Vector{Gate})::Gate{Universal}
     
     combined_op=eye()
+    targets=get_connected_qubits(gates[1])
+
+    common_target=targets[1]
 
     for gate in gates
         @assert get_num_connected_qubits(gate)==1 ("Received gate with multiple targets: $(gate)")
@@ -332,12 +336,12 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
 Quantum Circuit Object:
    qubit_count: 3 
-q[1]:──X────Y─────────P(1.0472)──
-                                 
-q[2]:────────────*───────────────
-                 |               
-q[3]:────────────X───────────────
-                                 
+q[1]:──X────Y─────────Rz(1.0472)──
+                                  
+q[2]:────────────*────────────────
+                 |                
+q[3]:────────────X────────────────
+                                  
 
 
 
@@ -360,7 +364,7 @@ true
 ```
 """
 function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit   
-    return find_and_compress_blocks(circuit,is_multi_target,compress_to_universal)
+    return find_and_compress_blocks(circuit,is_multi_target,unsafe_compress_to_universal)
 end
 
 function cast_to_cz(gate::AbstractGateSymbol, _::Vector{Int})
@@ -885,10 +889,10 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-1.1781)────Rx(1.5708)────P(2.3562)──
-                                              
-q[2]:─────────────────────────────────────────
-                                              
+q[1]:──Rz(-1.1781)────Rx(1.5708)────Rz(2.3562)──
+                                                
+q[2]:───────────────────────────────────────────
+                                                
 
 julia> compare_circuits(circuit,transpiled_circuit)
 true
@@ -904,11 +908,11 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-1.5708)────Rx(0.0000)────P(2.3562)──
-                                              
-q[2]:─────────────────────────────────────────
-                                              
-                                        
+q[1]:──Rz(-1.5708)────Rx(0.0000)────Rz(2.3562)──
+                                                
+q[2]:───────────────────────────────────────────
+                                                
+
 julia> compare_circuits(circuit,transpiled_circuit)
 true
 
@@ -987,10 +991,10 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──Z_90────X_90────P(0.3927)────X_m90────Z_m90──
-                                                    
-q[2]:───────────────────────────────────────────────
-                                                    
+q[1]:──Z_90────X_90────Rz(0.3927)────X_m90────Z_m90──
+                                                     
+q[2]:────────────────────────────────────────────────
+                                                     
 
 julia> compare_circuits(circuit,transpiled_circuit)
 true
@@ -1300,10 +1304,10 @@ julia> transpiler=SimplifyRzGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi/2)])
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(1.5708)──
-                  
-q[2]:─────────────
-                  
+q[1]:──Rz(1.5708)──
+                   
+q[2]:──────────────
+                   
 
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
@@ -1319,10 +1323,10 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,pi)])
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(3.1416)──
-                  
-q[2]:─────────────
-                  
+q[1]:──Rz(3.1416)──
+                   
+q[2]:──────────────
+                   
 
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
@@ -1338,10 +1342,10 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(0.0000)──
-                  
-q[2]:─────────────
-                  
+q[1]:──Rz(0.0000)──
+                   
+q[2]:──────────────
+                   
 
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
@@ -1372,7 +1376,7 @@ function transpile(
         if is_gate_type(gate, PhaseShift)
             new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
-                get_gate_parameters(gate)["phi"],
+                get_gate_parameters(gate)["lambda"],
                 atol=atol
             )
             if !isnothing(new_gate)
@@ -1410,11 +1414,17 @@ function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate{PhaseSh
 end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-function compress_to_rz(gates::Vector{<: AbstractGateSymbol}, target::Int)::Gate{PhaseShift}
+# Warning: does not assert gates having common target
+function unsafe_compress_to_rz(gates::Vector{<:AbstractGateSymbol})::Gate{PhaseShift}
     
     combined_op=eye()
+    targets=get_connected_qubits(gates[1])
+
+    common_target=targets[1]
 
     for gate in gates
+        targets=get_connected_qubits(gate)
+
         combined_op=get_operator(gate)*combined_op
     end
     
@@ -1446,10 +1456,10 @@ q[2]:─────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(-1.5708)──
-                   
-q[2]:──────────────
-                   
+q[1]:──Rz(-1.5708)──
+                    
+q[2]:───────────────
+                    
 
 julia> compare_circuits(circuit,transpiled_circuit)
 true
@@ -1467,12 +1477,12 @@ q[3]:────────────X───────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
-q[1]:──P(2.3562)───────
-                       
-q[2]:───────────────*──
-                    |  
-q[3]:───────────────X──
-                       
+q[1]:──Rz(2.3562)───────
+                        
+q[2]:────────────────*──
+                     |  
+q[3]:────────────────X──
+                        
 
 julia> compare_circuits(circuit,transpiled_circuit)
 true
@@ -1486,17 +1496,17 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
         return circuit
     end
     
-    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,compress_to_rz)
+    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,unsafe_compress_to_rz)
 end
 
 struct TrivialTranspiler<:Transpiler end
 
 transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 
 
-struct RemoveSwapBySwappingGates <: Transpiler end
+struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
 
 """
-    transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Removes the `Swap` gates from the `circuit` assuming all-to-all connectivity.
 
@@ -1510,7 +1520,7 @@ gate.
 
 # Examples
 ```jldoctest
-julia> transpiler = RemoveSwapBySwappingGates();
+julia> transpiler = RemoveSwapBySwappingGatesTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count=2, gates=[hadamard(1), swap(1,2), sigma_x(2)])
 Quantum Circuit Object:
@@ -1534,7 +1544,7 @@ q[2]:──H────X──
 
 ```
 """
-function transpile(::RemoveSwapBySwappingGates, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     gates = get_circuit_gates(circuit)
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count=qubit_count)
@@ -1603,7 +1613,7 @@ function is_trivial_gate(gate::AbstractGateSymbol;atol=1e-6)::Bool
             return true
         end
     elseif is_gate_type(gate,PhaseShift)
-        if isapprox(params["phi"],0.;atol=atol)
+        if isapprox(params["lambda"],0.;atol=atol)
             return true
         end
     end
@@ -1648,10 +1658,10 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, gates=[phase_shift(1,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──P(0.0000)──
-                  
-q[2]:─────────────
-                  
+q[1]:──Rz(0.0000)──
+                   
+q[2]:──────────────
+                   
 
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
@@ -1698,4 +1708,19 @@ function transpile(
     end
 
     return output
+end
+
+struct UnsupportedGatesTranspiler<:Transpiler end
+
+function transpile(
+    ::UnsupportedGatesTranspiler, 
+    circuit::QuantumCircuit)::QuantumCircuit
+
+    for gate in get_circuit_gates(circuit)
+        if gate isa ControlledGate
+            throw(NotImplementedError(:Transpiler,gate))
+        end
+    end
+
+    return circuit
 end

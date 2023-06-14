@@ -1,6 +1,5 @@
 qobj
 multi_body_system
-dynamic_system
 gate
 transpile
 transpile_trivial_gates

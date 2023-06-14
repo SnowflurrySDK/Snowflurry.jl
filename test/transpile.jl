@@ -424,8 +424,8 @@ end
 
 end
 
-@testset "AnyonQPU: transpilation of native gates" begin            
-    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+@testset "AnyonYukonQPU: transpilation of native gates" begin            
+    qpu=AnyonYukonQPU(;host=host,user=user,access_token=access_token)
 
     qubit_count=1
     target=1
@@ -487,8 +487,8 @@ end
     end
 end
 
-@testset "AnyonQPU: transpilation of a Ghz circuit" begin
-    qpu=AnyonQPU(;host=host,user=user,access_token=access_token)
+@testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
+    qpu=AnyonYukonQPU(;host=host,user=user,access_token=access_token)
 
     qubit_count=5
     
@@ -856,7 +856,7 @@ end
     @test length(get_circuit_gates(transpiled_circuit))==0
 end
 
-@testset "compress_to_rz" begin
+@testset "unsafe_compress_to_rz" begin
     target=1
     qubit_count=1
 
@@ -942,7 +942,7 @@ gates_in_output=[9,8]
 end
 
 @testset "remove_swap_by_swapping_gates" begin
-    transpiler = RemoveSwapBySwappingGates()
+    transpiler = RemoveSwapBySwappingGatesTranspiler()
 
     circuit =
         QuantumCircuit(qubit_count=4, gates=[hadamard(1), sigma_x(3), control_x(1, 4),
@@ -961,4 +961,12 @@ end
 
     @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
     @test simulate(circuit) ≈ simulate(transpiled_circuit)
+end
+
+@testset "UnsupportedGatesTranspiler" begin
+    
+    circuit =QuantumCircuit(qubit_count=4, gates=[ControlledGate(hadamard(2),1)])
+
+    @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
+
 end

@@ -11,7 +11,9 @@ using StaticArrays
 using LinearAlgebra
 using SparseArrays #SparseMatrixCSC
 using Arpack #provides eigen value decomposition for sparse matrices
+
 import StatsBase
+
 
 
 
@@ -30,9 +32,10 @@ export
     MultiBodySystem,
     QuantumCircuit,
     AbstractGateSymbol,
-    AbstractControlledGateSymbol,
+    AbstractControlledGate,
+    ControlledGate,
     Gate,
-    AnyonQPU,
+    AnyonYukonQPU,
     VirtualQPU,
     Client,
     Status,
@@ -53,7 +56,8 @@ export
     SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
     TrivialTranspiler,
-    RemoveSwapBySwappingGates,
+    RemoveSwapBySwappingGatesTranspiler,
+    UnsupportedGatesTranspiler,
 
     # Functions
     commute, 
@@ -91,8 +95,6 @@ export
     genlaguerre,
     moyal,
     wigner, 
-    sesolve,
-    mesolve,
     tr,
     get_operator,
     simulate,
@@ -165,7 +167,6 @@ export
     
 
 include("core/qobj.jl")
-include("core/dynamic_system.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/pauli.jl")

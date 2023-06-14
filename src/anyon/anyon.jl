@@ -1,7 +1,7 @@
 using Snowflake
 
 """
-    AnyonQPU
+    AnyonYukonQPU
 
 A data structure to represent a Anyon System's QPU.  
 # Fields
@@ -11,7 +11,7 @@ A data structure to represent a Anyon System's QPU.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia>  qpu = AnyonYukonQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -20,17 +20,17 @@ Quantum Processing Unit:
    connectivity_type:  linear
 ```
 """
-struct AnyonQPU <: AbstractQPU
+struct AnyonYukonQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
 
-    AnyonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle)
-    AnyonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle)
+    AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle)
+    AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle)
 end
 
 const line_connectivity_label="linear"
 
-get_metadata(::AnyonQPU) = Dict{String,Union{String,Int}}(
+get_metadata(::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
@@ -38,13 +38,13 @@ get_metadata(::AnyonQPU) = Dict{String,Union{String,Int}}(
     "connectivity_type"  =>line_connectivity_label
 )
 
-get_client(qpu_service::AnyonQPU)=qpu_service.client
+get_client(qpu_service::AnyonYukonQPU)=qpu_service.client
 
-get_num_qubits(qpu::AnyonQPU)=get_metadata(qpu)["qubit_count"]
+get_num_qubits(qpu::AnyonYukonQPU)=get_metadata(qpu)["qubit_count"]
 
-print_connectivity(qpu::AnyonQPU,io::IO=stdout)=println(io, "1──2──3──4──5──6")
+print_connectivity(qpu::AnyonYukonQPU,io::IO=stdout)=println(io, "1──2──3──4──5──6")
 
-function Base.show(io::IO, qpu::AnyonQPU)
+function Base.show(io::IO, qpu::AnyonYukonQPU)
     metadata=get_metadata(qpu)
 
     println(io, "Quantum Processing Unit:")
@@ -56,7 +56,7 @@ function Base.show(io::IO, qpu::AnyonQPU)
 end
 
 
-function is_native_gate(qpu::AnyonQPU,gate::AbstractGateSymbol)::Bool
+function is_native_gate(qpu::AnyonYukonQPU,gate::AbstractGateSymbol)::Bool
     
     set_of_native_gates=[
         PhaseShift,
@@ -87,7 +87,7 @@ function is_native_gate(qpu::AnyonQPU,gate::AbstractGateSymbol)::Bool
     return (get_gate_type(gate) in set_of_native_gates)
 end
 
-function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_circuit(qpu::AnyonYukonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
     if qubit_count_circuit>=qubit_count_qpu 
@@ -109,11 +109,11 @@ function is_native_circuit(qpu::AnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,St
 end
 
 """
-    transpile_and_run_job(qpu::AnyonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a key-word argument.
-The transpiled circuit is then run on the AnyonQPU, repeatedly for the
+The transpiled circuit is then run on the AnyonYukonQPU, repeatedly for the
 specified number of repetitions (num_repetitions).
 
 Returns the histogram of the completed circuit calculations, or an error
@@ -122,7 +122,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu=AnyonQPU(client_anyon);
+julia> qpu=AnyonYukonQPU(client_anyon);
 
 julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
@@ -131,7 +131,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::AnyonQPU,
+    qpu::AnyonYukonQPU,
     circuit::QuantumCircuit,
     num_repetitions::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
@@ -150,7 +150,7 @@ function transpile_and_run_job(
 end
 
 """
-    run_job(qpu::AnyonQPU, circuit::QuantumCircuit, num_repetitions::Integer)
+    run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, num_repetitions::Integer)
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
 number of repetitions (num_repetitions).
@@ -161,7 +161,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu=AnyonQPU(client);
+julia> qpu=AnyonYukonQPU(client);
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
@@ -170,7 +170,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::AnyonQPU,
+    qpu::AnyonYukonQPU,
     circuit::QuantumCircuit,
     num_repetitions::Integer
     )::Dict{String,Int}
@@ -209,21 +209,21 @@ function poll_for_status(client::Client, circuitID::String, request_throttle::Fu
 end
 
 """
-    get_transpiler(qpu::AnyonQPU)::Transpiler
+    get_transpiler(qpu::AnyonYukonQPU)::Transpiler
 
 Returns the transpiler associated with this QPU.
 
 # Example
 
 ```jldoctest  
-julia> qpu=AnyonQPU(client);
+julia> qpu=AnyonYukonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForLineConnectivityTranspiler(), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6)])
+SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForLineConnectivityTranspiler(), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
 
 ```
 """
-function get_transpiler(::AnyonQPU;atol=1e-6)::Transpiler
+function get_transpiler(::AnyonYukonQPU;atol=1e-6)::Transpiler
     return SequentialTranspiler([
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
@@ -237,5 +237,6 @@ function get_transpiler(::AnyonQPU;atol=1e-6)::Transpiler
         CastRxToRzAndHalfRotationXTranspiler(),
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
+        UnsupportedGatesTranspiler(),
     ])
 end

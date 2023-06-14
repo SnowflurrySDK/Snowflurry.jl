@@ -29,6 +29,7 @@ permute_qubits
 ## Quantum Gates
 ```@docs
 AbstractGateSymbol
+ControlledGate
 Gate
 eye
 identity_gate
@@ -68,7 +69,7 @@ move_gate
 
 ## Quantum Processing Unit
 ```@docs
-AnyonQPU
+AnyonYukonQPU
 VirtualQPU
 Client
 get_host
@@ -93,6 +94,9 @@ Bra
 DiagonalOperator
 AntiDiagonalOperator
 DenseOperator
+SwapLikeOperator
+IdentityOperator
+SparseOperator
 Base.adjoint
 is_hermitian
 Base.exp(A::AbstractOperator)
@@ -124,8 +128,6 @@ create
 destroy
 number_op
 coherent
-sesolve
-mesolve
 compare_kets
 ```
 

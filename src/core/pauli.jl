@@ -84,9 +84,11 @@ function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
         GF(2)(negative_exponent))
     
     for gate in get_circuit_gates(circuit)
-         connected_qubits = get_connected_qubits(gate)
-        @assert length(connected_qubits) == 1
-        new_pauli = unsafe_get_pauli(get_gate_symbol(gate), connected_qubits[1], num_qubits, GF(2)(0), GF(2)(0))
+        if !(get_gate_symbol(gate) isa Union{Identity,SigmaX,SigmaY,SigmaZ})
+            throw(NotImplementedError(:get_pauli, get_gate_symbol(gate)))
+        end
+        
+        new_pauli = unsafe_get_pauli(get_gate_symbol(gate), num_qubits, GF(2)(0), GF(2)(0))
         pauli = new_pauli*pauli
     end
     return pauli
@@ -133,8 +135,8 @@ Pauli Group Element:
 function get_pauli(gate::AbstractGateSymbol, target::Int, num_qubits::Integer; imaginary_exponent::Integer=0,
     negative_exponent::Integer=0)::PauliGroupElement
 
-    if target > num_qubits
-        throw(ErrorException("the target qubit is not in the circuit"))
+    if !(gate isa Union{Identity,SigmaX,SigmaY,SigmaZ})
+        throw(NotImplementedError(:get_pauli, gate))
     end
 
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
