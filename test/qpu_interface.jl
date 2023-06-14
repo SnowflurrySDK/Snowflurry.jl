@@ -26,14 +26,15 @@ end
     non_impl_requestor=NonImplementedRequestor()
     body=""
     
-    @test_throws NotImplementedError get_request(non_impl_requestor,host,access_token,body) 
-    @test_throws NotImplementedError post_request(non_impl_requestor,host,access_token,body) 
+    @test_throws NotImplementedError get_request(non_impl_requestor,host,user,access_token)
+    @test_throws NotImplementedError post_request(non_impl_requestor,host,user,access_token,body)
     
     #### request from :get_status
    
     @test_throws NotImplementedError get_request(
         requestor,
         "erroneous_url",
+        user,
         access_token
     )
 
@@ -44,6 +45,7 @@ end
     response=get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID,
+        user,
         access_token
     )
 
@@ -52,6 +54,7 @@ end
     @test_throws NotImplementedError get_request(
         requestor,
         host*"/"*string(Snowflake.path_circuits,"wrong_ending"),
+        user,
         access_token
     )
 
@@ -62,6 +65,7 @@ end
     response=get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*Snowflake.path_results,
+        user,
         access_token
     )
 
@@ -70,6 +74,7 @@ end
     @test_throws NotImplementedError get_request(
         requestor,
         host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*string(Snowflake.path_results,"wrong_ending"),
+        user,
         access_token
     )
 
@@ -140,6 +145,35 @@ end
     @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
+@testset "unexpected job status" begin
+    test_get = stub_response_sequence([
+        # Simulate a response containing an invalid job status.
+        stubStatusResponse("not a valid status")
+    ])
+
+    # We don't expect a POST during this test. Returning nothing should cause a
+    # failure if a POST is attempted
+    test_post = () -> Nothing
+
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    @test_throws ArgumentError get_status(test_client, "circuitID not used in this test")
+
+    malformedResponse = stubFailedStatusResponse()
+    # A failure response _should_ have a 'message' field but, if things go very
+    # wrong, the user should still get something useful.
+    body = "{\"status\":{\"type\":\"failed\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
+    malformedResponse.body = collect(UInt8, body)
+    test_get = stub_response_sequence([
+        malformedResponse
+    ])
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    status = get_status(test_client, "circuitID not used in this test")
+    @test status.type == "failed"
+    @test status.message != ""
+end
+
 @testset "Construct AnyonQPU" begin
     host = "host"
     user = "user"
@@ -157,17 +191,17 @@ end
 
 @testset "run_job on AnyonQPU" begin
 
-    requestor=MockRequestor(request_checker,post_checker)
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    requestor = MockRequestor(request_checker,post_checker)
+    test_client = Client(host=host,user=user,access_token=access_token,requestor=requestor)
     num_repetitions=100
-    qpu=AnyonQPU(test_client, status_request_throttle=no_throttle)
+    qpu = AnyonQPU(test_client, status_request_throttle=no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonQPU)
-    @test get_client(qpu)==test_client
-    
+    @test get_client(qpu) == test_client
+
     #test basic submission, no transpilation
-    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
-    histogram=run_job(qpu, circuit, num_repetitions)
-    @test histogram==Dict("001"=>num_repetitions)
+    circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(3), control_z(2,1)])
+    histogram = run_job(qpu, circuit, num_repetitions)
+    @test histogram == Dict("001"=>num_repetitions)
     @test !haskey(histogram,"error_msg")
 
     #verify that run_job blocks until a 'long-running' job completes
@@ -210,6 +244,28 @@ end
       post_checker)
     qpu = AnyonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
     @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+end
+
+@testset "HTTPRequestor" begin
+    test_post = stub_response_sequence([
+        stubCircuitSubmittedResponse()
+    ])
+    test_get = stub_response_sequence([
+        stubStatusResponse("succeeded"),
+        stubResult(),
+    ])
+
+    # Use dependency injection to keep from hitting the network stack.
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    qpu = AnyonQPU(test_client, status_request_throttle=no_throttle)
+
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
+    num_repetitions = 100
+    histogram = run_job(qpu, circuit, num_repetitions)
+    expected = Dict{String, Int}("001" => 100)
+
+    @test histogram == expected
 end
 
 @testset "transpile_and_run_job on AnyonQPU" begin
@@ -256,7 +312,7 @@ end
         @test is_native_gate(qpu,gate)
     end
        
-    histogram=transpile_and_run_job(qpu, circuit ,num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit, num_repetitions)
    
     @test histogram==Dict("001"=>num_repetitions)
 
