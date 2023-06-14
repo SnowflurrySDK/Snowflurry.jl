@@ -145,6 +145,35 @@ end
     @test get_status_type(status) in ["queued","running","failed","succeeded"]
 end
 
+@testset "unexpected job status" begin
+    test_get = stub_response_sequence([
+        # Simulate a response containing an invalid job status.
+        stubStatusResponse("not a valid status")
+    ])
+
+    # We don't expect a POST during this test. Returning nothing should cause a
+    # failure if a POST is attempted
+    test_post = () -> Nothing
+
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    @test_throws ArgumentError get_status(test_client, "circuitID not used in this test")
+
+    malformedResponse = stubFailedStatusResponse()
+    # A failure response _should_ have a 'message' field but, if things go very
+    # wrong, the user should still get something useful.
+    body = "{\"status\":{\"type\":\"failed\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
+    malformedResponse.body = collect(UInt8, body)
+    test_get = stub_response_sequence([
+        malformedResponse
+    ])
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(host=host, user=user, access_token=access_token, requestor=requestor)
+    status = get_status(test_client, "circuitID not used in this test")
+    @test status.type == "failed"
+    @test status.message != ""
+end
+
 @testset "Construct AnyonQPU" begin
     host = "host"
     user = "user"
