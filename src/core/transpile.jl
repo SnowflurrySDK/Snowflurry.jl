@@ -1377,7 +1377,7 @@ function transpile(
         if is_gate_type(gate, PhaseShift)
             new_gate=simplify_rz_gate(
                 get_connected_qubits(gate)[1],
-                get_gate_parameters(gate)["phi"],
+                get_gate_parameters(gate)["lambda"],
                 atol=atol
             )
             if !isnothing(new_gate)
@@ -1615,7 +1615,7 @@ function is_trivial_gate(gate::AbstractGate;atol=1e-6)::Bool
             return true
         end
     elseif is_gate_type(gate,PhaseShift)
-        if isapprox(params["phi"],0.;atol=atol)
+        if isapprox(params["lambda"],0.;atol=atol)
             return true
         end
     end

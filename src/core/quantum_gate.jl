@@ -1893,7 +1893,7 @@ get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.
 
 Base.inv(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
 
-get_gate_parameters(gate::PhaseShift)=Dict("phi" =>gate.phi)
+get_gate_parameters(gate::PhaseShift)=Dict("lambda" =>gate.phi)
 
 """
     universal(target, theta, phi, lambda)

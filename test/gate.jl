@@ -168,10 +168,10 @@ end
     @test get_gate_parameters(ry)==Dict("theta"=>-pi/2)
 
     p = phase_shift(1, pi/4)
-    @test get_instruction_symbol(p) == "p"
-    @test get_display_symbol(p) ==["P(0.7854)"]
+    @test get_instruction_symbol(p) == "rz"
+    @test get_display_symbol(p) ==["Rz(0.7854)"]
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
-    @test get_gate_parameters(p)==Dict("phi"=>pi/4)
+    @test get_gate_parameters(p)==Dict("lambda"=>pi/4)
 
 
     u = universal(1, pi/2, -pi/2, pi/2)
@@ -408,7 +408,7 @@ end
             [rotation,     [pi,pi/2],  ["theta","phi"], make_labels(num_controls, ["R(θ=3.1416,ϕ=1.5708)"])],
             [rotation_x,   [pi/3],     ["theta"],       make_labels(num_controls, ["Rx(1.0472)"])],
             [rotation_y,   [pi/4],     ["theta"],       make_labels(num_controls, ["Ry(0.7854)"])],
-            [phase_shift,  [pi/7],     ["phi"],         make_labels(num_controls, ["P(0.4488)"])],
+            [phase_shift,  [pi/7],     ["lambda"],      make_labels(num_controls, ["Rz(0.4488)"])],
             [universal,    [pi/3,pi/12,pi/4],["theta","phi","lambda"], 
                 make_labels(num_controls, ["U(θ=1.0472,ϕ=0.2618,λ=0.7854)"])],
         ]
