@@ -387,11 +387,11 @@ end
     @test get_display_symbol(toffoli_kernel_1_2_3) ==["*", "*", "X"]
 
     # ControlledHadamard as ControlledGate
-    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(2),1)
-    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(1),2)
+    controlled_hadamard_kernel_1_2=Gate(ControlledGate(hadamard(2),1), [1,2])
+    controlled_hadamard_kernel_2_1=Gate(ControlledGate(hadamard(1),2), [2,1])
 
-    # ControlledHadamard as Dense AbstractControlledGate
-    struct ControlledHadamard <: AbstractControlledGate
+    # ControlledHadamard as Dense AbstractControlledGateSymbol
+    struct ControlledHadamard <: AbstractControlledGateSymbol
         control::Int
         target::Int
     end
@@ -413,8 +413,8 @@ end
     
     Snowflake.get_target_qubits(gate::ControlledHadamard)=[gate.target]
 
-    controlled_hadamard_dense_1_2=ControlledHadamard(1,2)
-    controlled_hadamard_dense_2_1=ControlledHadamard(2,1)
+    controlled_hadamard_dense_1_2=Gate(ControlledHadamard(1,2), [1,2])
+    controlled_hadamard_dense_2_1=Gate(ControlledHadamard(2,1), [2,1])
   
     @test get_operator(controlled_hadamard_kernel_1_2) ≈ get_operator(controlled_hadamard_dense_1_2)
 
@@ -433,8 +433,8 @@ end
     @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
 
     # Neither target nor control is last qubit
-    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(3),2)
-    controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
+    controlled_hadamard_kernel_2_3=Gate(ControlledGate(hadamard(3),2), [2, 3])
+    controlled_hadamard_dense_2_3=Gate(ControlledHadamard(2,3), [2, 3])
 
     ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
     
@@ -450,7 +450,7 @@ end
 
 end
 
-struct DenseGate<:AbstractGate
+struct DenseGate<:AbstractGateSymbol
     connected_qubits::Vector{Int}
     operator::DenseOperator
 end
@@ -505,7 +505,7 @@ end
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -533,7 +533,7 @@ end
                 @test params_in_gate[k]==v
             end
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -592,7 +592,7 @@ end
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input

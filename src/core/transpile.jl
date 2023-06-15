@@ -116,12 +116,8 @@ end
 
 # compress (combine) several single-target gates with a common target to a Universal gate
 # does not assert gates having common target
-function unsafe_compress_to_universal(gates::Vector{Gate})::Gate{Universal}
-    
+function unsafe_compress_to_universal(gates::Vector{Gate}, target::Int)::Gate{Universal}
     combined_op=eye()
-    targets=get_connected_qubits(gates[1])
-
-    common_target=targets[1]
 
     for gate in gates
         @assert get_num_connected_qubits(gate)==1 ("Received gate with multiple targets: $(gate)")
@@ -1415,16 +1411,10 @@ end
 
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
 # Warning: does not assert gates having common target
-function unsafe_compress_to_rz(gates::Vector{<:AbstractGateSymbol})::Gate{PhaseShift}
-    
+function unsafe_compress_to_rz(gates::Vector{Gate}, target::Int)::Gate{PhaseShift}
     combined_op=eye()
-    targets=get_connected_qubits(gates[1])
-
-    common_target=targets[1]
 
     for gate in gates
-        targets=get_connected_qubits(gate)
-
         combined_op=get_operator(gate)*combined_op
     end
     
@@ -1717,7 +1707,7 @@ function transpile(
     circuit::QuantumCircuit)::QuantumCircuit
 
     for gate in get_circuit_gates(circuit)
-        if gate isa ControlledGate
+        if get_gate_symbol(gate) isa ControlledGate
             throw(NotImplementedError(:Transpiler,gate))
         end
     end

@@ -286,7 +286,7 @@ false
 is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool = isa(gate, type)
 
 """
-    ControlledGate{G<:AbstractGate}<:AbstractGate
+    ControlledGate{G<:AbstractGateSymbol}<:AbstractGateSymbol
 
 The `ControlledGate` object allows the construction of a controlled `Gate` using an `Operator` 
 (the `kernel`) and the corresponding control and target qubits, 
@@ -302,7 +302,7 @@ controlled Hadamard gate is constructed using the `hadamard()` `Function`. For i
 of a `ControlledGate{Hadamard}` with `control=1` and `target=2` is performed by calling:
 
 ```jldoctest controlled_hadamard
-julia> controlled_hadamard=ControlledGate(hadamard(2),1)
+julia> controlled_hadamard=Gate(ControlledGate(hadamard(2),1), [1, 2])
 Gate Object: ControlledGate{Snowflake.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
@@ -351,14 +351,14 @@ Underlying data ComplexF64:
 
 
 """
-struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
+struct ControlledGate{GateType<:AbstractGateSymbol}<:AbstractGateSymbol
     kernel::GateType
     connected_qubits::Vector{Int}
     control_qubits::Vector{Int}
     kernel_qubits::Vector{Int}
 
     function ControlledGate(
-        kernel::AbstractGate,
+        kernel::AbstractGateSymbol,
         control_qubits::Vector{Int},
         )
 
@@ -376,8 +376,12 @@ struct ControlledGate{GateType<:AbstractGate}<:AbstractGate
         new{typeof(kernel)}(kernel,connected_qubits,control_qubits,kernel_qubits)
     end
 
-    ControlledGate(kernel::AbstractGate,control_qubit::Int)=ControlledGate(kernel,[control_qubit])
 end
+
+ControlledGate(gate::Gate, control_qubit::Int) = ControlledGate(get_gate_symbol(gate), control_qubit)
+ControlledGate(gate::Gate, control_qubits::Vector{Int}) = ControlledGate(get_gate_symbol(gate), control_qubits)
+
+ControlledGate(kernel::AbstractGateSymbol,control_qubit::Int)=ControlledGate(kernel,[control_qubit])
 
 function get_operator(gate::ControlledGate, T::Type{<:Complex}=ComplexF64) 
 

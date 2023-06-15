@@ -31,7 +31,7 @@ end
 
     print(c)
 
-    push!(c, ControlledGate(swap(2,3),[1]))
+    push!(c, Gate(ControlledGate(swap(2,3),[1]), [1, 2, 3]))
     @test length(get_circuit_gates(c)) == 3
 
     print(c)
@@ -60,7 +60,9 @@ end
     circuit = QuantumCircuit(qubit_count = 2)
     push!(circuit, hadamard(1))
     push!(circuit, control_x(1, 2))  
-    push!(circuit, ControlledGate(hadamard(2),[1])) 
+    push!(circuit, Gate(ControlledGate(hadamard(2),[1]), [1,2])) 
+
+    println(get_circuit_gates(circuit))
 
     @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
