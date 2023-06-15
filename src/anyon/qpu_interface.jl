@@ -117,10 +117,10 @@ function get_request(
 end
 
 """
-    serialize_job(circuit::QuantumCircuit,repetitions::Integer)
+    serialize_job(circuit::QuantumCircuit,shot_count::Integer)
 
 Creates a JSON-formatted String containing the circuit configuration to be sent 
-to a `QPU` service, along with the number of repetitions requested.
+to a `QPU` service, along with the number of shots requested.
 
 # Examples
 ```jldoctest
@@ -139,13 +139,13 @@ julia> serialize_job(c,10)
 
 ```
 """
-function serialize_job(circuit::QuantumCircuit,repetitions::Integer)::String
+function serialize_job(circuit::QuantumCircuit,shot_count::Integer)::String
   
     circuit_description=Dict(
         "circuit"=>Dict{String,Any}(
                 "operations"=>Vector{Dict{String,Any}}()
             ),
-        "shot_count"=>repetitions
+        "shot_count"=>shot_count
     )
 
     for gate in get_circuit_gates(circuit)
