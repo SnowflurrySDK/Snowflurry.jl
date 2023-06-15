@@ -109,12 +109,12 @@ function is_native_circuit(qpu::AnyonYukonQPU,circuit::QuantumCircuit)::Tuple{Bo
 end
 
 """
-    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit,num_repetitions::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit,shot_count::Integer;transpiler::Transpiler=get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a key-word argument.
 The transpiled circuit is then run on the AnyonYukonQPU, repeatedly for the
-specified number of repetitions (num_repetitions).
+specified number of repetitions (shot_count).
 
 Returns the histogram of the completed circuit calculations, or an error
 message.
@@ -133,7 +133,7 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::AnyonYukonQPU,
     circuit::QuantumCircuit,
-    num_repetitions::Integer;
+    shot_count::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
     )::Dict{String,Int}
 
@@ -146,14 +146,14 @@ function transpile_and_run_job(
         throw(DomainError(qpu, message))
     end
 
-    return run_job(qpu,transpiled_circuit,num_repetitions)
+    return run_job(qpu,transpiled_circuit,shot_count)
 end
 
 """
-    run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, num_repetitions::Integer)
+    run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer)
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
-number of repetitions (num_repetitions).
+number of repetitions (shot_count).
 
 Returns the histogram of the completed circuit calculations, or an error
 message.
@@ -172,12 +172,12 @@ Dict{String, Int64} with 1 entry:
 function run_job(
     qpu::AnyonYukonQPU,
     circuit::QuantumCircuit,
-    num_repetitions::Integer
+    shot_count::Integer
     )::Dict{String,Int}
     
     client=get_client(qpu)
 
-    circuitID=submit_circuit(client,circuit,num_repetitions)
+    circuitID=submit_circuit(client,circuit,shot_count)
 
     status=poll_for_status(client,circuitID,qpu.status_request_throttle)
     
