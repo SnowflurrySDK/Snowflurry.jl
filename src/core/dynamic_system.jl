@@ -103,7 +103,11 @@ function Base.show(io::IO, p::LindbladProblem)
     println(io, "Collapse operators: (c_ops)\n$(p.c_ops)\n")
 end
 
-function check_t_span_t_integ!(t_span,t_integ)
+#ensures t_integ does not exceed t_span, and converts empty array to `nothing`
+function check_t_span_t_integ!(
+    t_span::Tuple{<:Real,<:Real},
+    t_integ::Union{<:AbstractRange,Vector{<:Real},Nothing}
+    )::Nothing
     # replace empty array by nothing
     if !isnothing(t_integ) && isempty(t_integ)
         t_integ=nothing
@@ -151,9 +155,6 @@ function sesolve(
 
     ODEprob = OrdinaryDiffEq.ODEProblem(Hamiltonian!,problem.init_state.data,problem.t_span)
 
-    #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
-    alg=OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))
-
     n_o=length(problem.e_ops)
 
     function save_func(u,t,integrator)
@@ -168,7 +169,7 @@ function sesolve(
         return observable_t
     end
 
-    return solve(ODEprob, alg, problem.t_integ, save_func,typeof(problem.init_state);kwargs...)
+    return solve(ODEprob, problem.t_integ, save_func,typeof(problem.init_state);kwargs...)
 end
 
 
@@ -202,9 +203,6 @@ function lindblad_solve(
 
     ODEprob=OrdinaryDiffEq.ODEProblem(Lindblad,problem.init_state.data,problem.t_span)
 
-    #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
-    alg=OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))
-
     n_o=length(problem.e_ops)
     
     function save_func(u,t,integrator)
@@ -219,12 +217,22 @@ function lindblad_solve(
         return observable_t
     end
       
-    return solve(ODEprob, alg, problem.t_integ, save_func, typeof(problem.init_state);kwargs...)
+    return solve(ODEprob, problem.t_integ, save_func, typeof(problem.init_state);kwargs...)
 end
 
 
 
-function solve(ODEprob,alg,t_integ,save_func,type_sol;kwargs...)
+function solve(
+    ODEprob::OrdinaryDiffEq.ODEProblem,
+    t_integ::Union{<:AbstractRange,Vector{<:Real},Nothing},
+    save_func::Function,
+    type_sol::DataType;
+    kwargs...
+    )::NamedTuple{
+        (:t, :u, :e), 
+        Tuple{Vector{<:Real}, 
+        Vector{Union{DenseOperator,Ket}}, 
+        Matrix{<:Real}}}
 
     #container for output values
                             # typeof(t), typeof(observable)
@@ -244,6 +252,9 @@ function solve(ODEprob,alg,t_integ,save_func,type_sol;kwargs...)
         cb=OrdinaryDiffEq.CallbackSet(cb_preset,cb_save)
     end
         
+    #The default algo is Tsit5 but we switch to Rosenbrock23 for stiff problems
+    alg=OrdinaryDiffEq.AutoTsit5(OrdinaryDiffEq.Rosenbrock23(autodiff=false))
+    
     sol = OrdinaryDiffEq.solve(ODEprob, alg, callback=cb, 
     save_everystep=false, # reduces the output size of sol
     save_on=false;

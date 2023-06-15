@@ -31,7 +31,7 @@ println(problem)
         problem = ShrodingerProblem(H=H , init_state=ψ_0, t_span=t_span, e_ops=e_ops)
         t, ψ , prob = sesolve(problem, is_hamiltonian_static=is_hamiltonian_static)
         @test last(prob) ≈ 1.0 atol=1.e-4
-        @test typeof(ψ)==Vector{Ket{dtype}}
+        @test typeof(ψ[1])==Ket{dtype}
     end
     test_sesolve_rabi(ComplexF64, is_hamiltonian_static=false)
     test_sesolve_rabi(ComplexF64, is_hamiltonian_static=true)
@@ -55,7 +55,7 @@ function test_relaxation(dtype, t_integ=nothing)
     end
     t, ρ, probability = lindblad_solve(problem)
     @test probability ≈ exp.(-Γ*t) atol=1.e-4
-    @test typeof(ρ)==Vector{DenseOperator{2,dtype}}
+    @test typeof(ρ[1])==DenseOperator{2,dtype}
 
     if !isnothing(t_integ) && length(t_integ)>0
         @test length(t)==length(t_integ)
