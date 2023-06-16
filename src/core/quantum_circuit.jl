@@ -334,7 +334,7 @@ end
 function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
     for target in get_connected_qubits(gate)
         if target > get_num_qubits(circuit)
-            throw(DomainError(target, "the gate does no fit in the circuit"))
+            throw(DomainError(target, "The gate does not fit in the circuit"))
         end
     end
 end

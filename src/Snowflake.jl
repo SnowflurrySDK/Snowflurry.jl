@@ -171,7 +171,62 @@ include("core/transpile.jl")
 include("anyon/qpu_interface.jl")
 include("anyon/anyon.jl")
 
+using PrecompileTools
+
+@compile_workload begin
+
+    host = "http://example.anyonsys.com"
+    user = "test_user"
+    access_token = "not_a_real_access_token"
+
+    theta = π/5
+    phi = π/7
+    lambda = π/9
+
+    qubit_count = 6
+    target = 1
+    
+    gates_list=[
+        identity_gate(1),
+        hadamard(1),
+        phase_shift(1,-phi/2),
+        pi_8(1),
+        pi_8_dagger(1),
+        rotation(1,theta,phi),
+        rotation_x(1,theta),
+        rotation_y(1,theta),
+        sigma_x(1),
+        sigma_y(1),
+        sigma_z(1),
+        universal(1, theta, phi, lambda),
+        x_90(1),
+        x_minus_90(1),
+        y_90(1),
+        y_minus_90(1),
+        z_90(1),
+        z_minus_90(1),
+        control_x(1,2),
+        control_z(4,6),
+        toffoli(1,2,6),
+        swap(2,5),
+        iswap(4,1),
+        iswap_dagger(6,3),
+    ]
+    
+
+    qpu = AnyonYukonQPU(;host=host, user=user, access_token=access_token)
+    transpiler = get_transpiler(qpu) 
+
+    for gate in gates_list
+    
+        circuit = QuantumCircuit(qubit_count=qubit_count,gates=[gate])
+        transpiled_circuit = transpile(transpiler,circuit)
+
+        simulate(circuit)
+    end
+
+end
 
 
 
-end # end module
+end
