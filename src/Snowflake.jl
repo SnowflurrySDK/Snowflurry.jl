@@ -208,9 +208,9 @@ using PrecompileTools
         control_x(1,2),
         control_z(4,6),
         toffoli(1,2,6),
-        # swap(2,5),   # will be added after issue #274 is fixed
-        # iswap(4,1),
-        # iswap_dagger(6,3),
+        swap(2,5),
+        iswap(4,1),
+        iswap_dagger(6,3),
     ]
     
 
