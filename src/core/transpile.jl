@@ -387,6 +387,31 @@ function cast_to_cz(gate::Swap)::AbstractVector{AbstractGate}
     ])
 end
 
+function cast_to_cz(gate::MovedGate)::AbstractVector{AbstractGate}
+
+    connected_qubits = get_connected_qubits(gate)
+
+    original_connected_qubits = get_connected_qubits(gate.original_gate)
+
+    qubit_mapping = Dict{Int,Int}()
+
+    for (q_moved, q_original) in zip(connected_qubits, original_connected_qubits)
+        qubit_mapping[q_original] = q_moved
+    end
+
+    cast_gates_list = cast_to_cz(gate.original_gate)
+
+    #create sequence of MovedGates that preserve the qubit mapping in input
+    output_list = Vector{UnionMovedGates}()
+
+    for new_gate in cast_gates_list
+        moved_connected_qubits = [qubit_mapping[q_original] for q_original in get_connected_qubits(new_gate)]
+        push!(output_list, MovedGate(new_gate, moved_connected_qubits))
+    end
+
+    return output_list
+end
+
 struct CastSwapToCZGateTranspiler <: Transpiler end
 
 """
