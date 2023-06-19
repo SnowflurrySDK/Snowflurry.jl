@@ -1,5 +1,79 @@
 using Snowflurry
 
+abstract type AbstractConnectivity end
+
+struct LineConnectivity <:AbstractConnectivity 
+    dimension   ::Int
+end
+
+struct LatticeConnectivity <:AbstractConnectivity 
+    dimension   ::Tuple{Int,Int}
+end
+
+get_connectivity_label(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_connectivity_label,connectivity))
+
+get_connectivity_label(::LineConnectivity) = "linear"
+get_connectivity_label(::LatticeConnectivity) = "lattice"
+
+get_num_qubits(conn::AbstractConnectivity) = *(conn.dimension...)
+
+function print_connectivity(connectivity::LineConnectivity,io::IO=stdout)
+    dim = connectivity.dimension
+
+    diagram = [string(n) * "──" for n in 1:dim-1]
+    push!(diagram,string(dim))
+
+    println(io,diagram)
+end
+
+function print_connectivity(connectivity::LatticeConnectivity,io::IO=stdout)
+    dims = connectivity.dimension
+
+    qubit_count=get_num_qubits(connectivity)
+
+    max_qubit_num_length=length(string(qubit_count))
+
+    nrows=dims[1]
+    ncols=dims[2]
+
+    # create string template for ncols: 
+    # e.g.: ""%s──%s──%s"" for 3 columns
+    line_segments=["%s──" for _ in 1:ncols-1]
+    push!(line_segments,"%s")
+    str_template=*(line_segments...)
+
+    # create float specifier of correct precision: 
+    # e.g.: "%2.f ──%2.f ──%2.f " for 3 columns, precision=2
+    precisionStr=string(" %",max_qubit_num_length,".f ")
+    precisionArray=[precisionStr for _ in 1:ncols]
+    str_template_float=Snowflake.formatter(str_template,precisionArray...)
+    
+    #vertical lines
+    right_padding=string([" " for _ in 1:div(max_qubit_num_length+1,2)]...)
+    left_padding=string([" " for _ in 1:div(max_qubit_num_length+2,2)]...)
+
+    padded_vertical_symbol=left_padding*"|"*right_padding
+    vertical_lines=Snowflake.formatter(
+        replace(str_template,"──"=>"  "),
+        [padded_vertical_symbol for _ in 1:ncols]...
+    )
+
+    for irow in 1:nrows
+        #insert qubit numbers into str_template_float
+        qubit_numbers_in_row=[v+(irow-1)*ncols for v in  1:ncols]
+        line_printout=Snowflake.formatter(str_template_float,qubit_numbers_in_row...)
+        println(io,line_printout)
+        if irow < nrows
+            println(io,vertical_lines)
+        end
+    end
+
+end
+
+print_connectivity(connectivity::AbstractConnectivity,io::IO=stdout) =
+    throw(NotImplementedError(:print_connectivity,connectivity))
+
 """
     AnyonYukonQPU
 
@@ -23,26 +97,26 @@ Quantum Processing Unit:
 struct AnyonYukonQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
+    connectivity            ::AbstractConnectivity
 
-    AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle)
-    AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle)
+    AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LineConnectivity(6))
+    AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LineConnectivity(6))
 end
 
-const line_connectivity_label="linear"
 
-get_metadata(::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
+get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
-    "qubit_count"   =>6,
-    "connectivity_type"  =>line_connectivity_label
+    "qubit_count"   =>get_num_qubits(qpu.connectivity),
+    "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
 get_client(qpu_service::AnyonYukonQPU)=qpu_service.client
 
 get_num_qubits(qpu::AnyonYukonQPU)=get_metadata(qpu)["qubit_count"]
 
-print_connectivity(qpu::AnyonYukonQPU,io::IO=stdout)=println(io, "1──2──3──4──5──6")
+print_connectivity(qpu::AnyonYukonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity)
 
 function Base.show(io::IO, qpu::AnyonYukonQPU)
     metadata=get_metadata(qpu)
@@ -75,8 +149,10 @@ function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
     ]
 
     if is_gate_type(gate, ControlZ)
-        @assert get_metadata(qpu)["connectivity_type"]==line_connectivity_label (
-            "Not implemented for connectivity type: $(get_metadata(qpu)["connectivity_type"])"
+        #on ControlZ gates are native only if targets are adjacent
+
+        @assert qpu.connectivity isa LineConnectivity (
+            "Not implemented for connectivity type: $(typeof(qpu.connectivity))"
         )
             
         targets=get_connected_qubits(gate)
