@@ -36,6 +36,7 @@ export
     ControlledGate,
     Gate,
     AnyonYukonQPU,
+    AnyonMonarqQPU,
     VirtualQPU,
     Client,
     Status,

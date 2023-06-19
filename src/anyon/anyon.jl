@@ -13,8 +13,11 @@ end
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label,connectivity))
 
-get_connectivity_label(::LineConnectivity) = "linear"
-get_connectivity_label(::LatticeConnectivity) = "lattice"
+const line_connectivity_label = "linear"
+const lattice_connectivity_label = "2D-lattice"
+
+get_connectivity_label(::LineConnectivity) = line_connectivity_label
+get_connectivity_label(::LatticeConnectivity) = lattice_connectivity_label
 
 get_num_qubits(conn::AbstractConnectivity) = *(conn.dimension...)
 
@@ -24,7 +27,9 @@ function print_connectivity(connectivity::LineConnectivity,io::IO=stdout)
     diagram = [string(n) * "──" for n in 1:dim-1]
     push!(diagram,string(dim))
 
-    println(io,diagram)
+    output_str=*(diagram...)
+
+    println(io,output_str)
 end
 
 function print_connectivity(connectivity::LatticeConnectivity,io::IO=stdout)
@@ -74,6 +79,8 @@ end
 print_connectivity(connectivity::AbstractConnectivity,io::IO=stdout) =
     throw(NotImplementedError(:print_connectivity,connectivity))
 
+abstract type AbstractAnyonQPU <: AbstractQPU end
+
 """
     AnyonYukonQPU
 
@@ -94,7 +101,7 @@ Quantum Processing Unit:
    connectivity_type:  linear
 ```
 """
-struct AnyonYukonQPU <: AbstractQPU
+struct AnyonYukonQPU <: AbstractAnyonQPU
     client                  ::Client
     status_request_throttle ::Function
     connectivity            ::AbstractConnectivity
@@ -112,13 +119,30 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
-get_client(qpu_service::AnyonYukonQPU)=qpu_service.client
+struct AnyonMonarqQPU <: AbstractAnyonQPU
+    client                  ::Client
+    status_request_throttle ::Function
+    connectivity            ::AbstractConnectivity
 
-get_num_qubits(qpu::AnyonYukonQPU)=get_metadata(qpu)["qubit_count"]
+    AnyonMonarqQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity((3,4)))
+    AnyonMonarqQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity((3,4)))
+end
 
-print_connectivity(qpu::AnyonYukonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity)
+get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
+    "manufacturer"  =>"Anyon Systems Inc.",
+    "generation"    =>"MonarQ",
+    "serial_number" =>"ANYK202301",
+    "qubit_count"   =>get_num_qubits(qpu.connectivity),
+    "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
+)
 
-function Base.show(io::IO, qpu::AnyonYukonQPU)
+get_client(qpu_service::AbstractAnyonQPU)=qpu_service.client
+
+get_num_qubits(qpu::AbstractAnyonQPU)=get_metadata(qpu)["qubit_count"]
+
+print_connectivity(qpu::AbstractAnyonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,io)
+
+function Base.show(io::IO, qpu::AbstractAnyonQPU)
     metadata=get_metadata(qpu)
 
     println(io, "Quantum Processing Unit:")
@@ -130,24 +154,23 @@ function Base.show(io::IO, qpu::AnyonYukonQPU)
 end
 
 
-function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
-    
-    set_of_native_gates=[
-        PhaseShift,
-        Pi8,
-        Pi8Dagger,
-        SigmaX,
-        SigmaY,
-        SigmaZ,
-        X90,
-        XM90,
-        Y90,
-        YM90,
-        Z90,
-        ZM90,
-        ControlZ,
-    ]
+set_of_native_gates=[
+    PhaseShift,
+    Pi8,
+    Pi8Dagger,
+    SigmaX,
+    SigmaY,
+    SigmaZ,
+    X90,
+    XM90,
+    Y90,
+    YM90,
+    Z90,
+    ZM90,
+    ControlZ,
+]
 
+function is_native_gate(qpu::AnyonYukonQPU,gate::AbstractGate)::Bool
     if is_gate_type(gate, ControlZ)
         #on ControlZ gates are native only if targets are adjacent
 
@@ -163,7 +186,24 @@ function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
     return (get_gate_type(gate) in set_of_native_gates)
 end
 
-function is_native_circuit(qpu::AnyonYukonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_gate(qpu::AnyonMonarqQPU,gate::AbstractGate)::Bool
+    
+    if is_gate_type(gate, ControlZ)
+        #on ControlZ gates are native only if targets are adjacent
+
+        @assert qpu.connectivity isa LineConnectivity (
+            "Not implemented for connectivity type: $(typeof(qpu.connectivity))"
+        )
+            
+        targets=get_connected_qubits(gate)
+
+        return (abs(targets[1]-targets[2])==1)        
+    end
+        
+    return (get_gate_type(gate) in set_of_native_gates)
+end
+
+function is_native_circuit(qpu::AbstractAnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
     if qubit_count_circuit>qubit_count_qpu 

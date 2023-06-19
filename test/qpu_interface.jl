@@ -22,7 +22,6 @@ end
 @testset "requestor" begin
     struct NonImplementedRequestor<:Snowflurry.Requestor end
 
-
     non_impl_requestor=NonImplementedRequestor()
     body=""
     
@@ -184,6 +183,21 @@ end
     @test status.message != ""
 end
 
+function test_print_connectivity(
+    input::Union{
+        Snowflake.AbstractAnyonQPU,
+        Snowflake.LatticeConnectivity,
+        Snowflake.LineConnectivity
+        }, 
+    expected::String
+    )
+    io = IOBuffer()
+
+    print_connectivity(input,io)
+
+    @test String(take!(io)) == expected
+end
+
 @testset "Construct AnyonYukonQPU" begin
     host = "host"
     user = "user"
@@ -196,8 +210,77 @@ end
     @test client.user == user
     @test client.access_token == token
 
-    print_connectivity(qpu)
+    test_print_connectivity(qpu,"1──2──3──4──5──6\n")
+
+    test_print_connectivity(
+        Snowflake.LineConnectivity(12),
+        "1──2──3──4──5──6──7──8──9──10──11──12\n"
+    )
+
 end
+
+@testset "Construct AnyonMonarqQPU" begin
+    host = "host"
+    user = "user"
+    token = "token"
+
+    qpu = AnyonMonarqQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
+    client = get_client(qpu)
+
+    @test client.host == host
+    @test client.user == user
+    @test client.access_token == token
+
+    test_print_connectivity(qpu,
+    "  1 ──  2 ──  3 ──  4 \n" *
+    "  |     |     |     | \n" *
+    "  5 ──  6 ──  7 ──  8 \n" *
+    "  |     |     |     | \n" *
+    "  9 ── 10 ── 11 ── 12 \n")
+
+    test_print_connectivity(Snowflake.LatticeConnectivity((4,5)),
+    "  1 ──  2 ──  3 ──  4 ──  5 \n" *
+    "  |     |     |     |     | \n" *
+    "  6 ──  7 ──  8 ──  9 ── 10 \n" *
+    "  |     |     |     |     | \n" *
+    " 11 ── 12 ── 13 ── 14 ── 15 \n" *
+    "  |     |     |     |     | \n" *
+    " 16 ── 17 ── 18 ── 19 ── 20 \n")
+end
+
+# @testset "Construct AnyonYukonQPU" begin
+#     host = "host"
+#     user = "user"
+#     token = "token"
+
+#     qpu = AnyonYukonQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
+#     client = get_client(qpu)
+
+#     @test client.host == host
+#     @test client.user == user
+#     @test client.access_token == token
+
+#     @test "1──2──3──4──5──6" == print_connectivity(qpu)
+# end
+
+# @testset "Construct AnyonMonarqQPU" begin
+#     host = "host"
+#     user = "user"
+#     token = "token"
+
+#     qpu = AnyonMonarqQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
+#     client = get_client(qpu)
+
+#     @test client.host == host
+#     @test client.user == user
+#     @test client.access_token == token
+
+#     @test "  1 ──  2 ──  3 ──  4 
+#   |     |     |     | 
+#   5 ──  6 ──  7 ──  8 
+#   |     |     |     | 
+#   9 ── 10 ── 11 ── 13 " == print_connectivity(qpu)
+# end
 
 @testset "run_job on AnyonYukonQPU" begin
 
@@ -334,3 +417,4 @@ end
     @test_throws NotImplementedError get_transpiler(NonExistentQPU())
     @test_throws NotImplementedError run_job(NonExistentQPU(),QuantumCircuit(qubit_count=1),42)
 end
+
