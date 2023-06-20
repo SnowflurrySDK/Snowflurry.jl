@@ -356,7 +356,7 @@ abstract type AbstractQPU end
 get_metadata(qpu::AbstractQPU) =
     throw(NotImplementedError(:get_metadata,qpu))
 
-is_native_gate(qpu::AbstractQPU,::AbstractGate) =
+is_native_gate(qpu::AbstractQPU,::AbstractGateSymbol) =
     throw(NotImplementedError(:is_native_gate,qpu))
 
 is_native_circuit(qpu::AbstractQPU,::QuantumCircuit) =
@@ -390,7 +390,7 @@ get_metadata(qpu::VirtualQPU) = Dict{String,String}(
     "package"     =>"Snowflake.jl",
 )
 
-is_native_gate(::VirtualQPU,::AbstractGate)::Bool = true
+is_native_gate(::VirtualQPU,::AbstractGateSymbol)::Bool = true
 
 is_native_circuit(::VirtualQPU,::QuantumCircuit)::Tuple{Bool,String} = (true,"")
 

@@ -4,6 +4,114 @@ using LinearAlgebra
 
 include("test_functions.jl")
 
+@testset "get_num_connected_qubits" begin
+    struct MockConnectedQubitGateSymbol <: AbstractGateSymbol
+        connected_qubits::Vector{Int}
+    end
+
+    Snowflake.get_connected_qubits(gate::MockConnectedQubitGateSymbol) = return gate.connected_qubits
+
+    function test_num_connected_qubits(connected_qubits::Vector{Int}, expected_num_connected_qubits)
+        @test get_num_connected_qubits(MockConnectedQubitGateSymbol(connected_qubits)) == expected_num_connected_qubits
+    end
+
+    test_num_connected_qubits(Vector{Int}([]), 0)
+    test_num_connected_qubits([1], 1)
+    test_num_connected_qubits([5], 1)
+    test_num_connected_qubits([1, 2], 2)
+    test_num_connected_qubits([5, 3], 2)
+    test_num_connected_qubits([7,3,4,5,6,99], 6)
+end
+
+@testset "Gate" begin
+    struct MockNumConnectedQubit <: AbstractGateSymbol
+        num_connected_qubits::Int
+    end
+
+    Snowflake.get_num_connected_qubits(gate::MockNumConnectedQubit) = return gate.num_connected_qubits
+
+    @testset "constructor" begin
+
+        function test_domain_error_on_mismatched_connected_qubits(num_connected_qubits::Int, connected_qubits::Vector{Int})
+            @test_throws DomainError Gate(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
+        end
+
+        test_domain_error_on_mismatched_connected_qubits(1, Vector{Int}([]))
+        test_domain_error_on_mismatched_connected_qubits(1, [1, 2])
+        test_domain_error_on_mismatched_connected_qubits(0, [1])
+        test_domain_error_on_mismatched_connected_qubits(0, [7, 9])
+        test_domain_error_on_mismatched_connected_qubits(6, [6])
+        test_domain_error_on_mismatched_connected_qubits(6, [1, 3, 7])
+
+
+        function test_success(num_connected_qubits::Int, connected_qubits::Vector{Int})
+            gate = Gate(MockNumConnectedQubit(num_connected_qubits), connected_qubits)
+        end
+
+        test_success(0, Vector{Int}([]))
+        test_success(1, [1])
+        test_success(1, [6])
+        test_success(2, [1, 2])
+        test_success(2, [7, 9])
+        test_success(6, [1, 3, 7, 99, 2, 11])
+    end
+
+    @testset "show" begin
+        function test_show(gate_placement::Gate, expected::String)
+            io = IOBuffer()
+
+            Base.show(io, gate_placement)
+
+            @test String(take!(io)) == expected
+        end
+
+        test_show(
+            Gate(iswap(1, 2), [1, 2]),
+            """Gate Object: Snowflake.ISwap
+            Connected_qubits	: [1, 2]
+            Operator:
+            (4, 4)-element Snowflake.SwapLikeOperator:
+            Underlying data ComplexF64:
+            Equivalent DenseOperator:
+            1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im    0.0 + 0.0im
+            0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+            """
+        )
+
+        test_show(
+            Gate(universal(1, pi/2, -pi/2, pi/2), [3]),
+            """Gate Object: Snowflake.Universal
+            Parameters: 
+            theta	: 1.5707963267948966
+            phi	: -1.5707963267948966
+            lambda	: 1.5707963267948966
+            
+            Connected_qubits	: [3]
+            Operator:
+            (2, 2)-element Snowflake.DenseOperator:
+            Underlying data ComplexF64:
+            0.7071067811865476 + 0.0im    -4.329780281177466e-17 - 0.7071067811865475im
+            4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
+            """
+        )
+    end
+
+    @testset "getters" begin
+        function test_getters(symbol::AbstractGateSymbol, connected_qubits::Vector{Int})
+            gate = Gate(symbol, connected_qubits)
+
+            @test get_connected_qubits(gate) == connected_qubits
+            @test get_gate_symbol(gate) == symbol
+        end
+
+        test_getters(hadamard(3), [3])
+        test_getters(iswap(3, 7), [7, 3])
+        test_getters(universal(11, pi/2, -pi/2, pi/4), [11])
+    end
+end
+
 @testset "apply_gate" begin
     ψ_0 = fock(0,2)
     ψ_0_to_update = fock(0,2)
@@ -279,11 +387,11 @@ end
     @test get_display_symbol(toffoli_kernel_1_2_3) ==["*", "*", "X"]
 
     # ControlledHadamard as ControlledGate
-    controlled_hadamard_kernel_1_2=ControlledGate(hadamard(2),1)
-    controlled_hadamard_kernel_2_1=ControlledGate(hadamard(1),2)
+    controlled_hadamard_kernel_1_2=Gate(ControlledGate(hadamard(2),1), [1,2])
+    controlled_hadamard_kernel_2_1=Gate(ControlledGate(hadamard(1),2), [2,1])
 
-    # ControlledHadamard as Dense AbstractControlledGate
-    struct ControlledHadamard <: AbstractControlledGate
+    # ControlledHadamard as Dense AbstractControlledGateSymbol
+    struct ControlledHadamard <: AbstractControlledGateSymbol
         control::Int
         target::Int
     end
@@ -305,8 +413,8 @@ end
     
     Snowflake.get_target_qubits(gate::ControlledHadamard)=[gate.target]
 
-    controlled_hadamard_dense_1_2=ControlledHadamard(1,2)
-    controlled_hadamard_dense_2_1=ControlledHadamard(2,1)
+    controlled_hadamard_dense_1_2=Gate(ControlledHadamard(1,2), [1,2])
+    controlled_hadamard_dense_2_1=Gate(ControlledHadamard(2,1), [2,1])
   
     @test get_operator(controlled_hadamard_kernel_1_2) ≈ get_operator(controlled_hadamard_dense_1_2)
 
@@ -325,8 +433,8 @@ end
     @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
 
     # Neither target nor control is last qubit
-    controlled_hadamard_kernel_2_3=ControlledGate(hadamard(3),2)
-    controlled_hadamard_dense_2_3=ControlledHadamard(2,3)
+    controlled_hadamard_kernel_2_3=Gate(ControlledGate(hadamard(3),2), [2, 3])
+    controlled_hadamard_dense_2_3=Gate(ControlledHadamard(2,3), [2, 3])
 
     ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
     
@@ -342,7 +450,7 @@ end
 
 end
 
-struct DenseGate<:AbstractGate
+struct DenseGate<:AbstractGateSymbol
     connected_qubits::Vector{Int}
     operator::DenseOperator
 end
@@ -397,7 +505,7 @@ end
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -425,7 +533,7 @@ end
                 @test params_in_gate[k]==v
             end
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -484,7 +592,7 @@ end
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= DenseGate(get_connected_qubits(c_gate),get_operator(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -628,30 +736,30 @@ end
     inverse_iden = inv(iden)
     @test get_connected_qubits(iden)==get_connected_qubits(inverse_iden)
 
-    struct UnknownGate <: AbstractGate
+    struct UnknownGateSymbol <: AbstractGateSymbol
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownGate) = DenseOperator([1 2; 3 4])
+    Snowflake.get_operator(gate::UnknownGateSymbol) = DenseOperator([1 2; 3 4])
 
-    unknown_gate=UnknownGate("na")
+    unknown_gate=UnknownGateSymbol("na")
     @test_throws NotImplementedError inv(unknown_gate)
 
-    struct UnknownHermitianGate <: AbstractGate
+    struct UnknownHermitianGateSymbol <: AbstractGateSymbol
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownHermitianGate) = DenseOperator([1 im; -im 1])
+    Snowflake.get_operator(gate::UnknownHermitianGateSymbol) = DenseOperator([1 im; -im 1])
 
-    unknown_hermitian_gate = UnknownHermitianGate("na")
+    unknown_hermitian_gate = UnknownHermitianGateSymbol("na")
 
-    # test fallback implementation of inv(::AbstractGate)
+    # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
 
-    struct UnknownControlledGate<:AbstractControlledGate end
+    struct UnknownControlledGateSymbol <: AbstractControlledGateSymbol end
 
-    @test_throws NotImplementedError get_target_qubits(UnknownControlledGate())
-    @test_throws NotImplementedError get_control_qubits(UnknownControlledGate())
+    @test_throws NotImplementedError get_target_qubits(UnknownControlledGateSymbol())
+    @test_throws NotImplementedError get_control_qubits(UnknownControlledGateSymbol())
 
 end
 

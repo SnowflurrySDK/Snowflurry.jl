@@ -1,7 +1,7 @@
 using Snowflake
 using LinearAlgebra
 
-function test_inverse(gate::AbstractGate)
+function test_inverse(gate::AbstractGateSymbol)
     inverse_gate=inv(gate)
     target_count=length(get_connected_qubits(gate))
 
@@ -27,7 +27,7 @@ end
 
 
 function test_operator_implementation(
-    op_type::Type{<:AbstractOperator};
+    op_type::Type{<: AbstractOperator};
     dim::Union{Integer,Nothing}=2,
     label="",
     values::Vector{<:Number}=[1.,2.,3.,4.])

@@ -232,7 +232,7 @@ Underlying data ComplexF64:
 
 ```
 """
-struct DenseOperator{N,T<:Complex}<:AbstractOperator
+struct DenseOperator{N,T<:Complex} <: AbstractOperator
     data::SMatrix{N,N,T}
 end
 
@@ -385,7 +385,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-struct DiagonalOperator{N,T<:Complex}<:AbstractOperator
+struct DiagonalOperator{N,T<:Complex} <: AbstractOperator
     data::SVector{N,T}
 end
 
@@ -424,7 +424,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-struct AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
+struct AntiDiagonalOperator{N,T<:Complex} <: AbstractOperator
     data::SVector{N,T}
 
     function AntiDiagonalOperator(

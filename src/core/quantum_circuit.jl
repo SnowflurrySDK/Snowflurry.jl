@@ -5,7 +5,7 @@
 A data structure to represent a *quantum circuit*.  
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e. quantum register size).
-- `gates::Vector{AbstractGate}` -- the sequence of gates to operate on qubits.
+- `gates::Vector{AbstractGateSymbol}` -- the sequence of gates to operate on qubits.
 
 # Examples
 ```jldoctest
@@ -19,30 +19,28 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
-    gates::Vector{AbstractGate} = Vector{AbstractGate}([])
+    gates::Vector{Gate} = Vector{Gate}([])
     
-    function QuantumCircuit(qubit_count::Int,gates::Vector{<:AbstractGate})    
+    function QuantumCircuit(qubit_count::Int,gates::Vector{GateType}) where GateType <: Gate
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
     
-        c=new(qubit_count,[])
-
-        # add gates, with ensure_gate_is_in_circuit()
-        append!(c,gates)
-
-        return c
+        circuit = new(qubit_count, [])
+        foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+        append!(circuit.gates, gates)
+        return circuit
     end
 end
 
 
 get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
-get_circuit_gates(circuit::QuantumCircuit)=circuit.gates
+get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{Gate}=circuit.gates
 
 """
-    push!(circuit::QuantumCircuit, gates::AbstractGate...)
+    push!(circuit::QuantumCircuit, gates::AbstractGateSymbol...)
 
 Inserts one or more `gates` at the end of a `circuit`.
 
-A `Vector` of `AbstractGate` objects can be passed to this function by using splatting.
+A `Vector` of `AbstractGateSymbol` objects can be passed to this function by using splatting.
 More details about splatting are provided
 [here](https://docs.julialang.org/en/v1/manual/faq/#What-does-the-...-operator-do?).
 
@@ -84,16 +82,15 @@ q[2]:───────X────X─────────H──
 
 ```
 """
-function Base.push!(circuit::QuantumCircuit, gates::AbstractGate...)
-    # convert input from Tuple to Vector
-    return append!(circuit,[gate for gate in gates])
+function Base.push!(circuit::QuantumCircuit, gates::Gate...)
+    foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+    append!(circuit.gates, gates)
+    return circuit
 end
 
-function Base.append!(circuit::QuantumCircuit, gates::Vector{<:AbstractGate})
-    for single_gate in gates
-        ensure_gate_is_in_circuit(circuit, single_gate)
-        push!(get_circuit_gates(circuit), single_gate)
-    end
+function Base.append!(circuit::QuantumCircuit, gates::Vector{Gate})
+    foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+    append!(circuit.gates, gates)
     return circuit
 end
 
@@ -308,7 +305,7 @@ function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
 end
 
 """
-    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
+    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
 
 Determined whether or not a type of gate is present in a circuit.
 
@@ -326,7 +323,7 @@ julia> circuit_contains_gate_type(circuit, Snowflake.ControlZ)
 false
 ```
 """
-function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:AbstractGate})::Bool
+function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
     for gate in get_circuit_gates(circuit)
         if is_gate_type(gate, gate_type)
             return true
@@ -336,7 +333,7 @@ function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<:A
     return false
 end
 
-function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGate)
+function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGateSymbol)
     for target in get_connected_qubits(gate)
         if target > get_num_qubits(circuit)
             throw(DomainError(target, "The gate does not fit in the circuit"))
@@ -381,7 +378,12 @@ function format_label(
     end
 end
 
-function get_display_symbol(gate::AbstractGate;precision::Integer=4)
+# TODO(#226): delete on completion
+function get_display_symbol(gate::Gate;precision::Integer=4)
+    return get_display_symbol(get_gate_symbol(gate), precision=precision)
+end
+
+function get_display_symbol(gate::AbstractGateSymbol;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
 
@@ -444,7 +446,7 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGate)=gates_instruction_symbols[get_gate_type(gate)]
+get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[get_gate_type(gate)]
 
 gates_instruction_symbols=Dict(
     Identity    =>"i",
@@ -558,7 +560,7 @@ function get_circuit_layout(circuit::QuantumCircuit)
     return circuit_layout
 end
 
-function get_longest_symbol_length(gate::AbstractGate)
+function get_longest_symbol_length(gate::AbstractGateSymbol)
     largest_length = 0
     for symbol in get_display_symbol(gate)
         symbol_length = length(symbol)
@@ -603,7 +605,7 @@ end
 
 function add_coupling_lines_to_circuit_layout!(
     circuit_layout::Array{String}, 
-    gate::AbstractGate,
+    gate::AbstractGateSymbol,
     i_step::Integer,
     longest_symbol_length::Integer
     )
@@ -624,7 +626,7 @@ function add_coupling_lines_to_circuit_layout!(
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::AbstractGate,
+function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::AbstractGateSymbol,
     i_step::Integer, longest_symbol_length::Integer)
     
     symbols_gate=get_display_symbol(gate)
@@ -893,7 +895,7 @@ q[2]:──X─────────────────
 """
 function Base.inv(circuit::QuantumCircuit)
 
-    inverse_gates = Vector{AbstractGate}( 
+    inverse_gates = Vector{Gate}( 
         [Base.inv(g) for g in reverse(get_circuit_gates(circuit))] 
     )
 
@@ -902,7 +904,7 @@ function Base.inv(circuit::QuantumCircuit)
 end
 
 """
-    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
 
 Returns a dictionary listing the number of gates of each type found in the `circuit`.
 
@@ -933,7 +935,7 @@ Dict{String, Int64} with 2 entries:
 
 ```
 """
-function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<:AbstractString, <:Integer}
+function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
     for gate in get_circuit_gates(circuit)
         instruction_symbol=get_instruction_symbol(gate)
