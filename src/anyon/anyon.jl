@@ -7,7 +7,7 @@ struct LineConnectivity <:AbstractConnectivity
 end
 
 struct LatticeConnectivity <:AbstractConnectivity 
-    dimension   ::Tuple{Int,Int}
+    dimension   ::Tuple{Int,Int} # (nrows,ncols)
 end
 
 get_connectivity_label(connectivity::AbstractConnectivity) =
@@ -32,48 +32,47 @@ function print_connectivity(connectivity::LineConnectivity,io::IO=stdout)
     println(io,output_str)
 end
 
-function print_connectivity(connectivity::LatticeConnectivity,io::IO=stdout)
+function print_connectivity(connectivity::LatticeConnectivity, io::IO = stdout)
     dims = connectivity.dimension
 
-    qubit_count=get_num_qubits(connectivity)
+    qubit_count = get_num_qubits(connectivity)
 
-    max_qubit_num_length=length(string(qubit_count))
+    max_qubit_num_length = length(string(qubit_count))
 
-    nrows=dims[1]
-    ncols=dims[2]
+    nrows = dims[1]
+    ncols = dims[2]
 
     # create string template for ncols: 
     # e.g.: ""%s──%s──%s"" for 3 columns
-    line_segments=["%s──" for _ in 1:ncols-1]
-    push!(line_segments,"%s")
-    str_template=*(line_segments...)
+    line_segments = ["%s──" for _ in 1:ncols-1]
+    push!(line_segments, "%s")
+    str_template = *(line_segments...)
 
     # create float specifier of correct precision: 
     # e.g.: "%2.f ──%2.f ──%2.f " for 3 columns, precision=2
-    precisionStr=string(" %",max_qubit_num_length,".f ")
-    precisionArray=[precisionStr for _ in 1:ncols]
-    str_template_float=Snowflake.formatter(str_template,precisionArray...)
+    precisionStr = string(" %", max_qubit_num_length, ".f ")
+    precisionArray = [precisionStr for _ in 1:ncols]
+    str_template_float = Snowflake.formatter(str_template, precisionArray...)
     
     #vertical lines
-    right_padding=string([" " for _ in 1:div(max_qubit_num_length+1,2)]...)
-    left_padding=string([" " for _ in 1:div(max_qubit_num_length+2,2)]...)
+    right_padding = string([" " for _ in 1:div(max_qubit_num_length+1, 2)]...)
+    left_padding =  string([" " for _ in 1:div(max_qubit_num_length+2, 2)]...)
 
-    padded_vertical_symbol=left_padding*"|"*right_padding
-    vertical_lines=Snowflake.formatter(
-        replace(str_template,"──"=>"  "),
+    padded_vertical_symbol = left_padding * "|" * right_padding
+    vertical_lines = Snowflake.formatter(
+        replace(str_template, "──" => "  "),
         [padded_vertical_symbol for _ in 1:ncols]...
     )
 
     for irow in 1:nrows
         #insert qubit numbers into str_template_float
-        qubit_numbers_in_row=[v+(irow-1)*ncols for v in  1:ncols]
-        line_printout=Snowflake.formatter(str_template_float,qubit_numbers_in_row...)
-        println(io,line_printout)
+        qubit_numbers_in_row = [v + (irow-1)*ncols for v in  1:ncols]
+        line_printout = Snowflake.formatter(str_template_float, qubit_numbers_in_row...)
+        println(io, line_printout)
         if irow < nrows
-            println(io,vertical_lines)
+            println(io, vertical_lines)
         end
     end
-
 end
 
 print_connectivity(connectivity::AbstractConnectivity,io::IO=stdout) =
@@ -170,34 +169,31 @@ set_of_native_gates=[
     ControlZ,
 ]
 
-function is_native_gate(qpu::AnyonYukonQPU,gate::AbstractGate)::Bool
-    if is_gate_type(gate, ControlZ)
-        #on ControlZ gates are native only if targets are adjacent
+get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int = 
+    abs(target_1 - target_2)
 
-        @assert qpu.connectivity isa LineConnectivity (
-            "Not implemented for connectivity type: $(typeof(qpu.connectivity))"
-        )
-            
-        targets=get_connected_qubits(gate)
+function get_qubits_distance(target_1::Int, target_2::Int, connectivity::Snowflake.LatticeConnectivity)::Int
+    dims = connectivity.dimension
 
-        return (abs(targets[1]-targets[2])==1)        
-    end
-        
-    return (get_gate_type(gate) in set_of_native_gates)
+    ncols = dims[2]
+
+    target_1_row = div(target_1 - 1, ncols) + 1
+    target_1_col = (target_1 - 1) % ncols + 1
+
+    target_2_row = div(target_2 - 1, ncols) + 1
+    target_2_col = (target_2 - 1) % ncols + 1
+
+    # Manhattan distance
+    return abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
 end
 
-function is_native_gate(qpu::AnyonMonarqQPU,gate::AbstractGate)::Bool
-    
+function is_native_gate(qpu::AbstractAnyonQPU,gate::AbstractGate)::Bool
     if is_gate_type(gate, ControlZ)
-        #on ControlZ gates are native only if targets are adjacent
-
-        @assert qpu.connectivity isa LineConnectivity (
-            "Not implemented for connectivity type: $(typeof(qpu.connectivity))"
-        )
+        # on ControlZ gates are native only if targets are adjacent
             
         targets=get_connected_qubits(gate)
 
-        return (abs(targets[1]-targets[2])==1)        
+        return (get_qubits_distance(targets[1],targets[2],qpu.connectivity)==1)        
     end
         
     return (get_gate_type(gate) in set_of_native_gates)

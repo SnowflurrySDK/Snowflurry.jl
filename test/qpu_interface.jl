@@ -198,6 +198,61 @@ function test_print_connectivity(
     @test String(take!(io)) == expected
 end
 
+@testset "print_connectivity" begin
+
+    test_print_connectivity(
+        Snowflake.LineConnectivity(12),
+        "1──2──3──4──5──6──7──8──9──10──11──12\n"
+    )
+
+    test_print_connectivity(Snowflake.LatticeConnectivity((4,5)),
+    "  1 ──  2 ──  3 ──  4 ──  5 \n" *
+    "  |     |     |     |     | \n" *
+    "  6 ──  7 ──  8 ──  9 ── 10 \n" *
+    "  |     |     |     |     | \n" *
+    " 11 ── 12 ── 13 ── 14 ── 15 \n" *
+    "  |     |     |     |     | \n" *
+    " 16 ── 17 ── 18 ── 19 ── 20 \n")
+
+    struct UnknownConnectivity <: Snowflake.AbstractConnectivity end
+    @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
+    @test_throws NotImplementedError Snowflake.get_connectivity_label(UnknownConnectivity())
+end
+
+@testset "get_qubits_distance" begin
+    # LineConnectivity
+    qubit_count = 6
+    c=Snowflake.LineConnectivity(qubit_count)
+
+    for target_1 in 1:qubit_count
+        for target_2 in 1:qubit_count
+            @test get_qubits_distance(target_1, target_2,c) == abs(target_1-target_2)
+        end
+    end
+
+    ##########################################
+    # LatticeConnectivity
+    nrows = 4
+    ncols = 3
+    c=Snowflake.LatticeConnectivity((nrows,ncols))
+
+    qubit_num_matrix=Matrix(transpose(reshape([v for v in 1:nrows*ncols],ncols,nrows)))
+
+    for (target_1,ind_1) in zip(qubit_num_matrix,CartesianIndices(qubit_num_matrix))
+        for (target_2,ind_2) in zip(qubit_num_matrix,CartesianIndices(qubit_num_matrix))
+
+            target_1_row = ind_1[1]
+            target_1_col = ind_1[2]
+        
+            target_2_row = ind_2[1]
+            target_2_col = ind_2[2]
+
+            @test get_qubits_distance(target_1, target_2,c) == 
+                abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
+        end
+    end
+end
+
 @testset "Construct AnyonYukonQPU" begin
     host = "host"
     user = "user"
@@ -212,11 +267,15 @@ end
 
     test_print_connectivity(qpu,"1──2──3──4──5──6\n")
 
-    test_print_connectivity(
-        Snowflake.LineConnectivity(12),
-        "1──2──3──4──5──6──7──8──9──10──11──12\n"
-    )
+    @test Snowflake.get_connectivity_label(qpu.connectivity) == Snowflake.line_connectivity_label
 
+    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+        "manufacturer"  =>"Anyon Systems Inc.",
+        "generation"    =>"Yukon",
+        "serial_number" =>"ANYK202201",
+        "qubit_count"   =>get_num_qubits(qpu.connectivity),
+        "connectivity_type"  =>Snowflake.get_connectivity_label(qpu.connectivity)
+    )
 end
 
 @testset "Construct AnyonMonarqQPU" begin
@@ -238,49 +297,17 @@ end
     "  |     |     |     | \n" *
     "  9 ── 10 ── 11 ── 12 \n")
 
-    test_print_connectivity(Snowflake.LatticeConnectivity((4,5)),
-    "  1 ──  2 ──  3 ──  4 ──  5 \n" *
-    "  |     |     |     |     | \n" *
-    "  6 ──  7 ──  8 ──  9 ── 10 \n" *
-    "  |     |     |     |     | \n" *
-    " 11 ── 12 ── 13 ── 14 ── 15 \n" *
-    "  |     |     |     |     | \n" *
-    " 16 ── 17 ── 18 ── 19 ── 20 \n")
+    @test Snowflake.get_connectivity_label(qpu.connectivity) == Snowflake.lattice_connectivity_label
+
+    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+        "manufacturer"  =>"Anyon Systems Inc.",
+        "generation"    =>"MonarQ",
+        "serial_number" =>"ANYK202301",
+        "qubit_count"   =>get_num_qubits(qpu.connectivity),
+        "connectivity_type"  =>Snowflake.get_connectivity_label(qpu.connectivity)
+    )
+
 end
-
-# @testset "Construct AnyonYukonQPU" begin
-#     host = "host"
-#     user = "user"
-#     token = "token"
-
-#     qpu = AnyonYukonQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
-#     client = get_client(qpu)
-
-#     @test client.host == host
-#     @test client.user == user
-#     @test client.access_token == token
-
-#     @test "1──2──3──4──5──6" == print_connectivity(qpu)
-# end
-
-# @testset "Construct AnyonMonarqQPU" begin
-#     host = "host"
-#     user = "user"
-#     token = "token"
-
-#     qpu = AnyonMonarqQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
-#     client = get_client(qpu)
-
-#     @test client.host == host
-#     @test client.user == user
-#     @test client.access_token == token
-
-#     @test "  1 ──  2 ──  3 ──  4 
-#   |     |     |     | 
-#   5 ──  6 ──  7 ──  8 
-#   |     |     |     | 
-#   9 ── 10 ── 11 ── 13 " == print_connectivity(qpu)
-# end
 
 @testset "run_job on AnyonYukonQPU" begin
 

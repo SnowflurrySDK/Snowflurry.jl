@@ -87,6 +87,7 @@ export
     get_num_connected_qubits,
     get_target_qubits,
     get_control_qubits,
+    get_qubits_distance,
     get_gate_parameters,
     is_gate_type,
     get_gate_type,
