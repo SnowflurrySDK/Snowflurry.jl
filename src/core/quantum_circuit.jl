@@ -24,12 +24,10 @@ Base.@kwdef struct QuantumCircuit
     function QuantumCircuit(qubit_count::Int,gates::Vector{GateType}) where GateType <: Gate
         @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
     
-        c=new(qubit_count,[])
-
-        # add gates, with ensure_gate_is_in_circuit()
-        append!(c,gates)
-
-        return c
+        circuit = new(qubit_count, [])
+        foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+        append!(circuit.gates, gates)
+        return circuit
     end
 end
 
@@ -85,15 +83,14 @@ q[2]:───────X────X─────────H──
 ```
 """
 function Base.push!(circuit::QuantumCircuit, gates::Gate...)
-    # convert input from Tuple to Vector
-    return append!(circuit,[gate for gate in gates])
+    foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+    append!(circuit.gates, gates)
+    return circuit
 end
 
 function Base.append!(circuit::QuantumCircuit, gates::Vector{Gate})
-    for single_gate in gates
-        ensure_gate_is_in_circuit(circuit, single_gate)
-        push!(get_circuit_gates(circuit), single_gate)
-    end
+    foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
+    append!(circuit.gates, gates)
     return circuit
 end
 
