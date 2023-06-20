@@ -52,7 +52,10 @@ test_circuits=[
         control_x(1,3),
         control_x(4,2),
         control_x(1,4),
-        toffoli(1,4,3)
+        toffoli(1,4,3),
+        swap(2,4),
+        iswap(4,1),
+        iswap_dagger(1,3),
     ]
 ]
 
@@ -483,6 +486,22 @@ end
             for gate in gates_in_output
                 @test is_native_gate(qpu, gate)
             end
+        end
+    end
+end
+
+@testset "AnyonYukonQPU: sequential transpilation" begin            
+    qpu=AnyonYukonQPU(;host=host,user=user,access_token=access_token)
+    transpiler=get_transpiler(qpu) 
+
+    qubit_count=4
+    
+    for gates_list in test_circuits
+        for end_pos in 1:length(gates_list)
+            truncated_input=gates_list[1:end_pos]
+            circuit = QuantumCircuit(qubit_count = qubit_count, gates=truncated_input)
+            transpiled_circuit=transpile(transpiler,circuit)
+            @test compare_circuits(circuit,transpiled_circuit)
         end
     end
 end

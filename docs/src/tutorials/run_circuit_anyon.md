@@ -135,8 +135,8 @@ q[2]:──────────Z_90─────────────�
 The final circuit `c_final` is now ready to be submitted to the QPU:
 
 ```julia
-num_repetitions = 200
-result = run_job(qpu, c_transpiled, num_repetitions)
+shot_count = 200
+result = run_job(qpu, c_transpiled, shot_count)
 println(result)
 ```
 which should print something like:

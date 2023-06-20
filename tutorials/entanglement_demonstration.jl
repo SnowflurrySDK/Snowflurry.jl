@@ -14,7 +14,7 @@ qpu = AnyonYukonQPU(host=host, user=user, access_token=token)
 transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
 
-num_repetitions = 200
-result = run_job(qpu, transpiled_circuit, num_repetitions)
+shot_count = 200
+result = run_job(qpu, transpiled_circuit, shot_count)
 
 println(result)

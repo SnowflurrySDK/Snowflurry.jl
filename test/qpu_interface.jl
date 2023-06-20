@@ -124,11 +124,11 @@ end
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
 
-    num_repetitions=100
+    shot_count=100
 
-    circuit_json=serialize_job(circuit,num_repetitions)
+    circuit_json=serialize_job(circuit,shot_count)
 
-    expected_json="{\"num_repetitions\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    expected_json="{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
     
     @test circuit_json==expected_json
        
@@ -138,7 +138,7 @@ end
 
     @test get_host(test_client)==host
     
-    circuitID=submit_circuit(test_client,circuit,num_repetitions)
+    circuitID=submit_circuit(test_client,circuit,shot_count)
 
     status=get_status(test_client,circuitID)
 
@@ -203,15 +203,15 @@ end
 
     requestor = MockRequestor(request_checker,post_checker)
     test_client = Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    num_repetitions=100
+    shot_count=100
     qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu)==test_client
     
     #test basic submission, no transpilation
     circuit = QuantumCircuit(qubit_count = 3, gates=[sigma_x(3), control_z(2,1)])
-    histogram = run_job(qpu, circuit, num_repetitions)
-    @test histogram == Dict("001"=>num_repetitions)
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001"=>shot_count)
     @test !haskey(histogram,"error_msg")
 
     #verify that run_job blocks until a 'long-running' job completes
@@ -225,8 +225,8 @@ end
       ]),
       post_checker)
     qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
-    histogram=run_job(qpu, circuit, num_repetitions)
-    @test histogram==Dict("001"=>num_repetitions)
+    histogram=run_job(qpu, circuit, shot_count)
+    @test histogram==Dict("001"=>shot_count)
     @test !haskey(histogram, "error_msg")
 
     #verify that run_job throws an error if the QPU returns an error
@@ -240,7 +240,7 @@ end
       ]),
       post_checker)
     qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
-    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+    @test_throws ErrorException histogram=run_job(qpu, circuit, shot_count)
 
     #verify that run_job throws an error if the job was cancelled
     requestor=MockRequestor(
@@ -253,26 +253,26 @@ end
       ]),
       post_checker)
     qpu = AnyonYukonQPU(Client(host,user,access_token,requestor), status_request_throttle=no_throttle)
-    @test_throws ErrorException histogram=run_job(qpu, circuit, num_repetitions)
+    @test_throws ErrorException histogram=run_job(qpu, circuit, shot_count)
 end
 
 @testset "transpile_and_run_job on AnyonYukonQPU" begin
 
     requestor=MockRequestor(request_checker,post_checker)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    num_repetitions=100
+    shot_count=100
     qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
 
     # submit circuit with qubit_count_circuit>qubit_count_qpu
     circuit = QuantumCircuit(qubit_count = 10)
-    @test_throws DomainError transpile_and_run_job(qpu, circuit, num_repetitions)
+    @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
     # submit circuit with a non-native gate on this qpu (no transpilation)
     circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1,2,3)])
     @test_throws DomainError transpile_and_run_job(
         qpu, 
         circuit,
-        num_repetitions;
+        shot_count;
         transpiler=TrivialTranspiler()
     )
     # using AnyonYukonQPU default transpiler
@@ -280,9 +280,9 @@ end
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
     qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
 
-    histogram=transpile_and_run_job(qpu, circuit, num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit, shot_count)
     
-    @test histogram==Dict("001"=>num_repetitions)
+    @test histogram==Dict("001"=>shot_count)
     @test !haskey(histogram,"error_msg")
 end
 
@@ -290,7 +290,7 @@ end
 
     circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
         
-    num_repetitions=100
+    shot_count=100
     
     qpu=VirtualQPU()
     
@@ -300,9 +300,9 @@ end
         @test is_native_gate(qpu,gate)
     end
        
-    histogram=transpile_and_run_job(qpu, circuit, num_repetitions)
+    histogram=transpile_and_run_job(qpu, circuit, shot_count)
    
-    @test histogram==Dict("001"=>num_repetitions)
+    @test histogram==Dict("001"=>shot_count)
 
 end
 
