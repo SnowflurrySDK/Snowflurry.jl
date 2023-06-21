@@ -1,7 +1,7 @@
-name = "Snowflake"
-uuid = "7bd9edc1-4fdc-40a1-a0f6-da58fb4f45eb"
+name = "Snowflurry"
+uuid = "7bd9edc1-4fdc-40a1-a0f6-da58fb4f45ec"
 authors = ["Alireza Yazdi <alireza@anyonsys.com>", "Paul Le Roux <pleroux@anyonsys.com>", "Facundo Sosa-Rey <facundo@anyonsys.com>", "Nicolas Poirier <nicolas.poirier2@mail.mcgill.ca>"]
-version = "0.2.0"
+version = "0.1.0"
 
 [deps]
 AbstractAlgebra = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
