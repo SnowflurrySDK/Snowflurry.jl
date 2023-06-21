@@ -183,12 +183,9 @@ end
     @test status.message != ""
 end
 
+
 function test_print_connectivity(
-    input::Union{
-        Snowflake.AbstractAnyonQPU,
-        Snowflake.LatticeConnectivity,
-        Snowflake.LineConnectivity
-        }, 
+    input::AbstractAnyonQPU, 
     expected::String
     )
     io = IOBuffer()
@@ -198,31 +195,50 @@ function test_print_connectivity(
     @test String(take!(io)) == expected
 end
 
+function test_print_connectivity(
+    input::Union{
+        LatticeConnectivity,
+        LineConnectivity
+        }, 
+    expected::String
+    )
+    io = IOBuffer()
+
+    print_connectivity(input,Int[],io)
+
+    @test String(take!(io)) == expected
+end
+
 @testset "print_connectivity" begin
 
     test_print_connectivity(
-        Snowflake.LineConnectivity(12),
+        LineConnectivity(12),
         "1──2──3──4──5──6──7──8──9──10──11──12\n"
     )
 
-    test_print_connectivity(Snowflake.LatticeConnectivity((4,5)),
-    "  1 ──  2 ──  3 ──  4 ──  5 \n" *
-    "  |     |     |     |     | \n" *
-    "  6 ──  7 ──  8 ──  9 ── 10 \n" *
-    "  |     |     |     |     | \n" *
-    " 11 ── 12 ── 13 ── 14 ── 15 \n" *
-    "  |     |     |     |     | \n" *
-    " 16 ── 17 ── 18 ── 19 ── 20 \n")
+    test_print_connectivity(LatticeConnectivity(4,5),
+    "        1 ──  2 \n"* 
+    "        |     | \n"* 
+    "  3 ──  4 ──  5 ──  6 \n"* 
+    "        |     |     | \n"* 
+    "        7 ──  8 ──  9 ── 10 \n"* 
+    "              |     |     | \n"* 
+    "             11 ── 12 ── 13 ── 14 \n"* 
+    "                    |     |     | \n"* 
+    "                   15 ── 16 ── 17 ── 18 \n"* 
+    "                          |     | \n"* 
+    "                         19 ── 20 \n"* 
+    "\n")
 
-    struct UnknownConnectivity <: Snowflake.AbstractConnectivity end
+    struct UnknownConnectivity <: AbstractConnectivity end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
-    @test_throws NotImplementedError Snowflake.get_connectivity_label(UnknownConnectivity())
+    @test_throws NotImplementedError get_connectivity_label(UnknownConnectivity())
 end
 
 @testset "get_qubits_distance" begin
     # LineConnectivity
     qubit_count = 6
-    c=Snowflake.LineConnectivity(qubit_count)
+    c=LineConnectivity(qubit_count)
 
     for target_1 in 1:qubit_count
         for target_2 in 1:qubit_count
@@ -234,7 +250,7 @@ end
     # LatticeConnectivity
     nrows = 4
     ncols = 3
-    c=Snowflake.LatticeConnectivity((nrows,ncols))
+    c=LatticeConnectivity(nrows,ncols)
 
     qubit_num_matrix=Matrix(transpose(reshape([v for v in 1:nrows*ncols],ncols,nrows)))
 
@@ -267,14 +283,14 @@ end
 
     test_print_connectivity(qpu,"1──2──3──4──5──6\n")
 
-    @test Snowflake.get_connectivity_label(qpu.connectivity) == Snowflake.line_connectivity_label
+    @test get_connectivity_label(qpu.connectivity) == Snowflake.line_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
         "generation"    =>"Yukon",
         "serial_number" =>"ANYK202201",
         "qubit_count"   =>get_num_qubits(qpu.connectivity),
-        "connectivity_type"  =>Snowflake.get_connectivity_label(qpu.connectivity)
+        "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
     )
 end
 
@@ -291,20 +307,23 @@ end
     @test client.access_token == token
 
     test_print_connectivity(qpu,
-    "  1 ──  2 ──  3 ──  4 \n" *
-    "  |     |     |     | \n" *
-    "  5 ──  6 ──  7 ──  8 \n" *
-    "  |     |     |     | \n" *
-    "  9 ── 10 ── 11 ── 12 \n")
+    "        1 ──  2 \n"*
+    "        |     | \n"*
+    "  3 ──  4 ──  5 ──  6 \n"*
+    "        |     |     | \n"*
+    "        7 ──  8 ──  9 ── 10 \n"*
+    "              |     | \n"*
+    "             11 ── 12 \n"*
+    "\n")
 
-    @test Snowflake.get_connectivity_label(qpu.connectivity) == Snowflake.lattice_connectivity_label
+    @test get_connectivity_label(qpu.connectivity) == Snowflake.lattice_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
         "generation"    =>"MonarQ",
         "serial_number" =>"ANYK202301",
         "qubit_count"   =>get_num_qubits(qpu.connectivity),
-        "connectivity_type"  =>Snowflake.get_connectivity_label(qpu.connectivity)
+        "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
     )
 
 end

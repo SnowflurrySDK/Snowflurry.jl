@@ -35,12 +35,16 @@ export
     AbstractControlledGateSymbol,
     ControlledGate,
     Gate,
+    AbstractAnyonQPU,
     AnyonYukonQPU,
     AnyonMonarqQPU,
     VirtualQPU,
     Client,
     Status,
     NotImplementedError,
+    AbstractConnectivity,
+    LineConnectivity,
+    LatticeConnectivity,
     Transpiler,
     SequentialTranspiler,
     CastSwapToCZGateTranspiler,
@@ -50,7 +54,7 @@ export
     CompressSingleQubitGatesTranspiler,
     CastToPhaseShiftAndHalfRotationXTranspiler,
     CastRxToRzAndHalfRotationXTranspiler,
-    SwapQubitsForLineConnectivityTranspiler,
+    SwapQubitsForAdjacencyTranspiler,
     CastUniversalToRzRxRzTranspiler,
     SimplifyRxGatesTranspiler,
     SimplifyRzGatesTranspiler,
@@ -118,6 +122,8 @@ export
     submit_circuit,
     get_client,
     print_connectivity,
+    get_connectivity_label,
+    get_adjacency_list,
     get_host,
     get_status,
     get_result,
@@ -172,6 +178,7 @@ include("core/qobj.jl")
 include("core/quantum_gate.jl")
 include("core/quantum_circuit.jl")
 include("core/pauli.jl")
+include("core/connectivity.jl")
 include("core/transpile.jl")
 include("anyon/qpu_interface.jl")
 include("anyon/anyon.jl")

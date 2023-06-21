@@ -1,83 +1,5 @@
 using Snowflurry
 
-abstract type AbstractConnectivity end
-
-struct LineConnectivity <:AbstractConnectivity 
-    dimension   ::Int
-end
-
-struct LatticeConnectivity <:AbstractConnectivity 
-    dimension   ::Tuple{Int,Int} # (nrows,ncols)
-end
-
-get_connectivity_label(connectivity::AbstractConnectivity) =
-    throw(NotImplementedError(:get_connectivity_label,connectivity))
-
-const line_connectivity_label = "linear"
-const lattice_connectivity_label = "2D-lattice"
-
-get_connectivity_label(::LineConnectivity) = line_connectivity_label
-get_connectivity_label(::LatticeConnectivity) = lattice_connectivity_label
-
-get_num_qubits(conn::AbstractConnectivity) = *(conn.dimension...)
-
-function print_connectivity(connectivity::LineConnectivity,io::IO=stdout)
-    dim = connectivity.dimension
-
-    diagram = [string(n) * "──" for n in 1:dim-1]
-    push!(diagram,string(dim))
-
-    output_str=*(diagram...)
-
-    println(io,output_str)
-end
-
-function print_connectivity(connectivity::LatticeConnectivity, io::IO = stdout)
-    dims = connectivity.dimension
-
-    qubit_count = get_num_qubits(connectivity)
-
-    max_qubit_num_length = length(string(qubit_count))
-
-    nrows = dims[1]
-    ncols = dims[2]
-
-    # create string template for ncols: 
-    # e.g.: ""%s──%s──%s"" for 3 columns
-    line_segments = ["%s──" for _ in 1:ncols-1]
-    push!(line_segments, "%s")
-    str_template = *(line_segments...)
-
-    # create float specifier of correct precision: 
-    # e.g.: "%2.f ──%2.f ──%2.f " for 3 columns, precision=2
-    precisionStr = string(" %", max_qubit_num_length, ".f ")
-    precisionArray = [precisionStr for _ in 1:ncols]
-    str_template_float = Snowflake.formatter(str_template, precisionArray...)
-    
-    #vertical lines
-    right_padding = string([" " for _ in 1:div(max_qubit_num_length+1, 2)]...)
-    left_padding =  string([" " for _ in 1:div(max_qubit_num_length+2, 2)]...)
-
-    padded_vertical_symbol = left_padding * "|" * right_padding
-    vertical_lines = Snowflake.formatter(
-        replace(str_template, "──" => "  "),
-        [padded_vertical_symbol for _ in 1:ncols]...
-    )
-
-    for irow in 1:nrows
-        #insert qubit numbers into str_template_float
-        qubit_numbers_in_row = [v + (irow-1)*ncols for v in  1:ncols]
-        line_printout = Snowflake.formatter(str_template_float, qubit_numbers_in_row...)
-        println(io, line_printout)
-        if irow < nrows
-            println(io, vertical_lines)
-        end
-    end
-end
-
-print_connectivity(connectivity::AbstractConnectivity,io::IO=stdout) =
-    throw(NotImplementedError(:print_connectivity,connectivity))
-
 abstract type AbstractAnyonQPU <: AbstractQPU end
 
 """
@@ -123,8 +45,8 @@ struct AnyonMonarqQPU <: AbstractAnyonQPU
     status_request_throttle ::Function
     connectivity            ::AbstractConnectivity
 
-    AnyonMonarqQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity((3,4)))
-    AnyonMonarqQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity((3,4)))
+    AnyonMonarqQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity(4,3))
+    AnyonMonarqQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity(4,3))
 end
 
 get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
@@ -139,7 +61,7 @@ get_client(qpu_service::AbstractAnyonQPU)=qpu_service.client
 
 get_num_qubits(qpu::AbstractAnyonQPU)=get_metadata(qpu)["qubit_count"]
 
-print_connectivity(qpu::AbstractAnyonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,io)
+print_connectivity(qpu::AbstractAnyonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,Int[],io)
 
 function Base.show(io::IO, qpu::AbstractAnyonQPU)
     metadata=get_metadata(qpu)
@@ -172,8 +94,8 @@ set_of_native_gates=[
 get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int = 
     abs(target_1 - target_2)
 
-function get_qubits_distance(target_1::Int, target_2::Int, connectivity::Snowflake.LatticeConnectivity)::Int
-    dims = connectivity.dimension
+function get_qubits_distance(target_1::Int, target_2::Int, connectivity::LatticeConnectivity)::Int
+    dims = connectivity.dimensions
 
     ncols = dims[2]
 
@@ -331,24 +253,24 @@ Returns the transpiler associated with this QPU.
 julia> qpu=AnyonYukonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForLineConnectivityTranspiler(), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
+SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
 
 ```
 """
-function get_transpiler(::AnyonYukonQPU;atol=1e-6)::Transpiler
+function get_transpiler(qpu::AbstractAnyonQPU;atol=1e-6)::Transpiler
     return SequentialTranspiler([
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForLineConnectivityTranspiler(),
+        SwapQubitsForAdjacencyTranspiler(qpu.connectivity),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
-        SimplifyTrivialGatesTranspiler(),
+        SimplifyTrivialGatesTranspiler(atol),
         CastUniversalToRzRxRzTranspiler(),
-        SimplifyRxGatesTranspiler(),
+        SimplifyRxGatesTranspiler(atol),
         CastRxToRzAndHalfRotationXTranspiler(),
         CompressRzGatesTranspiler(),
-        SimplifyRzGatesTranspiler(),
+        SimplifyRzGatesTranspiler(atol),
         UnsupportedGatesTranspiler(),
     ])
 end
