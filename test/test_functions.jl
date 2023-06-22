@@ -1,7 +1,7 @@
 using Snowflurry
 using LinearAlgebra
 
-function test_inverse(gate::AbstractGateSymbol)
+function test_inverse(gate::Gate)
     inverse_gate=inv(gate)
     target_count=length(get_connected_qubits(gate))
 

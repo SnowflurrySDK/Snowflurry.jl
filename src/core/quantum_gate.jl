@@ -147,7 +147,7 @@ An object that specifies an `AbstractGateSymbol` and its placement inside a `Qua
 
 # Examples
 ```jldoctest
-julia> gate = Gate(iswap(1, 2), [1, 2])
+julia> gate = iswap(1, 2)
 Gate Object: Snowflurry.ISwap
 Connected_qubits	: [1, 2]
 Operator:
@@ -162,7 +162,7 @@ Equivalent DenseOperator:
 
 
 ```jldoctest
-julia> gate = Gate(universal(3, pi/2, -pi/2, pi/2), [3])
+julia> gate = universal(3, pi/2, -pi/2, pi/2)
 Gate Object: Snowflurry.Universal
 Parameters:
 theta	: 1.5707963267948966
@@ -177,25 +177,25 @@ Underlying data ComplexF64:
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
 ```
 """
-struct Gate{SymbolType} <: AbstractGateSymbol where SymbolType <: AbstractGateSymbol
+struct Gate{SymbolType<:AbstractGateSymbol}
     symbol::SymbolType
     connected_qubits::Vector{Int}
+
+    function Gate(symbol::SymbolType, connected_qubits::Vector{Int}) where SymbolType <: AbstractGateSymbol
+        if length(connected_qubits) != get_num_connected_qubits(symbol)
+            throw(DomainError(connected_qubits, "connected qubits must match the number of qubits of the symbol"))
+        end
+
+        return new{SymbolType}(symbol, connected_qubits)
+    end
 end
+
 
 function Base.convert(::Type{Gate{AbstractGateSymbol}}, gate::Gate{SymbolType}) where SymbolType <: AbstractGateSymbol
     return Gate{AbstractGateSymbol}(
         Base.convert(AbstractGateSymbol, gate.symbol),
         gate.connected_qubits,
     )
-end
-
-function Gate(symbol::SymbolType, connected_qubits::Vector{Int}) where SymbolType <: AbstractGateSymbol
-    if get_num_connected_qubits(symbol) != length(connected_qubits)
-        throw(DomainError(connected_qubits,
-            "The connected qubits and the gate's number of connected qubits do not match"))
-    end
-
-    return Gate{SymbolType}(symbol, connected_qubits)
 end
 
 function Base.show(io::IO, gate::Gate)
@@ -341,7 +341,7 @@ constructed. For instance, the following constructs the equivalent of a `Toffoli
 but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=[3]`:
 
 ```jldoctest 
-julia> toffoli_as_controlled_gate=ControlledGate(sigma_x(3),[1,2])
+julia> toffoli_as_controlled_gate=Gate(ControlledGate(sigma_x(3),[1,2]), [1,2,3])
 Gate Object: ControlledGate{Snowflurry.SigmaX}
 Connected_qubits	: [1, 2, 3]
 Operator:
@@ -359,7 +359,7 @@ Underlying data ComplexF64:
 
 
 """
-struct ControlledGate{GateType<:AbstractGateSymbol}<:AbstractGateSymbol
+struct ControlledGate{GateType<:AbstractGateSymbol} <: AbstractControlledGateSymbol
     kernel::GateType
     connected_qubits::Vector{Int}
     control_qubits::Vector{Int}
@@ -1776,7 +1776,7 @@ end
 
 get_operator(gate::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
 
-Base.inv(gate::Pi8) =  pi_8_dagger(gate.target)
+Base.inv(gate::Pi8) =  get_gate_symbol(pi_8_dagger(gate.target))
 
 
 """
@@ -1792,7 +1792,7 @@ end
 
 get_operator(gate::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
 
-Base.inv(gate::Pi8Dagger) = pi_8(gate.target)
+Base.inv(gate::Pi8Dagger) = get_gate_symbol(pi_8(gate.target))
 
 
 """
@@ -1808,7 +1808,7 @@ end
 
 get_operator(::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
 
-Base.inv(gate::X90) = x_minus_90(gate.target)
+Base.inv(gate::X90) = get_gate_symbol(x_minus_90(gate.target))
 
 """
     x_minus_90(target)
@@ -1823,7 +1823,7 @@ end
 
 get_operator(::XM90, T::Type{<:Complex}=ComplexF64) = x_minus_90(T)
 
-Base.inv(gate::XM90) = x_90(gate.target)
+Base.inv(gate::XM90) = get_gate_symbol(x_90(gate.target))
 
 """
     y_90(target)
@@ -1838,7 +1838,7 @@ end
 
 get_operator(::Y90, T::Type{<:Complex}=ComplexF64) = y_90(T)
 
-Base.inv(gate::Y90) = y_minus_90(gate.target)
+Base.inv(gate::Y90) = get_gate_symbol(y_minus_90(gate.target))
 
 """
     y_minus_90(target)
@@ -1853,7 +1853,7 @@ end
 
 get_operator(::YM90, T::Type{<:Complex}=ComplexF64) = y_minus_90(T)
 
-Base.inv(gate::YM90) = y_90(gate.target)
+Base.inv(gate::YM90) = get_gate_symbol(y_90(gate.target))
 
 """
     z_90(target)
@@ -1868,7 +1868,7 @@ end
 
 get_operator(::Z90, T::Type{<:Complex}=ComplexF64) = z_90(T)
 
-Base.inv(gate::Z90) = z_minus_90(gate.target)
+Base.inv(gate::Z90) = get_gate_symbol(z_minus_90(gate.target))
 
 """
     z_minus_90(target)
@@ -1883,7 +1883,7 @@ end
 
 get_operator(::ZM90, T::Type{<:Complex}=ComplexF64) = z_minus_90(T)
 
-Base.inv(gate::ZM90) = z_90(gate.target)
+Base.inv(gate::ZM90) = get_gate_symbol(z_90(gate.target))
 
 
 """
@@ -1903,7 +1903,7 @@ end
 
 get_operator(gate::Rotation, T::Type{<:Complex}=ComplexF64) = rotation(gate.theta,gate.phi,T)
 
-Base.inv(gate::Rotation) = rotation(gate.target, -gate.theta, gate.phi)
+Base.inv(gate::Rotation) = get_gate_symbol(rotation(gate.target, -gate.theta, gate.phi))
 
 get_gate_parameters(gate::Rotation)=Dict(
     "theta" =>gate.theta,
@@ -1929,7 +1929,7 @@ end
 
 get_operator(gate::RotationX, T::Type{<:Complex}=ComplexF64) = rotation_x(gate.theta,T)
 
-Base.inv(gate::RotationX) = rotation_x(gate.target, -gate.theta)
+Base.inv(gate::RotationX) = get_gate_symbol(rotation_x(gate.target, -gate.theta))
 
 get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
 
@@ -1949,7 +1949,7 @@ end
 
 get_operator(gate::RotationY, T::Type{<:Complex}=ComplexF64) = rotation_y(gate.theta,T)
 
-Base.inv(gate::RotationY) = rotation_y(gate.target, -gate.theta)    
+Base.inv(gate::RotationY) = get_gate_symbol(rotation_y(gate.target, -gate.theta))
 
 get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
@@ -1967,7 +1967,7 @@ end
 
 get_operator(gate::PhaseShift,T::Type{<:Complex}=ComplexF64) = phase_shift(gate.phi,T)
 
-Base.inv(gate::PhaseShift) = phase_shift(gate.target, -gate.phi)
+Base.inv(gate::PhaseShift) = get_gate_symbol(phase_shift(gate.target, -gate.phi))
 
 get_gate_parameters(gate::PhaseShift)=Dict("lambda" =>gate.phi)
 
@@ -1990,8 +1990,7 @@ end
 
 get_operator(gate::Universal, T::Type{<:Complex}=ComplexF64) = universal(gate.theta, gate.phi, gate.lambda,T)
 
-Base.inv(gate::Universal) = universal(gate.target, -gate.theta,
-    -gate.lambda, -gate.phi)
+Base.inv(gate::Universal) = get_gate_symbol(universal(gate.target, -gate.theta,-gate.lambda, -gate.phi))
 
 get_gate_parameters(gate::Universal)=Dict(
     "theta" =>gate.theta,
@@ -2084,7 +2083,7 @@ end
 
 get_operator(gate::ISwap, T::Type{<:Complex}=ComplexF64) = iswap(T)
 
-Base.inv(gate::ISwap) = iswap_dagger(gate.target_1,gate.target_2)
+Base.inv(gate::ISwap) = get_gate_symbol(iswap_dagger(gate.target_1,gate.target_2))
 
 get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
 
@@ -2187,7 +2186,7 @@ end
 
 get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 
-Base.inv(gate::ISwapDagger) = iswap(gate.target_1,gate.target_2)
+Base.inv(gate::ISwapDagger) = get_gate_symbol(iswap(gate.target_1,gate.target_2))
 
 get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
 
@@ -2207,7 +2206,7 @@ get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{2,
 get_connected_qubits(gate::Identity)=[gate.target]
 
 """
-    Base.:*(M::AbstractGateSymbol, x::Ket)
+    Base.:*(M::Gate, x::Ket)
 
 Return a `Ket` which results from applying `Gate` `M` to `Ket` `x`.
 
@@ -2227,9 +2226,9 @@ julia> ψ_1 = sigma_x(1)*ψ_0
 
 ```
 """
-Base.:*(M::AbstractGateSymbol, x::Ket) = get_transformed_state(x, M) 
+Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M) 
 
-function get_transformed_state(state::Ket, gate::AbstractGateSymbol)
+function get_transformed_state(state::Ket, gate::Gate)
     transformed_state = deepcopy(state)
     apply_gate!(transformed_state, gate)
     return transformed_state
@@ -2274,11 +2273,11 @@ Underlying data ComplexF64:
 
 ```
 """
-function Base.inv(gate::AbstractGateSymbol)
-    if is_hermitian(get_operator(gate))
-        return gate
+function Base.inv(symbol::AbstractGateSymbol)
+    if is_hermitian(get_operator(symbol))
+        return symbol
     end
-    throw(NotImplementedError(:inv, gate))
+    throw(NotImplementedError(:inv, symbol))
 end
 
 function show_gate(

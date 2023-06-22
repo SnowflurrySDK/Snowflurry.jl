@@ -56,7 +56,7 @@ function Base.show(io::IO, qpu::AnyonYukonQPU)
 end
 
 
-function is_native_gate(qpu::AnyonYukonQPU,gate::AbstractGateSymbol)::Bool
+function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
     
     set_of_native_gates=[
         PhaseShift,
