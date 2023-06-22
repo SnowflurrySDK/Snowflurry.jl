@@ -23,7 +23,7 @@ Snowflurry is still in pre-release phase. Therefore, and for the time being, we 
 
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/QuantumJulia/Snowflurry.jl", rev="main")
+Pkg.add(url="https://github.com/SnowflurrySDK/Snowflurry.jl", rev="main")
 ```
 This will add the Snowflurry  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
 
@@ -40,7 +40,7 @@ Snowflurry, the SnowflurryPlots package can be installed by entering the followi
 Julia REPL:
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/QuantumJulia/SnowflurryPlots.jl", rev="main")
+Pkg.add(url="https://github.com/SnowflurrySDK/SnowflurryPlots.jl", rev="main")
 ```
 
 ## Typical workflow

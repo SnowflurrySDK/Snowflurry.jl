@@ -21,13 +21,13 @@ use GitHub pull requests for this purpose.
 information on using pull requests.
 
 The preferred manner for submitting pull requests is for users to fork
-the Snowflurry [repo](https://github.com/QuantumJulia/Snowflurry.jl) and then use a
+the Snowflurry [repo](https://github.com/SnowflurrySDK/Snowflurry.jl) and then use a
 branch from this fork to create a pull request to the main Snowflurry repo.
 
 The basic process for setting up a fork is
 
 1.  Fork the Snowflurry repo (Fork button in upper right corner of
-    [repo page](https://github.com/QuantumJulia/Snowflurry.jl)).
+    [repo page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
     Forking creates a new github repo at the location
     `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
     your github id. Use the directions on the
@@ -45,7 +45,7 @@ The basic process for setting up a fork is
     into your branch:
 
     ````shell # Track the upstream repo (if your local repo hasn't):
-    git remote add upstream https://github.com/QuantumJulia/Snowflurry.jl.git
+    git remote add upstream https://github.com/SnowflurrySDK/Snowflurry.jl.git
 
         # Update your local master.
         git fetch upstream
@@ -65,7 +65,7 @@ The basic process for setting up a fork is
     git push origin new_branch_name
     ```
 1.  Now when you navigate to the Snowflurry page on github,
-    [https://github.com/QuantumJulia/Snowflurry.jl](https://github.com/QuantumJulia/Snowflurry.jl)
+    [https://github.com/SnowflurrySDK/Snowflurry.jl](https://github.com/SnowflurrySDK/Snowflurry.jl)
     you should see the option to create a new pull request from
     your clone repository. Alternatively you can create the pull request
     by navigating to the "Pull requests" tab in the page, and selecting
