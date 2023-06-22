@@ -15,22 +15,20 @@ struct LatticeConnectivity <:AbstractConnectivity
         @assert ncols >= 2 "ncols must be at least 2"
 
         qubit_count = nrows*ncols
-
         placing_queue = [ nrows for _ in 1:ncols]
-
         qubits_per_row = Vector{Int}()
 
-        cursor=0
-        while !all(map(x->x==0,placing_queue))
-            cursor+=1
-            row_count=0
-            for pos in 1:minimum([cursor,ncols])
-                increment=minimum([2,placing_queue[pos]])
-                row_count+=increment
-                placing_queue[pos]-=increment
+        cursor = 0
+        while !all(map(x -> x == 0, placing_queue))
+            cursor += 1
+            row_count = 0
+            for pos in 1:minimum([cursor, ncols])
+                increment = minimum([2, placing_queue[pos]])
+                row_count += increment
+                placing_queue[pos] -= increment
             end
 
-            push!(qubits_per_row,row_count)
+            push!(qubits_per_row, row_count)
         end
 
         @assert +(qubits_per_row...) == qubit_count "Failed to build lattice"
@@ -87,17 +85,17 @@ function create_str_template(ncols::Int, left_padding::Vector{String})
     # e.g.: ""%s──%s──%s"" for 3 columns
     line_segments = ["%s"*connect_symbol for _ in 1:ncols-1]
     push!(line_segments, "%s")
-    return *(left_padding...,line_segments...)
+    return *(left_padding..., line_segments...)
 end
 
 function format_qubit_line(ncols::Int, starting_no::Int, symbol_width::Int, left_offset::Int=0)::String
 
-    @assert ncols>=0 ("ncols must be non-negative")
-    @assert starting_no>=0 ("starting_no must be non-negative")
-    @assert symbol_width>=0 ("symbol_width must be non-negative")
-    @assert left_offset>=0 ("left_offset must be non-negative")
+    @assert ncols           >= 0 ("ncols must be non-negative")
+    @assert starting_no     >= 0 ("starting_no must be non-negative")
+    @assert symbol_width    >= 0 ("symbol_width must be non-negative")
+    @assert left_offset     >= 0 ("left_offset must be non-negative")
 
-    left_padding=[" "^(2*len_connect_sym+symbol_width) for _ in 1:left_offset]
+    left_padding=[" "^(2*len_connect_sym + symbol_width) for _ in 1:left_offset]
     
     str_template=create_str_template(ncols, left_padding)
 
@@ -105,17 +103,17 @@ function format_qubit_line(ncols::Int, starting_no::Int, symbol_width::Int, left
     # e.g.: "%2.f ──%2.f ──%2.f " for 3 columns, precision=2
     precisionStr = string(" %", symbol_width, ".f ")
     precisionArray = [precisionStr for _ in 1:ncols]
-    str_template_float = Snowflake.formatter(str_template, precisionArray...)
+    str_template_float = Snowflurry.formatter(str_template, precisionArray...)
 
-    qubit_numbers_in_row = [v+starting_no-1 for v in  1:ncols]
-    return Snowflake.formatter(str_template_float, qubit_numbers_in_row...)
+    qubit_numbers_in_row = [v + starting_no - 1 for v in  1:ncols]
+    return Snowflurry.formatter(str_template_float, qubit_numbers_in_row...)
 end
 
 function format_vertical_connections(ncols::Int, symbol_width::Int, left_offset::Int = 0)::String
 
-    @assert ncols >= 0 ("ncols must be non-negative")
-    @assert symbol_width >= 0 ("symbol_width must be non-negative")
-    @assert left_offset >= 0 ("left_offset must be non-negative")
+    @assert ncols           >= 0 ("ncols must be non-negative")
+    @assert symbol_width    >= 0 ("symbol_width must be non-negative")
+    @assert left_offset     >= 0 ("left_offset must be non-negative")
     
     if ncols == 0
         return ""
@@ -131,7 +129,7 @@ function format_vertical_connections(ncols::Int, symbol_width::Int, left_offset:
 
     padded_vertical_symbol = left_padding * "|" * right_padding
 
-    vertical_lines = Snowflake.formatter(
+    vertical_lines = Snowflurry.formatter(
         replace(str_template, "──" => "  "),
         [padded_vertical_symbol for _ in 1:ncols]...
     )
@@ -140,23 +138,23 @@ function format_vertical_connections(ncols::Int, symbol_width::Int, left_offset:
 end
 
 function get_lattice_offsets(qubits_per_row::Vector{Int})::Tuple{Vector{Int}, Vector{Int}, Vector{Int}}
-    offsets                 = zeros(Int, length(qubits_per_row)+1)
-    offsets_vertical_lines  = zeros(Int, length(qubits_per_row)+1)
-    num_vertical_lines      = zeros(Int, length(qubits_per_row)+1)
+    offsets                 = zeros(Int, length(qubits_per_row) + 1)
+    offsets_vertical_lines  = zeros(Int, length(qubits_per_row) + 1)
+    num_vertical_lines      = zeros(Int, length(qubits_per_row) + 1)
     
-    for (irow,(count, next_count)) in enumerate(zip(qubits_per_row, vcat(qubits_per_row[2:end], [0])))
+    for (irow, (count, next_count)) in enumerate(zip(qubits_per_row, vcat(qubits_per_row[2:end], [0])))
         
         if next_count > count
-            offsets[1:irow] = [v+next_count-count-1 for v in offsets[1:irow]]
+            offsets[1:irow] = [v + next_count - count - 1 for v in offsets[1:irow]]
             num_vertical_lines[irow] = count
 
         elseif next_count == count
-            offsets[irow+1:end] = [v+1 for v in offsets[irow+1:end]]
+            offsets[irow + 1:end] = [v + 1 for v in offsets[irow+1:end]]
             offsets_vertical_lines[irow] += 1
-            num_vertical_lines[irow] = next_count-1
+            num_vertical_lines[irow] = next_count - 1
 
         elseif next_count < count
-            offsets[irow+1:end] = [v+1 for v in offsets[irow+1:end]]
+            offsets[irow + 1:end] = [v + 1 for v in offsets[irow + 1:end]]
             offsets_vertical_lines[irow] += 1
             num_vertical_lines[irow] = next_count
         end        
@@ -201,7 +199,6 @@ function print_connectivity(connectivity::LatticeConnectivity, path::Vector{Int}
         end
 
         println(io, line_printout)
-        
         
         vertical_lines = format_vertical_connections(
             num_vertical_lines[irow],

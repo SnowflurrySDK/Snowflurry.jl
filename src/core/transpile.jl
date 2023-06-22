@@ -1155,7 +1155,7 @@ function remap_qubits_to_adjacent(
     # create paths so that connected_qubits become adjacent on this connectivity
     paths=[[connected_qubits[sorting_order[1]]]]
     for pos in connected_qubits[sorting_order[2:end]]
-        path = path_search(min_qubit,pos,connectivity)
+        path = path_search(min_qubit, pos, connectivity)
         push!(paths, path[1:end-1])
         min_qubit = path[end-1]
     end
@@ -1171,13 +1171,12 @@ function remap_qubits_to_adjacent(
 end
 
 function remap_connections_using_swaps(
-    gates_block::Vector{Gate},
-    connected_qubits::Vector{Int},
+    gates_block::Vector{<: AbstractGateSymbol},
     adjacent_mapping::Vector{Int},
     paths::Vector{Vector{Int}},
     )::Vector{AbstractGateSymbol}
 
-    for (previous_qubit_num,current_qubit_num,path) in zip(connected_qubits,adjacent_mapping,paths)
+    for (current_qubit_num,path) in zip(adjacent_mapping,paths)
         
         while !isempty(path)
             next_pos=pop!(path)
@@ -1257,40 +1256,39 @@ function transpile(
     circuit::QuantumCircuit
     )::QuantumCircuit
 
-    gates=get_circuit_gates(circuit)
+    gates = get_circuit_gates(circuit)
     
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in gates
         
-        connected_qubits=get_connected_qubits(gate)
+        connected_qubits = get_connected_qubits(gate)
 
-        if length(connected_qubits)>1
+        if length(connected_qubits) > 1
 
-            (adjacent_mapping,sorting_order,paths)=remap_qubits_to_adjacent(connected_qubits,transpiler.connectivity)
+            (adjacent_mapping, sorting_order, paths) = 
+                remap_qubits_to_adjacent(connected_qubits, transpiler.connectivity)
             
             mapping_dict=Dict(
                 [
-                    old_number=>new_number for (old_number,new_number) in 
-                        zip(connected_qubits,adjacent_mapping)
+                    old_number => new_number for (old_number, new_number) in 
+                        zip(connected_qubits, adjacent_mapping)
                 ]
             )
     
-            gates_block::Vector{Gate} =[move_gate(gate,mapping_dict)]
+            gates_block = [move_gate(gate, mapping_dict)]
 
-            @assert get_connected_qubits(gates_block[1])==adjacent_mapping (
+            @assert get_connected_qubits(gates_block[1]) == adjacent_mapping (
                 "Failed to construct gate: $(get_gate_type((gates_block[1])))")
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit
-            connected_qubits =connected_qubits[reverse(sorting_order[2:end])]
-            adjacent_mapping =adjacent_mapping[reverse(sorting_order[2:end])]
-            paths =paths[reverse(sorting_order[2:end])]
+            adjacent_mapping = adjacent_mapping[reverse(sorting_order[2:end])]
+            paths = paths[reverse(sorting_order[2:end])]
             
-            gates_block=remap_connections_using_swaps(
+            gates_block = remap_connections_using_swaps(
                 gates_block,
-                connected_qubits,
                 adjacent_mapping,
                 paths
             )
@@ -1298,7 +1296,7 @@ function transpile(
             push!(output_circuit, gates_block...)
         else
             # no effect for single-target gate
-            push!(output_circuit,gate)
+            push!(output_circuit, gate)
         end
     end
 

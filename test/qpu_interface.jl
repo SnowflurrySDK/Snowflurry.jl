@@ -283,7 +283,7 @@ end
 
     test_print_connectivity(qpu,"1──2──3──4──5──6\n")
 
-    @test get_connectivity_label(qpu.connectivity) == Snowflake.line_connectivity_label
+    @test get_connectivity_label(qpu.connectivity) == Snowflurry.line_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
@@ -316,7 +316,7 @@ end
     "             11 ── 12 \n"*
     "\n")
 
-    @test get_connectivity_label(qpu.connectivity) == Snowflake.lattice_connectivity_label
+    @test get_connectivity_label(qpu.connectivity) == Snowflurry.lattice_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
