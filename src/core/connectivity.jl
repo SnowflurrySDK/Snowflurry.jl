@@ -1,4 +1,3 @@
-using DataStructures
 
 abstract type AbstractConnectivity end
 
@@ -17,23 +16,24 @@ struct LatticeConnectivity <:AbstractConnectivity
 
         qubit_count = nrows*ncols
 
-        qubits_per_row = Vector{Int}()
-        current_val = 0
-        increment   = 2
-        while isempty(qubits_per_row) || +(qubits_per_row...) < qubit_count
+        placing_queue = [ nrows for _ in 1:ncols]
 
-            if current_val == nrows
-                increment = 0
+        qubits_per_row = Vector{Int}()
+
+        cursor=0
+        while !all(map(x->x==0,placing_queue))
+            cursor+=1
+            row_count=0
+            for pos in 1:minimum([cursor,ncols])
+                increment=minimum([2,placing_queue[pos]])
+                row_count+=increment
+                placing_queue[pos]-=increment
             end
-            
-            if length(qubits_per_row) == ncols
-                increment = -2
-            end
-        
-            current_val = minimum([nrows, current_val += increment])
-            @assert current_val > 0 "Failed to build lattice"
-            push!(qubits_per_row, current_val)
+
+            push!(qubits_per_row,row_count)
         end
+
+        @assert +(qubits_per_row...) == qubit_count "Failed to build lattice"
 
         new(qubits_per_row, (nrows, ncols))
     end
@@ -278,13 +278,13 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     return adjacency_list
 end
     
-
-function breadth_first_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
+#breadth-first search on 2D Lattice
+function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
     adjacency_list = get_adjacency_list(connectivity)
  
     null_int=-1 # represents null previous node
 
-    search_queue = Deque{Tuple{Int,Int}}()
+    search_queue = Vector{Tuple{Int,Int}}()
     push!(search_queue, (origin, null_int))
     searched = Dict{Int, Int}()
 
@@ -307,5 +307,13 @@ function breadth_first_search(origin::Int, target::Int, connectivity::LatticeCon
                 push!(search_queue, neighbors_vec...)
             end
         end
+    end
+end
+
+function path_search(origin::Int, target::Int, connectivity::LineConnectivity) 
+    if origin < target 
+        return reverse(collect(origin:target))
+    else
+        return collect(target:origin)
     end
 end

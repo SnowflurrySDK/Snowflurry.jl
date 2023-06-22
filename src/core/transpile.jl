@@ -1132,51 +1132,75 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     return output
 end
 
-struct SwapQubitsForLineConnectivityTranspiler<:Transpiler end
+struct SwapQubitsForAdjacencyTranspiler{T<:AbstractConnectivity}<:Transpiler 
+    connectivity::T
+end
 
-function remap_qubits_to_consecutive(connected_qubits::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
+function remap_qubits_to_adjacent(
+    connected_qubits::Vector{Int},
+    connectivity::AbstractConnectivity
+    )::Tuple{Vector{Int},Vector{Int},Vector{Vector{Int}}}
+    
     min_qubit=minimum(connected_qubits)
 
-    sorting_order=sortperm(connected_qubits)
+    distances = [get_qubits_distance(min_qubit,pos,connectivity) for pos in connected_qubits]
+
+    sorting_order=sortperm(distances)
 
     # this contains an array of consecutive elements,
     # in the same unsorted order as the input,
     # meaning: sortperm(connected_qubits)==sortperm(mapped_indices)
     mapped_indices=sortperm(sorting_order)
     
-    consecutive_mapping=[min_qubit+offset for offset in ([v-1 for v in mapped_indices])]
+    # create paths so that connected_qubits become adjacent on this connectivity
+    paths=[[connected_qubits[sorting_order[1]]]]
+    for pos in connected_qubits[sorting_order[2:end]]
+        path = path_search(min_qubit,pos,connectivity)
+        push!(paths, path[1:end-1])
+        min_qubit = path[end-1]
+    end
 
-    return (consecutive_mapping,sorting_order)
+    adjacent_mapping=[path[end] for path in paths]
+    paths=[path[1:end-1] for path in paths]
+
+    # reorder in same unsorted order as input
+    adjacent_mapping = adjacent_mapping[mapped_indices]
+    paths = paths[mapped_indices]
+
+    return (adjacent_mapping, sorting_order, paths)
 end
 
 function remap_connections_using_swaps(
     gates_block::Vector{Gate},
     connected_qubits::Vector{Int},
-    consecutive_mapping::Vector{Int}
-    )::Vector{Gate}
+    adjacent_mapping::Vector{Int},
+    paths::Vector{Vector{Int}},
+    )::Vector{AbstractGateSymbol}
 
-    for (previous_qubit_num,current_qubit_num) in zip(connected_qubits,consecutive_mapping)
-
-        while !isequal(previous_qubit_num,current_qubit_num)
+    for (previous_qubit_num,current_qubit_num,path) in zip(connected_qubits,adjacent_mapping,paths)
+        
+        while !isempty(path)
+            next_pos=pop!(path)
+            
             # surround current gates_block with swap gates 
             # to bring one step closer
             gates_block=vcat(
-                swap(current_qubit_num,current_qubit_num+1),
+                swap(current_qubit_num, next_pos),
                 gates_block,
-                swap(current_qubit_num,current_qubit_num+1)
+                swap(current_qubit_num, next_pos)
             )
-            current_qubit_num+=1
+
+            current_qubit_num = next_pos
         end
     end
 
     return gates_block
 end
 
-
 """
-    transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::SwapQubitsForAdjacencyTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `SwapQubitsForLineConnectivityTranspiler` transpiler stage 
+Implementation of the `SwapQubitsForAdjacencyTranspiler` transpiler stage 
 which adds `Swap` gates around multi-qubit gates so that the 
 final `Operator` acts on adjacent qubits. The result of the input 
 and output circuit on any arbitrary state `Ket` is unchanged 
@@ -1184,7 +1208,7 @@ and output circuit on any arbitrary state `Ket` is unchanged
 
 # Examples
 ```jldoctest
-julia> transpiler=SwapQubitsForLineConnectivityTranspiler();
+julia> transpiler=SwapQubitsForAdjacencyTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 6, gates=[toffoli(4,6,1)])
 Quantum Circuit Object:
@@ -1228,7 +1252,10 @@ true
 
 ```
 """
-function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    transpiler::SwapQubitsForAdjacencyTranspiler, 
+    circuit::QuantumCircuit
+    )::QuantumCircuit
 
     gates=get_circuit_gates(circuit)
     
@@ -1241,29 +1268,31 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
 
         if length(connected_qubits)>1
 
-            (consecutive_mapping,sorting_order)=remap_qubits_to_consecutive(connected_qubits)
+            (adjacent_mapping,sorting_order,paths)=remap_qubits_to_adjacent(connected_qubits,transpiler.connectivity)
             
             mapping_dict=Dict(
                 [
                     old_number=>new_number for (old_number,new_number) in 
-                        zip(connected_qubits,consecutive_mapping)
+                        zip(connected_qubits,adjacent_mapping)
                 ]
             )
     
             gates_block::Vector{Gate} =[move_gate(gate,mapping_dict)]
 
-            @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
+            @assert get_connected_qubits(gates_block[1])==adjacent_mapping (
                 "Failed to construct gate: $(get_gate_type((gates_block[1])))")
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit
-            connected_qubits    =connected_qubits[   reverse(sorting_order[2:end])]
-            consecutive_mapping =consecutive_mapping[reverse(sorting_order[2:end])]
-
+            connected_qubits =connected_qubits[reverse(sorting_order[2:end])]
+            adjacent_mapping =adjacent_mapping[reverse(sorting_order[2:end])]
+            paths =paths[reverse(sorting_order[2:end])]
+            
             gates_block=remap_connections_using_swaps(
                 gates_block,
                 connected_qubits,
-                consecutive_mapping
+                adjacent_mapping,
+                paths
             )
 
             push!(output_circuit, gates_block...)
@@ -1274,7 +1303,6 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
     end
 
     return output_circuit
-
 end
 
 struct SimplifyRzGatesTranspiler<:Transpiler 
