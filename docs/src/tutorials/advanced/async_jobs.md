@@ -95,4 +95,4 @@ println(result)
 
 ```
 
-The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/QuantumJulia/Snowflurry.jl/blob/main/tutorials/asynchronous_jobs.jl)
+The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/SnowflurrySDK/Snowflurry.jl/blob/main/tutorials/asynchronous_jobs.jl)

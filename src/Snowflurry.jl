@@ -1,4 +1,4 @@
-# This file is part of Snowflurry package. License is Apache 2: https://github.com/QuantumJulia/Snowflurry.jl/blob/main/LICENSE  
+# This file is part of Snowflurry package. License is Apache 2: https://github.com/SnowflurrySDK/Snowflurry.jl/blob/main/LICENSE  
 """
 Snowflurry is an open source library for quantum computing using Julia.
 Snowflurrys allows one to easily design quantum circuits, experiments and applications and run them on real quantum computers and/or classical simulators. 

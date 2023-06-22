@@ -2,8 +2,8 @@
 
 # Snowflurry.jl
 
-![CI tests](https://github.com/QuantumJulia/Snowflurry.jl/actions/workflows/CI.yml/badge.svg)
-[![codecov](https://codecov.io/gh/QuantumJulia/Snowflurry.jl/branch/main/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/QuantumJulia/Snowflurry.jl)
+![CI tests](https://github.com/SnowflurrySDK/Snowflurry.jl/actions/workflows/CI.yml/badge.svg)
+[![codecov](https://codecov.io/gh/SnowflurrySDK/Snowflurry.jl/branch/main/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/SnowflurrySDK/Snowflurry.jl)
 
 Snowflurry is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
 
@@ -22,7 +22,7 @@ Snowflurry is still in pre-release phase. Therefore, and for the time being, we 
 
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/QuantumJulia/Snowflurry.jl", rev="main")
+Pkg.add(url="https://github.com/SnowflurrySDK/Snowflurry.jl", rev="main")
 ```
 This will add the Snowflurry  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
 
@@ -40,7 +40,7 @@ Snowflurry, the SnowflurryPlots package can be installed by entering the followi
 Julia REPL:
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/QuantumJulia/SnowflurryPlots.jl", rev="main")
+Pkg.add(url="https://github.com/SnowflurrySDK/SnowflurryPlots.jl", rev="main")
 ```
 
 # Getting Started
@@ -117,7 +117,7 @@ print(ψ)
 0.7071067811865475 + 0.0im
 ```
 
-Finally, we can use [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) to generate a histogram which shows the measurement
+Finally, we can use [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) to generate a histogram which shows the measurement
 output distribution after taking a certain number of shots, in this case 100, on a quantum
 computer simulator:
 
@@ -148,7 +148,7 @@ plot_histogram(c, 100)
 
 # Roadmap
 
-See what we have planned by looking at the [Snowflurry Github Project](https://github.com/orgs/QuantumJulia/projects/8).
+See what we have planned by looking at the [Snowflurry Github Project](https://github.com/orgs/SnowflurrySDK/projects/8).
 
 # Snowflurry Contributors Community
 
