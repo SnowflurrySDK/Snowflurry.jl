@@ -1171,10 +1171,10 @@ function remap_qubits_to_adjacent(
 end
 
 function remap_connections_using_swaps(
-    gates_block::Vector{<: AbstractGateSymbol},
+    gates_block::Vector{<: Gate},
     adjacent_mapping::Vector{Int},
     paths::Vector{Vector{Int}},
-    )::Vector{AbstractGateSymbol}
+    )::Vector{Gate}
 
     for (current_qubit_num,path) in zip(adjacent_mapping,paths)
         

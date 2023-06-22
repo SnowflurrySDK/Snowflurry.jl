@@ -109,7 +109,7 @@ function get_qubits_distance(target_1::Int, target_2::Int, connectivity::Lattice
     return abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
 end
 
-function is_native_gate(qpu::AbstractAnyonQPU,gate::AbstractGateSymbol)::Bool
+function is_native_gate(qpu::AbstractAnyonQPU,gate::Gate)::Bool
     if is_gate_type(gate, ControlZ)
         # on ControlZ gates are native only if targets are adjacent
             
