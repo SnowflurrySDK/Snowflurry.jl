@@ -1207,7 +1207,7 @@ and output circuit on any arbitrary state `Ket` is unchanged
 
 # Examples
 ```jldoctest
-julia> transpiler=SwapQubitsForAdjacencyTranspiler();
+julia> transpiler=SwapQubitsForAdjacencyTranspiler(LineConnectivity(6));
 
 julia> circuit = QuantumCircuit(qubit_count = 6, gates=[toffoli(4,6,1)])
 Quantum Circuit Object:
