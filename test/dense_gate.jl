@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 using StaticArrays
 
@@ -72,7 +72,7 @@ end
 
     dense_op=DenseOperator(reshape([v for v in 1:16],4,4))
 
-    Snowflake.apply_operator!(ψ_1,dense_op,[1,2])
+    Snowflurry.apply_operator!(ψ_1,dense_op,[1,2])
 
     @test dense_op*ψ_0 ≈ ψ_1
 
@@ -87,7 +87,7 @@ end
 
     dense_op=DenseOperator(reshape([v for v in 1:64],8,8))
 
-    Snowflake.apply_operator!(ψ_1,dense_op,[1,2,3])
+    Snowflurry.apply_operator!(ψ_1,dense_op,[1,2,3])
 
     @test dense_op*ψ_0 ≈ ψ_1
 

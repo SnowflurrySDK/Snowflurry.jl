@@ -20,9 +20,9 @@ done | sort | uniq -f 1 | {
                 echo 1>&2 "error: link doesn't use HTTPS: file: $fname link: $link"
                 failure="1"
                 ;;
-            https://github.com/anyonlabs/Snowflake.jl/blob/main/*)
-                # Snowflake.jl repo-local case ... make sure file exists
-                link_root=`echo "$link" | sed 's,https://github.com/anyonlabs/Snowflake.jl/blob/main/,,'`
+            https://github.com/QuantumJulia/Snowflurry.jl/blob/main/*)
+                # Snowflurry.jl repo-local case ... make sure file exists
+                link_root=`echo "$link" | sed 's,https://github.com/QuantumJulia/Snowflurry.jl/blob/main/,,'`
                 if [ ! -e "./$link_root" ] ; then
                     echo 1>&2 "404 error: file: $fname link: $link"
                     failure="1"

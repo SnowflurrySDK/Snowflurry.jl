@@ -2,7 +2,7 @@
 
 In the previous tutorial, we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates. 
 
-We also learnt how to build a quantum circuit using `Snowflake` and simulate the result of such circuit using our local machine. 
+We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine. 
 
 In this tutorial, we will the steps involved in running a quantum circuit on a both a virtual and also a real Quantum Processing Unit (QPU). 
 
@@ -13,9 +13,9 @@ Interactions with different QPUs are facilitated using `struct`s (objects) that 
 !!! warning 
     You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library.md#Quantum-Processing-Unit). 
 
-Now that you know what QPU objects are, let's get started by importing `Snowflake`:
+Now that you know what QPU objects are, let's get started by importing `Snowflurry`:
 ```jldoctest get_qpu_metadata_tutorial; output = false
-using Snowflake
+using Snowflurry
 
 # output
 
@@ -28,7 +28,7 @@ qpu_v=VirtualQPU()
 # output
 Quantum Simulator:
    developers:  Anyon Systems Inc.
-   package:     Snowflake.jl
+   package:     Snowflurry.jl
 
 ```
 We can print QPU's meta data by simply using
@@ -37,7 +37,7 @@ print(qpu_v)
 # output
 Quantum Simulator:
    developers:  Anyon Systems Inc.
-   package:     Snowflake.jl
+   package:     Snowflurry.jl
 
 ```
 or alternatively, retrieve the QPU metadata in a `Dict{String,String}` format through the following command:
@@ -47,7 +47,7 @@ get_metadata(qpu_v)
 # output
 Dict{String, String} with 2 entries:
   "developers" => "Anyon Systems Inc."
-  "package"    => "Snowflake.jl"
+  "package"    => "Snowflurry.jl"
 
 
 ```

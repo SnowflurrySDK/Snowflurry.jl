@@ -316,10 +316,10 @@ Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──X────Y──
                
-julia> circuit_contains_gate_type(circuit, Snowflake.SigmaX)
+julia> circuit_contains_gate_type(circuit, Snowflurry.SigmaX)
 true
                
-julia> circuit_contains_gate_type(circuit, Snowflake.ControlZ)
+julia> circuit_contains_gate_type(circuit, Snowflurry.ControlZ)
 false
 ```
 """

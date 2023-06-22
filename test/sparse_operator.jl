@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 include("test_functions.jl")

@@ -25,7 +25,7 @@ julia> struct X45 <: AbstractGateSymbol
 
 We need to define how many connected qubits our new gate has.
 ```jldoctest gate_struct
-julia> Snowflake.get_num_connected_qubits(::X45) = 1
+julia> Snowflurry.get_num_connected_qubits(::X45) = 1
 
 ```
 
@@ -43,7 +43,7 @@ julia> x_45(T::Type{<:Complex}=ComplexF64)=rotation_x(π/4, T);
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
 the function `get_operator` must be extended.
 ```jldoctest gate_struct
-julia> Snowflake.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotation_x(π/4, T);
+julia> Snowflurry.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotation_x(π/4, T);
 
 ```
 
@@ -59,20 +59,20 @@ julia> x_45_gate = x_45(1)
 Gate Object: X45
 Connected_qubits	: [1]
 Operator:
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.9238795325112867 + 0.0im    0.0 - 0.3826834323650898im
 0.0 - 0.3826834323650898im    0.9238795325112867 + 0.0im
 
 
 julia> inv(x_45_gate)
-Gate Object: Snowflake.RotationX
+Gate Object: Snowflurry.RotationX
 Parameters: 
 theta	: -0.7853981633974483
 
 Connected_qubits	: [1]
 Operator:
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.9238795325112867 + 0.0im    -0.0 + 0.3826834323650898im
 -0.0 + 0.3826834323650898im    0.9238795325112867 + 0.0im
@@ -83,14 +83,14 @@ Underlying data ComplexF64:
 To enable printout of a `QuantumCircuit` containing our new `Gate` type, a display symbol 
 must be defined as follows.
 ```jldoctest gate_struct
-julia> Snowflake.gates_display_symbols[X45]=["X45"];
+julia> Snowflurry.gates_display_symbols[X45]=["X45"];
 
 ```
 
 If this `Gate` is to be sent as an instruction to a hardware QPU, 
 an instruction `String` must be defined.
 ```jldoctest gate_struct
-julia> Snowflake.gates_instruction_symbols[X45]="x45";
+julia> Snowflurry.gates_instruction_symbols[X45]="x45";
 
 ```
 
@@ -113,7 +113,7 @@ julia> ControlledGate(x_45(target),control)
 Gate Object: ControlledGate{X45}
 Connected_qubits	: [1, 2]
 Operator:
-(4, 4)-element Snowflake.DenseOperator:
+(4, 4)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -135,6 +135,10 @@ get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
 get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(gate))
 
+get_num_target_qubits(gate::AbstractControlledGateSymbol)=length(get_target_qubits(gate))
+
+get_num_control_qubits(gate::AbstractControlledGateSymbol)=length(get_control_qubits(gate))
+
 # TODO(#226): `Gate` should not inherit from `AbstractGateSymbol` after completion
 """
     Gate
@@ -144,10 +148,10 @@ An object that specifies an `AbstractGateSymbol` and its placement inside a `Qua
 # Examples
 ```jldoctest
 julia> gate = Gate(iswap(1, 2), [1, 2])
-Gate Object: Snowflake.ISwap
+Gate Object: Snowflurry.ISwap
 Connected_qubits	: [1, 2]
 Operator:
-(4, 4)-element Snowflake.SwapLikeOperator:
+(4, 4)-element Snowflurry.SwapLikeOperator:
 Underlying data ComplexF64:
 Equivalent DenseOperator:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -159,7 +163,7 @@ Equivalent DenseOperator:
 
 ```jldoctest
 julia> gate = Gate(universal(3, pi/2, -pi/2, pi/2), [3])
-Gate Object: Snowflake.Universal
+Gate Object: Snowflurry.Universal
 Parameters:
 theta	: 1.5707963267948966
 phi	: -1.5707963267948966
@@ -167,7 +171,7 @@ lambda	: 1.5707963267948966
 
 Connected_qubits	: [3]
 Operator:
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    -4.329780281177466e-17 - 0.7071067811865475im
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
@@ -243,13 +247,17 @@ function Base.inv(gate::Gate)::Gate
 end
 
 # TODO(#226): delete on completion
-function get_target_qubits(gate::Gate)
-    return get_target_qubits(get_gate_symbol(gate))
+function get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+    connected_qubits = get_connected_qubits(gate)
+    num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
+    return Vector(view(connected_qubits, 1:num_control_qubits))
 end
 
 # TODO(#226): delete on completion
-function get_control_qubits(gate::Gate)
-    return get_control_qubits(get_gate_symbol(gate))
+function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+    connected_qubits = get_connected_qubits(gate)
+    num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
+    return Vector(view(connected_qubits, (num_control_qubits+1):length(connected_qubits)))
 end
 
 
@@ -266,19 +274,19 @@ Determines if a `gate` is of the specified `type`.
 # Examples
 ```jldoctest
 julia> gate = sigma_x(1)
-Gate Object: Snowflake.SigmaX
+Gate Object: Snowflurry.SigmaX
 Connected_qubits	: [1]
 Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
-julia> is_gate_type(gate, Snowflake.SigmaX)
+julia> is_gate_type(gate, Snowflurry.SigmaX)
 true
 
-julia> is_gate_type(gate, Snowflake.SigmaY)
+julia> is_gate_type(gate, Snowflurry.SigmaY)
 false
 
 ```
@@ -303,10 +311,10 @@ of a `ControlledGate{Hadamard}` with `control=1` and `target=2` is performed by 
 
 ```jldoctest controlled_hadamard
 julia> controlled_hadamard=Gate(ControlledGate(hadamard(2),1), [1, 2])
-Gate Object: ControlledGate{Snowflake.Hadamard}
+Gate Object: ControlledGate{Snowflurry.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
-(4, 4)-element Snowflake.DenseOperator:
+(4, 4)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -334,10 +342,10 @@ but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=
 
 ```jldoctest 
 julia> toffoli_as_controlled_gate=ControlledGate(sigma_x(3),[1,2])
-Gate Object: ControlledGate{Snowflake.SigmaX}
+Gate Object: ControlledGate{Snowflurry.SigmaX}
 Connected_qubits	: [1, 2, 3]
 Operator:
-(8, 8)-element Snowflake.DenseOperator:
+(8, 8)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -416,92 +424,25 @@ Returns the type of a `gate`.
 # Examples
 ```jldoctest
 julia> gate = sigma_x(1)
-Gate Object: Snowflake.SigmaX
+Gate Object: Snowflurry.SigmaX
 Connected_qubits	: [1]
 Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
 julia> get_gate_type(gate)
-Snowflake.SigmaX
+Snowflurry.SigmaX
 
 ```
 """
 get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
 
-# TODO(#226): delete on completion
-struct MovedGate <: AbstractGateSymbol
-    original_gate::AbstractGateSymbol
-    connected_qubits::Vector{Int}
-end
-
-# TODO(#226): delete on completion
-struct MovedControlledGate <: AbstractControlledGateSymbol
-    original_gate::AbstractControlledGateSymbol
-    connected_qubits::Vector{Int}
-end
-
-# TODO(#226): delete on completion
-MovedGate(gate::AbstractControlledGateSymbol, connected_qubits::Vector{Int}) = 
-    MovedControlledGate(gate,connected_qubits)
-
-# TODO(#226): delete on completion
-UnionMovedGates=Union{MovedGate,MovedControlledGate}
-
-# TODO(#226): delete on completion
-function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
-    old_connected_qubits=get_connected_qubits(gate.original_gate)
-    old_control_qubits=get_control_qubits(gate.original_gate)
-
-    return [gate.connected_qubits[i] 
-        for (i,num) in enumerate(old_connected_qubits) 
-            if num in old_control_qubits
-        ]
-end
-
-get_control_qubits(gate::AbstractGateSymbol)=
-    throw(NotImplementedError(:get_control_qubits,gate))
-
-# TODO(#226): delete on completion
-function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
-    old_connected_qubits=get_connected_qubits(gate.original_gate)
-    old_target_qubits=get_target_qubits(gate.original_gate)
-
-    return [gate.connected_qubits[i] 
-        for (i,num) in enumerate(old_connected_qubits) 
-            if num in old_target_qubits
-        ]
-end
-
-get_target_qubits(gate::AbstractGateSymbol)=
-    throw(NotImplementedError(:get_target_qubits,gate))
-
-function get_operator(gate::UnionMovedGates, T::Type{<:Complex}=ComplexF64)
-    return get_operator(gate.original_gate, T)
-end
-
-Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
-
-# TODO(#226): delete on completion
-Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate), gate.connected_qubits)
-
-get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
-
-# TODO(#226): delete on completion
-function is_gate_type(gate::UnionMovedGates, type::Type)::Bool
-    return is_gate_type(gate.original_gate, type)
-end
-
-# TODO(#226): delete on completion
-get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
-
-get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
 
 """
-    move_gate(gate::AbstractGateSymbol,
+    move_gate(gate::Gate,
         qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGateSymbol
 
 Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
@@ -514,20 +455,20 @@ the new qubit.
 # Examples
 ```jldoctest
 julia> gate = sigma_x(1)
-Gate Object: Snowflake.SigmaX
+Gate Object: Snowflurry.SigmaX
 Connected_qubits	: [1]
 Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
 julia> move_gate(gate, Dict(1=>2))
-Gate Object: Snowflake.SigmaX
+Gate Object: Snowflurry.SigmaX
 Connected_qubits	: [2]
 Operator:
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
@@ -548,7 +489,7 @@ function move_gate(gate::Gate,
         end
     end
 
-    return Gate(MovedGate(get_gate_symbol(gate), new_connected_qubits), new_connected_qubits)
+    return Gate(get_gate_symbol(gate), new_connected_qubits)
 end
 
 struct NotImplementedError{ArgsT} <: Exception
@@ -1257,7 +1198,7 @@ function create_shift_mask_list_from_list_and_value_buf!(
 end
 
 # adapted from https://github.com/qulacs/qulacs, method create_control_mask()
-# unlike the qulacs implementation, Snowflake always assumes the 
+# unlike the qulacs implementation, Snowflurry always assumes the 
 # control must be in state 1 to trigger the operator
 function create_control_mask(
     qubit_index_list::Vector{UInt64}, 
@@ -1433,13 +1374,13 @@ of dimensions (size,size).
 # Examples
 ```jldoctest
 julia> eye()
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im
 
 julia> eye(4)
-(4, 4)-element Snowflake.DenseOperator:
+(4, 4)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -1772,7 +1713,7 @@ Returns the `Operator` which is associated to a `Gate`.
 julia> x = sigma_x(1);
 
 julia> get_operator(x)
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
@@ -2086,12 +2027,6 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-get_control_qubits(gate::AbstractControlledGateSymbol)=
-    throw(NotImplementedError(:get_control_qubits,gate))
-
-get_target_qubits(gate::AbstractControlledGateSymbol)=
-    throw(NotImplementedError(:get_target_qubits,gate))
-
 struct ControlZ <: AbstractControlledGateSymbol
     control::Int
     target::Int
@@ -2308,7 +2243,7 @@ Return a `Gate` which is the inverse of the input `gate`.
 # Examples
 ```jldoctest
 julia> u = universal(1, -pi/2, pi/3, pi/4)
-Gate Object: Snowflake.Universal
+Gate Object: Snowflurry.Universal
 Parameters: 
 theta	: -1.5707963267948966
 phi	: 1.0471975511965976
@@ -2316,14 +2251,14 @@ lambda	: 0.7853981633974483
 
 Connected_qubits	: [1]
 Operator:
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    0.5 + 0.4999999999999999im
 -0.3535533905932738 - 0.6123724356957945im    -0.18301270189221924 + 0.6830127018922194im
 
 
 julia> inv(u)
-Gate Object: Snowflake.Universal
+Gate Object: Snowflurry.Universal
 Parameters: 
 theta	: 1.5707963267948966
 phi	: -0.7853981633974483
@@ -2331,7 +2266,7 @@ lambda	: -1.0471975511965976
 
 Connected_qubits	: [1]
 Operator:
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    -0.3535533905932738 + 0.6123724356957945im
 0.5 - 0.4999999999999999im    -0.18301270189221924 - 0.6830127018922194im

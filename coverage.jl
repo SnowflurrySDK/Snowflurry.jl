@@ -1,6 +1,6 @@
 using Coverage
 using Pkg
-using Snowflake
+using Snowflurry
 
 function print_missed_lines(fcs::Vector{FileCoverage})
     for fc in fcs

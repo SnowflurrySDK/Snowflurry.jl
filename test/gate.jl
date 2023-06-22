@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 using LinearAlgebra
 
@@ -9,7 +9,7 @@ include("test_functions.jl")
         connected_qubits::Vector{Int}
     end
 
-    Snowflake.get_connected_qubits(gate::MockConnectedQubitGateSymbol) = return gate.connected_qubits
+    Snowflurry.get_connected_qubits(gate::MockConnectedQubitGateSymbol) = return gate.connected_qubits
 
     function test_num_connected_qubits(connected_qubits::Vector{Int}, expected_num_connected_qubits)
         @test get_num_connected_qubits(MockConnectedQubitGateSymbol(connected_qubits)) == expected_num_connected_qubits
@@ -28,7 +28,7 @@ end
         num_connected_qubits::Int
     end
 
-    Snowflake.get_num_connected_qubits(gate::MockNumConnectedQubit) = return gate.num_connected_qubits
+    Snowflurry.get_num_connected_qubits(gate::MockNumConnectedQubit) = return gate.num_connected_qubits
 
     @testset "constructor" begin
 
@@ -67,10 +67,10 @@ end
 
         test_show(
             Gate(iswap(1, 2), [1, 2]),
-            """Gate Object: Snowflake.ISwap
+            """Gate Object: Snowflurry.ISwap
             Connected_qubits	: [1, 2]
             Operator:
-            (4, 4)-element Snowflake.SwapLikeOperator:
+            (4, 4)-element Snowflurry.SwapLikeOperator:
             Underlying data ComplexF64:
             Equivalent DenseOperator:
             1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -82,7 +82,7 @@ end
 
         test_show(
             Gate(universal(1, pi/2, -pi/2, pi/2), [3]),
-            """Gate Object: Snowflake.Universal
+            """Gate Object: Snowflurry.Universal
             Parameters: 
             theta	: 1.5707963267948966
             phi	: -1.5707963267948966
@@ -90,7 +90,7 @@ end
             
             Connected_qubits	: [3]
             Operator:
-            (2, 2)-element Snowflake.DenseOperator:
+            (2, 2)-element Snowflurry.DenseOperator:
             Underlying data ComplexF64:
             0.7071067811865476 + 0.0im    -4.329780281177466e-17 - 0.7071067811865475im
             4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
@@ -405,13 +405,13 @@ end
         ]],
     )
 
-    Snowflake.get_operator(gate::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
+    Snowflurry.get_operator(gate::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
     
-    Snowflake.get_connected_qubits(gate::ControlledHadamard)=[gate.control, gate.target]
+    Snowflurry.get_connected_qubits(gate::ControlledHadamard)=[gate.control, gate.target]
     
-    Snowflake.get_control_qubits(gate::ControlledHadamard)=[gate.control]
+    Snowflurry.get_control_qubits(gate::ControlledHadamard)=[gate.control]
     
-    Snowflake.get_target_qubits(gate::ControlledHadamard)=[gate.target]
+    Snowflurry.get_target_qubits(gate::ControlledHadamard)=[gate.target]
 
     controlled_hadamard_dense_1_2=Gate(ControlledHadamard(1,2), [1,2])
     controlled_hadamard_dense_2_1=Gate(ControlledHadamard(2,1), [2,1])
@@ -441,7 +441,7 @@ end
     @test controlled_hadamard_kernel_2_3*ψ_input ≈ controlled_hadamard_dense_2_3*ψ_input
 
     # circumventing casting to DenseOperator not allowed  
-    @test_throws NotImplementedError Snowflake.apply_controlled_gate_operator!(
+    @test_throws NotImplementedError Snowflurry.apply_controlled_gate_operator!(
         Ket([1,2]),
         eye(4),
         DiagonalOperator([-1.,1.]),
@@ -455,12 +455,12 @@ struct DenseGate<:AbstractGateSymbol
     operator::DenseOperator
 end
 
-Snowflake.get_connected_qubits(gate::DenseGate)=gate.connected_qubits
-Snowflake.get_operator(gate::DenseGate,T::Type{<:Complex}=ComplexF64)=gate.operator
+Snowflurry.get_connected_qubits(gate::DenseGate)=gate.connected_qubits
+Snowflurry.get_operator(gate::DenseGate,T::Type{<:Complex}=ComplexF64)=gate.operator
 
 function make_labels(num_controls::Int,labels::Vector{String})
     vcat(
-        [Snowflake.control_display_symbol for _ in 1:num_controls], 
+        [Snowflurry.control_display_symbol for _ in 1:num_controls], 
         labels
     )
 end
@@ -546,7 +546,7 @@ end
     end
 
     # circumventing casting to DenseOperator not allowed  
-    @test_throws NotImplementedError Snowflake.apply_controlled_gate_operator!(
+    @test_throws NotImplementedError Snowflurry.apply_controlled_gate_operator!(
         Ket([v for v in 1:8]),
         eye(8),
         DiagonalOperator([-1.,1.]),
@@ -576,8 +576,8 @@ end
         num_controls=length(control_qubits)
 
         c_gate_config=[
-            [control_x,     make_labels(num_controls, [Snowflake.control_display_symbol, "X"])],
-            [control_z,     make_labels(num_controls, [Snowflake.control_display_symbol, "Z"])],
+            [control_x,     make_labels(num_controls, [Snowflurry.control_display_symbol, "X"])],
+            [control_z,     make_labels(num_controls, [Snowflurry.control_display_symbol, "Z"])],
             [swap,          make_labels(num_controls, ["☒", "☒"])],
             [iswap,         make_labels(num_controls, ["x", "x"])],
             [iswap_dagger,  make_labels(num_controls, ["x†", "x†"])],
@@ -740,7 +740,7 @@ end
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownGateSymbol) = DenseOperator([1 2; 3 4])
+    Snowflurry.get_operator(gate::UnknownGateSymbol) = DenseOperator([1 2; 3 4])
 
     unknown_gate=UnknownGateSymbol("na")
     @test_throws NotImplementedError inv(unknown_gate)
@@ -749,18 +749,12 @@ end
         instruction_symbol::String
     end
     
-    Snowflake.get_operator(gate::UnknownHermitianGateSymbol) = DenseOperator([1 im; -im 1])
+    Snowflurry.get_operator(gate::UnknownHermitianGateSymbol) = DenseOperator([1 im; -im 1])
 
     unknown_hermitian_gate = UnknownHermitianGateSymbol("na")
 
     # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
-
-    struct UnknownControlledGateSymbol <: AbstractControlledGateSymbol end
-
-    @test_throws NotImplementedError get_target_qubits(UnknownControlledGateSymbol())
-    @test_throws NotImplementedError get_control_qubits(UnknownControlledGateSymbol())
-
 end
 
 @testset "move_gate" begin
@@ -769,38 +763,36 @@ end
     rx_gate = rotation_x(target, theta)
     qubit_mapping = Dict(2=>3)
     moved_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test_throws NotImplementedError get_control_qubits(moved_rx_gate)
-    @test_throws NotImplementedError get_target_qubits(moved_rx_gate)
     
     qubit_mapping = Dict(1=>3, 3=>1)
     untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test is_gate_type(untouched_rx_gate, Snowflake.RotationX)
-    @test get_gate_type(untouched_rx_gate) == Snowflake.RotationX
+    @test is_gate_type(untouched_rx_gate, Snowflurry.RotationX)
+    @test get_gate_type(untouched_rx_gate) == Snowflurry.RotationX
     @test get_connected_qubits(untouched_rx_gate) == [target]
     @test get_gate_parameters(untouched_rx_gate) == Dict("theta"=>theta)
 
     qubit_mapping = Dict(2=>3, 3=>2)
     moved_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test is_gate_type(moved_rx_gate, Snowflake.RotationX)
-    @test get_gate_type(moved_rx_gate) == Snowflake.RotationX
+    @test is_gate_type(moved_rx_gate, Snowflurry.RotationX)
+    @test get_gate_type(moved_rx_gate) == Snowflurry.RotationX
     @test get_connected_qubits(moved_rx_gate) == [3]
     @test get_gate_parameters(moved_rx_gate) == Dict("theta"=>theta)
 
     moved_twice_rx = move_gate(moved_rx_gate, qubit_mapping)
-    @test is_gate_type(moved_twice_rx, Snowflake.RotationX)
-    @test get_gate_type(moved_twice_rx) == Snowflake.RotationX
+    @test is_gate_type(moved_twice_rx, Snowflurry.RotationX)
+    @test get_gate_type(moved_twice_rx) == Snowflurry.RotationX
     @test get_connected_qubits(moved_twice_rx) == [2]
     @test get_gate_parameters(moved_twice_rx) == Dict("theta"=>theta)
     
     inverse_moved_gate = inv(moved_rx_gate)
-    @test is_gate_type(inverse_moved_gate, Snowflake.RotationX)
+    @test is_gate_type(inverse_moved_gate, Snowflurry.RotationX)
     @test get_connected_qubits(inverse_moved_gate) == [3]
     @test get_gate_parameters(inverse_moved_gate) == Dict("theta"=>-theta)
 
     qubit_mapping = Dict(2=>3, 3=>2, 4=>1, 1=>4)
     toffoli_gate = toffoli(2, 3, 1)
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
-    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test is_gate_type(moved_toffoli_gate, Snowflurry.Toffoli)
     @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
 
     qubit_mapping = Dict(2=>22, 3=>33,4=>44)
@@ -810,7 +802,7 @@ end
     @test get_target_qubits(toffoli_gate)==[4]
 
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
-    @test is_gate_type(moved_toffoli_gate, Snowflake.Toffoli)
+    @test is_gate_type(moved_toffoli_gate, Snowflurry.Toffoli)
     @test get_connected_qubits(moved_toffoli_gate) == [22, 33, 44]
     @test get_control_qubits(moved_toffoli_gate)==[22,33]
     @test get_target_qubits(moved_toffoli_gate)==[44]

@@ -1,9 +1,9 @@
 using BenchmarkTools
-using Snowflake
+using Snowflurry
 using JSON
 using Plots
 
-include("SnowflakeBenchmarking.jl")
+include("SnowflurryBenchmarking.jl")
 
 @task "ISWAP" nqubits=nqubits begin
     map(nqubits) do k

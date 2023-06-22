@@ -4,5 +4,5 @@ include("make.jl")
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
 deploydocs(
-    repo = "github.com/anyonlabs/Snowflake.jl.git",
+    repo = "github.com/QuantumJulia/Snowflurry.jl.git",
 )

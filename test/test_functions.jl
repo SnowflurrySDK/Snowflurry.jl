@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using LinearAlgebra
 
 function test_inverse(gate::AbstractGateSymbol)
@@ -208,7 +208,7 @@ function test_operator_implementation(
         end
 
         op=op_type(make_array(dim, ComplexF64, values))
-        Snowflake.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
+        Snowflurry.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
         if (op_type!=SparseOperator)
             @test op*ψ_0 ≈ ψ_1
         end

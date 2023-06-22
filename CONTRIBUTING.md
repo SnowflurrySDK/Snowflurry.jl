@@ -1,9 +1,9 @@
 # How to Contribute
 
-Snowflake is a community driven project and we'd love to accept your patches and contributions to this project.
+Snowflurry is a community driven project and we'd love to accept your patches and contributions to this project.
 
 To streamline the process, we have some guidelines to follow. Please also
-note that we have a [code of conduct](CODE_OF_CONDUCT.md) to make Snowflake an
+note that we have a [code of conduct](CODE_OF_CONDUCT.md) to make Snowflurry an
 open and welcoming environment.
 
 ## Contributor License Agreement
@@ -21,15 +21,15 @@ use GitHub pull requests for this purpose.
 information on using pull requests.
 
 The preferred manner for submitting pull requests is for users to fork
-the Snowflake [repo](https://github.com/anyonlabs/Snowflake.jl) and then use a
-branch from this fork to create a pull request to the main Snowflake repo.
+the Snowflurry [repo](https://github.com/QuantumJulia/Snowflurry.jl) and then use a
+branch from this fork to create a pull request to the main Snowflurry repo.
 
 The basic process for setting up a fork is
 
-1.  Fork the Snowflake repo (Fork button in upper right corner of
-    [repo page](https://github.com/anyonlabs/Snowflake.jl)).
+1.  Fork the Snowflurry repo (Fork button in upper right corner of
+    [repo page](https://github.com/QuantumJulia/Snowflurry.jl)).
     Forking creates a new github repo at the location
-    `https://github.com/USERNAME/Snowflake.jl` where `USERNAME` is
+    `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
     your github id. Use the directions on the
     [development page](docs/dev/development.md) to download a copy to
     your local machine. You need only do this once.
@@ -40,12 +40,12 @@ The basic process for setting up a fork is
     where `new_branch_name` is the name of your new branch.
 1.  Do your work and commit your changes to this branch.
 1.  If you have drifted out of sync with the master from the
-    main Snowflake repo you may need to merge in changes. To do this,
+    main Snowflurry repo you may need to merge in changes. To do this,
     first update your local master and then merge the local master
     into your branch:
 
     ````shell # Track the upstream repo (if your local repo hasn't):
-    git remote add upstream https://github.com/anyonlabs/Snowflake.jl.git
+    git remote add upstream https://github.com/QuantumJulia/Snowflurry.jl.git
 
         # Update your local master.
         git fetch upstream
@@ -64,8 +64,8 @@ The basic process for setting up a fork is
     ```shell
     git push origin new_branch_name
     ```
-1.  Now when you navigate to the Snowflake page on github,
-    [https://github.com/anyonlabs/Snowflake.jl](https://github.com/anyonlabs/Snowflake.jl)
+1.  Now when you navigate to the Snowflurry page on github,
+    [https://github.com/QuantumJulia/Snowflurry.jl](https://github.com/QuantumJulia/Snowflurry.jl)
     you should see the option to create a new pull request from
     your clone repository. Alternatively you can create the pull request
     by navigating to the "Pull requests" tab in the page, and selecting
@@ -81,7 +81,7 @@ We adhere to Julia recommanded [Style Guide](https://docs.julialang.org/en/v1/ma
 ## Code Testing Standards
 
 When a pull request is created or updated, various automatic checks will
-run to ensure that the change won't break Snowflake and meets our coding standards.
+run to ensure that the change won't break Snowflurry and meets our coding standards.
 
 Cirq contains a continuous integration tool to verify testing. See our
 [development page](docs/dev/development.md) on how to run the continuous
@@ -98,7 +98,7 @@ new changes.
    Type the following in the REPL:
 
 ```julia
-julia>using Pkg; Pkg.test("Snowflake"; coverage=true)
+julia>using Pkg; Pkg.test("Snowflurry"; coverage=true)
 ```
 
 2. Run `test/runtests.jl`: Include the `test/runtests.jl` script in the REPL:

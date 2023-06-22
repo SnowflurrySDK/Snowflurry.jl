@@ -1,10 +1,10 @@
-# Snowflake development
+# Snowflurry development
 
-## Installing Snowflake for local development
+## Installing Snowflurry for local development
 
-When developing Snowflake, you must ensure that you are using a local copy of Snowflake, not the latest released version. The easiest way to achieve that is to set the project to the local directory.
+When developing Snowflurry, you must ensure that you are using a local copy of Snowflurry, not the latest released version. The easiest way to achieve that is to set the project to the local directory.
 
-If you are starting a new instance of Julia, then you can activate the Snowflake project with
+If you are starting a new instance of Julia, then you can activate the Snowflurry project with
 
 ```bash
 julia --project=.
@@ -17,7 +17,7 @@ using Pkg
 Pkg.activate(".")
 ```
 
-If the current directory is not the Snowflake project, replace `.` with the Snowflake project path.
+If the current directory is not the Snowflurry project, replace `.` with the Snowflurry project path.
 
 
 ## Running tests
@@ -43,7 +43,7 @@ First open a julia REPL using the docs project
 julia --project=./docs
 ```
 
-If it is the first time building the docs, you need to instantiate the Julia project and add the Snowflake project as a development dependency. This means the version of the Snowflake package loaded is the one at the path specified, `pwd()`, and not the one registered at JuliaHub.
+If it is the first time building the docs, you need to instantiate the Julia project and add the Snowflurry project as a development dependency. This means the version of the Snowflurry package loaded is the one at the path specified, `pwd()`, and not the one registered at JuliaHub.
 
 ```julia
 using Pkg
@@ -51,17 +51,17 @@ Pkg.develop(PackageSpec(path=pwd()))
 Pkg.instantiate()
 ```
 
-At which point, the project status should be similar to the one below. The versions might be slightly different, but what is important is that the `Status` line refers to the `docs/Project.toml` and that `Snowflake` refers to `<pwd()>/Snowflake.jl`.
+At which point, the project status should be similar to the one below. The versions might be slightly different, but what is important is that the `Status` line refers to the `docs/Project.toml` and that `Snowflurry` refers to `<pwd()>/Snowflurry.jl`.
 
 ```julia
 Pkg.status()
 
 # output
-      Status `<pwd()>/Snowflake.jl/docs/Project.toml`
+      Status `<pwd()>/Snowflurry.jl/docs/Project.toml`
   [e30172f5] Documenter v0.27.24
   [cd3eb016] HTTP v1.7.4
   [682c06a0] JSON v0.21.4
-  [7bd9edc1] Snowflake v0.1.0 `<pwd()>/Snowflake.jl`
+  [7bd9edc1] Snowflurry v0.1.0 `<pwd()>/Snowflurry.jl`
   [90137ffa] StaticArrays v1.5.21
   [2913bbd2] StatsBase v0.33.21
   [de0858da] Printf

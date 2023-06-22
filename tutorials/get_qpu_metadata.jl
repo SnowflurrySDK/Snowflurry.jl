@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]

@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 @testset "multi_body::DenseOperator" begin
