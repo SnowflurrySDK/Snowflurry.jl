@@ -58,7 +58,7 @@ iswap
 swap
 toffoli
 iswap_dagger
-Base.:*(M::AbstractGateSymbol, x::Ket)
+Base.:*(M::Gate, x::Ket)
 apply_gate!
 get_operator
 inv(gate::AbstractGateSymbol)

@@ -717,21 +717,21 @@ end
 
     for (angle,type_result) in list_params
 
-        result_gate=Snowflurry.simplify_rx_gate(target,angle)
+        result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,angle))
 
         @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
-    result_gate=Snowflurry.simplify_rx_gate(target,0.)
+    result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,0.))
 
     @test isnothing(result_gate)
 
-    result_gate=Snowflurry.simplify_rx_gate(target,1e-3)
+    result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3))
 
     @test is_gate_type(result_gate, Snowflurry.RotationX)
 
-    result_gate=Snowflurry.simplify_rx_gate(target,1e-3,atol=1e-1)
+    result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3),atol=1e-1)
 
     @test isnothing(result_gate)
 end
@@ -808,21 +808,21 @@ end
 
     for (angle,type_result) in list_params
 
-        result_gate=Snowflurry.simplify_rz_gate(target,angle)
+        result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,angle))
 
         @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
-    result_gate=Snowflurry.simplify_rz_gate(target,0.)
+    result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,0.))
 
     @test isnothing(result_gate)
 
-    result_gate=Snowflurry.simplify_rz_gate(target,1e-3)
+    result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3))
 
     @test is_gate_type(result_gate, Snowflurry.PhaseShift)
 
-    result_gate=Snowflurry.simplify_rz_gate(target,1e-3,atol=1e-1)
+    result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3),atol=1e-1)
 
     @test isnothing(result_gate)
 end

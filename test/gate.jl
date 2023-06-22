@@ -61,12 +61,16 @@ end
             io = IOBuffer()
 
             Base.show(io, gate_placement)
+            actual = String(take!(io))
 
-            @test String(take!(io)) == expected
+            println(actual)
+            println(expected)
+
+            @test actual == expected
         end
 
         test_show(
-            Gate(iswap(1, 2), [1, 2]),
+            iswap(1, 2),
             """Gate Object: Snowflurry.ISwap
             Connected_qubits	: [1, 2]
             Operator:
@@ -81,7 +85,7 @@ end
         )
 
         test_show(
-            Gate(universal(1, pi/2, -pi/2, pi/2), [3]),
+            universal(3, pi/2, -pi/2, pi/2),
             """Gate Object: Snowflurry.Universal
             Parameters: 
             theta	: 1.5707963267948966
@@ -106,9 +110,9 @@ end
             @test get_gate_symbol(gate) == symbol
         end
 
-        test_getters(hadamard(3), [3])
-        test_getters(iswap(3, 7), [7, 3])
-        test_getters(universal(11, pi/2, -pi/2, pi/4), [11])
+        test_getters(Snowflurry.Hadamard(3), [3])
+        test_getters(Snowflurry.ISwap(3, 7), [7, 3])
+        test_getters(Snowflurry.Universal(11, pi/2, -pi/2, pi/4), [11])
     end
 end
 
@@ -315,8 +319,8 @@ end
     
     # ControlX as ControlledGate
 
-    cnot_kernel_1_2=ControlledGate(sigma_x(2),1)
-    cnot_kernel_2_1=ControlledGate(sigma_x(1),2)
+    cnot_kernel_1_2=Gate(ControlledGate(sigma_x(2),1), [1,2])
+    cnot_kernel_2_1=Gate(ControlledGate(sigma_x(1),2), [2,1])
 
     @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
     @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
@@ -339,8 +343,8 @@ end
 
     # ControlZ as ControlledGate
 
-    cz_kernel_1_2=ControlledGate(sigma_z(2),1)
-    cz_kernel_2_1=ControlledGate(sigma_z(1),2)
+    cz_kernel_1_2=Gate(ControlledGate(sigma_z(2),1), [1,2])
+    cz_kernel_2_1=Gate(ControlledGate(sigma_z(1),2), [2,1])
 
     @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
     @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
@@ -369,12 +373,12 @@ end
 
     # Toffoli as ControlledGate
 
-    toffoli_kernel_1_2_3=ControlledGate(sigma_x(3),[1,2])
-    toffoli_kernel_2_1_3=ControlledGate(sigma_x(3),[2,1])
-    toffoli_kernel_1_3_2=ControlledGate(sigma_x(2),[1,3])
-    toffoli_kernel_3_1_2=ControlledGate(sigma_x(2),[3,1])
-    toffoli_kernel_2_3_1=ControlledGate(sigma_x(1),[2,3])
-    toffoli_kernel_3_2_1=ControlledGate(sigma_x(1),[3,2])
+    toffoli_kernel_1_2_3=Gate(ControlledGate(sigma_x(3),[1,2]), [1,2,3])
+    toffoli_kernel_2_1_3=Gate(ControlledGate(sigma_x(3),[2,1]), [2,1,3])
+    toffoli_kernel_1_3_2=Gate(ControlledGate(sigma_x(2),[1,3]), [1,3,2])
+    toffoli_kernel_3_1_2=Gate(ControlledGate(sigma_x(2),[3,1]), [3,1,2])
+    toffoli_kernel_2_3_1=Gate(ControlledGate(sigma_x(1),[2,3]), [2,3,1])
+    toffoli_kernel_3_2_1=Gate(ControlledGate(sigma_x(1),[3,2]), [3,2,1])
 
     @test ψ_1_2_3 ≈ toffoli_kernel_1_2_3*ψ_input
     @test ψ_1_2_3 ≈ toffoli_kernel_2_1_3*ψ_input
@@ -498,7 +502,7 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=ControlledGate(func(target_qubits...),control_qubits)
+            c_gate=Gate(ControlledGate(func(target_qubits...),control_qubits), [control_qubits..., target_qubits...])
             @test get_display_symbol(c_gate)==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
@@ -522,7 +526,7 @@ end
         ]
 
         for (func,params,param_keys,labels) in test_cases_params
-            c_gate=ControlledGate(func(target_qubits...,params...),control_qubits)
+            c_gate=Gate(ControlledGate(func(target_qubits...,params...),control_qubits), [control_qubits..., target_qubits...])
             @test get_display_symbol(c_gate)==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
@@ -584,7 +588,7 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=ControlledGate(func(target_qubits...),control_qubits)
+            c_gate=Gate(ControlledGate(func(target_qubits...),control_qubits), [control_qubits..., target_qubits...])
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
 

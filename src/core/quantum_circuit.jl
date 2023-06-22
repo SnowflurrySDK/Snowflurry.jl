@@ -333,7 +333,7 @@ function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: 
     return false
 end
 
-function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::AbstractGateSymbol)
+function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::Gate)
     for target in get_connected_qubits(gate)
         if target > get_num_qubits(circuit)
             throw(DomainError(target, "The gate does not fit in the circuit"))
@@ -560,9 +560,13 @@ function get_circuit_layout(circuit::QuantumCircuit)
     return circuit_layout
 end
 
-function get_longest_symbol_length(gate::AbstractGateSymbol)
+function get_longest_symbol_length(gate::Gate)
+    return get_longest_symbol_length(get_gate_symbol(gate))
+end
+
+function get_longest_symbol_length(symbol::AbstractGateSymbol)
     largest_length = 0
-    for symbol in get_display_symbol(gate)
+    for symbol in get_display_symbol(symbol)
         symbol_length = length(symbol)
         if symbol_length > largest_length
             largest_length = symbol_length
@@ -605,7 +609,7 @@ end
 
 function add_coupling_lines_to_circuit_layout!(
     circuit_layout::Array{String}, 
-    gate::AbstractGateSymbol,
+    gate::Gate,
     i_step::Integer,
     longest_symbol_length::Integer
     )
@@ -626,7 +630,7 @@ function add_coupling_lines_to_circuit_layout!(
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::AbstractGateSymbol,
+function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
     i_step::Integer, longest_symbol_length::Integer)
     
     symbols_gate=get_display_symbol(gate)
