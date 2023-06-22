@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 
 abstract type Transpiler end
 

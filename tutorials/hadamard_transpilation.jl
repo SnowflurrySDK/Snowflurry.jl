@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 
 circuit = QuantumCircuit(qubit_count = 1)
 

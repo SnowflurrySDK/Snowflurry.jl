@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 @testset "submit_job_iswap" begin

@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 using StaticArrays
 
@@ -44,7 +44,7 @@ end
     target_qubit_1=1
     target_qubit_2=2
 
-    Snowflake.apply_operator!(ψ, diag_op,[target_qubit_1,target_qubit_2])
+    Snowflurry.apply_operator!(ψ, diag_op,[target_qubit_1,target_qubit_2])
 
     ψ_result=Ket([
         0.7071067811865476 + 0.7071067811865475im
@@ -77,7 +77,7 @@ end
         target_qubit_3
         ]
 
-    Snowflake.apply_operator!(ψ,diag_op,connected_qubits)
+    Snowflurry.apply_operator!(ψ,diag_op,connected_qubits)
 
     ψ_result=Ket([
         7.0710678118654755 + 7.071067811865475im
@@ -104,6 +104,6 @@ end
         target_qubit_3
         ]
 
-    @test_throws InexactError Snowflake.apply_operator!(ψ,diag_op,connected_qubits)
+    @test_throws InexactError Snowflurry.apply_operator!(ψ,diag_op,connected_qubits)
 
 end

@@ -11,7 +11,7 @@
 Help()
 {
    # Display Help
-   echo "Run benchmarks on the Snowflake package and plot the results."
+   echo "Run benchmarks on the Snowflurry package and plot the results."
    echo
    echo "Syntax: benchmarking/benchmarks.sh [-a|s|l|v|h]"
    echo "options:"

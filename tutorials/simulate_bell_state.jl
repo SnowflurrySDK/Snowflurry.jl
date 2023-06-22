@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 
 c = QuantumCircuit(qubit_count = 2)
 push!(c, hadamard(1))

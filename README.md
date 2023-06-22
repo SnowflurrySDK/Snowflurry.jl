@@ -1,15 +1,15 @@
-![Snowflake](https://repository-images.githubusercontent.com/441460066/a4572ad1-6421-4679-aa31-4c2a45829dc6)
+![Snowflurry](https://repository-images.githubusercontent.com/441460066/a4572ad1-6421-4679-aa31-4c2a45829dc6)
 
-# Snowflake.jl
+# Snowflurry.jl
 
-![CI tests](https://github.com/anyonlabs/Snowflake.jl/actions/workflows/CI.yml/badge.svg)
-[![codecov](https://codecov.io/gh/anyonlabs/Snowflake.jl/branch/main/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/anyonlabs/Snowflake.jl)
+![CI tests](https://github.com/QuantumJulia/Snowflurry.jl/actions/workflows/CI.yml/badge.svg)
+[![codecov](https://codecov.io/gh/QuantumJulia/Snowflurry.jl/branch/main/graph/badge.svg?token=OB65YO307L)](https://codecov.io/gh/QuantumJulia/Snowflurry.jl)
 
-Snowflake is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
+Snowflurry is an open source Julia-based software library for implementing quantum circuits, and then running them on quantum computers and quantum simulators.
 
 # Installation
 
-The following installation steps are for people interested in using Snowflake in their own applications. If you are interested in contributing, head right over to our [Contributing to Snowflake page](./CONTRIBUTING.md).
+The following installation steps are for people interested in using Snowflurry in their own applications. If you are interested in contributing, head right over to our [Contributing to Snowflurry page](./CONTRIBUTING.md).
 
 ### Installing Julia
 
@@ -17,30 +17,30 @@ Make sure your system has Julia installed. If not, download the latest version f
 
 We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please file a bug if they don't), but we only actively test against the LTS and the latest stable version.
 
-### Installing `Snowflake.jl` package
-Snowflake is still in pre-release phase. Therefore, and for the time being, we recommand installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
+### Installing `Snowflurry.jl` package
+Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommand installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
 
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/anyonlabs/Snowflake.jl", rev="main")
+Pkg.add(url="https://github.com/QuantumJulia/Snowflurry.jl", rev="main")
 ```
-This will add the Snowflake  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
+This will add the Snowflurry  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
 
-**Note** Once `Snowflake.jl` is released, you can install the latest release using the following command:
+**Note** Once `Snowflurry.jl` is released, you can install the latest release using the following command:
 	```julia
 	import Pkg
-	Pkg.add("Snowflake")
+	Pkg.add("Snowflurry")
 	```
 
-### Installing `SnowflakePlots.jl` package
+### Installing `SnowflurryPlots.jl` package
 
 
-Multiple visualization tools are available in the SnowflakePlots package. After installing
-Snowflake, the SnowflakePlots package can be installed by entering the following in the
+Multiple visualization tools are available in the SnowflurryPlots package. After installing
+Snowflurry, the SnowflurryPlots package can be installed by entering the following in the
 Julia REPL:
 ```julia
 import Pkg
-Pkg.add(url="https://github.com/anyonlabs/SnowflakePlots.jl", rev="main")
+Pkg.add(url="https://github.com/QuantumJulia/SnowflurryPlots.jl", rev="main")
 ```
 
 # Getting Started
@@ -53,7 +53,7 @@ A typical workflow to execute a quantum circuit on a quantum service consists of
 
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
-Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
+Now, let's try Snowflurry by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
 
 <div style="text-align: center;">
 	<img
@@ -63,13 +63,13 @@ Now, let's try Snowflake by making a two-qubit circuit which implements a [Bell/
 	/>
 </div>
 
-First import Snowflake:
+First import Snowflurry:
 
 ```julia
-using Snowflake
+using Snowflurry
 ```
 
-With Snowflake imported, we can define our two-qubit circuit.
+With Snowflurry imported, we can define our two-qubit circuit.
 
 ```julia
 c = QuantumCircuit(qubit_count=2)
@@ -83,7 +83,7 @@ q[1]:
 q[2]:
 ```
 
-In Snowflake, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it. We now proceed by adding gates to our circuit.
+In Snowflurry, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it. We now proceed by adding gates to our circuit.
 
 ```julia
 push!(c, [hadamard(1)])
@@ -117,12 +117,12 @@ print(ψ)
 0.7071067811865475 + 0.0im
 ```
 
-Finally, we can use [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) to generate a histogram which shows the measurement
+Finally, we can use [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) to generate a histogram which shows the measurement
 output distribution after taking a certain number of shots, in this case 100, on a quantum
 computer simulator:
 
 ```julia
-using SnowflakePlots
+using SnowflurryPlots
 plot_histogram(c, 100)
 ```
 
@@ -138,7 +138,7 @@ plot_histogram(c, 100)
 The script below puts all the steps above together:
 
 ```julia
-using Snowflake, SnowflakePlots
+using Snowflurry, SnowflurryPlots
 c = QuantumCircuit(qubit_count=2)
 push!(c, [hadamard(1)])
 push!(c, [control_x(1, 2)])
@@ -148,9 +148,9 @@ plot_histogram(c, 100)
 
 # Roadmap
 
-See what we have planned by looking at the [Snowflake Github Project](https://github.com/orgs/anyonlabs/projects/8).
+See what we have planned by looking at the [Snowflurry Github Project](https://github.com/orgs/QuantumJulia/projects/8).
 
-# Snowflake Contributors Community
+# Snowflurry Contributors Community
 
 We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to contribute page](./CONTRIBUTING.md).
 
@@ -158,6 +158,6 @@ We are dedicated to cultivating an open and inclusive community to build softwar
 
 # Alpha Disclaimer
 
-Snowflake is currently in alpha. We may change or remove parts of Snowflake's API when making new releases.
+Snowflurry is currently in alpha. We may change or remove parts of Snowflurry's API when making new releases.
 
-Copyright (c) 2023 by Snowflake Developers and Anyon Systems, Inc.
+Copyright (c) 2023 by Snowflurry Developers and Anyon Systems, Inc.

@@ -16,18 +16,18 @@ Practical applications of quantum computing typically involve both classical and
 
 In many cases, it is desirable to be able to continue with some classical computation while the program waits for the quantum hardware to complete its task. This is an example of asynchronous programming. We recommend you consult [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with this concept.
 
-In `Snowflake`, communicating with a quantum processor will [yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution every time it waits for a response from the quantum computer. This gives you the opportunity to perform work while the quantum computer is running your job.
+In `Snowflurry`, communicating with a quantum processor will [yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution every time it waits for a response from the quantum computer. This gives you the opportunity to perform work while the quantum computer is running your job.
 
 
 ## Code
 
-To provide maximum flexibility, Snowflake does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
+To provide maximum flexibility, Snowflurry does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
 
-We will start by importing Snowflake, building our circuit, and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
+We will start by importing Snowflurry, building our circuit, and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
 
 
 ```jldoctest asynchronous_job; output = false
-using Snowflake
+using Snowflurry
 
 circuit = QuantumCircuit(qubit_count=2, gates=[
     hadamard(1),
@@ -95,4 +95,4 @@ println(result)
 
 ```
 
-The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/anyonlabs/Snowflake.jl/blob/main/tutorials/asynchronous_jobs.jl)
+The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/QuantumJulia/Snowflurry.jl/blob/main/tutorials/asynchronous_jobs.jl)

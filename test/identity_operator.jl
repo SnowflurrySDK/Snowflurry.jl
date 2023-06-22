@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 using StaticArrays
 
@@ -120,7 +120,7 @@ test_label=string(label," apply_operator")
 
     op=IdentityOperator()
 
-    Snowflake.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
+    Snowflurry.apply_operator!(ψ_1,op,[v for v in 1:get_num_qubits(op)])
 
     @test op*ψ_0 ≈ ψ_1
 

@@ -1,5 +1,5 @@
 using Test
-using Snowflake
+using Snowflurry
 
 @testset "get_pauli" begin
     num_qubits = 1

@@ -1,7 +1,7 @@
 # Library
 
 ```@meta
-DocTestSetup = :(using Snowflake, SnowflakePlots)
+DocTestSetup = :(using Snowflurry, SnowflurryPlots)
 ```
 
 
@@ -86,7 +86,7 @@ SequentialTranspiler
 
 ### Basic Quantum Objects
 
-There are three basic quantum objects in Snowflake to simulate a quantum system. These objects are Ket, Bra, and AbstractOperator.
+There are three basic quantum objects in Snowflurry to simulate a quantum system. These objects are Ket, Bra, and AbstractOperator.
 
 ```@docs
 Ket
@@ -133,15 +133,15 @@ compare_kets
 
 ### Visualization
 
-The [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) package provides multiple visualization tools for Snowflake.jl. Please see the documentation of [SnowflakePlots](https://github.com/anyonlabs/SnowflakePlots.jl) for more details. 
+The [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) package provides multiple visualization tools for Snowflurry.jl. Please see the documentation of [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) for more details. 
 
 ## Pauli Simulator
-Snowflake provides tools for the efficient storage and manipulation of Pauli group elements.
+Snowflurry provides tools for the efficient storage and manipulation of Pauli group elements.
 
 ```@docs
-Snowflake.PauliGroupElement
+Snowflurry.PauliGroupElement
 get_pauli
-Base.:*(p1::Snowflake.PauliGroupElement, p2::Snowflake.PauliGroupElement)
+Base.:*(p1::Snowflurry.PauliGroupElement, p2::Snowflurry.PauliGroupElement)
 get_quantum_circuit
 get_negative_exponent
 get_imaginary_exponent

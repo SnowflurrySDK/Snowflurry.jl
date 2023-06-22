@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 using HTTP
 
@@ -7,7 +7,7 @@ include("mock_functions.jl")
 requestor=MockRequestor(request_checker,post_checker)
 
 # While testing, this throttle can be used to skip delays between status requests.
-no_throttle=()->Snowflake.default_status_request_throttle(0)
+no_throttle=()->Snowflurry.default_status_request_throttle(0)
 
 function compare_responses(expected::HTTP.Response,received::HTTP.Response)
 
@@ -20,7 +20,7 @@ function compare_responses(expected::HTTP.Response,received::HTTP.Response)
 end
 
 @testset "requestor" begin
-    struct NonImplementedRequestor<:Snowflake.Requestor end
+    struct NonImplementedRequestor<:Snowflurry.Requestor end
 
 
     non_impl_requestor=NonImplementedRequestor()
@@ -44,7 +44,7 @@ end
 
     response=get_request(
         requestor,
-        host*"/"*Snowflake.path_circuits*"/"*circuitID,
+        host*"/"*Snowflurry.path_circuits*"/"*circuitID,
         user,
         access_token
     )
@@ -53,7 +53,7 @@ end
 
     @test_throws NotImplementedError get_request(
         requestor,
-        host*"/"*string(Snowflake.path_circuits,"wrong_ending"),
+        host*"/"*string(Snowflurry.path_circuits,"wrong_ending"),
         user,
         access_token
     )
@@ -64,7 +64,7 @@ end
 
     response=get_request(
         requestor,
-        host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*Snowflake.path_results,
+        host*"/"*Snowflurry.path_circuits*"/"*circuitID*"/"*Snowflurry.path_results,
         user,
         access_token
     )
@@ -73,7 +73,7 @@ end
 
     @test_throws NotImplementedError get_request(
         requestor,
-        host*"/"*Snowflake.path_circuits*"/"*circuitID*"/"*string(Snowflake.path_results,"wrong_ending"),
+        host*"/"*Snowflurry.path_circuits*"/"*circuitID*"/"*string(Snowflurry.path_results,"wrong_ending"),
         user,
         access_token
     )
@@ -307,7 +307,7 @@ end
 end
 
 @testset "AbstractQPU" begin
-    struct NonExistentQPU<:Snowflake.AbstractQPU end
+    struct NonExistentQPU<:Snowflurry.AbstractQPU end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError is_native_gate(NonExistentQPU(),sigma_x(1))

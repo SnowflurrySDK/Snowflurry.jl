@@ -4,7 +4,7 @@ A Ket represents a *quantum wavefunction* and is mathematically equivalent to a 
 # Examples
 Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
-julia> using Snowflake
+julia> using Snowflurry
 
 julia> ψ = Ket([1.0; 0.0; 0.0])
 3-element Ket{ComplexF64}:
@@ -126,7 +126,7 @@ julia> _ψ * ψ    # A Bra times a Ket is a scalar
 1.0 + 0.0im
 
 julia> ψ*_ψ     # A Ket times a Bra is an operator
-(3, 3)-element Snowflake.DenseOperator:
+(3, 3)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
@@ -164,7 +164,7 @@ The equivalent dense matrix would have size NxN.
 # Examples
 ```jldoctest
 julia> z = SparseOperator([-1.0 1.0;0.0 -1.0])
-(2, 2)-element Snowflake.SparseOperator:
+(2, 2)-element Snowflurry.SparseOperator:
 Underlying data ComplexF64:
  -1.0 + 0.0im   1.0 + 0.0im
        ⋅       -1.0 + 0.0im
@@ -199,7 +199,7 @@ Returns a SparseOperator representation of x.
 # Examples
 ```jldoctest
 julia> z = sparse(sigma_z())
-(2, 2)-element Snowflake.SparseOperator:
+(2, 2)-element Snowflurry.SparseOperator:
 Underlying data ComplexF64:
  1.0 + 0.0im        ⋅     
       ⋅       -1.0 + 0.0im
@@ -215,7 +215,7 @@ A structure representing a quantum operator with a full (dense) matrix represent
 # Examples
 ```jldoctest
 julia> z = DenseOperator([1.0 0.0;0.0 -1.0])
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    -1.0 + 0.0im
@@ -224,7 +224,7 @@ Underlying data ComplexF64:
 Alternatively:
 ```jldoctest
 julia> z = rotation(π/2,-π/4)  
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    0.4999999999999999 - 0.5im
 -0.4999999999999999 - 0.5im    0.7071067811865476 + 0.0im
@@ -270,7 +270,7 @@ This operator is always of size 4x4.
 For example, the iswap `Operator` can be built using a `phase=0.0 + 1.0im` by calling:
 ```jldoctest
 julia> SwapLikeOperator(0.0 + 1.0im)
-(4, 4)-element Snowflake.SwapLikeOperator:
+(4, 4)-element Snowflurry.SwapLikeOperator:
 Underlying data ComplexF64:
 Equivalent DenseOperator:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -313,7 +313,7 @@ This operator is always of size 2x2.
 # Example
 ```jldoctest
 julia> iden=IdentityOperator()
-(2, 2)-element Snowflake.IdentityOperator:
+(2, 2)-element Snowflurry.IdentityOperator:
 Underlying data ComplexF64:
 Equivalent DenseOperator:
 1.0 + 0.0im    0.0 + 0.0im
@@ -338,7 +338,7 @@ Access the element at row i and column j in the matrix corresponding to `Operato
 # Examples
 ```jldoctest
 julia> Y = sigma_y()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    0.0 - 1.0im
     0.0 + 1.0im    .
@@ -370,13 +370,13 @@ The equivalent dense matrix would have size NxN.
 # Examples
 ```jldoctest
 julia> z = DiagonalOperator([1.0,-1.0])
-(2,2)-element Snowflake.DiagonalOperator:
+(2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 0.0im    .
 .    -1.0 + 0.0im
 
 julia> z = DiagonalOperator([1.0+im,1.0,1.0,0.0-im])
-(4,4)-element Snowflake.DiagonalOperator:
+(4,4)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 1.0im    .    .    .
 .    1.0 + 0.0im    .    .
@@ -417,7 +417,7 @@ The equivalent dense matrix would have size NxN.
 # Examples
 ```jldoctest
 julia> AntiDiagonalOperator([1,2])
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     2.0 + 0.0im    .
@@ -485,7 +485,7 @@ Determine if Operator `A` is Hermitian (i.e. self-adjoint).
 # Examples
 ```jldoctest
 julia> Y = sigma_y()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    0.0 - 1.0im
     0.0 + 1.0im    .
@@ -495,7 +495,7 @@ julia> is_hermitian(Y)
 true
 
 julia> P = sigma_p()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     0.0 + 0.0im    .
@@ -630,14 +630,14 @@ Compute the matrix exponential of `Operator` `A`.
 # Examples
 ```jldoctest
 julia> X = sigma_x()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
 julia> x_rotation_90_deg = exp(-im*π/4*X)
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865475 + 0.0im    0.0 - 0.7071067811865475im
 0.0 - 0.7071067811865475im    0.7071067811865475 + 0.0im
@@ -662,7 +662,7 @@ The `i`th eigenvector is extracted by calling `F.vectors[:, i]`.
 # Examples
 ```jldoctest
 julia> X = sigma_x()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
@@ -693,7 +693,7 @@ Compute the trace of Operator `A`.
 # Examples
 ```jldoctest
 julia> I = eye()
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    1.0 + 0.0im
@@ -722,7 +722,7 @@ julia> ψ = Ket([0.0; 1.0])
 
 
 julia> A = sigma_z()
-(2,2)-element Snowflake.DiagonalOperator:
+(2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 0.0im    .
 .    -1.0 + 0.0im
@@ -781,7 +781,7 @@ julia> ψ_0_1 = kron(ψ_0, ψ_1)
 
 
 julia> kron(sigma_x(), sigma_y())
-(4, 4)-element Snowflake.DenseOperator:
+(4, 4)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 - 1.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 1.0im    0.0 + 0.0im
@@ -814,7 +814,7 @@ end
 function Base.show(io::IO, system::MultiBodySystem)
     @printf(
         io,
-        "Snowflake.Multibody system with %d bodies\n",
+        "Snowflurry.Multibody system with %d bodies\n",
         length(system.hilbert_space_structure)
     )
     @printf(io, "   Hilbert space structure:\n")
@@ -829,18 +829,18 @@ Uses a local operator (`op`), which is defined for a particular body (e.g. qubit
 # Examples
 ```jldoctest
 julia> system = MultiBodySystem(3,2)
-Snowflake.Multibody system with 3 bodies
+Snowflurry.Multibody system with 3 bodies
    Hilbert space structure:
    [2, 2, 2]
 
 julia> x = sigma_x()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 julia> X_1=get_embed_operator(x,1,system)
-(8, 8)-element Snowflake.DenseOperator:
+(8, 8)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -889,7 +889,7 @@ get_matrix(op::AbstractOperator) =
     throw(NotImplementedError(:get_matrix,op))
 
 function Base.show(io::IO, x::DenseOperator)
-    println(io, "$(size(x.data))-element Snowflake.DenseOperator:")
+    println(io, "$(size(x.data))-element Snowflurry.DenseOperator:")
     println(io, "Underlying data $(eltype(x.data)):")
     (nrow, ncol) = size(x.data)
     for i in range(1, stop = nrow)
@@ -905,14 +905,14 @@ function Base.show(io::IO, x::DenseOperator)
 end
 
 function Base.show(io::IO, x::SparseOperator)
-    println(io, "$(size(x.data))-element Snowflake.SparseOperator:")
+    println(io, "$(size(x.data))-element Snowflurry.SparseOperator:")
     println(io, "Underlying data $(eltype(x.data)):")
     Base.print_array(io,x.data)
 end
 
 
 function Base.show(io::IO, x::SwapLikeOperator)
-    println(io, "$(size(x))-element Snowflake.SwapLikeOperator:")
+    println(io, "$(size(x))-element Snowflurry.SwapLikeOperator:")
     println(io, "Underlying data $(eltype(x.phase)):")
     (nrow, ncol) = size(x)
 
@@ -931,7 +931,7 @@ function Base.show(io::IO, x::SwapLikeOperator)
 end
 
 function Base.show(io::IO, x::IdentityOperator)
-    println(io, "$(size(x))-element Snowflake.IdentityOperator:")
+    println(io, "$(size(x))-element Snowflurry.IdentityOperator:")
     println(io, "Underlying data $(typeof(x[1,1])):")
     (nrow, ncol) = size(x)
 
@@ -950,7 +950,7 @@ function Base.show(io::IO, x::IdentityOperator)
 end
 
 function Base.show(io::IO, x::DiagonalOperator)
-    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.DiagonalOperator:")
+    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflurry.DiagonalOperator:")
     println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=nrow
@@ -989,7 +989,7 @@ function get_matrix(op::DiagonalOperator{N,T}) where {N,T<:Complex}
 end
 
 function Base.show(io::IO, x::AntiDiagonalOperator)
-    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflake.AntiDiagonalOperator:")
+    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflurry.AntiDiagonalOperator:")
     println(io, "Underlying data type: $(eltype(x.data)):")
     nrow=length(x.data) 
     ncol=nrow
@@ -1027,7 +1027,7 @@ Returns the number of qubits associated with an `Operator`.
 ```jldoctest
 julia> ρ = DenseOperator([1. 0.
                      0. 0.])
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im
@@ -1088,7 +1088,7 @@ Returns the number of bodies associated with an `Operator` given the
 julia> ρ = DenseOperator([1. 0. 0.
                      0. 0. 0.
                      0. 0. 0.])
-(3, 3)-element Snowflake.DenseOperator:
+(3, 3)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -1488,21 +1488,21 @@ end
 Returns the commutation of `A` and `B`.
 ```jldoctest
 julia> σ_x = sigma_x()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
 julia> σ_y = sigma_y()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    0.0 - 1.0im
     0.0 + 1.0im    .
 
 
 julia> commute(σ_x,σ_y)
-(2,2)-element Snowflake.DiagonalOperator:
+(2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 0.0 + 2.0im    .
 .    0.0 - 2.0im
@@ -1518,14 +1518,14 @@ commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A
 Returns the anticommutation of `A` and `B`.
 ```jldoctest
 julia> σ_x = sigma_x()
-(2,2)-element Snowflake.AntiDiagonalOperator:
+(2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
 
 julia> anticommute(σ_x,σ_x)
-(2,2)-element Snowflake.DiagonalOperator:
+(2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 2.0 + 0.0im    .
 .    2.0 + 0.0im
@@ -1552,7 +1552,7 @@ size `hspace_size`.
 
 ```jldoctest
 julia> dm=fock_dm(0,2)
-(2, 2)-element Snowflake.DenseOperator:
+(2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
 0.0 + 0.0im    0.0 + 0.0im

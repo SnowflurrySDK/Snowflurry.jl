@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 include("mock_functions.jl")
@@ -61,7 +61,7 @@ test_circuits=[
 
 @testset "as_universal_gate" begin
     for gate in single_qubit_gates    
-        universal_equivalent=Snowflake.as_universal_gate(target,get_operator(gate))
+        universal_equivalent=Snowflurry.as_universal_gate(target,get_operator(gate))
         @test get_operator(gate)≈get_operator(universal_equivalent)
     end
 end
@@ -83,7 +83,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test is_gate_type(gates[1], Snowflake.Universal)
+            @test is_gate_type(gates[1], Snowflurry.Universal)
         end
     end
 
@@ -105,7 +105,7 @@ end
 
     @test length(gates)==1
 
-    @test circuit_contains_gate_type(transpiled_circuit, Snowflake.SigmaX)
+    @test circuit_contains_gate_type(transpiled_circuit, Snowflurry.SigmaX)
 
     # circuit with single gate and boundary is unchanged
     circuit = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1),control_x(1,2)])
@@ -116,8 +116,8 @@ end
 
     @test length(gates)==2
 
-    @test is_gate_type(gates[1], Snowflake.SigmaX)
-    @test is_gate_type(gates[2], Snowflake.ControlX)
+    @test is_gate_type(gates[1], Snowflurry.SigmaX)
+    @test is_gate_type(gates[2], Snowflurry.ControlX)
 end 
 
 @testset "Transpiler" begin
@@ -205,9 +205,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test is_gate_type(gates[1], Snowflake.PhaseShift)
-        @test is_gate_type(gates[2], Snowflake.RotationX)
-        @test is_gate_type(gates[3], Snowflake.PhaseShift)
+        @test is_gate_type(gates[1], Snowflurry.PhaseShift)
+        @test is_gate_type(gates[2], Snowflurry.RotationX)
+        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -255,17 +255,17 @@ end
             
         @test compare_circuits(circuit,transpiled_circuit)  
         
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.RotationX)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.RotationX)
 
         gates=get_circuit_gates(transpiled_circuit)
         
         @test length(gates)==5
 
-        @test is_gate_type(gates[1], Snowflake.Z90)
-        @test is_gate_type(gates[2], Snowflake.X90)
-        @test is_gate_type(gates[3], Snowflake.PhaseShift)
-        @test is_gate_type(gates[4], Snowflake.XM90)
-        @test is_gate_type(gates[5], Snowflake.ZM90)
+        @test is_gate_type(gates[1], Snowflurry.Z90)
+        @test is_gate_type(gates[2], Snowflurry.X90)
+        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
+        @test is_gate_type(gates[4], Snowflurry.XM90)
+        @test is_gate_type(gates[5], Snowflurry.ZM90)
     end
 end
 
@@ -273,7 +273,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
 
     list_params=[
         #theta,     phi,    lambda, gates_in_output
@@ -306,7 +306,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
 
     for gate in single_qubit_gates
 
@@ -328,7 +328,7 @@ end
     @test length(get_circuit_gates(transpiled_circuit_default_tol))==5
 
     # with user-defined tolerance
-    transpiler=Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
+    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
 
     transpiled_circuit_high_tol=transpile(transpiler,circuit)
 
@@ -338,7 +338,7 @@ end
 
 @testset "SwapQubitsForLineConnectivityTranspiler" begin
     
-    transpiler=Snowflake.SwapQubitsForLineConnectivityTranspiler()
+    transpiler=Snowflurry.SwapQubitsForLineConnectivityTranspiler()
 
     qubit_count=10
 
@@ -389,7 +389,7 @@ end
 
 @testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
 
-    struct MultiParamMultiTargetGateSymbol <: Snowflake.AbstractGateSymbol
+    struct MultiParamMultiTargetGateSymbol <: Snowflurry.AbstractGateSymbol
         target_1::Int
         target_2::Int
         target_3::Int
@@ -397,9 +397,9 @@ end
         phi::Real
     end
 
-    Snowflake.get_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=[gate.target_1,gate.target_2,gate.target_3]
-    Snowflake.get_gate_parameters(gate::MultiParamMultiTargetGateSymbol)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
-    Snowflake.get_operator(gate::MultiParamMultiTargetGateSymbol, T::Type{<:Complex}=ComplexF64) = DenseOperator(
+    Snowflurry.get_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflurry.get_gate_parameters(gate::MultiParamMultiTargetGateSymbol)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
+    Snowflurry.get_operator(gate::MultiParamMultiTargetGateSymbol, T::Type{<:Complex}=ComplexF64) = DenseOperator(
         T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
         0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
         0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
@@ -410,9 +410,9 @@ end
         0.0 0.0 0.0 0.0 0.0 0.0 cos(gate.phi) 0.0]
     )
 
-    Snowflake.gates_display_symbols[MultiParamMultiTargetGateSymbol]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
+    Snowflurry.gates_display_symbols[MultiParamMultiTargetGateSymbol]=["*","x","MM(θ=%s,phi=%s)","theta","phi"]
 
-    Snowflake.gates_instruction_symbols[MultiParamMultiTargetGateSymbol]="mm"
+    Snowflurry.gates_instruction_symbols[MultiParamMultiTargetGateSymbol]="mm"
 
 
     circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])])
@@ -475,7 +475,7 @@ end
 
             if input_is_native
                 test_is_not_rz=[
-                    !(get_gate_type(gate) in Snowflake.set_of_rz_gates)
+                    !(get_gate_type(gate) in Snowflurry.set_of_rz_gates)
                     for gate in gates_in_output
                 ]
 
@@ -538,31 +538,31 @@ end
 
         if target==1
             @test gates_array_per_target==[
-                Snowflake.Z90,
-                Snowflake.X90,
-                Snowflake.Z90,
-                Snowflake.ControlZ,
+                Snowflurry.Z90,
+                Snowflurry.X90,
+                Snowflurry.Z90,
+                Snowflurry.ControlZ,
             ]
         elseif target==qubit_count
             @test gates_array_per_target==[
-                Snowflake.Z90,
-                Snowflake.X90,
-                Snowflake.Z90,
-                Snowflake.ControlZ,
-                Snowflake.Z90,
-                Snowflake.X90,
-                Snowflake.Z90,
+                Snowflurry.Z90,
+                Snowflurry.X90,
+                Snowflurry.Z90,
+                Snowflurry.ControlZ,
+                Snowflurry.Z90,
+                Snowflurry.X90,
+                Snowflurry.Z90,
             ]            
         else
             @test gates_array_per_target==[
-                Snowflake.Z90,
-                Snowflake.X90,
-                Snowflake.Z90,
-                Snowflake.ControlZ,
-                Snowflake.Z90,
-                Snowflake.X90,
-                Snowflake.Z90,
-                Snowflake.ControlZ,
+                Snowflurry.Z90,
+                Snowflurry.X90,
+                Snowflurry.Z90,
+                Snowflurry.ControlZ,
+                Snowflurry.Z90,
+                Snowflurry.X90,
+                Snowflurry.Z90,
+                Snowflurry.ControlZ,
             ]
         end
     end
@@ -570,9 +570,9 @@ end
 
 @testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
 
-    transpiler=Snowflake.SequentialTranspiler([   
-            Snowflake.CompressSingleQubitGatesTranspiler(),
-            Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=Snowflurry.SequentialTranspiler([   
+            Snowflurry.CompressSingleQubitGatesTranspiler(),
+            Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
         ])
 
     qubit_count=4
@@ -595,7 +595,7 @@ end
     struct UnknownCastToCZGateSymbol <: AbstractGateSymbol end
     symbol = UnknownCastToCZGateSymbol()
 
-    @test_throws NotImplementedError Snowflake.cast_to_cz(symbol, [1,2])
+    @test_throws NotImplementedError Snowflurry.cast_to_cz(symbol, [1,2])
 end
 
 @testset "cast_to_cz: swap" begin
@@ -610,7 +610,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.Swap)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
@@ -627,7 +627,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ControlX)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.ControlX)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
@@ -644,7 +644,7 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.ISwap)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.ISwap)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
@@ -661,17 +661,17 @@ end
     for circuit in circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Toffoli)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.Toffoli)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
 
 @testset "SequentialTranspiler: compress, cast_to_Rz_and_half_Rx and Place" begin    
     
-    transpiler=Snowflake.SequentialTranspiler([
-        Snowflake.CompressSingleQubitGatesTranspiler(),
-        Snowflake.CastToPhaseShiftAndHalfRotationXTranspiler(),
-        Snowflake.SwapQubitsForLineConnectivityTranspiler(),
+    transpiler=Snowflurry.SequentialTranspiler([
+        Snowflurry.CompressSingleQubitGatesTranspiler(),
+        Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler(),
+        Snowflurry.SwapQubitsForLineConnectivityTranspiler(),
     ])
 
     qubit_count=6
@@ -706,10 +706,10 @@ end
 @testset "simplify_rx_gate" begin
 
     list_params=[
-        ( pi/2, Snowflake.X90),
-        (-pi/2, Snowflake.XM90),
-        ( pi,   Snowflake.SigmaX),
-        ( pi/3, Snowflake.RotationX)
+        ( pi/2, Snowflurry.X90),
+        (-pi/2, Snowflurry.XM90),
+        ( pi,   Snowflurry.SigmaX),
+        ( pi/3, Snowflurry.RotationX)
     ]
 
     target=1
@@ -717,21 +717,21 @@ end
 
     for (angle,type_result) in list_params
 
-        result_gate=Snowflake.simplify_rx_gate(target,angle)
+        result_gate=Snowflurry.simplify_rx_gate(target,angle)
 
         @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
-    result_gate=Snowflake.simplify_rx_gate(target,0.)
+    result_gate=Snowflurry.simplify_rx_gate(target,0.)
 
     @test isnothing(result_gate)
 
-    result_gate=Snowflake.simplify_rx_gate(target,1e-3)
+    result_gate=Snowflurry.simplify_rx_gate(target,1e-3)
 
-    @test is_gate_type(result_gate, Snowflake.RotationX)
+    @test is_gate_type(result_gate, Snowflurry.RotationX)
 
-    result_gate=Snowflake.simplify_rx_gate(target,1e-3,atol=1e-1)
+    result_gate=Snowflurry.simplify_rx_gate(target,1e-3,atol=1e-1)
 
     @test isnothing(result_gate)
 end
@@ -743,10 +743,10 @@ end
     target=1
 
     test_inputs=[
-        (rotation_x(target,pi/2),  Snowflake.X90)
-        (rotation_x(target,-pi/2), Snowflake.XM90)
-        (rotation_x(target,pi),    Snowflake.SigmaX)
-        (rotation_x(target,pi/3),  Snowflake.RotationX)
+        (rotation_x(target,pi/2),  Snowflurry.X90)
+        (rotation_x(target,-pi/2), Snowflurry.XM90)
+        (rotation_x(target,pi),    Snowflurry.SigmaX)
+        (rotation_x(target,pi/3),  Snowflurry.RotationX)
     ]
 
     for (input_gate,type_result) in test_inputs
@@ -786,21 +786,21 @@ end
 @testset "simplify_rz_gate" begin
 
     list_params=[
-        ( pi/2,     Snowflake.Z90),
-        ( 5*pi/2,   Snowflake.Z90),
-        ( -3*pi/2,  Snowflake.Z90),
-        ( -7*pi/2,  Snowflake.Z90),
-        (-pi/2,     Snowflake.ZM90),
-        (-5*pi/2,   Snowflake.ZM90),
-        (3*pi/2,    Snowflake.ZM90),
-        (7*pi/2,    Snowflake.ZM90),
-        (-pi,       Snowflake.SigmaZ),
-        ( pi,       Snowflake.SigmaZ),
-        ( 3*pi,     Snowflake.SigmaZ),
-        (-3*pi,     Snowflake.SigmaZ),
-        ( pi/4,     Snowflake.Pi8),
-        (-pi/4,     Snowflake.Pi8Dagger),
-        ( pi/3,     Snowflake.PhaseShift)
+        ( pi/2,     Snowflurry.Z90),
+        ( 5*pi/2,   Snowflurry.Z90),
+        ( -3*pi/2,  Snowflurry.Z90),
+        ( -7*pi/2,  Snowflurry.Z90),
+        (-pi/2,     Snowflurry.ZM90),
+        (-5*pi/2,   Snowflurry.ZM90),
+        (3*pi/2,    Snowflurry.ZM90),
+        (7*pi/2,    Snowflurry.ZM90),
+        (-pi,       Snowflurry.SigmaZ),
+        ( pi,       Snowflurry.SigmaZ),
+        ( 3*pi,     Snowflurry.SigmaZ),
+        (-3*pi,     Snowflurry.SigmaZ),
+        ( pi/4,     Snowflurry.Pi8),
+        (-pi/4,     Snowflurry.Pi8Dagger),
+        ( pi/3,     Snowflurry.PhaseShift)
     ]
 
     target=1
@@ -808,21 +808,21 @@ end
 
     for (angle,type_result) in list_params
 
-        result_gate=Snowflake.simplify_rz_gate(target,angle)
+        result_gate=Snowflurry.simplify_rz_gate(target,angle)
 
         @test is_gate_type(result_gate, type_result)
     end
 
     # returns empty array
-    result_gate=Snowflake.simplify_rz_gate(target,0.)
+    result_gate=Snowflurry.simplify_rz_gate(target,0.)
 
     @test isnothing(result_gate)
 
-    result_gate=Snowflake.simplify_rz_gate(target,1e-3)
+    result_gate=Snowflurry.simplify_rz_gate(target,1e-3)
 
-    @test is_gate_type(result_gate, Snowflake.PhaseShift)
+    @test is_gate_type(result_gate, Snowflurry.PhaseShift)
 
-    result_gate=Snowflake.simplify_rz_gate(target,1e-3,atol=1e-1)
+    result_gate=Snowflurry.simplify_rz_gate(target,1e-3,atol=1e-1)
 
     @test isnothing(result_gate)
 end
@@ -833,12 +833,12 @@ end
     target=1
 
     test_inputs=[
-        (phase_shift(target,pi/2),  Snowflake.Z90)
-        (phase_shift(target,-pi/2), Snowflake.ZM90)
-        (phase_shift(target,pi),    Snowflake.SigmaZ)
-        (phase_shift(target, pi/4), Snowflake.Pi8)
-        (phase_shift(target,-pi/4), Snowflake.Pi8Dagger)
-        (phase_shift(target,pi/3),  Snowflake.PhaseShift)
+        (phase_shift(target,pi/2),  Snowflurry.Z90)
+        (phase_shift(target,-pi/2), Snowflurry.ZM90)
+        (phase_shift(target,pi),    Snowflurry.SigmaZ)
+        (phase_shift(target, pi/4), Snowflurry.Pi8)
+        (phase_shift(target,-pi/4), Snowflurry.Pi8Dagger)
+        (phase_shift(target,pi/3),  Snowflurry.PhaseShift)
     ]
 
     for (input_gate,type_result) in test_inputs
@@ -969,7 +969,7 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.Swap)
     @test simulate(circuit) ≈ simulate(transpiled_circuit)
 
     circuit =
@@ -978,7 +978,7 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test !circuit_contains_gate_type(transpiled_circuit, Snowflake.Swap)
+    @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.Swap)
     @test simulate(circuit) ≈ simulate(transpiled_circuit)
 end
 

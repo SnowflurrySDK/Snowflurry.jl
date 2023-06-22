@@ -1,14 +1,14 @@
 push!(LOAD_PATH, "../src/")
 
 using Documenter
-using Snowflake
+using Snowflurry
 
 
 DocMeta.setdocmeta!(
-    Snowflake, 
+    Snowflurry, 
     :DocTestSetup, 
     quote
-        using Snowflake
+        using Snowflurry
         ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
         requestor=MockRequestor(request_checker,post_checker)
@@ -33,9 +33,9 @@ DocMeta.setdocmeta!(
 )
 uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 makedocs(
-    sitename = "Snowflake",
+    sitename = "Snowflurry",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
-    modules = [Snowflake],
+    modules = [Snowflurry],
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",

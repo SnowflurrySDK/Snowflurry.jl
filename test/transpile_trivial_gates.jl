@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 target=1
@@ -95,7 +95,7 @@ end
 
 @testset "SequentialTranspiler: Compress and simplify gates" begin    
     
-    transpiler=Snowflake.SequentialTranspiler([
+    transpiler=Snowflurry.SequentialTranspiler([
         CompressSingleQubitGatesTranspiler(),
         SimplifyTrivialGatesTranspiler(),
     ])

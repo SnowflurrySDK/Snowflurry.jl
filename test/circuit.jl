@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Test
 
 @testset "Constructor: QuantumCircuit" begin
@@ -64,14 +64,14 @@ end
 
     println(get_circuit_gates(circuit))
 
-    @test circuit_contains_gate_type(circuit, Snowflake.Hadamard)
-    @test circuit_contains_gate_type(circuit, Snowflake.ControlX)
-    @test circuit_contains_gate_type(circuit, Snowflake.ControlledGate{Snowflake.Hadamard})
+    @test circuit_contains_gate_type(circuit, Snowflurry.Hadamard)
+    @test circuit_contains_gate_type(circuit, Snowflurry.ControlX)
+    @test circuit_contains_gate_type(circuit, Snowflurry.ControlledGate{Snowflurry.Hadamard})
 
-    @test !circuit_contains_gate_type(circuit, Snowflake.ControlZ)
-    @test !circuit_contains_gate_type(circuit, Snowflake.Swap)
-    @test !circuit_contains_gate_type(circuit, Snowflake.SigmaX)
-    @test !circuit_contains_gate_type(circuit, Snowflake.ControlledGate{Snowflake.RotationX})
+    @test !circuit_contains_gate_type(circuit, Snowflurry.ControlZ)
+    @test !circuit_contains_gate_type(circuit, Snowflurry.Swap)
+    @test !circuit_contains_gate_type(circuit, Snowflurry.SigmaX)
+    @test !circuit_contains_gate_type(circuit, Snowflurry.ControlledGate{Snowflurry.RotationX})
 
 end
 

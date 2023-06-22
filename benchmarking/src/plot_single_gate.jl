@@ -2,12 +2,12 @@ using JSON
 using Plots
 using ColorSchemes
 
-include("SnowflakeBenchmarking.jl")
+include("SnowflurryBenchmarking.jl")
 
 f = open("Project.toml", "r")
 lines = readlines(f)
-if lines[1] != "name = \"Snowflake\""
-    error("\n\n\tThis project must be activated at the root path of the Snowflake package.\n\n\tCurrent path is: $(pwd())\n")
+if lines[1] != "name = \"Snowflurry\""
+    error("\n\n\tThis project must be activated at the root path of the Snowflurry package.\n\n\tCurrent path is: $(pwd())\n")
 end
 
 # Select gate for plotting by uncommenting one line

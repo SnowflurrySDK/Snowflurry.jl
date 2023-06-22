@@ -1,4 +1,4 @@
-using Snowflake
+using Snowflurry
 using Base64
 using HTTP
 using JSON
@@ -378,7 +378,7 @@ A data structure to represent a Quantum Simulator.
 julia> qpu=VirtualQPU()
 Quantum Simulator:
    developers:  Anyon Systems Inc.
-   package:     Snowflake.jl
+   package:     Snowflurry.jl
 
 
 ```
@@ -387,7 +387,7 @@ struct VirtualQPU <: AbstractQPU end
 
 get_metadata(qpu::VirtualQPU) = Dict{String,String}(
     "developers"  =>"Anyon Systems Inc.",
-    "package"     =>"Snowflake.jl",
+    "package"     =>"Snowflurry.jl",
 )
 
 is_native_gate(::VirtualQPU,::AbstractGateSymbol)::Bool = true
