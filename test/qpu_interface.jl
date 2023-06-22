@@ -189,9 +189,7 @@ function test_print_connectivity(
     expected::String
     )
     io = IOBuffer()
-
     print_connectivity(input,io)
-
     @test String(take!(io)) == expected
 end
 
@@ -203,18 +201,32 @@ function test_print_connectivity(
     expected::String
     )
     io = IOBuffer()
-
     print_connectivity(input,Int[],io)
-
     @test String(take!(io)) == expected
+    
 end
 
 @testset "print_connectivity" begin
 
+    connectivity = LineConnectivity(12)
+
     test_print_connectivity(
-        LineConnectivity(12),
+        connectivity,
         "1──2──3──4──5──6──7──8──9──10──11──12\n"
     )
+
+    io = IOBuffer()
+    println(io,connectivity)
+    @test String(take!(io)) == "LineConnectivity{12}\n1──2──3──4──5──6──7──8──9──10──11──12\n\n"
+
+    @test path_search(1,12,connectivity) == reverse(collect(1:12))
+    @test path_search(7,4,connectivity) == collect(4:7)
+    @test path_search(1,1,connectivity) == [1]
+
+    @test_throws AssertionError path_search(1,44,connectivity)
+    @test_throws AssertionError path_search(44,1,connectivity)
+    @test_throws AssertionError path_search(-1,4,connectivity)
+    @test_throws AssertionError path_search(4,-1,connectivity)
 
     test_print_connectivity(LatticeConnectivity(4,5),
     "        1 ──  2 \n"* 
@@ -230,9 +242,85 @@ end
     "                         19 ── 20 \n"* 
     "\n")
 
+    io = IOBuffer()
+    connectivity=LatticeConnectivity(6,4)
+    print_connectivity(connectivity,path_search(3,22,connectivity),io)
+
+    @test String(take!(io)) == 
+    "              1 ──  2 \n"*
+    "              |     | \n"*
+    "       (3)──  4 ──  5 ──  6 \n"*
+    "        |     |     |     | \n"*
+    "  7 ── (8)──  9 ── 10 ── 11 ── 12 \n"*
+    "        |     |     |     |     | \n"*
+    "      (13)──(14)── 15 ── 16 ── 17 ── 18 \n"*
+    "              |     |     |     | \n"*
+    "            (19)──(20)──(21)──(22)\n"*
+    "                    |     | \n"*
+    "                   23 ── 24 \n\n"
+
+    io = IOBuffer()
+    println(io,connectivity)
+    @test String(take!(io)) == 
+    "LatticeConnectivity{6,4}\n"*
+    "              1 ──  2 \n"*
+    "              |     | \n"*
+    "        3 ──  4 ──  5 ──  6 \n"*
+    "        |     |     |     | \n"*
+    "  7 ──  8 ──  9 ── 10 ── 11 ── 12 \n"*
+    "        |     |     |     |     | \n"*
+    "       13 ── 14 ── 15 ── 16 ── 17 ── 18 \n"*
+    "              |     |     |     | \n"*
+    "             19 ── 20 ── 21 ── 22 \n"*
+    "                    |     | \n"*
+    "                   23 ── 24 \n\n\n"
+
+
+    @test path_search(1,24,connectivity) == [24,23, 20, 19, 14, 9, 4, 1]
+    @test path_search(1,1,connectivity) == [1]
+
+    @test_throws AssertionError path_search(1,44,connectivity)
+    @test_throws AssertionError path_search(44,1,connectivity)
+    @test_throws AssertionError path_search(-1,4,connectivity)
+    @test_throws AssertionError path_search(4,-1,connectivity)
+    
     struct UnknownConnectivity <: AbstractConnectivity end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
     @test_throws NotImplementedError get_connectivity_label(UnknownConnectivity())
+
+    # Customized Lattice specifying qubits_per_row
+    connectivity = LatticeConnectivity([1,3,4,5,6,7,7,6,5,4,3,1])
+
+    # path_search works on arbitrary lattice shape
+    io = IOBuffer()
+    print_connectivity(connectivity,path_search(5,48,connectivity),io)
+    @test String(take!(io)) == 
+    "        1 \n"*
+    "        | \n"*
+    "  2 ──  3 ──  4 \n"*
+    "  |     |     | \n"*
+    " (5)──  6 ──  7 ──  8 \n"*
+    "  |     |     |     | \n"*
+    " (9)── 10 ── 11 ── 12 ── 13 \n"*
+    "  |     |     |     |     | \n"*
+    "(14)── 15 ── 16 ── 17 ── 18 ── 19 \n"*
+    "  |     |     |     |     |     | \n"*
+    "(20)──(21)── 22 ── 23 ── 24 ── 25 ── 26 \n"*
+    "        |     |     |     |     |     | \n"*
+    "      (27)──(28)── 29 ── 30 ── 31 ── 32 ── 33 \n"*
+    "              |     |     |     |     |     | \n"*
+    "            (34)──(35)── 36 ── 37 ── 38 ── 39 \n"*
+    "                    |     |     |     |     | \n"*
+    "                  (40)──(41)── 42 ── 43 ── 44 \n"*
+    "                          |     |     |     | \n"*
+    "                        (45)──(46)──(47)──(48)\n"*
+    "                                |     |     | \n"*
+    "                               49 ── 50 ── 51 \n"*
+    "                                      | \n"*
+    "                                     52 \n\n"
+
+
+
 end
 
 @testset "get_qubits_distance" begin

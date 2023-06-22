@@ -51,7 +51,7 @@ end
 
 function Base.show(io::IO, connectivity::LineConnectivity) 
     println(io,"$(typeof(connectivity)){$(connectivity.dimension)}")
-    print_connectivity(connectivity, io)
+    print_connectivity(connectivity, Vector{Int}(), io)
 end
 
 get_connectivity_label(connectivity::AbstractConnectivity) =
@@ -66,7 +66,7 @@ get_connectivity_label(::LatticeConnectivity) = lattice_connectivity_label
 get_num_qubits(conn::LineConnectivity) = *(conn.dimension...)
 get_num_qubits(conn::LatticeConnectivity) = +(conn.qubits_per_row...)
 
-function print_connectivity(connectivity::LineConnectivity,::Vector{Int}, io::IO = stdout)
+function print_connectivity(connectivity::LineConnectivity, ::Vector{Int}, io::IO = stdout)
     dim = connectivity.dimension
 
     diagram = [string(n) * "──" for n in 1:dim-1]
@@ -277,6 +277,15 @@ end
     
 #breadth-first search on 2D Lattice
 function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
+
+    @assert origin > 0 "origin must be non-negative"
+    @assert target > 0 "target must be non-negative"
+
+    qubit_count = *(connectivity.dimensions...)
+
+    @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
+    @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
+
     adjacency_list = get_adjacency_list(connectivity)
  
     null_int=-1 # represents null previous node
@@ -308,6 +317,15 @@ function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity
 end
 
 function path_search(origin::Int, target::Int, connectivity::LineConnectivity) 
+
+    @assert origin > 0 "origin must be non-negative"
+    @assert target > 0 "target must be non-negative"
+
+    qubit_count = connectivity.dimension
+
+    @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
+    @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
+
     if origin < target 
         return reverse(collect(origin:target))
     else
