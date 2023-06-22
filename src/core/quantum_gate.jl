@@ -135,6 +135,10 @@ get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
 get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(gate))
 
+get_num_target_qubits(gate::AbstractControlledGateSymbol)=length(get_target_qubits(gate))
+
+get_num_control_qubits(gate::AbstractControlledGateSymbol)=length(get_control_qubits(gate))
+
 # TODO(#226): `Gate` should not inherit from `AbstractGateSymbol` after completion
 """
     Gate
@@ -243,13 +247,17 @@ function Base.inv(gate::Gate)::Gate
 end
 
 # TODO(#226): delete on completion
-function get_target_qubits(gate::Gate)
-    return get_target_qubits(get_gate_symbol(gate))
+function get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+    connected_qubits = get_connected_qubits(gate)
+    num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
+    return Vector(view(connected_qubits, 1:num_control_qubits))
 end
 
 # TODO(#226): delete on completion
-function get_control_qubits(gate::Gate)
-    return get_control_qubits(get_gate_symbol(gate))
+function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+    connected_qubits = get_connected_qubits(gate)
+    num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
+    return Vector(view(connected_qubits, (num_control_qubits+1):length(connected_qubits)))
 end
 
 
@@ -432,76 +440,9 @@ Snowflurry.SigmaX
 """
 get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
 
-# TODO(#226): delete on completion
-struct MovedGate <: AbstractGateSymbol
-    original_gate::AbstractGateSymbol
-    connected_qubits::Vector{Int}
-end
-
-# TODO(#226): delete on completion
-struct MovedControlledGate <: AbstractControlledGateSymbol
-    original_gate::AbstractControlledGateSymbol
-    connected_qubits::Vector{Int}
-end
-
-# TODO(#226): delete on completion
-MovedGate(gate::AbstractControlledGateSymbol, connected_qubits::Vector{Int}) = 
-    MovedControlledGate(gate,connected_qubits)
-
-# TODO(#226): delete on completion
-UnionMovedGates=Union{MovedGate,MovedControlledGate}
-
-# TODO(#226): delete on completion
-function get_control_qubits(gate::MovedControlledGate)::Vector{Int}
-    old_connected_qubits=get_connected_qubits(gate.original_gate)
-    old_control_qubits=get_control_qubits(gate.original_gate)
-
-    return [gate.connected_qubits[i] 
-        for (i,num) in enumerate(old_connected_qubits) 
-            if num in old_control_qubits
-        ]
-end
-
-get_control_qubits(gate::AbstractGateSymbol)=
-    throw(NotImplementedError(:get_control_qubits,gate))
-
-# TODO(#226): delete on completion
-function get_target_qubits(gate::MovedControlledGate)::Vector{Int}
-    old_connected_qubits=get_connected_qubits(gate.original_gate)
-    old_target_qubits=get_target_qubits(gate.original_gate)
-
-    return [gate.connected_qubits[i] 
-        for (i,num) in enumerate(old_connected_qubits) 
-            if num in old_target_qubits
-        ]
-end
-
-get_target_qubits(gate::AbstractGateSymbol)=
-    throw(NotImplementedError(:get_target_qubits,gate))
-
-function get_operator(gate::UnionMovedGates, T::Type{<:Complex}=ComplexF64)
-    return get_operator(gate.original_gate, T)
-end
-
-Base.inv(gate::MovedGate) = MovedGate(inv(gate.original_gate), gate.connected_qubits)
-
-# TODO(#226): delete on completion
-Base.inv(gate::MovedControlledGate) = MovedControlledGate(inv(gate.original_gate), gate.connected_qubits)
-
-get_gate_parameters(gate::UnionMovedGates) = get_gate_parameters(gate.original_gate)
-
-# TODO(#226): delete on completion
-function is_gate_type(gate::UnionMovedGates, type::Type)::Bool
-    return is_gate_type(gate.original_gate, type)
-end
-
-# TODO(#226): delete on completion
-get_gate_type(gate::UnionMovedGates)::Type = get_gate_type(gate.original_gate)
-
-get_connected_qubits(gate::UnionMovedGates) = gate.connected_qubits
 
 """
-    move_gate(gate::AbstractGateSymbol,
+    move_gate(gate::Gate,
         qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGateSymbol
 
 Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
@@ -548,7 +489,7 @@ function move_gate(gate::Gate,
         end
     end
 
-    return Gate(MovedGate(get_gate_symbol(gate), new_connected_qubits), new_connected_qubits)
+    return Gate(get_gate_symbol(gate), new_connected_qubits)
 end
 
 struct NotImplementedError{ArgsT} <: Exception
@@ -2085,12 +2026,6 @@ function ensure_target_qubits_are_different(target::Array)
         end
     end
 end
-
-get_control_qubits(gate::AbstractControlledGateSymbol)=
-    throw(NotImplementedError(:get_control_qubits,gate))
-
-get_target_qubits(gate::AbstractControlledGateSymbol)=
-    throw(NotImplementedError(:get_target_qubits,gate))
 
 struct ControlZ <: AbstractControlledGateSymbol
     control::Int

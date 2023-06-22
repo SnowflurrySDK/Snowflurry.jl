@@ -755,12 +755,6 @@ end
 
     # test fallback implementation of inv(::AbstractGateSymbol)
     @test inv(unknown_hermitian_gate) == unknown_hermitian_gate
-
-    struct UnknownControlledGateSymbol <: AbstractControlledGateSymbol end
-
-    @test_throws NotImplementedError get_target_qubits(UnknownControlledGateSymbol())
-    @test_throws NotImplementedError get_control_qubits(UnknownControlledGateSymbol())
-
 end
 
 @testset "move_gate" begin
@@ -769,8 +763,6 @@ end
     rx_gate = rotation_x(target, theta)
     qubit_mapping = Dict(2=>3)
     moved_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test_throws NotImplementedError get_control_qubits(moved_rx_gate)
-    @test_throws NotImplementedError get_target_qubits(moved_rx_gate)
     
     qubit_mapping = Dict(1=>3, 3=>1)
     untouched_rx_gate = move_gate(rx_gate, qubit_mapping)

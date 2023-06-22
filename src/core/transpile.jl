@@ -385,11 +385,6 @@ function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{Abstr
     ])
 end
 
-# TODO(#226): delete on completion
-function cast_to_cz(gate::MovedGate, connected_qubits::Vector{Int})::AbstractVector{AbstractGateSymbol}
-    return cast_to_cz(gate.original_gate, connected_qubits)
-end
-
 struct CastSwapToCZGateTranspiler <: Transpiler end
 
 """
