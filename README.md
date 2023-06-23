@@ -1,4 +1,4 @@
-![Snowflurry](https://repository-images.githubusercontent.com/441460066/a4572ad1-6421-4679-aa31-4c2a45829dc6)
+![Snowflurry](https://repository-images.githubusercontent.com/441460066/2ba724da-60e9-46a6-aa83-9df5891ea783)
 
 # Snowflurry.jl
 
