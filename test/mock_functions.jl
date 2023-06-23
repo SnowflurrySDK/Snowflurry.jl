@@ -18,6 +18,19 @@ function post_checker(url::String,user::String,access_token::String,body::String
     return stubCircuitSubmittedResponse()
 end
 
+function post_checker_last_qubit(url::String,user::String,access_token::String,body::String)
+
+    expected_url=host*"/"*Snowflurry.path_circuits
+    expected_access_token=access_token
+    expected_json="{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]}]}}"
+
+    @assert url==expected_url ("received: \n$url, \nexpected: \n$expected_url")
+    @assert access_token==expected_access_token  ("received: \n$access_token, expected: \n$expected_access_token")
+    @assert body==expected_json  ("received: \n$body, expected: \n$expected_json")
+
+    return stubCircuitSubmittedResponse()
+end
+
 function post_checker_transpiled(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflurry.path_circuits

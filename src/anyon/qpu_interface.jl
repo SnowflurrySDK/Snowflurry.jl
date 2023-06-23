@@ -445,11 +445,13 @@ function transpile_and_run_job(
     transpiler::Transpiler=get_transpiler(qpu)
     )::Dict{String,Int}
 
-    transpiled_circuit=transpile(transpiler,circuit)
+    transpiled_circuit = transpile(transpiler, circuit)
 
-    is_native_circuit(qpu,transpiled_circuit)
+    (passed, message) = is_native_circuit(qpu, transpiled_circuit)
 
-    return run_job(qpu,transpiled_circuit,shot_count)
+    @assert passed "All circuits should be native on VirtualQPU"
+
+    return run_job(qpu, transpiled_circuit,shot_count)
 end
 
 """

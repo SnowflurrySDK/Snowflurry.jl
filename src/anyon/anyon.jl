@@ -90,7 +90,7 @@ end
 function is_native_circuit(qpu::AnyonYukonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
-    if qubit_count_circuit>=qubit_count_qpu 
+    if qubit_count_circuit>qubit_count_qpu 
         return (
             false,
             "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu"

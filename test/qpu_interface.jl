@@ -264,17 +264,24 @@ end
     qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
 
     # submit circuit with qubit_count_circuit>qubit_count_qpu
-    circuit = QuantumCircuit(qubit_count = 10)
-    @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
+    qubit_count = 10
+    circuit = QuantumCircuit(qubit_count = qubit_count)
+
+    msg="Circuit qubit count $qubit_count exceeds $(typeof(qpu)) qubit count: 6" 
+    @test_throws DomainError(qpu,msg) transpile_and_run_job(qpu, circuit, shot_count)
 
     # submit circuit with a non-native gate on this qpu (no transpilation)
-    circuit = QuantumCircuit(qubit_count = 3, gates=[toffoli(1,2,3)])
-    @test_throws DomainError transpile_and_run_job(
+    gate = toffoli(1,2,3)
+    circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu), gates=[gate])
+
+    msg="Gate type $(get_gate_type(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
+    @test_throws DomainError(qpu,msg) transpile_and_run_job(
         qpu, 
         circuit,
         shot_count;
         transpiler=TrivialTranspiler()
     )
+
     # using AnyonYukonQPU default transpiler
     requestor=MockRequestor(request_checker,post_checker_toffoli)
     test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
@@ -284,6 +291,18 @@ end
     
     @test histogram==Dict("001"=>shot_count)
     @test !haskey(histogram,"error_msg")
+
+    # submit circuit with qubit_count_circuit==qubit_count_qpu
+    requestor=MockRequestor(request_checker,post_checker_last_qubit)
+    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
+
+    qubit_count = get_num_qubits(qpu)
+    circuit = QuantumCircuit(qubit_count = qubit_count, gates=[sigma_x(qubit_count)])
+
+    transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
+    
+
 end
 
 @testset "run on VirtualQPU" begin
