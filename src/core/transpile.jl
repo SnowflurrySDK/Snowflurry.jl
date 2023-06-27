@@ -1132,8 +1132,8 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     return output
 end
 
-struct SwapQubitsForAdjacencyTranspiler{T<:AbstractConnectivity}<:Transpiler 
-    connectivity::T
+struct SwapQubitsForAdjacencyTranspiler<:Transpiler 
+    connectivity::AbstractConnectivity
 end
 
 function remap_qubits_to_adjacent(
