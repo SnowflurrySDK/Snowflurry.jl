@@ -128,12 +128,9 @@ abstract type AbstractGateSymbol end
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
-# TODO(#226): delete on completion
-get_connected_qubits(gate::AbstractGateSymbol)=[gate.target]
-
 get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
-get_num_connected_qubits(gate::AbstractGateSymbol)=length(get_connected_qubits(gate))
+get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
 
 get_num_target_qubits(gate::AbstractControlledGateSymbol)=length(get_target_qubits(gate))
 
@@ -1697,11 +1694,9 @@ iswap_dagger(T::Type{<:Complex}=ComplexF64) = SwapLikeOperator(T(-im))
 
 Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to the target qubit.
 """
-sigma_x(target::Integer) = Gate(SigmaX(target), [target])
+sigma_x(target::Integer) = Gate(SigmaX(), [target])
 
-struct SigmaX <: AbstractGateSymbol
-    target::Integer
-end
+struct SigmaX <: AbstractGateSymbol end
 
 """
     get_operator(gate::Gate)
@@ -1721,20 +1716,18 @@ Underlying data type: ComplexF64:
 
 ```
 """
-get_operator(gate::SigmaX,T::Type{<:Complex}=ComplexF64) = sigma_x(T)
+get_operator(::SigmaX,T::Type{<:Complex}=ComplexF64) = sigma_x(T)
 
 """
     sigma_y(target)
 
 Return the Pauli-Y `Gate`, which applies the [`sigma_y()`](@ref) `Operator` to the target qubit.
 """
-sigma_y(target::Integer) = Gate(SigmaY(target), [target])
+sigma_y(target::Integer) = Gate(SigmaY(), [target])
 
-struct SigmaY <: AbstractGateSymbol
-    target::Int
-end
+struct SigmaY <: AbstractGateSymbol end
 
-get_operator(gate::SigmaY,T::Type{<:Complex}=ComplexF64) = sigma_y(T)
+get_operator(::SigmaY,T::Type{<:Complex}=ComplexF64) = sigma_y(T)
 
 
 """
@@ -1742,39 +1735,33 @@ get_operator(gate::SigmaY,T::Type{<:Complex}=ComplexF64) = sigma_y(T)
 
 Return the Pauli-Z `Gate`, which applies the [`sigma_z()`](@ref) `Operator` to the target qubit.
 """
-sigma_z(target::Integer) = Gate(SigmaZ(target), [target])
+sigma_z(target::Integer) = Gate(SigmaZ(), [target])
 
-struct SigmaZ <: AbstractGateSymbol
-    target::Int
-end
+struct SigmaZ <: AbstractGateSymbol end
 
-get_operator(gate::SigmaZ,T::Type{<:Complex}=ComplexF64) = sigma_z(T)
+get_operator(::SigmaZ,T::Type{<:Complex}=ComplexF64) = sigma_z(T)
 
 """
     hadamard(target)
 
 Return the Hadamard `Gate`, which applies the [`hadamard()`](@ref) `Operator` to the `target` qubit.
 """
-hadamard(target::Integer) = Gate(Hadamard(target), [target])
+hadamard(target::Integer) = Gate(Hadamard(), [target])
 
-struct Hadamard <: AbstractGateSymbol
-    target::Int
-end
+struct Hadamard <: AbstractGateSymbol end
 
-get_operator(gate::Hadamard,T::Type{<:Complex}=ComplexF64) = hadamard(T)
+get_operator(::Hadamard,T::Type{<:Complex}=ComplexF64) = hadamard(T)
 
 """
     pi_8(target)
 
 Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
-pi_8(target::Integer) = Gate(Pi8(target), [target])
+pi_8(target::Integer) = Gate(Pi8(), [target])
 
-struct Pi8 <: AbstractGateSymbol
-    target::Integer
-end
+struct Pi8 <: AbstractGateSymbol end
 
-get_operator(gate::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
+get_operator(::Pi8,T::Type{<:Complex}=ComplexF64) = pi_8(T)
 
 Base.inv(gate::Pi8) =  get_gate_symbol(pi_8_dagger(gate.target))
 
@@ -1784,13 +1771,11 @@ Base.inv(gate::Pi8) =  get_gate_symbol(pi_8_dagger(gate.target))
 
 Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
-pi_8_dagger(target::Integer) = Gate(Pi8Dagger(target), [target])
+pi_8_dagger(target::Integer) = Gate(Pi8Dagger(), [target])
 
-struct Pi8Dagger <: AbstractGateSymbol
-    target::Int
-end
+struct Pi8Dagger <: AbstractGateSymbol end
 
-get_operator(gate::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
+get_operator(::Pi8Dagger,T::Type{<:Complex}=ComplexF64) = pi_8_dagger(T)
 
 Base.inv(gate::Pi8Dagger) = get_gate_symbol(pi_8(gate.target))
 
@@ -1800,11 +1785,9 @@ Base.inv(gate::Pi8Dagger) = get_gate_symbol(pi_8(gate.target))
 
 Return a `Gate` that applies a 90° rotation about the X axis as defined by the [`x_90()`](@ref) `Operator`.
 """
-x_90(target::Integer) = Gate(X90(target), [target])
+x_90(target::Integer) = Gate(X90(), [target])
 
-struct X90 <: AbstractGateSymbol
-    target::Int
-end
+struct X90 <: AbstractGateSymbol end
 
 get_operator(::X90, T::Type{<:Complex}=ComplexF64) = x_90(T)
 
@@ -1815,11 +1798,9 @@ Base.inv(gate::X90) = get_gate_symbol(x_minus_90(gate.target))
 
 Return a `Gate` that applies a -90° rotation about the X axis as defined by the [`x_minus_90()`](@ref) `Operator`.
 """
-x_minus_90(target::Integer) = Gate(XM90(target), [target])
+x_minus_90(target::Integer) = Gate(XM90(), [target])
 
-struct XM90 <: AbstractGateSymbol
-    target::Int
-end
+struct XM90 <: AbstractGateSymbol end
 
 get_operator(::XM90, T::Type{<:Complex}=ComplexF64) = x_minus_90(T)
 
@@ -1830,11 +1811,9 @@ Base.inv(gate::XM90) = get_gate_symbol(x_90(gate.target))
 
 Return a `Gate` that applies a 90° rotation about the Y axis as defined by the [`y_90()`](@ref) `Operator`.
 """
-y_90(target::Integer) = Gate(Y90(target), [target])
+y_90(target::Integer) = Gate(Y90(), [target])
 
-struct Y90 <: AbstractGateSymbol
-    target::Int
-end
+struct Y90 <: AbstractGateSymbol end
 
 get_operator(::Y90, T::Type{<:Complex}=ComplexF64) = y_90(T)
 
@@ -1845,11 +1824,9 @@ Base.inv(gate::Y90) = get_gate_symbol(y_minus_90(gate.target))
 
 Return a `Gate` that applies a -90° rotation about the Y axis as defined by the [`y_minus_90()`](@ref) `Operator`.
 """
-y_minus_90(target::Integer) = Gate(YM90(target), [target])
+y_minus_90(target::Integer) = Gate(YM90(), [target])
 
-struct YM90 <: AbstractGateSymbol
-    target::Int
-end
+struct YM90 <: AbstractGateSymbol end
 
 get_operator(::YM90, T::Type{<:Complex}=ComplexF64) = y_minus_90(T)
 
@@ -1860,11 +1837,9 @@ Base.inv(gate::YM90) = get_gate_symbol(y_90(gate.target))
 
 Return a `Gate` that applies a 90° rotation about the Z axis as defined by the [`z_90()`](@ref) `Operator`.
 """
-z_90(target::Integer) = Gate(Z90(target), [target])
+z_90(target::Integer) = Gate(Z90(), [target])
 
-struct Z90 <: AbstractGateSymbol
-    target::Int
-end
+struct Z90 <: AbstractGateSymbol end
 
 get_operator(::Z90, T::Type{<:Complex}=ComplexF64) = z_90(T)
 
@@ -1875,11 +1850,9 @@ Base.inv(gate::Z90) = get_gate_symbol(z_minus_90(gate.target))
 
 Return a `Gate` that applies a -90° rotation about the Z axis as defined by the [`z_minus_90()`](@ref) `Operator`.
 """
-z_minus_90(target::Integer) = Gate(ZM90(target), [target])
+z_minus_90(target::Integer) = Gate(ZM90(), [target])
 
-struct ZM90 <: AbstractGateSymbol
-    target::Int
-end
+struct ZM90 <: AbstractGateSymbol end
 
 get_operator(::ZM90, T::Type{<:Complex}=ComplexF64) = z_minus_90(T)
 
@@ -1893,10 +1866,9 @@ Return a gate that applies a rotation `theta` to the `target` qubit about the co
 
 The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
-rotation(target::Integer, theta::Real, phi::Real) = Gate(Rotation(target, theta, phi), [target])
+rotation(target::Integer, theta::Real, phi::Real) = Gate(Rotation(theta, phi), [target])
 
 struct Rotation <: AbstractGateSymbol
-    target::Int
     theta::Real
     phi::Real
 end
@@ -1920,10 +1892,9 @@ Return a `Gate` that applies a rotation `theta` about the X axis of the `target`
 
 The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
-rotation_x(target::Integer, theta::Real) = Gate(RotationX(target, theta), [target])
+rotation_x(target::Integer, theta::Real) = Gate(RotationX(theta), [target])
 
 struct RotationX <: AbstractGateSymbol
-    target::Int
     theta::Real
 end
 
@@ -1940,10 +1911,9 @@ Return a `Gate` that applies a rotation `theta` about the Y axis of the `target`
 
 The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
-rotation_y(target::Integer, theta::Real) = Gate(RotationY(target, theta), [target])
+rotation_y(target::Integer, theta::Real) = Gate(RotationY(theta), [target])
 
 struct RotationY <: AbstractGateSymbol
-    target::Int
     theta::Real
 end
 
@@ -1958,10 +1928,9 @@ get_gate_parameters(gate::RotationY)=Dict("theta" =>gate.theta)
 
 Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `DiagonalOperator`.
 """ 
-phase_shift(target::Integer, phi::Real) = Gate(PhaseShift(target, phi), [target])
+phase_shift(target::Integer, phi::Real) = Gate(PhaseShift(phi), [target])
 
 struct PhaseShift <: AbstractGateSymbol
-    target::Integer
     phi::Real
 end
 
@@ -1979,10 +1948,9 @@ See: https://qiskit.org/textbook/ch-states/single-qubit-gates.html#generalU
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
-universal(target::Integer, theta::Real, phi::Real, lambda::Real) = Gate(Universal(target, theta, phi, lambda), [target])
+universal(target::Integer, theta::Real, phi::Real, lambda::Real) = Gate(Universal(theta, phi, lambda), [target])
 
 struct Universal <: AbstractGateSymbol
-    target::Int
     theta::Real
     phi::Real
     lambda::Real
@@ -2009,7 +1977,7 @@ The corresponding `Operator` is [`control_z()`](@ref).
 """ 
 function control_z(control_qubit, target_qubit)
     ensure_target_qubits_are_different([control_qubit, target_qubit])
-    return Gate(ControlZ(control_qubit,target_qubit), [control_qubit,target_qubit])
+    return Gate(ControlZ(), [control_qubit,target_qubit])
 end
 
 function ensure_target_qubits_are_different(target::Array)
@@ -2026,18 +1994,11 @@ function ensure_target_qubits_are_different(target::Array)
     end
 end
 
-struct ControlZ <: AbstractControlledGateSymbol
-    control::Int
-    target::Int
-end
+struct ControlZ <: AbstractControlledGateSymbol end
 
 get_operator(gate::ControlZ, T::Type{<:Complex}=ComplexF64) = control_z(T)
 
-get_connected_qubits(gate::ControlZ)=[gate.control, gate.target]
-
-get_control_qubits(gate::ControlZ)=[gate.control]
-
-get_target_qubits(gate::ControlZ)=[gate.target]
+get_num_connected_qubits(::ControlZ) = 2
 
 """
     control_x(control_qubit, target_qubit)
@@ -2048,21 +2009,14 @@ The corresponding `Operator` is [`control_x()`](@ref).
 """ 
 function control_x(control_qubit::Integer, target_qubit::Integer)
     ensure_target_qubits_are_different([control_qubit, target_qubit])
-    return Gate(ControlX(control_qubit,target_qubit), [control_qubit, target_qubit])
+    return Gate(ControlX(), [control_qubit, target_qubit])
 end
 
-struct ControlX <: AbstractControlledGateSymbol
-    control::Int
-    target::Int
-end
+struct ControlX <: AbstractControlledGateSymbol end
 
 get_operator(gate::ControlX, T::Type{<:Complex}=ComplexF64) = control_x(T)
 
-get_connected_qubits(gate::ControlX)=[gate.control, gate.target]
-
-get_control_qubits(gate::ControlX)=[gate.control]
-
-get_target_qubits(gate::ControlX)=[gate.target]
+get_num_connected_qubits(::ControlX) = 2
 
 """
     iswap(qubit_1, qubit_2)
@@ -2073,19 +2027,16 @@ The corresponding `Operator` is [`iswap()`](@ref).
 """ 
 function iswap(qubit_1, qubit_2)
     ensure_target_qubits_are_different([qubit_1, qubit_2])
-    return Gate(ISwap(qubit_1, qubit_2), [qubit_1, qubit_2])
+    return Gate(ISwap(), [qubit_1, qubit_2])
 end
 
-struct ISwap <: AbstractGateSymbol
-    target_1::Int
-    target_2::Int
-end
+struct ISwap <: AbstractGateSymbol end
 
 get_operator(gate::ISwap, T::Type{<:Complex}=ComplexF64) = iswap(T)
 
-Base.inv(gate::ISwap) = get_gate_symbol(iswap_dagger(gate.target_1,gate.target_2))
+get_num_connected_qubits(::ISwap) = 2
 
-get_connected_qubits(gate::ISwap)=[gate.target_1, gate.target_2]
+Base.inv(gate::ISwap) = get_gate_symbol(iswap_dagger(gate.target_1,gate.target_2))
 
 """
     swap(qubit_1, qubit_2)
@@ -2096,16 +2047,14 @@ The corresponding `Operator` is [`swap()`](@ref).
 """ 
 function swap(qubit_1, qubit_2)
     ensure_target_qubits_are_different([qubit_1, qubit_2])
-    return Gate(Swap(qubit_1, qubit_2), [qubit_1, qubit_2])
+    return Gate(Swap(), [qubit_1, qubit_2])
 end
 
-struct Swap <: AbstractGateSymbol
-    target_1::Int
-    target_2::Int
-end
+struct Swap <: AbstractGateSymbol end
 
 get_operator(::Swap, T::Type{<:Complex}=ComplexF64) = swap(T)
-get_connected_qubits(gate::Swap)=[gate.target_1, gate.target_2]
+
+get_num_connected_qubits(::Swap) = 2
 
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
@@ -2122,22 +2071,14 @@ function toffoli(
     ensure_target_qubits_are_different(
         [control_qubit_1, control_qubit_2, target_qubit]
     )
-    return Gate(Toffoli(control_qubit_1, control_qubit_2, target_qubit), [control_qubit_1, control_qubit_2, target_qubit])
+    return Gate(Toffoli(), [control_qubit_1, control_qubit_2, target_qubit])
 end
 
-struct Toffoli <: AbstractControlledGateSymbol
-    control_1::Int
-    control_2::Int
-    target::Int
-end
+struct Toffoli <: AbstractControlledGateSymbol end
 
 get_operator(gate::Toffoli, T::Type{<:Complex}=ComplexF64) = toffoli(T)
 
-get_connected_qubits(gate::Toffoli)=[gate.control_1, gate.control_2, gate.target]
-
-get_control_qubits(gate::Toffoli)=[gate.control_1, gate.control_2]
-
-get_target_qubits(gate::Toffoli)=[gate.target]
+get_num_connected_qubits(::Toffoli) = 3
 
 # optimized application of ControlX, ControlZ or Toffoli gate without calling operator 
 # (it is hard-coded in apply_control_x!, apply_control_z! or apply_toffoli!, respectively)
@@ -2176,34 +2117,29 @@ The corresponding `Operator` is [`iswap_dagger()`](@ref).
 """ 
 function iswap_dagger(qubit_1::Integer, qubit_2::Integer)
     ensure_target_qubits_are_different([qubit_1, qubit_2])
-    return Gate(ISwapDagger(qubit_1,qubit_2), [qubit_1, qubit_2])
+    return Gate(ISwapDagger(), [qubit_1, qubit_2])
 end
 
-struct ISwapDagger <: AbstractGateSymbol
-    target_1::Int
-    target_2::Int
-end
+struct ISwapDagger <: AbstractGateSymbol end
 
 get_operator(gate::ISwapDagger, T::Type{<:Complex}=ComplexF64) = iswap_dagger(T)
 
 Base.inv(gate::ISwapDagger) = get_gate_symbol(iswap(gate.target_1,gate.target_2))
 
-get_connected_qubits(gate::ISwapDagger)=[gate.target_1, gate.target_2]
+get_num_connected_qubits(::ISwapDagger) = 2
+
 
 """
     identity_gate(target)
 
 Return the Identity `Gate`, which applies the [`identity_gate()`](@ref) `IdentityOperator` to the target qubit.
 """
-identity_gate(target::Integer) = Gate(Identity(target), [target])
+identity_gate(target::Integer) = Gate(Identity(), [target])
 
-struct Identity <: AbstractGateSymbol
-    target::Integer
-end
+struct Identity <: AbstractGateSymbol end
 
 get_operator(gate::Identity,T::Type{<:Complex}=ComplexF64) = IdentityOperator{2,T}()
 
-get_connected_qubits(gate::Identity)=[gate.target]
 
 """
     Base.:*(M::Gate, x::Ket)
