@@ -365,20 +365,22 @@ end
     qpu = AnyonYukonQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
     client = get_client(qpu)
 
+    connectivity=get_connectivity(qpu)
+
     @test client.host == host
     @test client.user == user
     @test client.access_token == token
 
     test_print_connectivity(qpu,"1──2──3──4──5──6\n")
 
-    @test get_connectivity_label(qpu.connectivity) == Snowflurry.line_connectivity_label
+    @test get_connectivity_label(get_connectivity(qpu)) == Snowflurry.line_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
         "generation"    =>"Yukon",
         "serial_number" =>"ANYK202201",
-        "qubit_count"   =>get_num_qubits(qpu.connectivity),
-        "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
+        "qubit_count"   =>get_num_qubits(connectivity),
+        "connectivity_type"  =>get_connectivity_label(connectivity)
     )
 end
 
@@ -389,6 +391,8 @@ end
 
     qpu = AnyonMonarqQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
     client = get_client(qpu)
+
+    connectivity = get_connectivity(qpu)
 
     @test client.host == host
     @test client.user == user
@@ -404,14 +408,14 @@ end
     "             11 ── 12 \n"*
     "\n")
 
-    @test get_connectivity_label(qpu.connectivity) == Snowflurry.lattice_connectivity_label
+    @test get_connectivity_label(connectivity) == Snowflurry.lattice_connectivity_label
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
         "generation"    =>"MonarQ",
         "serial_number" =>"ANYK202301",
-        "qubit_count"   =>get_num_qubits(qpu.connectivity),
-        "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
+        "qubit_count"   =>get_num_qubits(connectivity),
+        "connectivity_type"  =>get_connectivity_label(connectivity)
     )
 
 end

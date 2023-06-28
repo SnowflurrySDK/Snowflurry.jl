@@ -59,7 +59,7 @@ get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
 
 get_client(qpu_service::AbstractAnyonQPU)=qpu_service.client
 
-get_num_qubits(qpu::AbstractAnyonQPU)=get_metadata(qpu)["qubit_count"]
+get_num_qubits(qpu::AbstractAnyonQPU)=get_num_qubits(qpu.connectivity)
 
 print_connectivity(qpu::AbstractAnyonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,Int[],io)
 
@@ -115,7 +115,7 @@ function is_native_gate(qpu::AbstractAnyonQPU,gate::Gate)::Bool
             
         targets=get_connected_qubits(gate)
 
-        return (get_qubits_distance(targets[1],targets[2],qpu.connectivity)==1)        
+        return (get_qubits_distance(targets[1],targets[2],get_connectivity(qpu))==1)        
     end
         
     return (get_gate_type(gate) in set_of_native_gates)
