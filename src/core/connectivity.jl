@@ -57,14 +57,23 @@ end
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label,connectivity))
 
+struct AllToAllConnectivity <: AbstractConnectivity end
+
 const line_connectivity_label = "linear"
 const lattice_connectivity_label = "2D-lattice"
+const all2all_connectivity_label = "all-to-all"
 
 get_connectivity_label(::LineConnectivity) = line_connectivity_label
 get_connectivity_label(::LatticeConnectivity) = lattice_connectivity_label
 
 get_num_qubits(conn::LineConnectivity) = *(conn.dimension...)
 get_num_qubits(conn::LatticeConnectivity) = +(conn.qubits_per_row...)
+
+print_connectivity(connectivity::AbstractConnectivity, args...) =
+    throw(NotImplementedError(:print_connectivity, connectivity))
+
+print_connectivity(connectivity::AllToAllConnectivity, ::Vector{Int}, io::IO = stdout) =
+    println(io,connectivity)
 
 function print_connectivity(connectivity::LineConnectivity, ::Vector{Int}, io::IO = stdout)
     dim = connectivity.dimension
@@ -75,6 +84,51 @@ function print_connectivity(connectivity::LineConnectivity, ::Vector{Int}, io::I
     output_str=*(diagram...)
 
     println(io,output_str)
+end
+
+function print_connectivity(connectivity::LatticeConnectivity, path::Vector{Int} = Vector{Int}(), io::IO = stdout)
+    qubits_per_row = connectivity.qubits_per_row
+    
+    (
+        offsets,
+        offsets_vertical_lines,
+        num_vertical_lines
+    )=get_lattice_offsets(connectivity)
+
+    max_symbol_length = length(string(get_num_qubits(connectivity)))
+    qubit_index = 1
+
+    for (irow,qubit_count) in enumerate(qubits_per_row)
+        line_printout = format_qubit_line(
+            qubit_count,
+            qubit_index,
+            max_symbol_length,
+            offsets[irow]
+        )
+
+        if !isempty(path)
+            qubits_in_row=collect(qubit_index:qubit_index+qubit_count)
+                   
+            for qubit in qubits_in_row
+                qubit_s=string(qubit)
+                if qubit in path && occursin(qubit_s, line_printout)
+                    line_printout=replace(line_printout," "*qubit_s*" "=>"("*qubit_s*")")
+                end
+            end
+        end
+
+        println(io, line_printout)
+        
+        vertical_lines = format_vertical_connections(
+            num_vertical_lines[irow],
+            max_symbol_length,
+            offsets[irow] + offsets_vertical_lines[irow]
+        )
+        
+        println(io, vertical_lines)
+
+        qubit_index += qubit_count
+    end
 end
 
 connect_symbol="──"
@@ -168,55 +222,6 @@ function get_lattice_offsets(connectivity::LatticeConnectivity)::Tuple{Vector{In
         num_vertical_lines
     )
 end
-
-function print_connectivity(connectivity::LatticeConnectivity, path::Vector{Int} = Vector{Int}(), io::IO = stdout)
-    qubits_per_row = connectivity.qubits_per_row
-    
-    (
-        offsets,
-        offsets_vertical_lines,
-        num_vertical_lines
-    )=get_lattice_offsets(connectivity)
-
-    max_symbol_length = length(string(get_num_qubits(connectivity)))
-    qubit_index = 1
-
-    for (irow,qubit_count) in enumerate(qubits_per_row)
-        line_printout = format_qubit_line(
-            qubit_count,
-            qubit_index,
-            max_symbol_length,
-            offsets[irow]
-        )
-
-        if !isempty(path)
-            qubits_in_row=collect(qubit_index:qubit_index+qubit_count)
-                   
-            for qubit in qubits_in_row
-                qubit_s=string(qubit)
-                if qubit in path && occursin(qubit_s, line_printout)
-                    line_printout=replace(line_printout," "*qubit_s*" "=>"("*qubit_s*")")
-                end
-            end
-        end
-
-        println(io, line_printout)
-        
-        vertical_lines = format_vertical_connections(
-            num_vertical_lines[irow],
-            max_symbol_length,
-            offsets[irow] + offsets_vertical_lines[irow]
-        )
-        
-        println(io, vertical_lines)
-
-        qubit_index += qubit_count
-    end
-end
-
-print_connectivity(connectivity::AbstractConnectivity, args...) =
-    throw(NotImplementedError(:print_connectivity, connectivity))
-
 
 function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{Int}}
 
@@ -334,3 +339,6 @@ function path_search(origin::Int, target::Int, connectivity::LineConnectivity)
         return collect(target:origin)
     end
 end
+
+path_search(::Int, ::Int, connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:path_search,connectivity))

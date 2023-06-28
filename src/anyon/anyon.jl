@@ -1,7 +1,5 @@
 using Snowflurry
 
-abstract type AbstractAnyonQPU <: AbstractQPU end
-
 """
     AnyonYukonQPU
 
@@ -22,7 +20,7 @@ Quantum Processing Unit:
    connectivity_type:  linear
 ```
 """
-struct AnyonYukonQPU <: AbstractAnyonQPU
+struct AnyonYukonQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
     connectivity            ::AbstractConnectivity
@@ -40,7 +38,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
-struct AnyonMonarqQPU <: AbstractAnyonQPU
+struct AnyonMonarqQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
     connectivity            ::AbstractConnectivity
@@ -57,13 +55,17 @@ get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
     "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
-get_client(qpu_service::AbstractAnyonQPU)=qpu_service.client
+get_client(qpu_service::AbstractQPU)=qpu_service.client
 
-get_num_qubits(qpu::AbstractAnyonQPU)=get_num_qubits(qpu.connectivity)
+UnionAnyonQPU=Union{AnyonYukonQPU,AnyonMonarqQPU}
 
-print_connectivity(qpu::AbstractAnyonQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,Int[],io)
+get_num_qubits(qpu::UnionAnyonQPU)=get_num_qubits(qpu.connectivity)
 
-function Base.show(io::IO, qpu::AbstractAnyonQPU)
+get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
+
+print_connectivity(qpu::AbstractQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,Int[],io)
+
+function Base.show(io::IO, qpu::UnionAnyonQPU)
     metadata=get_metadata(qpu)
 
     println(io, "Quantum Processing Unit:")
@@ -99,7 +101,7 @@ function get_qubits_distance(target_1::Int, target_2::Int, connectivity::Lattice
     return maximum([0, length(path_search(target_1,target_2,connectivity))-1])
 end
 
-function is_native_gate(qpu::AbstractAnyonQPU,gate::Gate)::Bool
+function is_native_gate(qpu::UnionAnyonQPU,gate::Gate)::Bool
     if is_gate_type(gate, ControlZ)
         # on ControlZ gates are native only if targets are adjacent
             
@@ -111,7 +113,7 @@ function is_native_gate(qpu::AbstractAnyonQPU,gate::Gate)::Bool
     return (get_gate_type(gate) in set_of_native_gates)
 end
 
-function is_native_circuit(qpu::AbstractAnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_circuit(qpu::UnionAnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
     if qubit_count_circuit>qubit_count_qpu 
@@ -155,7 +157,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::AbstractAnyonQPU,
+    qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
@@ -194,7 +196,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::AbstractAnyonQPU,
+    qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer
     )::Dict{String,Int}
@@ -248,7 +250,7 @@ SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateT
 ), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
 ```
 """
-function get_transpiler(qpu::AbstractAnyonQPU;atol=1e-6)::Transpiler
+function get_transpiler(qpu::UnionAnyonQPU;atol=1e-6)::Transpiler
     return SequentialTranspiler([
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),

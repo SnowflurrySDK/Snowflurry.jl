@@ -185,7 +185,7 @@ end
 
 
 function test_print_connectivity(
-    input::AbstractAnyonQPU, 
+    input::Snowflurry.UnionAnyonQPU, 
     expected::String
     )
     io = IOBuffer()
@@ -194,10 +194,7 @@ function test_print_connectivity(
 end
 
 function test_print_connectivity(
-    input::Union{
-        LatticeConnectivity,
-        LineConnectivity
-        }, 
+    input::AbstractConnectivity, 
     expected::String
     )
     io = IOBuffer()
@@ -206,7 +203,7 @@ function test_print_connectivity(
     
 end
 
-@testset "print_connectivity" begin
+@testset "AbstractConnectivity" begin
 
     connectivity = LineConnectivity(12)
 
@@ -287,6 +284,7 @@ end
     struct UnknownConnectivity <: AbstractConnectivity end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
     @test_throws NotImplementedError get_connectivity_label(UnknownConnectivity())
+    @test_throws NotImplementedError path_search(1,1,UnknownConnectivity())
 
     # Customized Lattice specifying qubits_per_row
     connectivity = LatticeConnectivity([1,3,4,5,6,7,7,6,5,4,3,1])
@@ -590,12 +588,14 @@ end
     
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
+    test_print_connectivity(connectivity,"AllToAllConnectivity()\n")
 end
 
 @testset "AbstractQPU" begin
     struct NonExistentQPU<:Snowflurry.AbstractQPU end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
+    @test_throws NotImplementedError get_connectivity(NonExistentQPU())
     @test_throws NotImplementedError is_native_gate(NonExistentQPU(),sigma_x(1))
     @test_throws NotImplementedError is_native_circuit(NonExistentQPU(),QuantumCircuit(qubit_count=1))
     @test_throws NotImplementedError get_transpiler(NonExistentQPU())

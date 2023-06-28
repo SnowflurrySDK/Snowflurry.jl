@@ -35,7 +35,6 @@ export
     AbstractControlledGateSymbol,
     ControlledGate,
     Gate,
-    AbstractAnyonQPU,
     AnyonYukonQPU,
     AnyonMonarqQPU,
     VirtualQPU,
