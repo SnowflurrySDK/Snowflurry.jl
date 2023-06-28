@@ -95,18 +95,8 @@ get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int =
     abs(target_1 - target_2)
 
 function get_qubits_distance(target_1::Int, target_2::Int, connectivity::LatticeConnectivity)::Int
-    dims = connectivity.dimensions
-
-    ncols = dims[2]
-
-    target_1_row = div(target_1 - 1, ncols) + 1
-    target_1_col = (target_1 - 1) % ncols + 1
-
-    target_2_row = div(target_2 - 1, ncols) + 1
-    target_2_col = (target_2 - 1) % ncols + 1
-
     # Manhattan distance
-    return abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
+    return maximum([0, length(path_search(target_1,target_2,connectivity))-1])
 end
 
 function is_native_gate(qpu::AbstractAnyonQPU,gate::Gate)::Bool

@@ -325,34 +325,71 @@ end
 
 @testset "get_qubits_distance" begin
     # LineConnectivity
-    qubit_count = 6
-    c=LineConnectivity(qubit_count)
+    qubit_count_list = [6,12]
+    for qubit_count in qubit_count_list
+        connectivity=LineConnectivity(qubit_count)
 
-    for target_1 in 1:qubit_count
-        for target_2 in 1:qubit_count
-            @test get_qubits_distance(target_1, target_2,c) == abs(target_1-target_2)
+        for target_1 in 1:qubit_count
+            for target_2 in 1:qubit_count
+                @test get_qubits_distance(target_1, target_2,connectivity) == 
+                    abs(target_1-target_2)
+            end
         end
     end
 
     ##########################################
     # LatticeConnectivity
-    nrows = 4
-    ncols = 3
-    c=LatticeConnectivity(nrows,ncols)
+    nrows_list = [4,6,5]
+    ncols_list = [3,4,5]
 
-    qubit_num_matrix=Matrix(transpose(reshape([v for v in 1:nrows*ncols],ncols,nrows)))
+    for (nrows, ncols) in zip(nrows_list, ncols_list)
 
-    for (target_1,ind_1) in zip(qubit_num_matrix,CartesianIndices(qubit_num_matrix))
-        for (target_2,ind_2) in zip(qubit_num_matrix,CartesianIndices(qubit_num_matrix))
+        connectivity=LatticeConnectivity(nrows,ncols)
 
-            target_1_row = ind_1[1]
-            target_1_col = ind_1[2]
+        (offsets,_,_) = Snowflurry.get_lattice_offsets(connectivity)
+
+        qubits_per_row = connectivity.qubits_per_row
+
+        ncols = 0
+        for (qubit_count, offset) in zip(qubits_per_row, offsets)
+            ncols = maximum([ncols, qubit_count+offset])
+        end
+
+        nrows = length(qubits_per_row)
+        qubit_placement = zeros(Int, nrows, ncols)
+        qubit_count = get_num_qubits(connectivity)
         
-            target_2_row = ind_2[1]
-            target_2_col = ind_2[2]
+        placed_qubits = 0
 
-            @test get_qubits_distance(target_1, target_2,c) == 
-                abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
+        for (irow, qubit_count) in enumerate(qubits_per_row)
+            offset = offsets[irow]
+            qubit_placement[irow, 1+offset:qubit_count+offset] = 
+                [v+placed_qubits for v in (1:qubit_count)]
+
+            placed_qubits += qubit_count
+        end
+
+        qubit_coordinates=Dict{Int,CartesianIndex{2}}()
+
+        for (origin,ind) in zip(qubit_placement,CartesianIndices(qubit_placement))
+            if origin != 0
+                qubit_coordinates[origin] = ind
+
+            end
+        end
+
+        for (target_1,ind_1) in qubit_coordinates
+            for (target_2,ind_2) in qubit_coordinates
+
+                target_1_row = ind_1[1]
+                target_1_col = ind_1[2]
+            
+                target_2_row = ind_2[1]
+                target_2_col = ind_2[2]
+
+                @test get_qubits_distance(target_1, target_2,connectivity) == 
+                    abs(target_1_row - target_2_row)+abs(target_1_col - target_2_col)
+            end
         end
     end
 end

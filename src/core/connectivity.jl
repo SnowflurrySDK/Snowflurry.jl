@@ -137,7 +137,9 @@ function format_vertical_connections(ncols::Int, symbol_width::Int, left_offset:
     return vertical_lines
 end
 
-function get_lattice_offsets(qubits_per_row::Vector{Int})::Tuple{Vector{Int}, Vector{Int}, Vector{Int}}
+function get_lattice_offsets(connectivity::LatticeConnectivity)::Tuple{Vector{Int}, Vector{Int}, Vector{Int}}
+    qubits_per_row=connectivity.qubits_per_row
+
     offsets                 = zeros(Int, length(qubits_per_row) + 1)
     offsets_vertical_lines  = zeros(Int, length(qubits_per_row) + 1)
     num_vertical_lines      = zeros(Int, length(qubits_per_row) + 1)
@@ -174,7 +176,7 @@ function print_connectivity(connectivity::LatticeConnectivity, path::Vector{Int}
         offsets,
         offsets_vertical_lines,
         num_vertical_lines
-    )=get_lattice_offsets(qubits_per_row)
+    )=get_lattice_offsets(connectivity)
 
     max_symbol_length = length(string(get_num_qubits(connectivity)))
     qubit_index = 1
@@ -218,9 +220,9 @@ print_connectivity(connectivity::AbstractConnectivity, args...) =
 
 function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{Int}}
 
-    qubits_per_row = connectivity.qubits_per_row
+    (offsets,_,_) = get_lattice_offsets(connectivity)
 
-    (offsets,_,_) = get_lattice_offsets(qubits_per_row)
+    qubits_per_row = connectivity.qubits_per_row
 
     ncols = 0
     for (qubit_count, offset) in zip(qubits_per_row, offsets)
