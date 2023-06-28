@@ -325,11 +325,11 @@ end
     # LineConnectivity
     qubit_count_list = [6,12]
     for qubit_count in qubit_count_list
-        connectivity=LineConnectivity(qubit_count)
+        connectivity = LineConnectivity(qubit_count)
 
         for target_1 in 1:qubit_count
             for target_2 in 1:qubit_count
-                @test get_qubits_distance(target_1, target_2,connectivity) == 
+                @test get_qubits_distance(target_1, target_2, connectivity) == 
                     abs(target_1-target_2)
             end
         end
@@ -342,7 +342,7 @@ end
 
     for (nrows, ncols) in zip(nrows_list, ncols_list)
 
-        connectivity=LatticeConnectivity(nrows,ncols)
+        connectivity=LatticeConnectivity(nrows, ncols)
 
         (offsets,_,_) = Snowflurry.get_lattice_offsets(connectivity)
 
@@ -350,7 +350,7 @@ end
 
         ncols = 0
         for (qubit_count, offset) in zip(qubits_per_row, offsets)
-            ncols = maximum([ncols, qubit_count+offset])
+            ncols = maximum([ncols, qubit_count + offset])
         end
 
         nrows = length(qubits_per_row)
@@ -361,7 +361,7 @@ end
 
         for (irow, qubit_count) in enumerate(qubits_per_row)
             offset = offsets[irow]
-            qubit_placement[irow, 1+offset:qubit_count+offset] = 
+            qubit_placement[irow, 1 + offset:qubit_count + offset] = 
                 [v+placed_qubits for v in (1:qubit_count)]
 
             placed_qubits += qubit_count
@@ -369,15 +369,15 @@ end
 
         qubit_coordinates=Dict{Int,CartesianIndex{2}}()
 
-        for (origin,ind) in zip(qubit_placement,CartesianIndices(qubit_placement))
+        for (origin, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
             if origin != 0
                 qubit_coordinates[origin] = ind
 
             end
         end
 
-        for (target_1,ind_1) in qubit_coordinates
-            for (target_2,ind_2) in qubit_coordinates
+        for (target_1, ind_1) in qubit_coordinates
+            for (target_2, ind_2) in qubit_coordinates
 
                 target_1_row = ind_1[1]
                 target_1_col = ind_1[2]

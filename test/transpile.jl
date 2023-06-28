@@ -678,9 +678,9 @@ end
                 if t_0 == t_1
                     continue
                 end
-                circuit = QuantumCircuit(qubit_count = qubit_count, gates=[control_z(t_0,t_1)])
-                transpiled_circuit=transpile(transpiler,circuit)
-                @test compare_circuits(circuit,transpiled_circuit)
+                circuit = QuantumCircuit(qubit_count = qubit_count, gates=[control_z(t_0, t_1)])
+                transpiled_circuit = transpile(transpiler, circuit)
+                @test compare_circuits(circuit, transpiled_circuit)
 
                 gates_in_output = get_circuit_gates(transpiled_circuit)
 
@@ -689,9 +689,6 @@ end
                     if length(connected_qubits) > 1
                         (t_2, t_3) = connected_qubits
 
-                        if get_qubits_distance(t_2, t_3, connectivity) != 1
-                            println("\ngate: $gate, t_2: $t_2, t_3: $t_3, distance: $(get_qubits_distance(t_2, t_3, connectivity))\n")
-                        end
                         #confirm adjacency
                         @test get_qubits_distance(t_2, t_3, connectivity) == 1
                     end
