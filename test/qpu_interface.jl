@@ -525,11 +525,12 @@ end
         post_checker_toffoli,
         post_checker_last_qubit
         ) in zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
-        requestor=MockRequestor(request_checker,post_checker)
-        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-        shot_count=100
+        
+        requestor = MockRequestor(request_checker, post_checker)
+        test_client = Client(host = host, user = user, access_token = access_token, requestor = requestor)
+        shot_count = 100
 
-        qpu = QPU(test_client, status_request_throttle=no_throttle)
+        qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu)+1)
@@ -541,24 +542,24 @@ end
             qpu, 
             circuit,
             shot_count;
-            transpiler=TrivialTranspiler()
+            transpiler = TrivialTranspiler()
         )
 
         # using default transpiler
-        requestor=MockRequestor(request_checker,post_checker_toffoli)
-        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+        requestor = MockRequestor(request_checker, post_checker_toffoli)
+        test_client = Client(host = host, user = user, access_token = access_token, requestor = requestor)
 
-        qpu = QPU(test_client, status_request_throttle=no_throttle)
+        qpu = QPU(test_client, status_request_throttle = no_throttle)
 
-        histogram=transpile_and_run_job(qpu, circuit, shot_count)
+        histogram = transpile_and_run_job(qpu, circuit, shot_count)
         
-        @test histogram==Dict("001"=>shot_count)
-        @test !haskey(histogram,"error_msg")
+        @test histogram == Dict("001" => shot_count)
+        @test !haskey(histogram, "error_msg")
 
         # submit circuit with qubit_count_circuit==qubit_count_qpu
-        requestor=MockRequestor(request_checker,post_checker_last_qubit)
-        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-        qpu = QPU(test_client, status_request_throttle=no_throttle)
+        requestor = MockRequestor(request_checker, post_checker_last_qubit)
+        test_client = Client(host = host, user = user, access_token = access_token, requestor = requestor)
+        qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(qubit_count = qubit_count, gates=[sigma_x(qubit_count)])
@@ -569,22 +570,26 @@ end
 
 @testset "run on VirtualQPU" begin
 
-    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3),control_z(2,1)])
+    circuit = QuantumCircuit(qubit_count = 3,gates=[sigma_x(3), control_z(2, 1)])
         
-    shot_count=100
+    shot_count = 100
     
-    qpu=VirtualQPU()
+    qpu = VirtualQPU()
     
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
 
     for gate in get_circuit_gates(circuit)
-        @test is_native_gate(qpu,gate)
+        @test is_native_gate(qpu, gate)
     end
        
-    histogram=transpile_and_run_job(qpu, circuit, shot_count)
+    histogram = transpile_and_run_job(qpu, circuit, shot_count)
    
-    @test histogram==Dict("001"=>shot_count)
-
+    @test histogram == Dict("001" => shot_count)
+    
+    connectivity = get_connectivity(qpu)
+    
+    @test connectivity isa AllToAllConnectivity
+    @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
 end
 
 @testset "AbstractQPU" begin

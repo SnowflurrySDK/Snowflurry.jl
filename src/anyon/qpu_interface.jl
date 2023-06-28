@@ -401,7 +401,7 @@ get_transpiler(::VirtualQPU)=TrivialTranspiler()
 struct AllToAllConnectivity <: AbstractConnectivity end
 const all2all_connectivity_label = "all-to-all"
 
-get_connectivity(::VirtualQPU) = AllToAllConnectivity
+get_connectivity(::VirtualQPU) = AllToAllConnectivity()
 get_connectivity_label(::AllToAllConnectivity) = all2all_connectivity_label
 
 
