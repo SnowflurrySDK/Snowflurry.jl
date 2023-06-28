@@ -514,53 +514,57 @@ end
     @test_throws ErrorException histogram=run_job(qpu, circuit, shot_count)
 end
 
-@testset "transpile_and_run_job on AnyonYukonQPU" begin
-
-    requestor=MockRequestor(request_checker,post_checker)
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    shot_count=100
-    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
-
-    # submit circuit with qubit_count_circuit>qubit_count_qpu
-    qubit_count = 10
-    circuit = QuantumCircuit(qubit_count = qubit_count)
-
-    msg="Circuit qubit count $qubit_count exceeds $(typeof(qpu)) qubit count: 6" 
-    @test_throws DomainError(qpu,msg) transpile_and_run_job(qpu, circuit, shot_count)
-
-    # submit circuit with a non-native gate on this qpu (no transpilation)
-    gate = toffoli(1,2,3)
-    circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu), gates=[gate])
-
-    msg="Gate type $(get_gate_type(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
-    @test_throws DomainError(qpu,msg) transpile_and_run_job(
-        qpu, 
-        circuit,
-        shot_count;
-        transpiler=TrivialTranspiler()
-    )
-
-    # using AnyonYukonQPU default transpiler
-    requestor=MockRequestor(request_checker,post_checker_toffoli)
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
-
-    histogram=transpile_and_run_job(qpu, circuit, shot_count)
+@testset "transpile_and_run_job on AnyonYukonQPU and AnyonMonarqQPU" begin
     
-    @test histogram==Dict("001"=>shot_count)
-    @test !haskey(histogram,"error_msg")
+    qpus = [AnyonYukonQPU, AnyonMonarqQPU]
+    post_checkers_toffoli = [post_checker_toffoli_Yukon, post_checker_toffoli_MonarQ]
+    post_checkers_last_qubit = [post_checker_last_qubit_Yukon, post_checker_last_qubit_MonarQ]
 
-    # submit circuit with qubit_count_circuit==qubit_count_qpu
-    requestor=MockRequestor(request_checker,post_checker_last_qubit)
-    test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
-    qpu=AnyonYukonQPU(test_client, status_request_throttle=no_throttle)
+    for (
+        QPU,
+        post_checker_toffoli,
+        post_checker_last_qubit
+        ) in zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
+        requestor=MockRequestor(request_checker,post_checker)
+        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+        shot_count=100
 
-    qubit_count = get_num_qubits(qpu)
-    circuit = QuantumCircuit(qubit_count = qubit_count, gates=[sigma_x(qubit_count)])
+        qpu = QPU(test_client, status_request_throttle=no_throttle)
 
-    transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
-    
+        # submit circuit with qubit_count_circuit>qubit_count_qpu
+        circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu)+1)
+        @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
+        # submit circuit with a non-native gate on this qpu (no transpilation)
+        circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu)-1, gates=[toffoli(1,2,3)])
+        @test_throws DomainError transpile_and_run_job(
+            qpu, 
+            circuit,
+            shot_count;
+            transpiler=TrivialTranspiler()
+        )
+
+        # using default transpiler
+        requestor=MockRequestor(request_checker,post_checker_toffoli)
+        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+
+        qpu = QPU(test_client, status_request_throttle=no_throttle)
+
+        histogram=transpile_and_run_job(qpu, circuit, shot_count)
+        
+        @test histogram==Dict("001"=>shot_count)
+        @test !haskey(histogram,"error_msg")
+
+        # submit circuit with qubit_count_circuit==qubit_count_qpu
+        requestor=MockRequestor(request_checker,post_checker_last_qubit)
+        test_client=Client(host=host,user=user,access_token=access_token,requestor=requestor)
+        qpu = QPU(test_client, status_request_throttle=no_throttle)
+
+        qubit_count = get_num_qubits(qpu)
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=[sigma_x(qubit_count)])
+
+        transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
+    end
 end
 
 @testset "run on VirtualQPU" begin

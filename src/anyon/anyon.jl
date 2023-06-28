@@ -155,7 +155,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::AnyonYukonQPU,
+    qpu::AbstractAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
@@ -194,7 +194,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::AnyonYukonQPU,
+    qpu::AbstractAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer
     )::Dict{String,Int}
