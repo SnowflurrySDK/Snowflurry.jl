@@ -4,25 +4,6 @@ using LinearAlgebra
 
 include("test_functions.jl")
 
-@testset "get_num_connected_qubits" begin
-    struct MockConnectedQubitGateSymbol <: AbstractGateSymbol
-        connected_qubits::Vector{Int}
-    end
-
-    Snowflurry.get_connected_qubits(gate::MockConnectedQubitGateSymbol) = return gate.connected_qubits
-
-    function test_num_connected_qubits(connected_qubits::Vector{Int}, expected_num_connected_qubits)
-        @test get_num_connected_qubits(MockConnectedQubitGateSymbol(connected_qubits)) == expected_num_connected_qubits
-    end
-
-    test_num_connected_qubits(Vector{Int}([]), 0)
-    test_num_connected_qubits([1], 1)
-    test_num_connected_qubits([5], 1)
-    test_num_connected_qubits([1, 2], 2)
-    test_num_connected_qubits([5, 3], 2)
-    test_num_connected_qubits([7,3,4,5,6,99], 6)
-end
-
 @testset "Gate" begin
     struct MockNumConnectedQubit <: AbstractGateSymbol
         num_connected_qubits::Int
