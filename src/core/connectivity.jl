@@ -6,6 +6,8 @@ abstract type AbstractConnectivity end
     LineConnectivity <:AbstractConnectivity
 
 A data structure to represent linear qubit connectivity in a Anyon System's QPU.  
+This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@ref)
+
 # Fields
 - `dimension                  ::Int` -- Qubit count in this connectivity.
 
@@ -26,6 +28,8 @@ end
     LatticeConnectivity <:AbstractConnectivity
 
 A data structure to represent 2D-lattice qubit connectivity in a Anyon System's QPU.  
+This connectivity type is encountered in `QPUs` such as the [`AnyonMonarqQPU`](@ref)
+
 # Fields
 - `qubits_per_row    ::Vector{Int}` -- number of qubits in each line, when constructing the printout.
 - `dimensions        ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
