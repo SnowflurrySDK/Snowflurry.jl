@@ -23,7 +23,7 @@ Quantum Processing Unit:
 struct AnyonYukonQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
-    connectivity            ::AbstractConnectivity
+    connectivity            ::LineConnectivity
 
     AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LineConnectivity(6))
     AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LineConnectivity(6))
@@ -41,7 +41,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
 struct AnyonMonarqQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
-    connectivity            ::AbstractConnectivity
+    connectivity            ::LatticeConnectivity
 
     AnyonMonarqQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity(4,3))
     AnyonMonarqQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity(4,3))
@@ -63,7 +63,7 @@ get_num_qubits(qpu::UnionAnyonQPU)=get_num_qubits(qpu.connectivity)
 
 get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
 
-print_connectivity(qpu::AbstractQPU,io::IO=stdout)=print_connectivity(qpu.connectivity,Int[],io)
+print_connectivity(qpu::AbstractQPU,io::IO=stdout)=print_connectivity(get_connectivity(qpu),Int[],io)
 
 function Base.show(io::IO, qpu::UnionAnyonQPU)
     metadata=get_metadata(qpu)
@@ -255,7 +255,7 @@ function get_transpiler(qpu::UnionAnyonQPU;atol=1e-6)::Transpiler
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForAdjacencyTranspiler(qpu.connectivity),
+        SwapQubitsForAdjacencyTranspiler(get_connectivity(qpu)),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
         SimplifyTrivialGatesTranspiler(atol),
