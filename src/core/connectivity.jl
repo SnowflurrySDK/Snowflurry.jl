@@ -23,7 +23,7 @@ struct LineConnectivity <:AbstractConnectivity
 end
 
 """
-    LineConnectivity <:AbstractConnectivity
+    LatticeConnectivity <:AbstractConnectivity
 
 A data structure to represent 2D-lattice qubit connectivity in a Anyon System's QPU.  
 # Fields
@@ -143,6 +143,19 @@ end
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label,connectivity))
 
+"""
+    AllToAllConnectivity <:AbstractConnectivity
+
+A data structure to represent all-to-all qubit connectivity in a Anyon System's QPU.  
+This connectivity type is encountered in simulated `QPUs`, such as the [`VirtualQPU`](@ref)
+
+# Example
+```jldoctest
+julia>  connectivity = AllToAllConnectivity()
+AllToAllConnectivity()
+
+```
+"""
 struct AllToAllConnectivity <: AbstractConnectivity end
 
 const line_connectivity_label = "linear"
