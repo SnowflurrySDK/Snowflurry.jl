@@ -18,8 +18,6 @@ applies a 45° rotation about the X axis:
 
 ```jldoctest gate_struct
 julia> struct X45 <: AbstractGateSymbol
-           # TODO(#226): delete on completion
-           target::Int
        end;
 ```
 
@@ -31,7 +29,7 @@ julia> Snowflurry.get_num_connected_qubits(::X45) = 1
 
 A `Gate` constructor must be defined as:
 ```jldoctest gate_struct
-julia> x_45(target::Integer) = Gate(X45(target), [target]);
+julia> x_45(target::Integer) = Gate(X45(), [target]);
 ```
 
 along with an `Operator` constructor, with default precision `ComplexF64`, defined as:
@@ -49,7 +47,7 @@ julia> Snowflurry.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotat
 
 The gate inverse can also be specified by extending the `inv` function.
 ```jldoctest gate_struct
-julia> Base.inv(gate::Gate{X45}) = rotation_x(get_connected_qubits(gate)[1], -π/4);
+julia> Base.inv(::X45) = Snowflurry.RotationX(-π/4);
 
 ```
 
@@ -1617,7 +1615,7 @@ Returns the `Operator` which is associated to a `Gate`.
 ```jldoctest
 julia> x = sigma_x(1);
 
-julia> get_operator(x)
+julia> get_operator(get_gate_symbol(x))
 (2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
