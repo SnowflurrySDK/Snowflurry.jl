@@ -91,9 +91,9 @@ include("test_functions.jl")
             @test get_gate_symbol(gate) == symbol
         end
 
-        test_getters(Snowflurry.Hadamard(3), [3])
-        test_getters(Snowflurry.ISwap(3, 7), [7, 3])
-        test_getters(Snowflurry.Universal(11, pi/2, -pi/2, pi/4), [11])
+        test_getters(Snowflurry.Hadamard(), [3])
+        test_getters(Snowflurry.ISwap(), [7, 3])
+        test_getters(Snowflurry.Universal(pi/2, -pi/2, pi/4), [11])
     end
 end
 
@@ -126,54 +126,52 @@ end
     h_oper=get_operator(H)
     @test h_oper ≈ hadamard()
     @test inv(H) == H
-    @test get_instruction_symbol(H) == "h"
-    @test get_display_symbol(H) ==["H"]
-
-    println(H)
+    @test get_instruction_symbol(get_gate_symbol(H)) == "h"
+    @test get_display_symbol(get_gate_symbol(H)) ==["H"]
 
     @test get_matrix(2*h_oper) == get_matrix(h_oper).*2
 
     X = sigma_x(1)
 
-    @test get_instruction_symbol(X) == "x"
-    @test get_display_symbol(X) ==["X"]
+    @test get_instruction_symbol(get_gate_symbol(X)) == "x"
+    @test get_display_symbol(get_gate_symbol(X)) ==["X"]
     @test get_operator(X) ≈ sigma_x()
     @test inv(X) == X
 
     Y = sigma_y(1)
-    @test get_instruction_symbol(Y) == "y"
-    @test get_display_symbol(Y) ==["Y"]
+    @test get_instruction_symbol(get_gate_symbol(Y)) == "y"
+    @test get_display_symbol(get_gate_symbol(Y)) ==["Y"]
     @test get_operator(Y) ≈ sigma_y()
     @test inv(Y) == Y
 
     Z = sigma_z(1)
-    @test get_instruction_symbol(Z) == "z"
-    @test get_display_symbol(Z) ==["Z"]
+    @test get_instruction_symbol(get_gate_symbol(Z)) == "z"
+    @test get_display_symbol(get_gate_symbol(Z)) ==["Z"]
     @test get_operator(Z) ≈ sigma_z()
     @test inv(Z) == Z
 
     CX = control_x(1, 2)
 
-    @test get_instruction_symbol(CX) == "cx"
-    @test get_display_symbol(CX) ==["*", "X"]
+    @test get_instruction_symbol(get_gate_symbol(CX)) == "cx"
+    @test get_display_symbol(get_gate_symbol(CX)) ==["*", "X"]
     @test get_operator(CX) ≈ control_x()
     @test inv(CX) == CX
 
     CZ = control_z(1, 2)
-    @test get_instruction_symbol(CZ) == "cz"
-    @test get_display_symbol(CZ) ==["*", "Z"]
+    @test get_instruction_symbol(get_gate_symbol(CZ)) == "cz"
+    @test get_display_symbol(get_gate_symbol(CZ)) ==["*", "Z"]
     @test get_operator(CZ) ≈ control_z()
     @test inv(CZ) == CZ
 
     SWAP = swap(1, 2)
-    @test get_instruction_symbol(SWAP) == "swap"
-    @test get_display_symbol(SWAP) == ["☒", "☒"]
+    @test get_instruction_symbol(get_gate_symbol(SWAP)) == "swap"
+    @test get_display_symbol(get_gate_symbol(SWAP)) == ["☒", "☒"]
     @test get_operator(SWAP) ≈ swap()
     @test inv(SWAP) == SWAP
 
     CCX = toffoli(1, 2, 3)
-    @test get_instruction_symbol(CCX) == "ccx"
-    @test get_display_symbol(CCX) ==["*", "*", "X"]
+    @test get_instruction_symbol(get_gate_symbol(CCX)) == "ccx"
+    @test get_display_symbol(get_gate_symbol(CCX)) ==["*", "*", "X"]
     @test CCX*fock(6,8) ≈ fock(7,8)
     @test CCX*fock(2,8) ≈ fock(2,8)
     @test CCX*fock(4,8) ≈ fock(4,8)
@@ -184,92 +182,90 @@ end
     ψ_1 = fock(1,2)
 
     T = pi_8(1)
-    @test get_instruction_symbol(T) == "t"
-    @test get_display_symbol(T) ==["T"]
+    @test get_instruction_symbol(get_gate_symbol(T)) == "t"
+    @test get_display_symbol(get_gate_symbol(T)) ==["T"]
     @test T*ψ_0 ≈ ψ_0
     @test T*ψ_1 ≈ exp(im*pi/4.0)*ψ_1
 
     x90 = x_90(1)
-    @test get_instruction_symbol(x90) == "x_90"
-    @test get_display_symbol(x90) ==["X_90"]
+    @test get_instruction_symbol(get_gate_symbol(x90)) == "x_90"
+    @test get_display_symbol(get_gate_symbol(x90)) ==["X_90"]
     @test get_matrix(get_operator(x90)) ≈ (1/sqrt(2.0)) .* [
         1 -im;
         -im 1
     ]
 
     xm90 = x_minus_90(1)
-    @test get_instruction_symbol(xm90) == "x_minus_90"
-    @test get_display_symbol(xm90) ==["X_m90"]
+    @test get_instruction_symbol(get_gate_symbol(xm90)) == "x_minus_90"
+    @test get_display_symbol(get_gate_symbol(xm90)) ==["X_m90"]
     @test get_matrix(get_operator(xm90)) ≈ (1/sqrt(2.0)) .* [
         1 im;
         im 1
     ]
 
     y90 = y_90(1)
-    @test get_instruction_symbol(y90) == "y_90"
-    @test get_display_symbol(y90) ==["Y_90"]
+    @test get_instruction_symbol(get_gate_symbol(y90)) == "y_90"
+    @test get_display_symbol(get_gate_symbol(y90)) ==["Y_90"]
     @test get_matrix(get_operator(y90)) ≈ (1/sqrt(2.0)) .* [
         1 -1;
         1 1
     ]
 
     ym90 = y_minus_90(1)
-    @test get_instruction_symbol(ym90) == "y_minus_90"
-    @test get_display_symbol(ym90) ==["Y_m90"]
+    @test get_instruction_symbol(get_gate_symbol(ym90)) == "y_minus_90"
+    @test get_display_symbol(get_gate_symbol(ym90)) ==["Y_m90"]
     @test get_matrix(get_operator(ym90)) ≈ (1/sqrt(2.0)) .* [
         1 1;
         -1 1
     ]
 
     z90 = z_90(1)
-    @test get_instruction_symbol(z90) == "z_90"
-    @test get_display_symbol(z90) ==["Z_90"]
+    @test get_instruction_symbol(get_gate_symbol(z90)) == "z_90"
+    @test get_display_symbol(get_gate_symbol(z90)) ==["Z_90"]
     @test get_matrix(get_operator(z90)) ≈ [
         1 0;
         0 im
     ]
 
     zm90 = z_minus_90(1)
-    @test get_instruction_symbol(zm90) == "z_minus_90"
-    @test get_display_symbol(zm90) ==["Z_m90"]
+    @test get_instruction_symbol(get_gate_symbol(zm90)) == "z_minus_90"
+    @test get_display_symbol(get_gate_symbol(zm90)) ==["Z_m90"]
     @test get_matrix(get_operator(zm90)) ≈ [
         1 0;
         0 -im
     ]
 
     r = rotation(1, pi/2, pi/2)
-    @test get_instruction_symbol(r) == "r"
-    @test get_display_symbol(r) == ["R(θ=1.5708,ϕ=1.5708)"]
+    @test get_instruction_symbol(get_gate_symbol(r)) == "r"
+    @test get_display_symbol(get_gate_symbol(r)) == ["R(θ=1.5708,ϕ=1.5708)"]
     @test r*ψ_0 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test r*ψ_1 ≈ 1/2^.5*(-ψ_0+ψ_1)
     @test get_gate_parameters(r)==Dict("theta"=>pi/2,"phi"=>pi/2)
 
-    println(r)
-
     rx = rotation_x(1, pi/2)
-    @test get_instruction_symbol(rx) == "rx"
-    @test get_display_symbol(rx) ==["Rx(1.5708)"]
+    @test get_instruction_symbol(get_gate_symbol(rx)) == "rx"
+    @test get_display_symbol(get_gate_symbol(rx)) ==["Rx(1.5708)"]
     @test rx*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test rx*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
     @test get_gate_parameters(rx)==Dict("theta"=>pi/2)
 
     ry = rotation_y(1, -pi/2)
-    @test get_instruction_symbol(ry) == "ry"
-    @test get_display_symbol(ry) ==["Ry(-1.5708)"]
+    @test get_instruction_symbol(get_gate_symbol(ry)) == "ry"
+    @test get_display_symbol(get_gate_symbol(ry)) ==["Ry(-1.5708)"]
     @test ry*ψ_0 ≈ 1/2^.5*(ψ_0-ψ_1)
     @test ry*ψ_1 ≈ 1/2^.5*(ψ_0+ψ_1)
     @test get_gate_parameters(ry)==Dict("theta"=>-pi/2)
 
     p = phase_shift(1, pi/4)
-    @test get_instruction_symbol(p) == "rz"
-    @test get_display_symbol(p) ==["Rz(0.7854)"]
+    @test get_instruction_symbol(get_gate_symbol(p)) == "rz"
+    @test get_display_symbol(get_gate_symbol(p)) ==["Rz(0.7854)"]
     @test p*Ket([1/2^.5; 1/2^.5]) ≈ Ket([1/2^.5, exp(im*pi/4)/2^.5])
     @test get_gate_parameters(p)==Dict("lambda"=>pi/4)
 
 
     u = universal(1, pi/2, -pi/2, pi/2)
-    @test get_instruction_symbol(u) == "u"
-    @test get_display_symbol(u) ==["U(θ=1.5708,ϕ=-1.5708,λ=1.5708)"]
+    @test get_instruction_symbol(get_gate_symbol(u)) == "u"
+    @test get_display_symbol(get_gate_symbol(u)) ==["U(θ=1.5708,ϕ=-1.5708,λ=1.5708)"]
     @test u*ψ_0 ≈ 1/2^.5*(ψ_0-im*ψ_1)
     @test u*ψ_1 ≈ 1/2^.5*(-im*ψ_0+ψ_1)
     @test get_gate_parameters(u)==Dict(
@@ -279,8 +275,8 @@ end
         )
 
     iden = identity_gate(1)
-    @test get_instruction_symbol(iden) == "i"
-    @test get_display_symbol(iden) ==["I"]
+    @test get_instruction_symbol(get_gate_symbol(iden)) == "i"
+    @test get_display_symbol(get_gate_symbol(iden)) ==["I"]
     @test get_matrix(get_operator(iden)) ≈ get_matrix(eye())
     
     
@@ -298,16 +294,16 @@ end
 
     @test_throws DomainError control_x(1,10)*ψ_input
     
-    # ControlX as ControlledGate
+    # ControlX as Controlled
 
-    cnot_kernel_1_2=Gate(ControlledGate(sigma_x(2),1), [1,2])
-    cnot_kernel_2_1=Gate(ControlledGate(sigma_x(1),2), [2,1])
+    cnot_kernel_1_2=controlled(sigma_x(2),[1])
+    cnot_kernel_2_1=controlled(sigma_x(1),[2])
 
     @test ψ_1_2 ≈ cnot_kernel_1_2*ψ_input
     @test ψ_2_1 ≈ cnot_kernel_2_1*ψ_input
 
     @test typeof(cnot_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
-    @test get_display_symbol(cnot_kernel_1_2) ==["*", "X"]
+    @test get_display_symbol(get_gate_symbol(cnot_kernel_1_2)) ==["*", "X"]
 
     # ControlZ
     ψ_input=Ket([1.,2.,3.,4.])
@@ -322,16 +318,16 @@ end
 
     @test_throws DomainError control_x(1,10)*ψ_input
 
-    # ControlZ as ControlledGate
+    # ControlZ as Controlled
 
-    cz_kernel_1_2=Gate(ControlledGate(sigma_z(2),1), [1,2])
-    cz_kernel_2_1=Gate(ControlledGate(sigma_z(1),2), [2,1])
+    cz_kernel_1_2=controlled(sigma_z(2),[1])
+    cz_kernel_2_1=controlled(sigma_z(1),[2])
 
     @test ψ_1_2 ≈ cz_kernel_1_2*ψ_input
     @test ψ_1_2 ≈ cz_kernel_2_1*ψ_input
 
     @test typeof(cz_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
-    @test get_display_symbol(cz_kernel_1_2) ==["*", "Z"]
+    @test get_display_symbol(get_gate_symbol(cz_kernel_1_2)) ==["*", "Z"]
 
     #Toffoli
     ψ_input=Ket([1.,2.,3.,4.,5.,6.,7.,8.])
@@ -352,14 +348,14 @@ end
 
     @test_throws DomainError toffoli(1,2,10)*ψ_input
 
-    # Toffoli as ControlledGate
+    # Toffoli as Controlled
 
-    toffoli_kernel_1_2_3=Gate(ControlledGate(sigma_x(3),[1,2]), [1,2,3])
-    toffoli_kernel_2_1_3=Gate(ControlledGate(sigma_x(3),[2,1]), [2,1,3])
-    toffoli_kernel_1_3_2=Gate(ControlledGate(sigma_x(2),[1,3]), [1,3,2])
-    toffoli_kernel_3_1_2=Gate(ControlledGate(sigma_x(2),[3,1]), [3,1,2])
-    toffoli_kernel_2_3_1=Gate(ControlledGate(sigma_x(1),[2,3]), [2,3,1])
-    toffoli_kernel_3_2_1=Gate(ControlledGate(sigma_x(1),[3,2]), [3,2,1])
+    toffoli_kernel_1_2_3=controlled(sigma_x(3),[1,2])
+    toffoli_kernel_2_1_3=controlled(sigma_x(3),[2,1])
+    toffoli_kernel_1_3_2=controlled(sigma_x(2),[1,3])
+    toffoli_kernel_3_1_2=controlled(sigma_x(2),[3,1])
+    toffoli_kernel_2_3_1=controlled(sigma_x(1),[2,3])
+    toffoli_kernel_3_2_1=controlled(sigma_x(1),[3,2])
 
     @test ψ_1_2_3 ≈ toffoli_kernel_1_2_3*ψ_input
     @test ψ_1_2_3 ≈ toffoli_kernel_2_1_3*ψ_input
@@ -369,16 +365,14 @@ end
     @test ψ_2_3_1 ≈ toffoli_kernel_3_2_1*ψ_input
 
     @test typeof(toffoli_kernel_1_2_3*ψ_input_32)==Ket{ComplexF32}
-    @test get_display_symbol(toffoli_kernel_1_2_3) ==["*", "*", "X"]
+    @test get_display_symbol(get_gate_symbol(toffoli_kernel_1_2_3)) ==["*", "*", "X"]
 
-    # ControlledHadamard as ControlledGate
-    controlled_hadamard_kernel_1_2=Gate(ControlledGate(hadamard(2),1), [1,2])
-    controlled_hadamard_kernel_2_1=Gate(ControlledGate(hadamard(1),2), [2,1])
+    # ControlledHadamard as Controlled
+    controlled_hadamard_kernel_1_2=controlled(hadamard(2),[1])
+    controlled_hadamard_kernel_2_1=controlled(hadamard(1),[2])
 
-    # ControlledHadamard as Dense AbstractControlledGateSymbol
-    struct ControlledHadamard <: AbstractControlledGateSymbol
-        control::Int
-        target::Int
+    # ControlledHadamard as Dense AbstractControlledSymbol
+    struct ControlledHadamard <: AbstractGateSymbol
     end
     
     control_hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(
@@ -390,16 +384,13 @@ end
         ]],
     )
 
-    Snowflurry.get_operator(gate::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
-    
-    Snowflurry.get_connected_qubits(gate::ControlledHadamard)=[gate.control, gate.target]
-    
-    Snowflurry.get_control_qubits(gate::ControlledHadamard)=[gate.control]
-    
-    Snowflurry.get_target_qubits(gate::ControlledHadamard)=[gate.target]
+    Snowflurry.get_num_connected_qubits(ch::ControlledHadamard) = 2
 
-    controlled_hadamard_dense_1_2=Gate(ControlledHadamard(1,2), [1,2])
-    controlled_hadamard_dense_2_1=Gate(ControlledHadamard(2,1), [2,1])
+    Snowflurry.get_operator(::ControlledHadamard, T::Type{<:Complex}=ComplexF64) = control_hadamard(T)
+    
+
+    controlled_hadamard_dense_1_2=Gate(ControlledHadamard(), [1,2])
+    controlled_hadamard_dense_2_1=Gate(ControlledHadamard(), [2,1])
   
     @test get_operator(controlled_hadamard_kernel_1_2) ≈ get_operator(controlled_hadamard_dense_1_2)
 
@@ -413,13 +404,13 @@ end
     @test controlled_hadamard_kernel_2_1*ψ_input ≈ controlled_hadamard_dense_2_1*ψ_input
 
     @test typeof(controlled_hadamard_kernel_1_2*ψ_input_32)==Ket{ComplexF32}
-    @test get_display_symbol(controlled_hadamard_kernel_1_2) ==["*", "H"]
+    @test get_display_symbol(get_gate_symbol(controlled_hadamard_kernel_1_2)) ==["*", "H"]
 
     @test_throws DomainError controlled_hadamard_kernel_1_2*Ket([1.,2.])
 
     # Neither target nor control is last qubit
-    controlled_hadamard_kernel_2_3=Gate(ControlledGate(hadamard(3),2), [2, 3])
-    controlled_hadamard_dense_2_3=Gate(ControlledHadamard(2,3), [2, 3])
+    controlled_hadamard_kernel_2_3=controlled(hadamard(3),[2])
+    controlled_hadamard_dense_2_3=Gate(ControlledHadamard(), [2, 3])
 
     ψ_input=Ket([ComplexF64(v) for v in 1:2^4])
     
@@ -436,11 +427,18 @@ end
 end
 
 struct DenseGate<:AbstractGateSymbol
-    connected_qubits::Vector{Int}
     operator::DenseOperator
 end
 
-Snowflurry.get_connected_qubits(gate::DenseGate)=gate.connected_qubits
+function Snowflurry.get_num_connected_qubits(gate::DenseGate)
+    matrix = get_matrix(gate.operator)
+    rows, cols = size(matrix)
+    @assert rows == cols
+    num_connected_qubits = Int(round(log2(rows)))
+    @assert 2 ^ num_connected_qubits == rows
+    return num_connected_qubits
+end
+
 Snowflurry.get_operator(gate::DenseGate,T::Type{<:Complex}=ComplexF64)=gate.operator
 
 function make_labels(num_controls::Int,labels::Vector{String})
@@ -450,7 +448,7 @@ function make_labels(num_controls::Int,labels::Vector{String})
     )
 end
 
-@testset "ControlledGate multi-control single-target" begin
+@testset "Controlled multi-control single-target" begin
     qubit_count=4
 
     test_cases=[
@@ -483,14 +481,14 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=Gate(ControlledGate(func(target_qubits...),control_qubits), [control_qubits..., target_qubits...])
-            @test get_display_symbol(c_gate)==labels
+            c_gate=controlled(func(target_qubits...),control_qubits)
+            @test get_display_symbol(get_gate_symbol(c_gate))==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -507,8 +505,8 @@ end
         ]
 
         for (func,params,param_keys,labels) in test_cases_params
-            c_gate=Gate(ControlledGate(func(target_qubits...,params...),control_qubits), [control_qubits..., target_qubits...])
-            @test get_display_symbol(c_gate)==labels
+            c_gate=controlled(func(target_qubits...,params...),control_qubits)
+            @test get_display_symbol(get_gate_symbol(c_gate))==labels
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
 
@@ -518,7 +516,7 @@ end
                 @test params_in_gate[k]==v
             end
 
-            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -526,7 +524,7 @@ end
 
         #test label precision
         @test get_display_symbol(
-            ControlledGate(rotation(target_qubits...,[pi,pi/2]...),control_qubits),precision=2
+            get_gate_symbol(controlled(rotation(target_qubits...,[pi,pi/2]...),control_qubits)),precision=2
             ) == make_labels(num_controls, ["R(θ=3.14,ϕ=1.57)"])
     end
 
@@ -538,10 +536,10 @@ end
         [1,2]
     )
 
-    @test_throws AssertionError ControlledGate(ControlledGate(sigma_x(2),[1]),[3])
+    @test_throws AssertionError Controlled(Controlled(Snowflurry.SigmaX(),1),3)
 end
 
-@testset "ControlledGate multi-control dual-target" begin
+@testset "Controlled multi-control dual-target" begin
     qubit_count=6
 
     test_cases=[
@@ -569,15 +567,15 @@ end
         ]
 
         for (func,labels) in c_gate_config
-            c_gate=Gate(ControlledGate(func(target_qubits...),control_qubits), [control_qubits..., target_qubits...])
+            c_gate=controlled(func(target_qubits...),control_qubits)
             @test control_qubits==get_control_qubits(c_gate)
             @test vcat(control_qubits,target_qubits)==get_connected_qubits(c_gate)
 
-            @test get_display_symbol(c_gate)==labels
+            @test get_display_symbol(get_gate_symbol(c_gate))==labels
 
             @test get_gate_parameters(c_gate)==Dict{String, Real}()
 
-            equivalent_dense_gate= Gate(DenseGate(get_connected_qubits(c_gate),get_operator(c_gate)), get_connected_qubits(c_gate))
+            equivalent_dense_gate= Gate(DenseGate(get_operator(c_gate)), get_connected_qubits(c_gate))
             ψ_input=Ket([ComplexF64(v) for v in 1:2^qubit_count])
 
             @test c_gate*ψ_input ≈ equivalent_dense_gate*ψ_input
@@ -590,13 +588,13 @@ end
     iswap_dag=iswap_dagger(1, 2)
     @test iswap(1, 2)*(iswap_dag*initial_state_10) ≈ initial_state_10
     @test get_instruction_symbol(iswap_dag) == "iswap_dag"
-    @test get_display_symbol(iswap_dag) ==["x†", "x†"]
+    @test get_display_symbol(get_gate_symbol(iswap_dag)) ==["x†", "x†"]
 
     initial_state_1 = Ket([0, 1])
     pi_8_dag=pi_8_dagger(1)
     @test pi_8_dag*(pi_8(1)*initial_state_1) ≈ initial_state_1
     @test get_instruction_symbol(pi_8_dag) == "t_dag"
-    @test get_display_symbol(pi_8_dag) ==["T†"]
+    @test get_display_symbol(get_gate_symbol(pi_8_dag)) ==["T†"]
 
 end
 
@@ -640,71 +638,71 @@ end
     @test test_inverse(x_90_gate)
     inverse_x_90 = inv(x_90_gate)
     @test get_connected_qubits(x_90_gate)==get_connected_qubits(inverse_x_90)
-    @test get_instruction_symbol(inverse_x_90) == "x_minus_90"
-    @test get_display_symbol(inverse_x_90) ==["X_m90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_x_90)) == "x_minus_90"
+    @test get_display_symbol(get_gate_symbol(inverse_x_90)) ==["X_m90"]
 
     x_minus_90_gate = x_minus_90(1)
     @test test_inverse(x_minus_90_gate)
     inverse_x_minus_90 = inv(x_minus_90_gate)
     @test get_connected_qubits(x_minus_90_gate)==get_connected_qubits(inverse_x_minus_90)
-    @test get_instruction_symbol(inverse_x_minus_90) == "x_90"
-    @test get_display_symbol(inverse_x_minus_90) ==["X_90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_x_minus_90)) == "x_90"
+    @test get_display_symbol(get_gate_symbol(inverse_x_minus_90)) ==["X_90"]
 
     y_90_gate = y_90(1)
     @test test_inverse(y_90_gate)
     inverse_y_90 = inv(y_90_gate)
     @test get_connected_qubits(y_90_gate)==get_connected_qubits(inverse_y_90)
-    @test get_instruction_symbol(inverse_y_90) == "y_minus_90"
-    @test get_display_symbol(inverse_y_90) ==["Y_m90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_y_90)) == "y_minus_90"
+    @test get_display_symbol(get_gate_symbol(inverse_y_90)) ==["Y_m90"]
 
     y_minus_90_gate = y_minus_90(1)
     @test test_inverse(y_minus_90_gate)
     inverse_y_minus_90 = inv(y_minus_90_gate)
     @test get_connected_qubits(y_minus_90_gate)==get_connected_qubits(inverse_y_minus_90)
-    @test get_instruction_symbol(inverse_y_minus_90) == "y_90"
-    @test get_display_symbol(inverse_y_minus_90) ==["Y_90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_y_minus_90)) == "y_90"
+    @test get_display_symbol(get_gate_symbol(inverse_y_minus_90)) ==["Y_90"]
 
     z_90_gate = z_90(1)
     @test test_inverse(z_90_gate)
     inverse_z_90 = inv(z_90_gate)
     @test get_connected_qubits(z_90_gate)==get_connected_qubits(inverse_z_90)
-    @test get_instruction_symbol(inverse_z_90) == "z_minus_90"
-    @test get_display_symbol(inverse_z_90) ==["Z_m90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_z_90)) == "z_minus_90"
+    @test get_display_symbol(get_gate_symbol(inverse_z_90)) ==["Z_m90"]
 
     z_minus_90_gate = z_minus_90(1)
     @test test_inverse(z_minus_90_gate)
     inverse_z_minus_90 = inv(z_minus_90_gate)
     @test get_connected_qubits(z_minus_90_gate)==get_connected_qubits(inverse_z_minus_90)
-    @test get_instruction_symbol(inverse_z_minus_90) == "z_90"
-    @test get_display_symbol(inverse_z_minus_90) ==["Z_90"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_z_minus_90)) == "z_90"
+    @test get_display_symbol(get_gate_symbol(inverse_z_minus_90)) ==["Z_90"]
 
     t = pi_8(1)
     @test test_inverse(t)
     inverse_t = inv(t)
     @test get_connected_qubits(t)==get_connected_qubits(inverse_t)
-    @test get_instruction_symbol(inverse_t) == "t_dag"
-    @test get_display_symbol(inverse_t) ==["T†"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_t)) == "t_dag"
+    @test get_display_symbol(get_gate_symbol(inverse_t)) ==["T†"]
     
     t_dag = pi_8_dagger(1)
     @test test_inverse(t_dag)
     inverse_t_dag = inv(t_dag)
     @test get_connected_qubits(t_dag)==get_connected_qubits(inverse_t_dag)
-    @test get_instruction_symbol(inverse_t_dag) == "t"
-    @test get_display_symbol(inverse_t_dag) ==["T"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_t_dag)) == "t"
+    @test get_display_symbol(get_gate_symbol(inverse_t_dag)) ==["T"]
     
     iswap_gate = iswap(1, 2)
     @test test_inverse(iswap_gate) 
     inverse_iswap = inv(iswap_gate)
     @test get_connected_qubits(iswap_gate)==get_connected_qubits(inverse_iswap)
-    @test get_instruction_symbol(inverse_iswap) == "iswap_dag"
-    @test get_display_symbol(inverse_iswap) ==["x†", "x†"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_iswap)) == "iswap_dag"
+    @test get_display_symbol(get_gate_symbol(inverse_iswap)) ==["x†", "x†"]
 
     iswap_dag = iswap_dagger(1, 2)
     @test test_inverse(iswap_dag)
     inverse_iswap_dag = inv(iswap_dag)
     @test get_connected_qubits(iswap_dag)==get_connected_qubits(inverse_iswap_dag)
-    @test get_instruction_symbol(inverse_iswap_dag) == "iswap"
-    @test get_display_symbol(inverse_iswap_dag) ==["x", "x"]
+    @test get_instruction_symbol(get_gate_symbol(inverse_iswap_dag)) == "iswap"
+    @test get_display_symbol(get_gate_symbol(inverse_iswap_dag)) ==["x", "x"]
 
     r = rotation(1, pi/2, -pi/3)
     @test test_inverse(r)

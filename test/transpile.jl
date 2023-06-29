@@ -390,14 +390,11 @@ end
 @testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
 
     struct MultiParamMultiTargetGateSymbol <: Snowflurry.AbstractGateSymbol
-        target_1::Int
-        target_2::Int
-        target_3::Int
         theta::Real
         phi::Real
     end
 
-    Snowflurry.get_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflurry.get_num_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=3
     Snowflurry.get_gate_parameters(gate::MultiParamMultiTargetGateSymbol)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
     Snowflurry.get_operator(gate::MultiParamMultiTargetGateSymbol, T::Type{<:Complex}=ComplexF64) = DenseOperator(
         T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -415,7 +412,7 @@ end
     Snowflurry.gates_instruction_symbols[MultiParamMultiTargetGateSymbol]="mm"
 
 
-    circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])])
+    circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGateSymbol(π,π/3), [1,3, 5])])
 
     transpiler=SwapQubitsForLineConnectivityTranspiler()
 
@@ -984,7 +981,7 @@ end
 
 @testset "UnsupportedGatesTranspiler" begin
     
-    circuit =QuantumCircuit(qubit_count=4, gates=[Gate(ControlledGate(hadamard(2),1), [1,2])])
+    circuit =QuantumCircuit(qubit_count=4, gates=[controlled(hadamard(2),[1])])
 
     @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
 

@@ -378,39 +378,32 @@ function format_label(
     end
 end
 
-# TODO(#226): delete on completion
-function get_display_symbol(gate::Gate;precision::Integer=4)
-    return get_display_symbol(get_gate_symbol(gate), precision=precision)
-end
-
 function get_display_symbol(gate::AbstractGateSymbol;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
 
-    targets=get_connected_qubits(gate)
-
-    num_targets=length(targets)
+    num_targets=get_num_connected_qubits(gate)
 
     symbol_specs=gates_display_symbols[get_gate_type(gate)]
 
     return format_label(symbol_specs,num_targets,gate_params;precision=precision)
 end
 
-function get_display_symbol(gate::ControlledGate;precision::Integer=4)
+function get_display_symbol(gate::Controlled;precision::Integer=4)
 
     # build new display symbol using existing symbol pertaining to kernel
-    symbol_specs=get_display_symbol(gate.kernel,precision=precision)
+    symbol_specs=get_display_symbol(gate.target,precision=precision)
 
-    num_kernel_qubits=length(gate.kernel_qubits)
+    num_target_qubits=get_num_target_qubits(gate)
     
     gate_params=get_gate_parameters(gate)
 
     return vcat(
-        [control_display_symbol for _ in 1:length(gate.control_qubits)],
+        [control_display_symbol for _ in 1:get_num_control_qubits(gate)],
         [
             format_label(
                 symbol_specs,
-                num_kernel_qubits,
+                num_target_qubits,
                 gate_params;
                 precision=precision
             )...
@@ -633,7 +626,7 @@ end
 function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
     i_step::Integer, longest_symbol_length::Integer)
     
-    symbols_gate=get_display_symbol(gate)
+    symbols_gate=get_display_symbol(get_gate_symbol(gate))
 
     for (i_target, target) in enumerate(get_connected_qubits(gate))
         symbol_length = length(symbols_gate[i_target])

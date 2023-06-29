@@ -1711,7 +1711,7 @@ function transpile(
     circuit::QuantumCircuit)::QuantumCircuit
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa ControlledGate
+        if get_gate_symbol(gate) isa Controlled
             throw(NotImplementedError(:Transpiler,gate))
         end
     end

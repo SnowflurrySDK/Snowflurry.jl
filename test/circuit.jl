@@ -31,7 +31,7 @@ end
 
     print(c)
 
-    push!(c, Gate(ControlledGate(swap(2,3),[1]), [1, 2, 3]))
+    push!(c, controlled(swap(2,3),[1]))
     @test length(get_circuit_gates(c)) == 3
 
     print(c)
@@ -60,18 +60,18 @@ end
     circuit = QuantumCircuit(qubit_count = 2)
     push!(circuit, hadamard(1))
     push!(circuit, control_x(1, 2))  
-    push!(circuit, Gate(ControlledGate(hadamard(2),[1]), [1,2])) 
+    push!(circuit, controlled(hadamard(2),[1]))
 
     println(get_circuit_gates(circuit))
 
     @test circuit_contains_gate_type(circuit, Snowflurry.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflurry.ControlX)
-    @test circuit_contains_gate_type(circuit, Snowflurry.ControlledGate{Snowflurry.Hadamard})
+    @test circuit_contains_gate_type(circuit, Snowflurry.Controlled{Snowflurry.Hadamard})
 
     @test !circuit_contains_gate_type(circuit, Snowflurry.ControlZ)
     @test !circuit_contains_gate_type(circuit, Snowflurry.Swap)
     @test !circuit_contains_gate_type(circuit, Snowflurry.SigmaX)
-    @test !circuit_contains_gate_type(circuit, Snowflurry.ControlledGate{Snowflurry.RotationX})
+    @test !circuit_contains_gate_type(circuit, Snowflurry.Controlled{Snowflurry.RotationX})
 
 end
 

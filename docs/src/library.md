@@ -29,7 +29,7 @@ permute_qubits
 ## Quantum Gates
 ```@docs
 AbstractGateSymbol
-ControlledGate
+Controlled
 Gate
 eye
 identity_gate
