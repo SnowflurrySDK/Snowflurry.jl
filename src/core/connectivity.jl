@@ -1,10 +1,96 @@
 
 abstract type AbstractConnectivity end
 
+
+"""
+    LineConnectivity <:AbstractConnectivity
+
+A data structure to represent linear qubit connectivity in a Anyon System's QPU.  
+# Fields
+- `dimension                  ::Int` -- Qubit count in this connectivity.
+
+
+# Example
+```jldoctest
+julia>  connectivity = LineConnectivity(6)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+```
+"""
 struct LineConnectivity <:AbstractConnectivity 
     dimension::Int
 end
 
+"""
+    LineConnectivity <:AbstractConnectivity
+
+A data structure to represent 2D-lattice qubit connectivity in a Anyon System's QPU.  
+# Fields
+- `qubits_per_row    ::Vector{Int}` -- number of qubits in each line, when constructing the printout.
+- `dimensions        ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
+
+
+# Example
+The following lattice has 4 rows, made of qubits 
+`[2, 6, 10]`, `[1, 5, 9]`, `[4, 8, 12]` and `[3, 7, 11]`, with each of those rows having 3 columns.
+
+The corresponding `qubits_per_row` field is `[2,4,4,2]`, the number of qubits in each line
+in the printed representation.  
+
+```jldoctest
+julia>  connectivity = LatticeConnectivity(4,3)
+LatticeConnectivity{4,3}
+        1 ──  2 
+        |     | 
+  3 ──  4 ──  5 ──  6 
+        |     |     | 
+        7 ──  8 ──  9 ── 10 
+              |     | 
+             11 ── 12 
+
+
+```
+
+Lattices of arbitrairy dimensions can be built:
+```jldoctest
+julia>  connectivity = LatticeConnectivity(7,5)
+LatticeConnectivity{7,5}
+              1 ──  2 
+              |     | 
+        3 ──  4 ──  5 ──  6 
+        |     |     |     | 
+  7 ──  8 ──  9 ── 10 ── 11 ── 12 
+  |     |     |     |     |     | 
+ 13 ── 14 ── 15 ── 16 ── 17 ── 18 ── 19 
+        |     |     |     |     |     | 
+       20 ── 21 ── 22 ── 23 ── 24 ── 25 ── 26 
+              |     |     |     |     | 
+             27 ── 28 ── 29 ── 30 ── 31 
+                    |     |     | 
+                   32 ── 33 ── 34 
+                          | 
+                         35 
+```
+
+Non rectangular shapes can also be achieved by directly specifying the `qubits_per_row`:
+
+```jldoctest
+julia>  connectivity = LatticeConnectivity([5,7,8,8,7,5])
+LatticeConnectivity{8,5}
+        1 ──  2 ──  3 ──  4 ──  5 
+        |     |     |     |     | 
+  6 ──  7 ──  8 ──  9 ── 10 ── 11 ── 12 
+  |     |     |     |     |     |     | 
+ 13 ── 14 ── 15 ── 16 ── 17 ── 18 ── 19 ── 20 
+        |     |     |     |     |     |     | 
+       21 ── 22 ── 23 ── 24 ── 25 ── 26 ── 27 ── 28 
+              |     |     |     |     |     |     | 
+             29 ── 30 ── 31 ── 32 ── 33 ── 34 ── 35 
+                    |     |     |     |     | 
+                   36 ── 37 ── 38 ── 39 ── 40 
+```
+"""
 struct LatticeConnectivity <:AbstractConnectivity 
     qubits_per_row::Vector{Int}
     dimensions::Tuple{Int,Int}

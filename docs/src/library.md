@@ -81,6 +81,8 @@ run_job
 transpile_and_run_job
 get_transpiler
 SequentialTranspiler
+LineConnectivity
+LatticeConnectivity
 ```
 
 ## Quantum Toolkit

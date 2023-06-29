@@ -255,7 +255,7 @@ function poll_for_status(client::Client, circuitID::String, request_throttle::Fu
 end
 
 """
-    get_transpiler(qpu::AnyonYukonQPU)::Transpiler
+    get_transpiler(qpu::AbstractQPU)::Transpiler
 
 Returns the transpiler associated with this QPU.
 
