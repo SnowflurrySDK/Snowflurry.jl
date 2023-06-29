@@ -384,7 +384,7 @@ function get_display_symbol(gate::AbstractGateSymbol;precision::Integer=4)
 
     num_targets=get_num_connected_qubits(gate)
 
-    symbol_specs=gates_display_symbols[get_gate_type(gate)]
+    symbol_specs=gates_display_symbols[typeof(gate)]
 
     return format_label(symbol_specs,num_targets,gate_params;precision=precision)
 end
@@ -439,7 +439,7 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[get_gate_type(gate)]
+get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[typeof(gate)]
 
 gates_instruction_symbols=Dict(
     Identity    =>"i",

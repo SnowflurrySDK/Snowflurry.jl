@@ -472,7 +472,7 @@ end
 
             if input_is_native
                 test_is_not_rz=[
-                    !(get_gate_type(gate) in Snowflurry.set_of_rz_gates)
+                    !(typeof(get_gate_symbol(gate)) in Snowflurry.set_of_rz_gates)
                     for gate in gates_in_output
                 ]
 
@@ -524,9 +524,9 @@ end
 
         for target in targets
             if haskey(results,target)
-                results[target]=push!(results[target], get_gate_type(gate))
+                results[target]=push!(results[target], typeof(get_gate_symbol(gate)))
             else
-                results[target]=[get_gate_type(gate)]
+                results[target]=[typeof(get_gate_symbol(gate))]
             end
         end
     end

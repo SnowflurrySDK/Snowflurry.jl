@@ -1253,7 +1253,7 @@ function transpile(::SwapQubitsForLineConnectivityTranspiler, circuit::QuantumCi
             gates_block::Vector{Gate} =[move_gate(gate,mapping_dict)]
 
             @assert get_connected_qubits(gates_block[1])==consecutive_mapping (
-                "Failed to construct gate: $(get_gate_type((gates_block[1])))")
+                "Failed to construct gate: $(typeof((gates_block[1])))")
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit

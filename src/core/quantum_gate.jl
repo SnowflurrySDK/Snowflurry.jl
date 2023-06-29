@@ -199,9 +199,9 @@ function Base.show(io::IO, gate::Gate)
     parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
-        show_gate(io, get_gate_type(gate), targets, get_operator(gate))
+        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(gate))
     else
-        show_gate(io, get_gate_type(gate), targets, get_operator(gate), parameters)
+        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(gate), parameters)
     end
 end
 
@@ -221,11 +221,6 @@ end
 # TODO(#226): delete on completion
 function get_instruction_symbol(gate::Gate)
     return get_instruction_symbol(get_gate_symbol(gate))
-end
-
-# TODO(#226): delete on completion
-function get_gate_type(gate::Gate)
-    return get_gate_type(get_gate_symbol(gate))
 end
 
 # TODO(#226): delete on completion
@@ -405,37 +400,6 @@ function get_operator(gate::Controlled, T::Type{<:Complex}=ComplexF64)
 end
 
 get_gate_parameters(gate::Controlled)=get_gate_parameters(gate.target)
-
-# TODO(#226): delete on completion
-"""
-    get_gate_type(gate::AbstractGateSymbol)::Type
-
-Returns the type of a `gate`.
-
-!!! warning "Use get_gate_type instead of typeof!"
-    For `AbstractGateSymbol` objects, `get_gate_type` should be used instead of `typeof`. The
-    utilization of `typeof` could lead to unexpected behavior (e.g. if a gate has been
-    moved).
-
-# Examples
-```jldoctest
-julia> gate = sigma_x(1)
-Gate Object: Snowflurry.SigmaX
-Connected_qubits	: [1]
-Operator:
-(2,2)-element Snowflurry.AntiDiagonalOperator:
-Underlying data type: ComplexF64:
-    .    1.0 + 0.0im
-    1.0 + 0.0im    .
-
-
-julia> get_gate_type(gate)
-Snowflurry.SigmaX
-
-```
-"""
-get_gate_type(gate::AbstractGateSymbol)::Type = typeof(gate)
-
 
 """
     move_gate(gate::Gate,
@@ -2102,10 +2066,10 @@ function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ,Toffoli})
     target_qubits=get_target_qubits(gate)
     @assert length(target_qubits)==1
 
-    if get_gate_type(gate)==ControlX
+    if typeof(gate)==ControlX
         @assert length(control_qubits)==1
         apply_control_x!(state,control_qubits[1],target_qubits[1])
-    elseif get_gate_type(gate)==ControlZ
+    elseif typeof(gate)==ControlZ
         @assert length(control_qubits)==1
         apply_control_z!(state,control_qubits[1],target_qubits[1])
     else
@@ -2263,8 +2227,8 @@ function Base.show(io::IO, gate::AbstractGateSymbol)
     parameters = get_gate_parameters(gate)
 
     if isempty(parameters)
-        show_gate(io, get_gate_type(gate), targets, get_operator(gate))
+        show_gate(io, typeof(gate), targets, get_operator(gate))
     else
-        show_gate(io, get_gate_type(gate), targets, get_operator(gate), parameters)
+        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
     end
 end
