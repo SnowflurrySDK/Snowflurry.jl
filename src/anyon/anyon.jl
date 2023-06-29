@@ -74,7 +74,7 @@ function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
         ControlZ,
     ]
 
-    if gate isa ControlZ
+    if get_gate_symbol(gate) isa ControlZ
         @assert get_metadata(qpu)["connectivity_type"]==line_connectivity_label (
             "Not implemented for connectivity type: $(get_metadata(qpu)["connectivity_type"])"
         )
