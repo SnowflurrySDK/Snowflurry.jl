@@ -182,14 +182,6 @@ struct Gate{SymbolType<:AbstractGateSymbol}
     end
 end
 
-
-function Base.convert(::Type{Gate{AbstractGateSymbol}}, gate::Gate{SymbolType}) where SymbolType <: AbstractGateSymbol
-    return Gate{AbstractGateSymbol}(
-        Base.convert(AbstractGateSymbol, gate.symbol),
-        gate.connected_qubits,
-    )
-end
-
 function Base.show(io::IO, gate::Gate)
     targets = get_connected_qubits(gate)
 
