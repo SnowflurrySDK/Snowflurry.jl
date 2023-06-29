@@ -61,8 +61,8 @@ test_circuits=[
 
 @testset "as_universal_gate" begin
     for gate in single_qubit_gates    
-        universal_equivalent=Snowflurry.as_universal_gate(target,get_operator(gate))
-        @test get_operator(gate)≈get_operator(universal_equivalent)
+        universal_equivalent=Snowflurry.as_universal_gate(target,get_operator(get_gate_symbol(gate)))
+        @test get_operator(get_gate_symbol(gate))≈get_operator(get_gate_symbol(universal_equivalent))
     end
 end
 

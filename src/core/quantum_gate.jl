@@ -134,7 +134,6 @@ get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
 
 
-# TODO(#226): `Gate` should not inherit from `AbstractGateSymbol` after completion
 """
     Gate
 
@@ -196,12 +195,12 @@ end
 function Base.show(io::IO, gate::Gate)
     targets = get_connected_qubits(gate)
 
-    parameters = get_gate_parameters(gate)
+    parameters = get_gate_parameters(get_gate_symbol(gate))
 
     if isempty(parameters)
-        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(gate))
+        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(get_gate_symbol(gate)))
     else
-        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(gate), parameters)
+        show_gate(io, typeof(get_gate_symbol(gate)), targets, get_operator(get_gate_symbol(gate)), parameters)
     end
 end
 
@@ -213,22 +212,6 @@ function get_connected_qubits(gate::Gate)::AbstractVector{Int}
     return gate.connected_qubits
 end
 
-# TODO(#226): delete on completion
-function get_gate_parameters(gate::Gate)::Dict{String,Real}
-    return get_gate_parameters(get_gate_symbol(gate))
-end
-
-# TODO(#226): delete on completion
-function get_instruction_symbol(gate::Gate)
-    return get_instruction_symbol(get_gate_symbol(gate))
-end
-
-# TODO(#226): delete on completion
-function get_operator(gate::Gate, T::Type{<:Complex}=ComplexF64)::AbstractOperator
-    return get_operator(get_gate_symbol(gate), T)
-end
-
-# TODO(#226): delete on completion
 function Base.inv(gate::Gate)::Gate
     return Gate(inv(get_gate_symbol(gate)), get_connected_qubits(gate))
 end
@@ -455,7 +438,7 @@ function apply_gate!(state::Ket, gate::Gate)
 
     type_in_ket=eltype(state.data)
 
-    operator=get_operator(gate,type_in_ket)
+    operator=get_operator(get_gate_symbol(gate),type_in_ket)
 
     apply_operator!(state,operator,connected_qubits)
 end
@@ -472,7 +455,7 @@ function apply_gate!(state::Ket, gate::Controlled)
 
     apply_controlled_gate_operator!(
         state,
-        get_operator(gate),
+        get_operator(get_gate_symbol(gate)),
         DenseOperator(get_operator(gate.target)),
         connected_qubits)
 end

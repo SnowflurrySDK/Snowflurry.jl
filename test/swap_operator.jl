@@ -11,9 +11,9 @@ test_operator_implementation(SwapLikeOperator,dim=nothing,label="SwapOperator")
     sw=iswap(1,2)
     println(sw)
 
-    @test SwapLikeOperator(im)≈get_operator(sw)
-    @test SwapLikeOperator(0.0 + 1.0im)≈get_operator(sw)
-    @test SwapLikeOperator(Complex(1))≈get_operator(swap(1,2))
+    @test SwapLikeOperator(im)≈get_operator(get_gate_symbol(sw))
+    @test SwapLikeOperator(0.0 + 1.0im)≈get_operator(get_gate_symbol(sw))
+    @test SwapLikeOperator(Complex(1))≈get_operator(get_gate_symbol(swap(1,2)))
 
     sum_op=swap()+iswap()
 

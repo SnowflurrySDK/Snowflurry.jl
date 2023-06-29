@@ -13,7 +13,7 @@ using StaticArrays
 
     phase_gate=phase_shift(target,ϕ)
 
-    phase_gate_operator=get_operator(phase_gate)
+    phase_gate_operator=get_operator(get_gate_symbol(phase_gate))
 
     println(phase_gate_operator)
 
@@ -48,7 +48,7 @@ using StaticArrays
     @test ψ≈ψ_z
 
     # Ctor from LinearAlgebra.Adjoint(DiagonalOperator{N,T})
-    @test adjoint(phase_gate_operator)≈get_operator(phase_shift(target,-ϕ))
+    @test adjoint(phase_gate_operator)≈get_operator(get_gate_symbol(phase_shift(target,-ϕ)))
 
     @test test_inverse(phase_gate)
 
@@ -67,13 +67,13 @@ end
 
     phase_gate=phase_shift(target,ϕ)
     
-    op=get_operator(phase_gate)
+    op=get_operator(get_gate_symbol(phase_gate))
 
     @test op[1,1] === ComplexF64(1.)
     @test op[2,2] === exp(im*ϕ)
     @test op[2,1] === ComplexF64(0.)
 
-    @test get_operator(inv(phase_gate))==get_operator(phase_shift(target,-ϕ))
+    @test get_operator(get_gate_symbol(inv(phase_gate)))==get_operator(get_gate_symbol(phase_shift(target,-ϕ)))
   
     apply_gate!(ψ, phase_gate)
 
@@ -101,7 +101,7 @@ end
 
     ψ_z = Ket([v for v in 1:2^qubit_count])
 
-    @test expected_value(get_operator(z_gate), ψ_z) == ComplexF64(-3.)
+    @test expected_value(get_operator(get_gate_symbol(z_gate)), ψ_z) == ComplexF64(-3.)
 
     @test test_inverse(z_gate)
 

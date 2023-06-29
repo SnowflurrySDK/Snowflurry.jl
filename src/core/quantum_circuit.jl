@@ -935,7 +935,7 @@ Dict{String, Int64} with 2 entries:
 function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
     for gate in get_circuit_gates(circuit)
-        instruction_symbol=get_instruction_symbol(gate)
+        instruction_symbol=get_instruction_symbol(get_gate_symbol(gate))
         if haskey(gate_counts, instruction_symbol)
             gate_counts[instruction_symbol] += 1
         else

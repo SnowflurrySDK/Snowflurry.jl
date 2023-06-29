@@ -126,7 +126,7 @@ function unsafe_compress_to_universal(gates::Vector{Gate}, target::Int)::Gate{Un
         @assert length(targets)==1 ("Received gate with multiple targets: $gate")
         @assert targets[1]==target ("Gates in array do not share common target")
 
-        combined_op=get_operator(gate)*combined_op
+        combined_op=get_operator(get_gate_symbol(gate))*combined_op
     end
 
     return as_universal_gate(target,combined_op)
@@ -833,7 +833,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
             push!(output_circuit,gate)
         else
             if !(get_gate_symbol(gate) isa Universal)
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(gate)))
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
             else
                 gate=get_gate_symbol(gate)
             end
@@ -937,7 +937,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
             push!(output_circuit,gate)
         else
             if !(get_gate_symbol(gate) isa Universal)
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(gate)))
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
             else
                 gate=get_gate_symbol(gate)
             end
@@ -1417,7 +1417,7 @@ function unsafe_compress_to_rz(gates::Vector{Gate}, target::Int)::Gate{PhaseShif
     combined_op=eye()
 
     for gate in gates
-        combined_op=get_operator(gate)*combined_op
+        combined_op=get_operator(get_gate_symbol(gate))*combined_op
     end
     
     return as_phase_shift_gate(target,combined_op)
