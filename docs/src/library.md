@@ -70,6 +70,7 @@ move_gate
 ## Quantum Processing Unit
 ```@docs
 AnyonYukonQPU
+AnyonMonarqQPU
 VirtualQPU
 Client
 get_host

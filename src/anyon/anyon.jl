@@ -38,6 +38,26 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
+"""
+    AnyonMonarqQPU
+
+A data structure to represent an Anyon System's QPU.  
+# Fields
+- `client                  ::Client` -- Client to the QPU server.
+- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+
+
+# Example
+```jldoctest
+julia>  qpu = AnyonMonarqQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    MonarQ
+   serial_number: ANYK202301
+   qubit_count:   12 
+   connectivity_type:  2D-lattice
+```
+"""
 struct AnyonMonarqQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
