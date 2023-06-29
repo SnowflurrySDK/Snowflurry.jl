@@ -441,7 +441,7 @@ function apply_gate!(state::Ket, gate::Gate)
     apply_operator!(state,operator,connected_qubits)
 end
 
-function apply_gate!(state::Ket, gate::Controlled)
+function apply_gate!(state::Ket, gate::Gate{Controlled{T}}) where T<:AbstractGateSymbol
     qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
@@ -454,7 +454,7 @@ function apply_gate!(state::Ket, gate::Controlled)
     apply_controlled_gate_operator!(
         state,
         get_operator(get_gate_symbol(gate)),
-        DenseOperator(get_operator(gate.target)),
+        DenseOperator(get_operator(get_gate_symbol(gate).target)),
         connected_qubits)
 end
 
@@ -1996,7 +1996,7 @@ get_num_target_qubits(::Toffoli) = 1
 
 # optimized application of ControlX, ControlZ or Toffoli gate without calling operator 
 # (it is hard-coded in apply_control_x!, apply_control_z! or apply_toffoli!, respectively)
-function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ,Toffoli})
+function apply_gate!(state::Ket, gate::Union{Gate{ControlX},Gate{ControlZ},Gate{Toffoli}})
     qubit_count = get_num_qubits(state)
     
     connected_qubits=get_connected_qubits(gate)
@@ -2011,13 +2011,14 @@ function apply_gate!(state::Ket, gate::Union{ControlX,ControlZ,Toffoli})
     target_qubits=get_target_qubits(gate)
     @assert length(target_qubits)==1
 
-    if typeof(gate)==ControlX
+    if typeof(get_gate_symbol(gate))==ControlX
         @assert length(control_qubits)==1
         apply_control_x!(state,control_qubits[1],target_qubits[1])
-    elseif typeof(gate)==ControlZ
+    elseif typeof(get_gate_symbol(gate))==ControlZ
         @assert length(control_qubits)==1
         apply_control_z!(state,control_qubits[1],target_qubits[1])
     else
+        @assert length(control_qubits)==2
         apply_toffoli!(state,control_qubits,target_qubits[1])
     end
 end
