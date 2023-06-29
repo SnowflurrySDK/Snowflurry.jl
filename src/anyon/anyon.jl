@@ -113,6 +113,45 @@ set_of_native_gates=[
     ControlZ,
 ]
 
+
+"""
+    get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
+
+Find the length of the shortest path between target qubits in terms of 
+Manhattan distance, using the Breadth-First Search algorithm, on any 
+`connectivity::AbstractConnectivity`.
+
+# Example
+```jldoctest
+julia>  connectivity = LineConnectivity(6)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+
+julia> get_qubits_distance(2, 5, connectivity)
+3
+
+julia> connectivity = LatticeConnectivity(6,4)
+LatticeConnectivity{6,4}
+              1 ──  2 
+              |     | 
+        3 ──  4 ──  5 ──  6 
+        |     |     |     | 
+  7 ──  8 ──  9 ── 10 ── 11 ── 12 
+        |     |     |     |     | 
+       13 ── 14 ── 15 ── 16 ── 17 ── 18 
+              |     |     |     | 
+             19 ── 20 ── 21 ── 22 
+                    |     | 
+                   23 ── 24 
+
+
+julia> get_qubits_distance(3, 24, connectivity)
+7
+
+```
+
+"""
 get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int = 
     abs(target_1 - target_2)
 

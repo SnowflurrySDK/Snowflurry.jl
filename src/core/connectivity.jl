@@ -368,8 +368,6 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     return adjacency_list
 end
     
-#breadth-first search on 2D Lattice
-
 """
     path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
 
@@ -424,7 +422,6 @@ julia> path = path_search(3, 24, connectivity)
   3
 
 ```
-
 """
 function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
 

@@ -81,9 +81,11 @@ run_job
 transpile_and_run_job
 get_transpiler
 SequentialTranspiler
+AllToAllConnectivity
 LineConnectivity
 LatticeConnectivity
 path_search
+get_qubits_distance
 ```
 
 ## Quantum Toolkit
