@@ -2166,15 +2166,3 @@ function show_gate(
     println(io, "Operator:")
     show(io, "text/plain", op)
 end
-
-function Base.show(io::IO, gate::AbstractGateSymbol)
-    targets = get_connected_qubits(gate)
-
-    parameters = get_gate_parameters(gate)
-
-    if isempty(parameters)
-        show_gate(io, typeof(gate), targets, get_operator(gate))
-    else
-        show_gate(io, typeof(gate), targets, get_operator(gate), parameters)
-    end
-end
