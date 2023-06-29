@@ -224,9 +224,6 @@ function get_instruction_symbol(gate::Gate)
 end
 
 # TODO(#226): delete on completion
-is_gate_type(gate::Gate, type::Type)::Bool = is_gate_type(gate.symbol, type)
-
-# TODO(#226): delete on completion
 function get_operator(gate::Gate, T::Type{<:Complex}=ComplexF64)::AbstractOperator
     return get_operator(get_gate_symbol(gate), T)
 end
@@ -247,39 +244,6 @@ function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
     return Vector(view(connected_qubits, (num_control_qubits+1):length(connected_qubits)))
 end
-
-
-# TODO(#226): delete on completion
-"""
-    is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool 
-
-Determines if a `gate` is of the specified `type`.
-
-!!! warning "Use is_gate_type instead of isa!"
-    For `AbstractGateSymbol` objects, `is_gate_type` should be used instead of `isa`. The
-    utilization of `isa` could lead to unexpected behavior (e.g. if a gate has been moved).
-
-# Examples
-```jldoctest
-julia> gate = sigma_x(1)
-Gate Object: Snowflurry.SigmaX
-Connected_qubits	: [1]
-Operator:
-(2,2)-element Snowflurry.AntiDiagonalOperator:
-Underlying data type: ComplexF64:
-    .    1.0 + 0.0im
-    1.0 + 0.0im    .
-
-
-julia> is_gate_type(gate, Snowflurry.SigmaX)
-true
-
-julia> is_gate_type(gate, Snowflurry.SigmaY)
-false
-
-```
-"""
-is_gate_type(gate::AbstractGateSymbol, type::Type)::Bool = isa(gate, type)
 
 """
     Controlled{G<:AbstractGateSymbol}<:AbstractGateSymbol

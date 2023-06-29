@@ -93,7 +93,6 @@ export
     get_target_qubits,
     get_control_qubits,
     get_gate_parameters,
-    is_gate_type,
     move_gate,
     normalize!,
     get_measurement_probabilities,

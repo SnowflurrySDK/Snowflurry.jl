@@ -424,11 +424,11 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     qubit_count=get_num_qubits(circuit)
     output=QuantumCircuit(qubit_count=qubit_count)
 
-    for placement in get_circuit_gates(circuit)
-        if is_gate_type(get_gate_symbol(placement), Swap)
-            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
+    for gate in get_circuit_gates(circuit)
+        if get_gate_symbol(gate) isa Swap
+            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
-            push!(output, placement)
+            push!(output, gate)
         end
     end
 
@@ -480,11 +480,11 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     qubit_count=get_num_qubits(circuit)
     output=QuantumCircuit(qubit_count=qubit_count)
 
-    for placement in get_circuit_gates(circuit)
-        if is_gate_type(placement, ControlX)
-            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
+    for gate in get_circuit_gates(circuit)
+        if get_gate_symbol(gate) isa ControlX
+            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
-            push!(output, placement)
+            push!(output, gate)
         end
     end
 
@@ -543,11 +543,11 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     qubit_count=get_num_qubits(circuit)
     output=QuantumCircuit(qubit_count=qubit_count)
 
-    for placement in get_circuit_gates(circuit)
-        if is_gate_type(placement, ISwap)
-            push!(output, cast_to_cz(get_gate_symbol(placement), get_connected_qubits(placement))...)
+    for gate in get_circuit_gates(circuit)
+        if get_gate_symbol(gate) isa ISwap
+            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
-            push!(output, placement)
+            push!(output, gate)
         end
     end
 
@@ -624,7 +624,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, Toffoli)
+        if get_gate_symbol(gate) isa Toffoli
             push!(output, cast_to_cx(get_gate_symbol(gate),get_connected_qubits(gate))...)
         else
             push!(output, gate)
@@ -825,17 +825,17 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
 
     atol=transpiler_stage.atol
 
-    for placement in gates
+    for gate in gates
 
-        targets=get_connected_qubits(placement)
+        targets=get_connected_qubits(gate)
 
         if length(targets)>1
-            push!(output_circuit,placement)
+            push!(output_circuit,gate)
         else
-            if !(is_gate_type(placement, Universal))
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(placement)))
+            if !(get_gate_symbol(gate) isa Universal)
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(gate)))
             else
-                gate=get_gate_symbol(placement)
+                gate=get_gate_symbol(gate)
             end
 
             gate_array=cast_to_phase_shift_and_half_rotation_x(gate, targets[1];atol=atol)
@@ -929,17 +929,17 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
     qubit_count=get_num_qubits(circuit)
     output_circuit=QuantumCircuit(qubit_count=qubit_count)
 
-    for placement in gates
+    for gate in gates
 
-        targets=get_connected_qubits(placement)
+        targets=get_connected_qubits(gate)
 
         if length(targets)>1
-            push!(output_circuit,placement)
+            push!(output_circuit,gate)
         else
-            if !(is_gate_type(placement, Universal))
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(placement)))
+            if !(get_gate_symbol(gate) isa Universal)
+                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(gate)))
             else
-                gate=get_gate_symbol(placement)
+                gate=get_gate_symbol(gate)
             end
 
             gate_array=cast_to_rz_rx_rz(gate, targets[1])
@@ -1012,7 +1012,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 
     for gate in gates
         
-        if is_gate_type(gate, RotationX)
+        if get_gate_symbol(gate) isa RotationX
             gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
             push!(output_circuit, gate_array...)
         else
@@ -1115,7 +1115,7 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, RotationX)
+        if get_gate_symbol(gate) isa RotationX
             new_gate=simplify_rx_gate(
                 gate,
                 atol=atol
@@ -1372,7 +1372,7 @@ function transpile(
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, PhaseShift)
+        if get_gate_symbol(gate) isa PhaseShift
             new_gate=simplify_rz_gate(
                 gate,
                 atol=atol
@@ -1544,7 +1544,7 @@ function transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircui
     reverse_transpiled_gates = Vector{Gate}([])
 
     for gate in reverse(gates)
-        if is_gate_type(gate, Swap)
+        if get_gate_symbol(gate) isa Swap
             update_qubit_mapping!(qubit_mapping, get_connected_qubits(gate))
         else
             moved_gate = move_gate(gate, qubit_mapping)
@@ -1589,24 +1589,24 @@ function is_trivial_gate(gate::Gate;atol=1e-6)::Bool
     
     params=get_gate_parameters(symbol)
 
-    if is_gate_type(symbol,Identity)
+    if symbol isa Identity
         return true
-    elseif is_gate_type(symbol,Universal)
+    elseif symbol isa Universal
         if isapprox( params["theta"],   0.;atol=atol) && 
             isapprox(params["phi"],     0.;atol=atol) &&
             isapprox(params["lambda"],  0.;atol=atol)
             return true
         end
-    elseif is_gate_type(symbol,Rotation)
+    elseif symbol isa Rotation
         if isapprox( params["theta"],   0.;atol=atol) && 
             isapprox(params["phi"],     0.;atol=atol)
             return true
         end
-    elseif is_gate_type(symbol,RotationX) || is_gate_type(symbol,RotationY)
+    elseif symbol isa RotationX || symbol isa RotationY
         if isapprox(params["theta"],0.;atol=atol) 
             return true
         end
-    elseif is_gate_type(symbol,PhaseShift)
+    elseif symbol isa PhaseShift
         if isapprox(params["lambda"],0.;atol=atol)
             return true
         end

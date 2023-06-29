@@ -83,7 +83,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test is_gate_type(gates[1], Snowflurry.Universal)
+            @test get_gate_symbol(gates[1]) isa Snowflurry.Universal
         end
     end
 
@@ -116,8 +116,8 @@ end
 
     @test length(gates)==2
 
-    @test is_gate_type(gates[1], Snowflurry.SigmaX)
-    @test is_gate_type(gates[2], Snowflurry.ControlX)
+    @test get_gate_symbol(gates[1]) isa Snowflurry.SigmaX
+    @test get_gate_symbol(gates[2]) isa Snowflurry.ControlX
 end 
 
 @testset "Transpiler" begin
@@ -205,9 +205,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test is_gate_type(gates[1], Snowflurry.PhaseShift)
-        @test is_gate_type(gates[2], Snowflurry.RotationX)
-        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
+        @test get_gate_symbol(gates[1]) isa Snowflurry.PhaseShift
+        @test get_gate_symbol(gates[2]) isa Snowflurry.RotationX
+        @test get_gate_symbol(gates[3]) isa Snowflurry.PhaseShift
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -261,11 +261,11 @@ end
         
         @test length(gates)==5
 
-        @test is_gate_type(gates[1], Snowflurry.Z90)
-        @test is_gate_type(gates[2], Snowflurry.X90)
-        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
-        @test is_gate_type(gates[4], Snowflurry.XM90)
-        @test is_gate_type(gates[5], Snowflurry.ZM90)
+        @test get_gate_symbol(gates[1]) isa Snowflurry.Z90
+        @test get_gate_symbol(gates[2]) isa Snowflurry.X90
+        @test get_gate_symbol(gates[3]) isa Snowflurry.PhaseShift
+        @test get_gate_symbol(gates[4]) isa Snowflurry.XM90
+        @test get_gate_symbol(gates[5]) isa Snowflurry.ZM90
     end
 end
 
@@ -716,7 +716,7 @@ end
 
         result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,angle))
 
-        @test is_gate_type(result_gate, type_result)
+        @test get_gate_symbol(result_gate) isa type_result
     end
 
     # returns empty array
@@ -726,7 +726,7 @@ end
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3))
 
-    @test is_gate_type(result_gate, Snowflurry.RotationX)
+    @test get_gate_symbol(result_gate) isa Snowflurry.RotationX
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3),atol=1e-1)
 
@@ -753,7 +753,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
+        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,0.)])
@@ -807,7 +807,7 @@ end
 
         result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,angle))
 
-        @test is_gate_type(result_gate, type_result)
+        @test get_gate_symbol(result_gate) isa type_result
     end
 
     # returns empty array
@@ -817,7 +817,7 @@ end
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3))
 
-    @test is_gate_type(result_gate, Snowflurry.PhaseShift)
+    @test get_gate_symbol(result_gate) isa Snowflurry.PhaseShift
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3),atol=1e-1)
 
@@ -845,7 +845,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
+        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,0.)])

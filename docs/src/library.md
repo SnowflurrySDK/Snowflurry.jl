@@ -62,7 +62,6 @@ Base.:*(M::Gate, x::Ket)
 apply_gate!
 get_operator
 inv(gate::AbstractGateSymbol)
-is_gate_type
 move_gate
 ```
 
