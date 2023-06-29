@@ -54,23 +54,23 @@ LatticeConnectivity{4,3}
 
 Lattices of arbitrairy dimensions can be built:
 ```jldoctest
-julia>  connectivity = LatticeConnectivity(7,5)
-LatticeConnectivity{7,5}
+julia>  connectivity = LatticeConnectivity(6,4)
+LatticeConnectivity{6,4}
               1 ──  2 
               |     | 
         3 ──  4 ──  5 ──  6 
         |     |     |     | 
   7 ──  8 ──  9 ── 10 ── 11 ── 12 
-  |     |     |     |     |     | 
- 13 ── 14 ── 15 ── 16 ── 17 ── 18 ── 19 
-        |     |     |     |     |     | 
-       20 ── 21 ── 22 ── 23 ── 24 ── 25 ── 26 
-              |     |     |     |     | 
-             27 ── 28 ── 29 ── 30 ── 31 
-                    |     |     | 
-                   32 ── 33 ── 34 
-                          | 
-                         35 
+        |     |     |     |     | 
+       13 ── 14 ── 15 ── 16 ── 17 ── 18 
+              |     |     |     | 
+             19 ── 20 ── 21 ── 22 
+                    |     | 
+                   23 ── 24 
+
+
+
+
 ```
 
 Non rectangular shapes can also be achieved by directly specifying the `qubits_per_row`:
@@ -369,6 +369,63 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
 end
     
 #breadth-first search on 2D Lattice
+
+"""
+    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
+
+Find the shortest path between origin and target qubits in terms of 
+Manhattan distance, using the Breadth-First Search algorithm, on any 
+`connectivity::AbstractConnectivity`.
+
+# Example
+```jldoctest
+julia>  connectivity = LineConnectivity(6)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+
+julia> path = path_search(2, 5, connectivity)
+4-element Vector{Int64}:
+ 5
+ 4
+ 3
+ 2
+
+```
+
+On LatticeConnectivity, the print_connectivity() method is used to visualize the path.
+The qubits along the path between origin and target are marker with `( )`
+
+```jldoctest; output=false
+julia> connectivity = LatticeConnectivity(6,4)
+LatticeConnectivity{6,4}
+              1 ──  2 
+              |     | 
+        3 ──  4 ──  5 ──  6 
+        |     |     |     | 
+  7 ──  8 ──  9 ── 10 ── 11 ── 12 
+        |     |     |     |     | 
+       13 ── 14 ── 15 ── 16 ── 17 ── 18 
+              |     |     |     | 
+             19 ── 20 ── 21 ── 22 
+                    |     | 
+                   23 ── 24 
+
+
+julia> path = path_search(3, 24, connectivity)
+8-element Vector{Int64}:
+ 24
+ 23
+ 20
+ 19
+ 14
+ 13
+  8
+  3
+
+```
+
+"""
 function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
 
     @assert origin > 0 "origin must be non-negative"

@@ -83,6 +83,7 @@ get_transpiler
 SequentialTranspiler
 LineConnectivity
 LatticeConnectivity
+path_search
 ```
 
 ## Quantum Toolkit
