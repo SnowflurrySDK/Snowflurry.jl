@@ -83,7 +83,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test get_gate_symbol(gates[1]) isa Snowflurry.Universal
+            @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
         end
     end
 
@@ -116,8 +116,8 @@ end
 
     @test length(gates)==2
 
-    @test get_gate_symbol(gates[1]) isa Snowflurry.SigmaX
-    @test get_gate_symbol(gates[2]) isa Snowflurry.ControlX
+    @test gates[1] isa Snowflurry.Gate{Snowflurry.SigmaX}
+    @test gates[2] isa Snowflurry.Gate{Snowflurry.ControlX}
 end 
 
 @testset "Transpiler" begin
@@ -205,9 +205,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test get_gate_symbol(gates[1]) isa Snowflurry.PhaseShift
-        @test get_gate_symbol(gates[2]) isa Snowflurry.RotationX
-        @test get_gate_symbol(gates[3]) isa Snowflurry.PhaseShift
+        @test gates[1] isa Snowflurry.Gate{Snowflurry.PhaseShift}
+        @test gates[2] isa Snowflurry.Gate{Snowflurry.RotationX}
+        @test gates[3] isa Snowflurry.Gate{Snowflurry.PhaseShift}
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -261,11 +261,11 @@ end
         
         @test length(gates)==5
 
-        @test get_gate_symbol(gates[1]) isa Snowflurry.Z90
-        @test get_gate_symbol(gates[2]) isa Snowflurry.X90
-        @test get_gate_symbol(gates[3]) isa Snowflurry.PhaseShift
-        @test get_gate_symbol(gates[4]) isa Snowflurry.XM90
-        @test get_gate_symbol(gates[5]) isa Snowflurry.ZM90
+        @test gates[1] isa Snowflurry.Gate{Snowflurry.Z90}
+        @test gates[2] isa Snowflurry.Gate{Snowflurry.X90}
+        @test gates[3] isa Snowflurry.Gate{Snowflurry.PhaseShift}
+        @test gates[4] isa Snowflurry.Gate{Snowflurry.XM90}
+        @test gates[5] isa Snowflurry.Gate{Snowflurry.ZM90}
     end
 end
 
@@ -726,7 +726,7 @@ end
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3))
 
-    @test get_gate_symbol(result_gate) isa Snowflurry.RotationX
+    @test result_gate isa Snowflurry.Gate{Snowflurry.RotationX}
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3),atol=1e-1)
 
@@ -817,7 +817,7 @@ end
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3))
 
-    @test get_gate_symbol(result_gate) isa Snowflurry.PhaseShift
+    @test result_gate isa Snowflurry.Gate{Snowflurry.PhaseShift}
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3),atol=1e-1)
 

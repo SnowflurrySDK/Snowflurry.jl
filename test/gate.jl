@@ -778,30 +778,30 @@ end
     
     qubit_mapping = Dict(1=>3, 3=>1)
     untouched_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test get_gate_symbol(untouched_rx_gate) isa Snowflurry.RotationX
+    @test untouched_rx_gate isa Snowflurry.Gate{Snowflurry.RotationX}
     @test get_connected_qubits(untouched_rx_gate) == [target]
     @test get_gate_parameters(get_gate_symbol(untouched_rx_gate)) == Dict("theta"=>theta)
 
     qubit_mapping = Dict(2=>3, 3=>2)
     moved_rx_gate = move_gate(rx_gate, qubit_mapping)
-    @test get_gate_symbol(moved_rx_gate) isa Snowflurry.RotationX
+    @test moved_rx_gate isa Snowflurry.Gate{Snowflurry.RotationX}
     @test get_connected_qubits(moved_rx_gate) == [3]
     @test get_gate_parameters(get_gate_symbol(moved_rx_gate)) == Dict("theta"=>theta)
 
     moved_twice_rx = move_gate(moved_rx_gate, qubit_mapping)
-    @test get_gate_symbol(moved_twice_rx) isa Snowflurry.RotationX
+    @test moved_twice_rx isa Snowflurry.Gate{Snowflurry.RotationX}
     @test get_connected_qubits(moved_twice_rx) == [2]
     @test get_gate_parameters(get_gate_symbol(moved_twice_rx)) == Dict("theta"=>theta)
     
     inverse_moved_gate = inv(moved_rx_gate)
-    @test get_gate_symbol(inverse_moved_gate) isa Snowflurry.RotationX
+    @test inverse_moved_gate isa Snowflurry.Gate{Snowflurry.RotationX}
     @test get_connected_qubits(inverse_moved_gate) == [3]
     @test get_gate_parameters(get_gate_symbol(inverse_moved_gate)) == Dict("theta"=>-theta)
 
     qubit_mapping = Dict(2=>3, 3=>2, 4=>1, 1=>4)
     toffoli_gate = toffoli(2, 3, 1)
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
-    @test get_gate_symbol(moved_toffoli_gate) isa Snowflurry.Toffoli
+    @test moved_toffoli_gate isa Snowflurry.Gate{Snowflurry.Toffoli}
     @test get_connected_qubits(moved_toffoli_gate) == [3, 2, 4]
 
     qubit_mapping = Dict(2=>22, 3=>33,4=>44)
@@ -811,7 +811,7 @@ end
     @test get_target_qubits(toffoli_gate)==[4]
 
     moved_toffoli_gate = move_gate(toffoli_gate, qubit_mapping)
-    @test get_gate_symbol(moved_toffoli_gate) isa Snowflurry.Toffoli
+    @test moved_toffoli_gate isa Snowflurry.Gate{Snowflurry.Toffoli}
     @test get_connected_qubits(moved_toffoli_gate) == [22, 33, 44]
     @test get_control_qubits(moved_toffoli_gate)==[22,33]
     @test get_target_qubits(moved_toffoli_gate)==[44]

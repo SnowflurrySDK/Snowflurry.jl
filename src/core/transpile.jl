@@ -425,7 +425,7 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa Swap
+        if gate isa Snowflurry.Gate{Swap}
             push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
             push!(output, gate)
@@ -481,7 +481,7 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa ControlX
+        if gate isa Snowflurry.Gate{ControlX}
             push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
             push!(output, gate)
@@ -544,7 +544,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa ISwap
+        if gate isa Snowflurry.Gate{ISwap}
             push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
             push!(output, gate)
@@ -624,7 +624,7 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     output=QuantumCircuit(qubit_count=qubit_count)
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa Toffoli
+        if gate isa Snowflurry.Gate{Toffoli}
             push!(output, cast_to_cx(get_gate_symbol(gate),get_connected_qubits(gate))...)
         else
             push!(output, gate)
@@ -832,7 +832,7 @@ function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(get_gate_symbol(gate) isa Universal)
+            if !(gate isa Snowflurry.Gate{Universal})
                 gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
             else
                 gate=get_gate_symbol(gate)
@@ -936,7 +936,7 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
         if length(targets)>1
             push!(output_circuit,gate)
         else
-            if !(get_gate_symbol(gate) isa Universal)
+            if !(gate isa Snowflurry.Gate{Universal})
                 gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
             else
                 gate=get_gate_symbol(gate)
@@ -1012,7 +1012,7 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 
     for gate in gates
         
-        if get_gate_symbol(gate) isa RotationX
+        if gate isa Snowflurry.Gate{RotationX}
             gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
             push!(output_circuit, gate_array...)
         else
@@ -1115,7 +1115,7 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa RotationX
+        if gate isa Snowflurry.Gate{RotationX}
             new_gate=simplify_rx_gate(
                 gate,
                 atol=atol
@@ -1372,7 +1372,7 @@ function transpile(
     atol=transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if get_gate_symbol(gate) isa PhaseShift
+        if gate isa Snowflurry.Gate{PhaseShift}
             new_gate=simplify_rz_gate(
                 gate,
                 atol=atol
@@ -1544,7 +1544,7 @@ function transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircui
     reverse_transpiled_gates = Vector{Gate}([])
 
     for gate in reverse(gates)
-        if get_gate_symbol(gate) isa Swap
+        if gate isa Snowflurry.Gate{Swap}
             update_qubit_mapping!(qubit_mapping, get_connected_qubits(gate))
         else
             moved_gate = move_gate(gate, qubit_mapping)
