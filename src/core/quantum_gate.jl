@@ -447,7 +447,7 @@ function apply_gate!(state::Ket, gate::Gate{Controlled{T}}) where T<:AbstractGat
     apply_controlled_gate_operator!(
         state,
         get_operator(get_gate_symbol(gate)),
-        DenseOperator(get_operator(get_gate_symbol(gate).target)),
+        DenseOperator(get_operator(get_gate_symbol(gate).kernel)),
         connected_qubits)
 end
 
