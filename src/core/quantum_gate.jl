@@ -225,18 +225,15 @@ end
 """
     Controlled{G<:AbstractGateSymbol}<:AbstractGateSymbol
 
-The `Controlled` object allows the construction of a controlled `Gate` using an `Operator` 
-(the `kernel`) and the corresponding control and target qubits, 
-specified as `control_qubit::Int` `target_qubit::Int` for single-target single-control, or
-`control_qubit::Vector{Int}` `target_qubit::{Int}` in the general case.
-In the case of single-control single-target `Controlled`, `apply_gate()` dispatches to 
-an optimized routine, otherwise the fall-back case casts a equivalent `DenseOperator` and 
-applies it. 
+The `Controlled` object allows the construction of a controlled `AbstractGateSymbol` using an `Operator` 
+(the `kernel`) and the corresponding number of control qubits. A helper function, `controlled`
+can be used to easily create both controlled `AbstractGateSymbol`s and controlled `Gate`s.
+The `apply_gate` will call into the optimized routine, and if no such routine is present, it will fall-back
+to casting the operator into the equivalent `DenseOperator` and applying the created operator.
 
 # Examples
-Whereas a `Hadamard` Gate with `target=1` is constructed by calling `hadamard(target)`, a 
-controlled Hadamard gate is constructed using the `hadamard()` `Function`. For instance, the construction 
-of a `Controlled{Hadamard}` with `control=1` and `target=2` is performed by calling:
+
+We can use the `controlled` function to create a controlled-Hadamard gate
 
 ```jldoctest controlled_hadamard
 julia> controlled_hadamard=controlled(hadamard(2),[1])
