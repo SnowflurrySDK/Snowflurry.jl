@@ -273,7 +273,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=CastToPhaseShiftAndHalfRotationXTranspiler()
 
     list_params=[
         #theta,     phi,    lambda, gates_in_output
@@ -306,7 +306,7 @@ end
 
     qubit_count=2
     target=1
-    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=CastToPhaseShiftAndHalfRotationXTranspiler()
 
     for gate in single_qubit_gates
 
@@ -328,7 +328,7 @@ end
     @test length(get_circuit_gates(transpiled_circuit_default_tol))==5
 
     # with user-defined tolerance
-    transpiler=Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
+    transpiler=CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
 
     transpiled_circuit_high_tol=transpile(transpiler,circuit)
 
@@ -336,11 +336,11 @@ end
 
 end
 
-@testset "SwapQubitsForLineConnectivityTranspiler" begin
+@testset "SwapQubitsForAdjacencyTranspiler{LineConnectivity}" begin
     
-    transpiler=Snowflurry.SwapQubitsForLineConnectivityTranspiler()
-
     qubit_count=10
+    transpiler=SwapQubitsForAdjacencyTranspiler(LineConnectivity(qubit_count))
+
 
     test_specs=[
         # (gates list       gates_in_output)
@@ -370,7 +370,6 @@ end
     for (input_gates,gates_in_output) in test_specs
         circuit = QuantumCircuit(qubit_count = qubit_count, gates=input_gates) 
     
-        
         transpiled_circuit=transpile(transpiler,circuit)
         
         gates=get_circuit_gates(transpiled_circuit)
@@ -387,7 +386,74 @@ end
 
 end
 
-@testset "SwapQubitsForLineConnectivityTranspiler: multi-target multi-parameter" begin
+
+@testset "SwapQubitsForAdjacencyTranspiler{LatticeConnectivity}" begin
+    
+    nrows       =4
+    ncols       =3
+    qubit_count =nrows*ncols
+    transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols))
+
+    # LatticeConnectivity{4,3}
+    #        1 ──  2 
+    #        |     | 
+    #  3 ──  4 ──  5 ──  6 
+    #        |     |     | 
+    #        7 ──  8 ──  9 ── 10 
+    #              |     | 
+    #             11 ── 12 
+
+    test_specs=[
+        # (gates list       gates_in_output)
+        ([swap(1,2)],       1)      # no effect
+        ([swap(2,8)],       3)
+        ([swap(8,2)],       3)
+
+        ([iswap(1,2)],       1)      # no effect
+        ([iswap(2,8)],       3)
+        ([iswap(8,2)],       3)
+
+        ([control_z(5,6)],  1)      # no effect
+        ([control_z(5,10)], 5)      # target at bottom
+        ([control_z(10,1)], 9)     # target on top
+
+        ([toffoli(4,5,6)],  1)      # no effect
+        ([toffoli(4,6,5)],  1)      # no effect
+        ([toffoli(6,5,4)],  1)      # no effect
+        ([toffoli(4,6,2)],  3)      # 1 swap required
+        ([toffoli(2,6,4)],  3)      # 1 swap required
+        ([toffoli(2,6,4)],  3)      # 1 swap required
+        ([toffoli(4,6,9)],  5)      # 1 swap required on 2 targets
+        ([toffoli(4,9,6)],  5)      # 1 swap required on 2 targets
+        ([toffoli(4,8,11)],  5)     # 1 swap required on 2 targets
+        ([toffoli(4,11,8)],  5)     # 1 swap required on 2 targets
+        ([toffoli(1,3,6)],  5)      # 1 swap required on 2 targets
+        ([toffoli(1,11,12)], 13)    # 3 swap required on 2 targets
+
+        ([control_z(10,1),toffoli(2,4,8)], 12) # sequence of gates
+    ]
+
+    for (input_gates,gates_in_output) in test_specs
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates=input_gates) 
+    
+        transpiled_circuit=transpile(transpiler,circuit)
+        
+        gates=get_circuit_gates(transpiled_circuit)
+        
+        @test length(gates)==gates_in_output
+        
+        if !(compare_circuits(circuit,transpiled_circuit))
+            println("gates in input: $(get_circuit_gates(circuit))")
+        end
+
+        @test compare_circuits(circuit,transpiled_circuit)
+
+    end
+
+end
+
+
+@testset "SwapQubitsForAdjacencyTranspiler: multi-target multi-parameter" begin
 
     struct MultiParamMultiTargetGateSymbol <: Snowflurry.AbstractGateSymbol
         target_1::Int
@@ -414,16 +480,44 @@ end
 
     Snowflurry.gates_instruction_symbols[MultiParamMultiTargetGateSymbol]="mm"
 
+    qubit_count =6
+    nrows       =2
+    ncols       =3
+    circuit = QuantumCircuit(
+        qubit_count = qubit_count, 
+        gates = [Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])]
+    )
 
-    circuit=QuantumCircuit(qubit_count=5,gates=[Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])])
+    # test printout for multi-target multi-param gate
+    io = IOBuffer()
+    println(io, "circuit: $circuit") 
+    @test String(take!(io)) == 
+    "circuit: Quantum Circuit Object:\n"*
+    "   qubit_count: 6 \n"*
+    "q[1]:─────────────*─────────────\n"*
+    "                  |             \n"*
+    "q[2]:─────────────|─────────────\n"*
+    "                  |             \n"*
+    "q[3]:─────────────x─────────────\n"*
+    "                  |             \n"*
+    "q[4]:─────────────|─────────────\n"*
+    "                  |             \n"*
+    "q[5]:──MM(θ=3.1416,phi=1.0472)──\n"*
+    "                                \n"*
+    "q[6]:───────────────────────────\n"*
+    "                                \n\n\n"
 
-    transpiler=SwapQubitsForLineConnectivityTranspiler()
+    transpilers=[
+        SwapQubitsForAdjacencyTranspiler(LineConnectivity(qubit_count)),
+        SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols)),
+        SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(ncols, nrows)),
+    ]
 
-    transpiled_circuit=transpile(transpiler,circuit)
-
-    println("circuit: $circuit") # test printout for multi-target multi-param gate
+    for transpiler in transpilers
+        transpiled_circuit = transpile(transpiler,circuit)
+        @test compare_circuits(circuit, transpiled_circuit)       
+    end
     
-    @test compare_circuits(circuit,transpiled_circuit)
 
 end
 
@@ -568,11 +662,47 @@ end
     end
 end
 
+@testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin            
+    qpus = [
+        AnyonYukonQPU(;host = host, user = user, access_token = access_token),
+        AnyonYamaskaQPU(;host = host, user = user, access_token = access_token)
+    ]
+
+    for qpu in qpus
+        transpiler      = get_transpiler(qpu) 
+        connectivity    = get_connectivity(qpu)
+        qubit_count     = get_num_qubits(qpu)
+        
+        for t_0 in 1:qubit_count
+            for t_1 in 1:qubit_count
+                if t_0 == t_1
+                    continue
+                end
+                circuit = QuantumCircuit(qubit_count = qubit_count, gates=[control_z(t_0, t_1)])
+                transpiled_circuit = transpile(transpiler, circuit)
+                @test compare_circuits(circuit, transpiled_circuit)
+
+                gates_in_output = get_circuit_gates(transpiled_circuit)
+
+                for gate in gates_in_output
+                    connected_qubits = get_connected_qubits(gate)
+                    if length(connected_qubits) > 1
+                        (t_2, t_3) = connected_qubits
+
+                        #confirm adjacency
+                        @test get_qubits_distance(t_2, t_3, connectivity) == 1
+                    end
+                end
+            end
+        end
+    end
+end
+
 @testset "SequentialTranspiler: compress and cast_to_phase_shift_and_half_rotation_x" begin    
 
-    transpiler=Snowflurry.SequentialTranspiler([   
-            Snowflurry.CompressSingleQubitGatesTranspiler(),
-            Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler()
+    transpiler=SequentialTranspiler([   
+            CompressSingleQubitGatesTranspiler(),
+            CastToPhaseShiftAndHalfRotationXTranspiler()
         ])
 
     qubit_count=4
@@ -668,13 +798,13 @@ end
 
 @testset "SequentialTranspiler: compress, cast_to_Rz_and_half_Rx and Place" begin    
     
-    transpiler=Snowflurry.SequentialTranspiler([
-        Snowflurry.CompressSingleQubitGatesTranspiler(),
-        Snowflurry.CastToPhaseShiftAndHalfRotationXTranspiler(),
-        Snowflurry.SwapQubitsForLineConnectivityTranspiler(),
-    ])
-
     qubit_count=6
+
+    transpiler=SequentialTranspiler([
+        CompressSingleQubitGatesTranspiler(),
+        CastToPhaseShiftAndHalfRotationXTranspiler(),
+        SwapQubitsForAdjacencyTranspiler(LineConnectivity(qubit_count)),
+    ])
 
     test_inputs=[
                 toffoli(4,6,2),

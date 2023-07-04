@@ -368,6 +368,9 @@ get_transpiler(qpu::AbstractQPU) =
 run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
     throw(NotImplementedError(:run_job,qpu))
 
+get_connectivity(qpu::AbstractQPU) = 
+    throw(NotImplementedError(:get_connectivity,qpu))
+
 """
     VirtualQPU
 
@@ -395,6 +398,10 @@ is_native_gate(::VirtualQPU,::Gate)::Bool = true
 is_native_circuit(::VirtualQPU,::QuantumCircuit)::Tuple{Bool,String} = (true,"")
 
 get_transpiler(::VirtualQPU)=TrivialTranspiler()
+
+get_connectivity(::VirtualQPU) = AllToAllConnectivity()
+get_connectivity_label(::AllToAllConnectivity) = all2all_connectivity_label
+
 
 function Base.show(io::IO, qpu::VirtualQPU)
     metadata=get_metadata(qpu)
