@@ -128,7 +128,7 @@ abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
 get_gate_parameters(gate::AbstractGateSymbol)=Dict{String,Real}()
 
-# TODO: Change default to throw not implemented
+# TODO(#293): Change default to throw not implemented
 get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
 
 
