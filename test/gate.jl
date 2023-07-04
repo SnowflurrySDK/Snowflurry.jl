@@ -95,6 +95,35 @@ include("test_functions.jl")
         test_getters(Snowflurry.ISwap(), [7, 3])
         test_getters(Snowflurry.Universal(pi/2, -pi/2, pi/4), [11])
     end
+
+    @testset "throw domain error when connected qubits are not unique" begin
+        function test_dissallow_non_unique_connected_qubits(symbol::AbstractGateSymbol, connected_qubits::Vector{Int})
+            @test_throws DomainError Gate(symbol, connected_qubits)
+        end
+
+        test_dissallow_non_unique_connected_qubits(Snowflurry.ISwap(), [3, 3])
+        test_dissallow_non_unique_connected_qubits(Snowflurry.Toffoli(), [1,1,2])
+        test_dissallow_non_unique_connected_qubits(Snowflurry.Toffoli(), [1,2,1])
+        test_dissallow_non_unique_connected_qubits(Snowflurry.Toffoli(), [2,1,1])
+    end
+end
+
+@testset "controlled" begin
+    @testset "throw domain error when target and control qubits are not unique" begin
+        function test_dissallow_non_unique_target_and_control_qubits(gate::Gate, control_qubits::Vector{Int})
+            @test_throws DomainError Snowflurry.controlled(gate, control_qubits)
+        end
+
+        test_dissallow_non_unique_target_and_control_qubits(sigma_x(1), [1])
+        test_dissallow_non_unique_target_and_control_qubits(hadamard(3), [3])
+        test_dissallow_non_unique_target_and_control_qubits(hadamard(7), [1,7])
+        test_dissallow_non_unique_target_and_control_qubits(hadamard(7), [7,1])
+        test_dissallow_non_unique_target_and_control_qubits(iswap(1,2), [1])
+        test_dissallow_non_unique_target_and_control_qubits(iswap(1,2), [2])
+        test_dissallow_non_unique_target_and_control_qubits(iswap(1,2), [1,2])
+        test_dissallow_non_unique_target_and_control_qubits(iswap(1,2), [3,4,1])
+        test_dissallow_non_unique_target_and_control_qubits(iswap(1,2), [3,4,2])
+    end
 end
 
 @testset "apply_gate" begin

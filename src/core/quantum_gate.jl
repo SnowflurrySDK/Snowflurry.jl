@@ -178,6 +178,10 @@ struct Gate{SymbolType<:AbstractGateSymbol}
             throw(DomainError(connected_qubits, "connected qubits must match the number of qubits of the symbol"))
         end
 
+        if length(connected_qubits) != length(unique(connected_qubits))
+            throw(DomainError(connected_qubits, "connected qubits qubits must be unique"))
+        end
+
         return new{SymbolType}(symbol, connected_qubits)
     end
 end
