@@ -392,7 +392,7 @@ end
 function get_display_symbol(gate::Controlled;precision::Integer=4)
 
     # build new display symbol using existing symbol pertaining to kernel
-    symbol_specs=get_display_symbol(gate.target,precision=precision)
+    symbol_specs=get_display_symbol(gate.kernel,precision=precision)
 
     num_target_qubits=get_num_target_qubits(gate)
     

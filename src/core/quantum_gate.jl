@@ -289,17 +289,17 @@ Underlying data ComplexF64:
 
 """
 struct Controlled{GateType<:AbstractGateSymbol} <: AbstractControlledGateSymbol
-    target::GateType
+    kernel::GateType
     num_control_qubits::Int
 
     function Controlled(
-        target::AbstractGateSymbol,
+        kernel::AbstractGateSymbol,
         num_control_qubits::Int=1,
         )
 
-        @assert !(target isa Controlled) "Recursive construction of Controlled{Controlled} is not allowed"
+        @assert !(kernel isa Controlled) "Recursive construction of Controlled{Controlled} is not allowed"
 
-        new{typeof(target)}(target,num_control_qubits)
+        new{typeof(kernel)}(kernel,num_control_qubits)
     end
 
 end
@@ -316,7 +316,7 @@ function controlled(gate::Gate, control_qubits::Vector{Int})
 end
 
 function get_num_target_qubits(controlled_symbol::Controlled)::Int
-    return get_num_connected_qubits(controlled_symbol.target)
+    return get_num_connected_qubits(controlled_symbol.kernel)
 end
 
 function get_num_control_qubits(controlled_symbol::Controlled)::Int
@@ -335,12 +335,12 @@ function get_operator(gate::Controlled, T::Type{<:Complex}=ComplexF64)
     op=get_matrix(eye(2^num_connected_qubits))
     
     op[end-(2^num_kernel_qubits)+1:end,end-(2^num_kernel_qubits)+1:end]=
-        get_matrix(get_operator(gate.target))
+        get_matrix(get_operator(gate.kernel))
 
     return DenseOperator(convert(Matrix{T},op))
 end
 
-get_gate_parameters(gate::Controlled)=get_gate_parameters(gate.target)
+get_gate_parameters(gate::Controlled)=get_gate_parameters(gate.kernel)
 
 """
     move_gate(gate::Gate,
