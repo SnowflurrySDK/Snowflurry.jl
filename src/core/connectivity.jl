@@ -28,7 +28,7 @@ end
     LatticeConnectivity <:AbstractConnectivity
 
 A data structure to represent 2D-lattice qubit connectivity in a Anyon System's QPU.  
-This connectivity type is encountered in `QPUs` such as the [`AnyonMonarqQPU`](@ref)
+This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](@ref)
 
 # Fields
 - `qubits_per_row    ::Vector{Int}` -- number of qubits in each line, when constructing the printout.

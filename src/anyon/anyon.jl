@@ -39,7 +39,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
 )
 
 """
-    AnyonMonarqQPU
+    AnyonYamaskaQPU
 
 A data structure to represent an Anyon System's QPU.  
 # Fields
@@ -49,27 +49,27 @@ A data structure to represent an Anyon System's QPU.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonMonarqQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia>  qpu = AnyonYamaskaQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
-   generation:    MonarQ
+   generation:    Yamaska
    serial_number: ANYK202301
    qubit_count:   12 
    connectivity_type:  2D-lattice
 ```
 """
-struct AnyonMonarqQPU <: AbstractQPU
+struct AnyonYamaskaQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
     connectivity            ::LatticeConnectivity
 
-    AnyonMonarqQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity(4,3))
-    AnyonMonarqQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity(4,3))
+    AnyonYamaskaQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity(4,3))
+    AnyonYamaskaQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity(4,3))
 end
 
-get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
+get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
     "manufacturer"  =>"Anyon Systems Inc.",
-    "generation"    =>"MonarQ",
+    "generation"    =>"Yamaska",
     "serial_number" =>"ANYK202301",
     "qubit_count"   =>get_num_qubits(qpu.connectivity),
     "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
@@ -77,7 +77,7 @@ get_metadata(qpu::AnyonMonarqQPU) = Dict{String,Union{String,Int}}(
 
 get_client(qpu_service::AbstractQPU)=qpu_service.client
 
-UnionAnyonQPU=Union{AnyonYukonQPU,AnyonMonarqQPU}
+UnionAnyonQPU=Union{AnyonYukonQPU,AnyonYamaskaQPU}
 
 get_num_qubits(qpu::UnionAnyonQPU)=get_num_qubits(qpu.connectivity)
 

@@ -31,7 +31,7 @@ function post_checker_last_qubit_Yukon(url::String,user::String,access_token::St
     return stubCircuitSubmittedResponse()
 end
 
-function post_checker_last_qubit_MonarQ(url::String,user::String,access_token::String,body::String)
+function post_checker_last_qubit_Yamaska(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflurry.path_circuits
     expected_access_token=access_token
@@ -70,7 +70,7 @@ function post_checker_toffoli_Yukon(url::String,user::String,access_token::Strin
     return stubCircuitSubmittedResponse()
 end
 
-function post_checker_toffoli_MonarQ(url::String,user::String,access_token::String,body::String)
+function post_checker_toffoli_Yamaska(url::String,user::String,access_token::String,body::String)
 
     expected_url=host*"/"*Snowflurry.path_circuits
     expected_access_token=access_token

@@ -419,12 +419,12 @@ end
     )
 end
 
-@testset "Construct AnyonMonarqQPU" begin
+@testset "Construct AnyonYamaskaQPU" begin
     host = "host"
     user = "user"
     token = "token"
 
-    qpu = AnyonMonarqQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
+    qpu = AnyonYamaskaQPU(host=host, user=user, access_token=token, status_request_throttle=no_throttle)
     client = get_client(qpu)
 
     connectivity = get_connectivity(qpu)
@@ -447,7 +447,7 @@ end
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer"  =>"Anyon Systems Inc.",
-        "generation"    =>"MonarQ",
+        "generation"    =>"Yamaska",
         "serial_number" =>"ANYK202301",
         "qubit_count"   =>get_num_qubits(connectivity),
         "connectivity_type"  =>get_connectivity_label(connectivity)
@@ -512,11 +512,11 @@ end
     @test_throws ErrorException histogram=run_job(qpu, circuit, shot_count)
 end
 
-@testset "transpile_and_run_job on AnyonYukonQPU and AnyonMonarqQPU" begin
+@testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
     
-    qpus = [AnyonYukonQPU, AnyonMonarqQPU]
-    post_checkers_toffoli = [post_checker_toffoli_Yukon, post_checker_toffoli_MonarQ]
-    post_checkers_last_qubit = [post_checker_last_qubit_Yukon, post_checker_last_qubit_MonarQ]
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+    post_checkers_toffoli = [post_checker_toffoli_Yukon, post_checker_toffoli_Yamaska]
+    post_checkers_last_qubit = [post_checker_last_qubit_Yukon, post_checker_last_qubit_Yamaska]
 
     for (
         QPU,

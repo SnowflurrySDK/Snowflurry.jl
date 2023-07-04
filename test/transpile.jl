@@ -665,7 +665,7 @@ end
 @testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin            
     qpus = [
         AnyonYukonQPU(;host = host, user = user, access_token = access_token),
-        AnyonMonarqQPU(;host = host, user = user, access_token = access_token)
+        AnyonYamaskaQPU(;host = host, user = user, access_token = access_token)
     ]
 
     for qpu in qpus
