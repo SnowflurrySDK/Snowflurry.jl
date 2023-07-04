@@ -352,11 +352,13 @@ function format_label(
 
     num_params=length(gate_params)
 
-    symbol_gate=symbol_specs[num_targets]
+    symbol_gate=symbol_specs[num_targets] #label with %s fields is at index=num_targets
     fields=symbol_specs[num_targets+1:end]
     repetitions=length(fields)
 
-    # create format specifier of correct precision
+    # create format specifier of correct precision: 
+    # for instance: "U(θ=%s,ϕ=%s,λ=%s)" is converted to
+    # "U(θ=%.2f,ϕ=%.2f,λ=%.2f)" for precision=2
     precisionStr=string("%.",precision,"f")
     precisionArray=[precisionStr for _ in 1:repetitions]
     str_label_with_precision=formatter(symbol_gate,precisionArray...)

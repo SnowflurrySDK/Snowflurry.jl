@@ -36,6 +36,8 @@ end
 
     print(c)
 
+    append!(c,[sigma_x(2),sigma_y(2)])
+
     @test_throws DomainError push!(c,sigma_x(5))
 end
 

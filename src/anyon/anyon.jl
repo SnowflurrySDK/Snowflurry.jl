@@ -23,28 +23,69 @@ Quantum Processing Unit:
 struct AnyonYukonQPU <: AbstractQPU
     client                  ::Client
     status_request_throttle ::Function
+    connectivity            ::LineConnectivity
 
-    AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle)
-    AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle)
+    AnyonYukonQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LineConnectivity(6))
+    AnyonYukonQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LineConnectivity(6))
 end
 
-const line_connectivity_label="linear"
 
-get_metadata(::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
+get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer"  =>"Anyon Systems Inc.",
     "generation"    =>"Yukon",
     "serial_number" =>"ANYK202201",
-    "qubit_count"   =>6,
-    "connectivity_type"  =>line_connectivity_label
+    "qubit_count"   =>get_num_qubits(qpu.connectivity),
+    "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
 )
 
-get_client(qpu_service::AnyonYukonQPU)=qpu_service.client
+"""
+    AnyonYamaskaQPU
 
-get_num_qubits(qpu::AnyonYukonQPU)=get_metadata(qpu)["qubit_count"]
+A data structure to represent an Anyon System's QPU.  
+# Fields
+- `client                  ::Client` -- Client to the QPU server.
+- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 
-print_connectivity(qpu::AnyonYukonQPU,io::IO=stdout)=println(io, "1──2──3──4──5──6")
 
-function Base.show(io::IO, qpu::AnyonYukonQPU)
+# Example
+```jldoctest
+julia>  qpu = AnyonYamaskaQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yamaska
+   serial_number: ANYK202301
+   qubit_count:   12 
+   connectivity_type:  2D-lattice
+```
+"""
+struct AnyonYamaskaQPU <: AbstractQPU
+    client                  ::Client
+    status_request_throttle ::Function
+    connectivity            ::LatticeConnectivity
+
+    AnyonYamaskaQPU(client::Client; status_request_throttle=default_status_request_throttle) = new(client, status_request_throttle,LatticeConnectivity(4,3))
+    AnyonYamaskaQPU(; host::String, user::String, access_token::String, status_request_throttle=default_status_request_throttle) = new(Client(host=host, user=user, access_token=access_token), status_request_throttle,LatticeConnectivity(4,3))
+end
+
+get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
+    "manufacturer"  =>"Anyon Systems Inc.",
+    "generation"    =>"Yamaska",
+    "serial_number" =>"ANYK202301",
+    "qubit_count"   =>get_num_qubits(qpu.connectivity),
+    "connectivity_type"  =>get_connectivity_label(qpu.connectivity)
+)
+
+get_client(qpu_service::AbstractQPU)=qpu_service.client
+
+UnionAnyonQPU=Union{AnyonYukonQPU,AnyonYamaskaQPU}
+
+get_num_qubits(qpu::UnionAnyonQPU)=get_num_qubits(qpu.connectivity)
+
+get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
+
+print_connectivity(qpu::AbstractQPU,io::IO=stdout)=print_connectivity(get_connectivity(qpu),Int[],io)
+
+function Base.show(io::IO, qpu::UnionAnyonQPU)
     metadata=get_metadata(qpu)
 
     println(io, "Quantum Processing Unit:")
@@ -56,41 +97,84 @@ function Base.show(io::IO, qpu::AnyonYukonQPU)
 end
 
 
-function is_native_gate(qpu::AnyonYukonQPU,gate::Gate)::Bool
-    
-    set_of_native_gates=[
-        PhaseShift,
-        Pi8,
-        Pi8Dagger,
-        SigmaX,
-        SigmaY,
-        SigmaZ,
-        X90,
-        XM90,
-        Y90,
-        YM90,
-        Z90,
-        ZM90,
-        ControlZ,
-    ]
+set_of_native_gates=[
+    PhaseShift,
+    Pi8,
+    Pi8Dagger,
+    SigmaX,
+    SigmaY,
+    SigmaZ,
+    X90,
+    XM90,
+    Y90,
+    YM90,
+    Z90,
+    ZM90,
+    ControlZ,
+]
 
-    if get_gate_symbol(gate) isa ControlZ
-        @assert get_metadata(qpu)["connectivity_type"]==line_connectivity_label (
-            "Not implemented for connectivity type: $(get_metadata(qpu)["connectivity_type"])"
-        )
+"""
+    get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
+
+Find the length of the shortest path between target qubits in terms of 
+Manhattan distance, using the Breadth-First Search algorithm, on any 
+`connectivity::AbstractConnectivity`.
+
+# Example
+```jldoctest
+julia>  connectivity = LineConnectivity(6)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+
+julia> get_qubits_distance(2, 5, connectivity)
+3
+
+julia> connectivity = LatticeConnectivity(6,4)
+LatticeConnectivity{6,4}
+              1 ──  2 
+              |     | 
+        3 ──  4 ──  5 ──  6 
+        |     |     |     | 
+  7 ──  8 ──  9 ── 10 ── 11 ── 12 
+        |     |     |     |     | 
+       13 ── 14 ── 15 ── 16 ── 17 ── 18 
+              |     |     |     | 
+             19 ── 20 ── 21 ── 22 
+                    |     | 
+                   23 ── 24 
+
+
+julia> get_qubits_distance(3, 24, connectivity)
+7
+
+```
+
+"""
+get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int = 
+    abs(target_1 - target_2)
+
+function get_qubits_distance(target_1::Int, target_2::Int, connectivity::LatticeConnectivity)::Int
+    # Manhattan distance
+    return maximum([0, length(path_search(target_1,target_2,connectivity))-1])
+end
+
+function is_native_gate(qpu::UnionAnyonQPU,gate::Gate)::Bool
+    if gate isa Gate{ControlZ}
+        # on ControlZ gates are native only if targets are adjacent
             
         targets=get_connected_qubits(gate)
 
-        return (abs(targets[1]-targets[2])==1)        
+        return (get_qubits_distance(targets[1],targets[2],get_connectivity(qpu))==1)        
     end
         
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-function is_native_circuit(qpu::AnyonYukonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_circuit(qpu::UnionAnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit=get_num_qubits(circuit)
     qubit_count_qpu    =get_num_qubits(qpu)
-    if qubit_count_circuit>=qubit_count_qpu 
+    if qubit_count_circuit>qubit_count_qpu 
         return (
             false,
             "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu"
@@ -131,7 +215,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::AnyonYukonQPU,
+    qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler=get_transpiler(qpu)
@@ -170,7 +254,7 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::AnyonYukonQPU,
+    qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer
     )::Dict{String,Int}
@@ -209,7 +293,7 @@ function poll_for_status(client::Client, circuitID::String, request_throttle::Fu
 end
 
 """
-    get_transpiler(qpu::AnyonYukonQPU)::Transpiler
+    get_transpiler(qpu::AbstractQPU)::Transpiler
 
 Returns the transpiler associated with this QPU.
 
@@ -219,24 +303,25 @@ Returns the transpiler associated with this QPU.
 julia> qpu=AnyonYukonQPU(client);
 
 julia> get_transpiler(qpu)
-SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForLineConnectivityTranspiler(), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
-
+SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}
+1──2──3──4──5──6
+), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
 ```
 """
-function get_transpiler(::AnyonYukonQPU;atol=1e-6)::Transpiler
+function get_transpiler(qpu::UnionAnyonQPU;atol=1e-6)::Transpiler
     return SequentialTranspiler([
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForLineConnectivityTranspiler(),
+        SwapQubitsForAdjacencyTranspiler(get_connectivity(qpu)),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
-        SimplifyTrivialGatesTranspiler(),
+        SimplifyTrivialGatesTranspiler(atol),
         CastUniversalToRzRxRzTranspiler(),
-        SimplifyRxGatesTranspiler(),
+        SimplifyRxGatesTranspiler(atol),
         CastRxToRzAndHalfRotationXTranspiler(),
         CompressRzGatesTranspiler(),
-        SimplifyRzGatesTranspiler(),
+        SimplifyRzGatesTranspiler(atol),
         UnsupportedGatesTranspiler(),
     ])
 end
