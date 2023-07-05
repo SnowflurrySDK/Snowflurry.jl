@@ -14,8 +14,14 @@ using Arpack #provides eigen value decomposition for sparse matrices
 
 import StatsBase
 
-
-
+include("core/qobj.jl")
+include("core/quantum_gate.jl")
+include("core/quantum_circuit.jl")
+include("core/pauli.jl")
+include("core/connectivity.jl")
+include("core/transpile.jl")
+include("anyon/qpu_interface.jl")
+include("anyon/anyon.jl")
 
 export
 
@@ -33,7 +39,7 @@ export
     QuantumCircuit,
     AbstractGateSymbol,
     AbstractControlledGateSymbol,
-    ControlledGate,
+    Controlled,
     Gate,
     AnyonYukonQPU,
     AnyonYamaskaQPU,
@@ -65,6 +71,7 @@ export
     UnsupportedGatesTranspiler,
 
     # Functions
+    controlled,
     commute, 
     anticommute, 
     get_gate_symbol,
@@ -93,8 +100,6 @@ export
     get_control_qubits,
     get_qubits_distance,
     get_gate_parameters,
-    is_gate_type,
-    get_gate_type,
     move_gate,
     normalize!,
     get_measurement_probabilities,
@@ -176,15 +181,6 @@ export
     toffoli
     
 
-include("core/qobj.jl")
-include("core/quantum_gate.jl")
-include("core/quantum_circuit.jl")
-include("core/pauli.jl")
-include("core/connectivity.jl")
-include("core/transpile.jl")
-include("anyon/qpu_interface.jl")
-include("anyon/anyon.jl")
-
 using PrecompileTools
 
 @compile_workload begin
@@ -240,7 +236,5 @@ using PrecompileTools
     end
 
 end
-
-
 
 end

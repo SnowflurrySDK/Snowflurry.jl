@@ -325,7 +325,7 @@ false
 """
 function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
     for gate in get_circuit_gates(circuit)
-        if is_gate_type(gate, gate_type)
+        if get_gate_symbol(gate) isa gate_type
             return true
         end
     end
@@ -380,39 +380,32 @@ function format_label(
     end
 end
 
-# TODO(#226): delete on completion
-function get_display_symbol(gate::Gate;precision::Integer=4)
-    return get_display_symbol(get_gate_symbol(gate), precision=precision)
-end
-
 function get_display_symbol(gate::AbstractGateSymbol;precision::Integer=4)
 
     gate_params=get_gate_parameters(gate)
 
-    targets=get_connected_qubits(gate)
+    num_targets=get_num_connected_qubits(gate)
 
-    num_targets=length(targets)
-
-    symbol_specs=gates_display_symbols[get_gate_type(gate)]
+    symbol_specs=gates_display_symbols[typeof(gate)]
 
     return format_label(symbol_specs,num_targets,gate_params;precision=precision)
 end
 
-function get_display_symbol(gate::ControlledGate;precision::Integer=4)
+function get_display_symbol(gate::Controlled;precision::Integer=4)
 
     # build new display symbol using existing symbol pertaining to kernel
     symbol_specs=get_display_symbol(gate.kernel,precision=precision)
 
-    num_kernel_qubits=length(gate.kernel_qubits)
+    num_target_qubits=get_num_target_qubits(gate)
     
     gate_params=get_gate_parameters(gate)
 
     return vcat(
-        [control_display_symbol for _ in 1:length(gate.control_qubits)],
+        [control_display_symbol for _ in 1:get_num_control_qubits(gate)],
         [
             format_label(
                 symbol_specs,
-                num_kernel_qubits,
+                num_target_qubits,
                 gate_params;
                 precision=precision
             )...
@@ -448,7 +441,7 @@ gates_display_symbols=Dict(
     Swap       =>["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[get_gate_type(gate)]
+get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[typeof(gate)]
 
 gates_instruction_symbols=Dict(
     Identity    =>"i",
@@ -635,7 +628,7 @@ end
 function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
     i_step::Integer, longest_symbol_length::Integer)
     
-    symbols_gate=get_display_symbol(gate)
+    symbols_gate=get_display_symbol(get_gate_symbol(gate))
 
     for (i_target, target) in enumerate(get_connected_qubits(gate))
         symbol_length = length(symbols_gate[i_target])
@@ -944,7 +937,7 @@ Dict{String, Int64} with 2 entries:
 function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
     gate_counts = Dict{String, Int}()
     for gate in get_circuit_gates(circuit)
-        instruction_symbol=get_instruction_symbol(gate)
+        instruction_symbol=get_instruction_symbol(get_gate_symbol(gate))
         if haskey(gate_counts, instruction_symbol)
             gate_counts[instruction_symbol] += 1
         else

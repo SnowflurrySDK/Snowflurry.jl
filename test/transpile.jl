@@ -61,8 +61,8 @@ test_circuits=[
 
 @testset "as_universal_gate" begin
     for gate in single_qubit_gates    
-        universal_equivalent=Snowflurry.as_universal_gate(target,get_operator(gate))
-        @test get_operator(gate)≈get_operator(universal_equivalent)
+        universal_equivalent=Snowflurry.as_universal_gate(target,get_operator(get_gate_symbol(gate)))
+        @test get_operator(get_gate_symbol(gate))≈get_operator(get_gate_symbol(universal_equivalent))
     end
 end
 
@@ -83,7 +83,7 @@ end
 
             @test compare_circuits(circuit,transpiled_circuit)
 
-            @test is_gate_type(gates[1], Snowflurry.Universal)
+            @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
         end
     end
 
@@ -116,8 +116,8 @@ end
 
     @test length(gates)==2
 
-    @test is_gate_type(gates[1], Snowflurry.SigmaX)
-    @test is_gate_type(gates[2], Snowflurry.ControlX)
+    @test gates[1] isa Snowflurry.Gate{Snowflurry.SigmaX}
+    @test gates[2] isa Snowflurry.Gate{Snowflurry.ControlX}
 end 
 
 @testset "Transpiler" begin
@@ -205,9 +205,9 @@ end
 
         @test length(gates)==gates_in_output
 
-        @test is_gate_type(gates[1], Snowflurry.PhaseShift)
-        @test is_gate_type(gates[2], Snowflurry.RotationX)
-        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
+        @test gates[1] isa Snowflurry.Gate{Snowflurry.PhaseShift}
+        @test gates[2] isa Snowflurry.Gate{Snowflurry.RotationX}
+        @test gates[3] isa Snowflurry.Gate{Snowflurry.PhaseShift}
     
         @test compare_circuits(circuit,transpiled_circuit)  
     end
@@ -261,11 +261,11 @@ end
         
         @test length(gates)==5
 
-        @test is_gate_type(gates[1], Snowflurry.Z90)
-        @test is_gate_type(gates[2], Snowflurry.X90)
-        @test is_gate_type(gates[3], Snowflurry.PhaseShift)
-        @test is_gate_type(gates[4], Snowflurry.XM90)
-        @test is_gate_type(gates[5], Snowflurry.ZM90)
+        @test gates[1] isa Snowflurry.Gate{Snowflurry.Z90}
+        @test gates[2] isa Snowflurry.Gate{Snowflurry.X90}
+        @test gates[3] isa Snowflurry.Gate{Snowflurry.PhaseShift}
+        @test gates[4] isa Snowflurry.Gate{Snowflurry.XM90}
+        @test gates[5] isa Snowflurry.Gate{Snowflurry.ZM90}
     end
 end
 
@@ -456,14 +456,11 @@ end
 @testset "SwapQubitsForAdjacencyTranspiler: multi-target multi-parameter" begin
 
     struct MultiParamMultiTargetGateSymbol <: Snowflurry.AbstractGateSymbol
-        target_1::Int
-        target_2::Int
-        target_3::Int
         theta::Real
         phi::Real
     end
 
-    Snowflurry.get_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=[gate.target_1,gate.target_2,gate.target_3]
+    Snowflurry.get_num_connected_qubits(gate::MultiParamMultiTargetGateSymbol)=3
     Snowflurry.get_gate_parameters(gate::MultiParamMultiTargetGateSymbol)=Dict("theta"=>gate.theta,"phi"=>gate.phi)
     Snowflurry.get_operator(gate::MultiParamMultiTargetGateSymbol, T::Type{<:Complex}=ComplexF64) = DenseOperator(
         T[1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -485,7 +482,7 @@ end
     ncols       =3
     circuit = QuantumCircuit(
         qubit_count = qubit_count, 
-        gates = [Gate(MultiParamMultiTargetGateSymbol(1,3,5,π,π/3), [1,3, 5])]
+        gates = [Gate(MultiParamMultiTargetGateSymbol(π,π/3), [1,3, 5])]
     )
 
     # test printout for multi-target multi-param gate
@@ -569,7 +566,7 @@ end
 
             if input_is_native
                 test_is_not_rz=[
-                    !(get_gate_type(gate) in Snowflurry.set_of_rz_gates)
+                    !(typeof(get_gate_symbol(gate)) in Snowflurry.set_of_rz_gates)
                     for gate in gates_in_output
                 ]
 
@@ -621,9 +618,9 @@ end
 
         for target in targets
             if haskey(results,target)
-                results[target]=push!(results[target], get_gate_type(gate))
+                results[target]=push!(results[target], typeof(get_gate_symbol(gate)))
             else
-                results[target]=[get_gate_type(gate)]
+                results[target]=[typeof(get_gate_symbol(gate))]
             end
         end
     end
@@ -849,7 +846,7 @@ end
 
         result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,angle))
 
-        @test is_gate_type(result_gate, type_result)
+        @test get_gate_symbol(result_gate) isa type_result
     end
 
     # returns empty array
@@ -859,7 +856,7 @@ end
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3))
 
-    @test is_gate_type(result_gate, Snowflurry.RotationX)
+    @test result_gate isa Snowflurry.Gate{Snowflurry.RotationX}
 
     result_gate=Snowflurry.simplify_rx_gate(Snowflurry.rotation_x(target,1e-3),atol=1e-1)
 
@@ -886,7 +883,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
+        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[rotation_x(target,0.)])
@@ -940,7 +937,7 @@ end
 
         result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,angle))
 
-        @test is_gate_type(result_gate, type_result)
+        @test get_gate_symbol(result_gate) isa type_result
     end
 
     # returns empty array
@@ -950,7 +947,7 @@ end
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3))
 
-    @test is_gate_type(result_gate, Snowflurry.PhaseShift)
+    @test result_gate isa Snowflurry.Gate{Snowflurry.PhaseShift}
 
     result_gate=Snowflurry.simplify_rz_gate(Snowflurry.phase_shift(target,1e-3),atol=1e-1)
 
@@ -978,7 +975,7 @@ end
 
         @test compare_circuits(circuit,transpiled_circuit)
 
-        @test is_gate_type(get_circuit_gates(transpiled_circuit)[1], type_result)
+        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
     end
 
     circuit=QuantumCircuit(qubit_count=target, gates=[phase_shift(target,0.)])
@@ -1114,7 +1111,7 @@ end
 
 @testset "UnsupportedGatesTranspiler" begin
     
-    circuit =QuantumCircuit(qubit_count=4, gates=[Gate(ControlledGate(hadamard(2),1), [1,2])])
+    circuit =QuantumCircuit(qubit_count=4, gates=[controlled(hadamard(2),[1])])
 
     @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
 

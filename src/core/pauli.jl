@@ -80,7 +80,7 @@ function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
 
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
     num_qubits = get_num_qubits(circuit)
-    pauli = unsafe_get_pauli(Identity(1), 1, num_qubits, GF(2)(imaginary_exponent),
+    pauli = unsafe_get_pauli(Identity(), 1, num_qubits, GF(2)(imaginary_exponent),
         GF(2)(negative_exponent))
     
     for gate in get_circuit_gates(circuit)

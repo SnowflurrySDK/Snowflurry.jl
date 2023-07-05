@@ -92,7 +92,7 @@ end
 
     Y_gate=sigma_y(target)
 
-    y_operator=get_operator(Y_gate)
+    y_operator=get_operator(get_gate_symbol(Y_gate))
 
     println(y_operator)
 

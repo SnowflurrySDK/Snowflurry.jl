@@ -113,7 +113,6 @@ set_of_native_gates=[
     ControlZ,
 ]
 
-
 """
     get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
 
@@ -161,7 +160,7 @@ function get_qubits_distance(target_1::Int, target_2::Int, connectivity::Lattice
 end
 
 function is_native_gate(qpu::UnionAnyonQPU,gate::Gate)::Bool
-    if is_gate_type(gate, ControlZ)
+    if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
             
         targets=get_connected_qubits(gate)
@@ -169,7 +168,7 @@ function is_native_gate(qpu::UnionAnyonQPU,gate::Gate)::Bool
         return (get_qubits_distance(targets[1],targets[2],get_connectivity(qpu))==1)        
     end
         
-    return (get_gate_type(gate) in set_of_native_gates)
+    return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
 function is_native_circuit(qpu::UnionAnyonQPU,circuit::QuantumCircuit)::Tuple{Bool,String}
@@ -185,7 +184,7 @@ function is_native_circuit(qpu::UnionAnyonQPU,circuit::QuantumCircuit)::Tuple{Bo
     for gate in get_circuit_gates(circuit)
         if !is_native_gate(qpu,gate)
             return (false,
-            "Gate type $(get_gate_type(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
+            "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))"
             )
         end
     end
