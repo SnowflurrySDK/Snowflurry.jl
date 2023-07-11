@@ -1,4 +1,4 @@
-# Running a Circuit on a Real Hardware
+# Running a Circuit on Real Hardware
 
 ```@meta
 using Snowflurry
@@ -12,7 +12,7 @@ end
 
 In the previous tutorial, we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU`.
 
-In this tutorial, we will learn how to submit a job to a real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines. 
+In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines. 
 
 ## Anyon QPU
 
@@ -38,7 +38,7 @@ Quantum Processing Unit:
 ```
 
 !!! warning
-    If you plan to make your code public or work in a shared envrinoment, it is best to use environment variables to set the user credentials rather than hardcoding them!
+    If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
 
 
 We can now print the `qpu` object to print further information about the hardware:
@@ -107,9 +107,9 @@ If you examine the `src/anyon/qpu_interface.jl` file, you notice that Anyon Yuko
     ]
 ```
 
-Snowflurry is designed to allow users to design and use their own transpilers for different QPUs. Alternatively, a use may opt out to use the default transpilers that are implemented for each QPU driver. 
+Snowflurry is designed to allow users to design and use their own transpilers for different QPUs. Alternatively, a user may opt not to use the default transpilers that are implemented for each QPU driver. 
 
-Let's see how can we transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
+Let's see how we can transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
 
 ```jldoctest anyon_qpu_tutorial; output = false
 transpiler=get_transpiler(qpu)

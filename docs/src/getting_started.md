@@ -16,10 +16,10 @@ The following installation steps are for people interested in using Snowflurry i
 
 Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please file a bug if they don't), but we only actively test against the LTS and the latest stable version.
+We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing the Snowflurry package
-Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommand installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
+Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
 
 ```julia
 import Pkg

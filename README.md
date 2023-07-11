@@ -15,22 +15,22 @@ The following installation steps are for people interested in using Snowflurry i
 
 Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please file a bug if they don't), but we only actively test against the LTS and the latest stable version.
+We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing `Snowflurry.jl` package
-Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommand installing it by checking out the `main` branch from github. This can be achieved by typing the following commands in the Julia REPL:
+Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from github. This is achieved by typing the following commands in the Julia REPL:
 
 ```julia
 import Pkg
 Pkg.add(url="https://github.com/SnowflurrySDK/Snowflurry.jl", rev="main")
 ```
-This will add the Snowflurry  package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
+This adds the Snowflurry package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
 
-**Note** Once `Snowflurry.jl` is released, you can install the latest release using the following command:
-	```julia
-	import Pkg
-	Pkg.add("Snowflurry")
-	```
+**Note:** once `Snowflurry.jl` is released to [JuliaHub](https://https://juliahub.com/), it will be possible to import the latest release using the following command:
+```julia
+import Pkg
+Pkg.add("Snowflurry")
+```
 
 ### Installing `SnowflurryPlots.jl` package
 
@@ -49,7 +49,7 @@ A typical workflow to execute a quantum circuit on a quantum service consists of
 
 - Create: Build the circuit using quantum gates.
 
-- Transpile: Transpile the circuit to improve performance and make the circuit compatible with the quantum service.
+- Transpile: transform the circuit into an equivalent one, but with improved performance and ensuring compatibility with the chosen quantum service.
 
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
