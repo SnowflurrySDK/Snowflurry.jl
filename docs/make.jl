@@ -1,7 +1,6 @@
 push!(LOAD_PATH, "../src/")
 
 using Documenter
-using DocumenterMarkdown
 using Snowflurry
 
 
@@ -35,7 +34,7 @@ DocMeta.setdocmeta!(
 uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 makedocs(
     sitename = "Snowflurry",
-    format = Markdown(), #Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
     modules = [Snowflurry],
     pages = [
         "Home" => "index.md",
