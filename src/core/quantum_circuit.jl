@@ -470,6 +470,11 @@ gates_instruction_symbols=Dict(
     Swap        =>"swap",
     )
 
+instruction_to_gate_symbol_types=Dict( v => k for (k,v) in gates_instruction_symbols)
+
+get_symbol_type_for_instruction(instruction::String)::DataType=instruction_to_gate_symbol_types[instruction]
+
+
 """
     pop!(circuit::QuantumCircuit)
 
