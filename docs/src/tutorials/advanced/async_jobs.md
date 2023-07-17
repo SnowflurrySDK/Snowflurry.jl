@@ -23,7 +23,7 @@ In `Snowflurry`, communicating with a quantum processor will [yield](https://doc
 
 To provide maximum flexibility, Snowflurry does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
 
-We will start by importing Snowflurry, building our circuit, and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
+We will start by importing Snowflurry, building our circuit and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../run_circuit_anyon.md) tutorial.
 
 
 ```jldoctest asynchronous_job; output = false

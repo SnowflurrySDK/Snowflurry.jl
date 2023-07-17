@@ -104,7 +104,7 @@ function compare_kets(ψ_0::Ket,ψ_1::Ket)
 end
 
 """
-A structure representing a Bra (i.e. a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
+A structure representing a Bra (i.e., a row vector of complex values). A Bra is created as the complex conjugate of a Ket.
 
 # Examples
 ```jldoctest
@@ -364,7 +364,7 @@ Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).
 
     DiagonalOperator{N,T<:Complex}<:AbstractOperator
 
-A structure representing a diagonal quantum `Operator` (i.e. a complex matrix of element type T, with non-zero elements all lying on the diagonal).
+A structure representing a diagonal quantum `Operator` (i.e., a complex matrix of element type T, with non-zero elements all lying on the diagonal).
 The equivalent dense matrix would have size NxN.
 
 # Examples
@@ -411,7 +411,7 @@ end
 
     AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
 
-A structure representing a anti-diagonal quantum `Operator` (i.e. a complex matrix of element type T, with non-zero elements all lying on the cross-diagonal).
+A structure representing a anti-diagonal quantum `Operator` (i.e., a complex matrix of element type T, with non-zero elements all lying on the cross-diagonal).
 The equivalent dense matrix would have size NxN.
 
 # Examples
@@ -480,7 +480,7 @@ Base.adjoint(A::IdentityOperator) = A
 """
     is_hermitian(A::AbstractOperator)
 
-Determine if Operator `A` is Hermitian (i.e. self-adjoint).
+Determine if Operator `A` is Hermitian (i.e., self-adjoint).
 
 # Examples
 ```jldoctest

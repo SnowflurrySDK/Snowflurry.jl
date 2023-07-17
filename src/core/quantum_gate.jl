@@ -1,19 +1,19 @@
 """
     AbstractGateSymbol
 
-A `Gate` is an instantiation of an `AbstractGateSymbol`, which can be added to a `QuantumCircuit` in order to apply an operator to one or more `target` qubits.
-`AbstractGateSymbol` is useful to dispatch all `Gates` to default implementation of functions such as get_connected_qubits(). 
-Those functions are then specialized for `Gates` requiring a different implementation. 
+A `GateSymbol` is an instantiation of an `AbstractGateSymbol`, which, when used inside a `Gate` (specifing placement) can be added to a `QuantumCircuit` to apply an operator to one or more `target` qubits.
+`AbstractGateSymbol` is useful to dispatch all `GateSymbols` to default implementation of functions such as get_connected_qubits(). 
+Those functions are then specialized for `GateSymbols` requiring a different implementation. 
 
 `AbstractGateSymbol` is an abstract type, which means that it cannot be instantiated. 
-Instead, each concrete type of `Gate` is a struct which is a subtype of `AbstractGateSymbol`.
+Instead, each concrete type of `GateSymbols` is a struct which is a subtype of `AbstractGateSymbol`.
 Each descendant of `AbstractGateSymbol` must implement at least the following methods:
 
 - `get_operator(gate::AbstractGateSymbol, T::Type{<:Complex}=ComplexF64})::AbstractOperator`
 - `get_num_connected_qubits(gate::AbstractGateSymbol)::Integer`
 
 # Examples
-A struct must be defined for each new `Gate` type, such as the following X_45 `Gate` which
+A struct must be defined for each new `GateSymbol` type, such as the following X_45 `GateSymbol` which
 applies a 45° rotation about the X axis:
 
 ```jldoctest gate_struct
@@ -21,7 +21,7 @@ julia> struct X45 <: AbstractGateSymbol
        end;
 ```
 
-We need to define how many connected qubits our new gate has.
+We need to define how many connected qubits our new `GateSymbol` has.
 ```jldoctest gate_struct
 julia> Snowflurry.get_num_connected_qubits(::X45) = 1
 
@@ -78,7 +78,7 @@ Underlying data ComplexF64:
 
 ```
 
-To enable printout of a `QuantumCircuit` containing our new `Gate` type, a display symbol 
+To enable printout of a `QuantumCircuit` containing our new `GateSymbol` type, a display symbol 
 must be defined as follows.
 ```jldoctest gate_struct
 julia> Snowflurry.gates_display_symbols[X45]=["X45"];
@@ -103,7 +103,7 @@ q[2]:───────
 
 ```
 
-In addition, a `Controlled{X45}` can be constructed using:
+In addition, a `Controlled{X45}` gate can be constructed using:
 ```jldoctest gate_struct
 julia> control=1; target=2;
 
