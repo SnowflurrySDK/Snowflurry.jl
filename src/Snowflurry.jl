@@ -79,7 +79,7 @@ export
     get_matrix,
     get_display_symbol,
     get_instruction_symbol,
-    get_symbol_type_for_instruction,
+    get_symbol_for_instruction,
     fock,
     spin_up,
     spin_down,

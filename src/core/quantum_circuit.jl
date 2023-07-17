@@ -472,7 +472,7 @@ gates_instruction_symbols=Dict(
 
 instruction_to_gate_symbol_types=Dict( v => k for (k,v) in gates_instruction_symbols)
 
-get_symbol_type_for_instruction(instruction::String)::DataType=instruction_to_gate_symbol_types[instruction]
+get_symbol_for_instruction(instruction::String)::DataType=instruction_to_gate_symbol_types[instruction]
 
 
 """
