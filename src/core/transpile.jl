@@ -9,9 +9,9 @@ transpile(t::Transpiler,::QuantumCircuit)::QuantumCircuit=
     SequentialTranspiler(Vector{<:Transpiler})
     
 Composite transpiler object which is constructed from an array 
-of `Transpiler`` stages. Calling 
+of `Transpiler` stages. Calling 
     `transpile(::SequentialTranspiler,::QuantumCircuit)`
-will apply each stage in sequence to the input circuit, and return
+will apply each stage in sequence to the input circuit and return
 a transpiled output circuit. The result of the input and output 
 circuit on any arbitrary state `Ket` is unchanged (up to a global phase).
 
@@ -872,7 +872,7 @@ struct CastUniversalToRzRxRzTranspiler<:Transpiler end
     transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
-which finds `Universal` gates in an input circuit and converst casts 
+which finds `Universal` gates in an input circuit and casts 
 them into a sequence of `PhaseShift` (Rz), `RotationX` (Rx) and 
 `PhaseShift` (Rz) gates in a new circuit.
 The result of the input and output circuit on any arbitrary state `Ket` 
@@ -1034,9 +1034,9 @@ SimplifyRxGatesTranspiler()=SimplifyRxGatesTranspiler(1e-6)
     transpile(::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `SimplifyRxGatesTranspiler` transpiler stage 
-which finds `RotationX` gates in an input circuit and according to it's 
+which finds `RotationX` gates in an input circuit and according to its 
 angle theta, casts them to one of the right-angle `RotationX` gates, 
-e.g. `SigmaX`, `X90`, or `XM90`. In the case where `theta≈0.`, the gate is removed.
+e.g., `SigmaX`, `X90`, or `XM90`. In the case where `theta≈0.`, the gate is removed.
 The result of the input and output circuit on any arbitrary state `Ket` is 
 unchanged (up to a global phase).
 
@@ -1313,9 +1313,9 @@ SimplifyRzGatesTranspiler()=SimplifyRzGatesTranspiler(1e-6)
     transpile(::SimplifyRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `SimplifyRzGatesTranspiler` transpiler stage 
-which finds `PhaseShift` gates in an input circuit and according to it's 
+which finds `PhaseShift` gates in an input circuit and according to its 
 phase angle phi, casts them to one of the right-angle `RotationZ` gates, 
-e.g. `SigmaZ`, `Z90`, `ZM90`, `Pi8` or `Pi8Dagger`. In the case where `phi≈0.`, the 
+e.g., `SigmaZ`, `Z90`, `ZM90`, `Pi8` or `Pi8Dagger`. In the case where `phi≈0.`, the 
 gate is removed. The result of the input and output circuit on any 
 arbitrary state `Ket` is unchanged (up to a global phase). The tolerance 
 used for `Base.isapprox()` in each case can be set by passing an optional 

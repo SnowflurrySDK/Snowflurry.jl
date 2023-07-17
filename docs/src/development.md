@@ -22,7 +22,7 @@ If the current directory is not the Snowflurry project, replace `.` with the Sno
 
 ## Running tests
 
-First open a julia REPL in the current project
+First open a Julia REPL in the current project
 
 ```bash
 julia --project=.
@@ -37,7 +37,7 @@ Pkg.test()
 
 ## Build the documentation
 
-First open a julia REPL using the docs project
+Open a Julia REPL using the docs project
 
 ```bash
 julia --project=./docs
@@ -67,7 +67,7 @@ Pkg.status()
   [de0858da] Printf
 ```
 
-Then you can run
+Then you can run the following to build the documentation website.
 
 ```julia
 include("./docs/make.jl")

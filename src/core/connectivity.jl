@@ -5,7 +5,7 @@ abstract type AbstractConnectivity end
 """
     LineConnectivity <:AbstractConnectivity
 
-A data structure to represent linear qubit connectivity in a Anyon System's QPU.  
+A data structure to represent linear qubit connectivity in an Anyon System's QPU.  
 This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@ref)
 
 # Fields
@@ -27,7 +27,7 @@ end
 """
     LatticeConnectivity <:AbstractConnectivity
 
-A data structure to represent 2D-lattice qubit connectivity in a Anyon System's QPU.  
+A data structure to represent 2D-lattice qubit connectivity in an Anyon System's QPU.  
 This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](@ref)
 
 # Fields
@@ -56,7 +56,7 @@ LatticeConnectivity{4,3}
 
 ```
 
-Lattices of arbitrairy dimensions can be built:
+Lattices of arbitrary dimensions can be built:
 ```jldoctest
 julia>  connectivity = LatticeConnectivity(6,4)
 LatticeConnectivity{6,4}
@@ -77,7 +77,7 @@ LatticeConnectivity{6,4}
 
 ```
 
-Non rectangular shapes can also be achieved by directly specifying the `qubits_per_row`:
+Non-rectangular shapes can also be achieved by directly specifying the desired `qubits_per_row` as a `Vector{Int}`:
 
 ```jldoctest
 julia>  connectivity = LatticeConnectivity([5,7,8,8,7,5])
@@ -150,7 +150,7 @@ get_connectivity_label(connectivity::AbstractConnectivity) =
 """
     AllToAllConnectivity <:AbstractConnectivity
 
-A data structure to represent all-to-all qubit connectivity in a Anyon System's QPU.  
+A data structure to represent all-to-all qubit connectivity in an Anyon System's QPU.  
 This connectivity type is encountered in simulated `QPUs`, such as the [`VirtualQPU`](@ref)
 
 # Example

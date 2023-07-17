@@ -4,11 +4,11 @@ In the previous tutorial, we introduced some basic concepts of quantum computing
 
 We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine. 
 
-In this tutorial, we will the steps involved in running a quantum circuit on a both a virtual and also a real Quantum Processing Unit (QPU). 
+In this tutorial, we will the steps involved in running a quantum circuit on both a virtual and a real Quantum Processing Unit (QPU). 
 
 
 ## QPU Object
-Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface, and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more. 
+Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more. 
 
 !!! warning 
     You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library.md#Quantum-Processing-Unit). 
@@ -79,10 +79,10 @@ Dict("00" => 53, "11" => 47)
 ```
 
 !!! note
-	The reason the number of measured values for states `00` and `11` are not necessarily equal is due to the fact that `VirtualQPU` tries to mimick the statistical nature of a real hardware. By increasing the `shots_count` the experiment will can confirm that the probability of `00` and `11` are equal. 
+	The reason the number of measured values for states `00` and `11` are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of `00` and `11` are equal. 
 
 
 
-The virtual QPU currently mimicks an ideal hardware with no error. In future versions, we expect to add noise models and also models for other sources of error such as crosstalk, thermal noise, etc. 
+The virtual QPU currently mimics an ideal hardware with no error. In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc. 
 
-In the next tutorial, we will show how to submit a job to a real quantum processing hardware. 
+In the next tutorial, we will show how to submit a job to real quantum processing hardware. 

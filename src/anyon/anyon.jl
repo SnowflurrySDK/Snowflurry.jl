@@ -3,7 +3,7 @@ using Snowflurry
 """
     AnyonYukonQPU
 
-A data structure to represent a Anyon System's QPU.  
+A data structure to represent an Anyon System's Yukon generation QPU.  
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
@@ -41,7 +41,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
 """
     AnyonYamaskaQPU
 
-A data structure to represent an Anyon System's QPU.  
+A data structure to represent an Anyon System's Yamaska generation QPU.  
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.

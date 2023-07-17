@@ -4,7 +4,7 @@
 
 A data structure to represent a *quantum circuit*.  
 # Fields
-- `qubit_count::Int` -- number of qubits (i.e. quantum register size).
+- `qubit_count::Int` -- number of qubits (i.e., quantum register size).
 - `gates::Vector{AbstractGateSymbol}` -- the sequence of gates to operate on qubits.
 
 # Examples
@@ -161,7 +161,7 @@ end
 
 Prepends one or more `circuits_to_prepend` to the `base_circuit`.
 
-The order of the `circuits_to_prepend` is maintained (i.e. `circuits_to_prepend[1]` will
+The order of the `circuits_to_prepend` is maintained (i.e., `circuits_to_prepend[1]` will
 appear leftmost in `base_circuit`). The `circuits_to_prepend` cannot contain more qubits
 than the `base_circuit`.
 
@@ -307,7 +307,7 @@ end
 """
     circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
 
-Determined whether or not a type of gate is present in a circuit.
+Determines whether a type of gate is present in a circuit.
 
 # Examples
 ```jldoctest
@@ -867,7 +867,7 @@ end
     inv(circuit::QuantumCircuit)
 
 Return a `QuantumCircuit` which is the inverse of the input `circuit`. 
-Each gate is replaced by it's corresponding inverse, and the order of gates is reversed.
+Each gate is replaced by its corresponding inverse, and the order of gates is reversed.
 
 # Examples
 ```jldoctest
