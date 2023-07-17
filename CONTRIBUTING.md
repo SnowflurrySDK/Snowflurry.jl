@@ -28,9 +28,9 @@ The basic process for setting up a fork is
 
 1.  Fork the Snowflurry repo (Fork button in upper right corner of
     [repo page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
-    Forking creates a new github repo at the location
+    Forking creates a new Github repo at the location
     `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
-    your github id. Use the directions on the
+    your Github id. Use the directions on the
     [development page](docs/dev/development.md) to download a copy to
     your local machine. You need only do this once.
 1.  Checkout master and create a new branch from this master
