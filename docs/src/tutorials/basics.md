@@ -90,7 +90,7 @@ q[2]:───────X──
 ```
 Voila! You just made your first quantum circuit with `Snowflurry` that does something interesting:
 
-It puts a two-qubit register in a maximally-entangled quantum state ($\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$). This state is one of the four celebrated [Bell State](https://en.wikipedia.org/wiki/Bell_state) or the EPR states. These states do not have classical counterparts and are among the building blocks of many interesting ideas in quantum computing and quantum communication.
+It puts a two-qubit register in a maximally-entangled quantum state ($\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$). This state is one of the four celebrated [Bell States](https://en.wikipedia.org/wiki/Bell_state) or the EPR states. These states do not have classical counterparts and are among the building blocks of many interesting ideas in quantum computing and quantum communication.
 
 ## Circuit Simulation
 You can verify what your circuit will ideally do on a real computer by simulating the circuit on your own local machine:
