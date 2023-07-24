@@ -472,8 +472,36 @@ gates_instruction_symbols=Dict(
 
 instruction_to_gate_symbol_types=Dict( v => k for (k,v) in gates_instruction_symbols)
 
-get_symbol_for_instruction(instruction::String)::DataType=instruction_to_gate_symbol_types[instruction]
+get_symbol_for_instruction(instruction::String)::DataType = instruction_to_gate_symbol_types[instruction]
 
+gates_constructor_by_type=Dict(
+    Identity    =>  identity_gate,
+    SigmaX      =>  sigma_x,
+    SigmaY      =>  sigma_y,
+    SigmaZ      =>  sigma_z,
+    Hadamard    =>  hadamard,
+    Pi8         =>  pi_8,
+    Pi8Dagger   =>  pi_8_dagger,
+    X90         =>  x_90,
+    XM90        =>  x_minus_90,
+    Y90         =>  y_90,
+    YM90        =>  y_minus_90,
+    Z90         =>  z_90,
+    ZM90        =>  z_minus_90,
+    Rotation    =>  rotation,
+    RotationX   =>  rotation_x,
+    RotationY   =>  rotation_y,
+    PhaseShift  =>  phase_shift,
+    Universal   =>  universal,
+    ControlZ    =>  control_z,
+    ControlX    =>  control_x,
+    ISwap       =>  iswap,
+    ISwapDagger =>  iswap_dagger,
+    Toffoli     =>  toffoli,
+    Swap        =>  swap,
+    )
+
+get_constructor_from_gate_type(gate_type::DataType) = gates_constructor_by_type[gate_type]
 
 """
     pop!(circuit::QuantumCircuit)
