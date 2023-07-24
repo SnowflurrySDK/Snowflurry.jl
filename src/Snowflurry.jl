@@ -80,6 +80,7 @@ export
     get_display_symbol,
     get_instruction_symbol,
     get_symbol_for_instruction,
+    get_constructor_from_gate_type,
     fock,
     spin_up,
     spin_down,
