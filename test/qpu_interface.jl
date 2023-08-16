@@ -13,7 +13,11 @@ function compare_responses(expected::HTTP.Response, received::HTTP.Response)
 
     for f in fieldnames(typeof(received))
         if isdefined(received, f) # response.request is undefined in Julia 1.6.7
-            @test getfield(received, f) == getfield(expected, f)
+            if getfield(received, f) != getfield(expected, f)
+                receivedStr = read_response_body(getfield(received, f))
+                expectedStr = read_response_body(getfield(expected, f))
+                @test receivedStr == expectedStr
+            end
         end
     end
 
@@ -48,14 +52,17 @@ end
         access_token,
     )
 
-    expected_response =
-        HTTP.Response(200, [], body = "{\"status\":{\"type\":\"succeeded\"}}")
+    expected_response = HTTP.Response(
+        200,
+        [],
+        body = "{\"status\":{\"type\":\"succeeded\"},\"histogram\":{\"001\":100}}",
+    )
 
     circuitID = "1234-abcd"
 
     response = get_request(
         requestor,
-        host * "/" * Snowflurry.path_circuits * "/" * circuitID,
+        host * "/" * Snowflurry.path_jobs * "/" * circuitID,
         user,
         access_token,
     )
@@ -64,7 +71,7 @@ end
 
     @test_throws NotImplementedError get_request(
         requestor,
-        host * "/" * string(Snowflurry.path_circuits, "wrong_ending"),
+        host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
         user,
         access_token,
     )
@@ -75,13 +82,7 @@ end
 
     response = get_request(
         requestor,
-        host *
-        "/" *
-        Snowflurry.path_circuits *
-        "/" *
-        circuitID *
-        "/" *
-        Snowflurry.path_results,
+        host * "/" * Snowflurry.path_jobs * "/" * circuitID * "/" * Snowflurry.path_results,
         user,
         access_token,
     )
@@ -92,7 +93,7 @@ end
         requestor,
         host *
         "/" *
-        Snowflurry.path_circuits *
+        Snowflurry.path_jobs *
         "/" *
         circuitID *
         "/" *
@@ -149,9 +150,9 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(circuit, shot_count)
+    circuit_json = serialize_job(circuit, shot_count, "http://test.anyonsys.com")
 
-    expected_json = "{\"qubit_count\":3,\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    expected_json = "{\"name\":\"default\",\"machine_id\":\"http://test.anyonsys.com\",\"shot_count\":100,\"type\":\"circuit\",\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
 
     @test circuit_json == expected_json
 
@@ -164,7 +165,7 @@ end
 
     circuitID = submit_circuit(test_client, circuit, shot_count)
 
-    status = get_status(test_client, circuitID)
+    status, histogram = get_status(test_client, circuitID)
 
     @test get_status_type(status) in ["queued", "running", "failed", "succeeded"]
 end
@@ -181,7 +182,7 @@ end
     requestor = HTTPRequestor(test_get, test_post)
     test_client =
         Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status = get_status(test_client, "circuitID not used in this test")
+    status, histogram = get_status(test_client, "circuitID not used in this test")
     @test get_status_type(status) == "failed"
     @test get_status_message(status) == "mocked"
 
@@ -204,7 +205,7 @@ end
     requestor = HTTPRequestor(test_get, test_post)
     test_client =
         Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status = get_status(test_client, "circuitID not used in this test")
+    status, histogram = get_status(test_client, "circuitID not used in this test")
     @test status.type == "failed"
     @test status.message != ""
 end

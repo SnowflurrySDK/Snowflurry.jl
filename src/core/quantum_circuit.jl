@@ -1,12 +1,13 @@
 
 """
-    QuantumCircuit(qubit_count::Int, bit_count::Int, instructions::Vector{AbstractInstruction})
+    QuantumCircuit(qubit_count::Int, bit_count::Int, instructions::Vector{AbstractInstruction}, name::String = "default")
 
 A data structure to represent a *quantum circuit*.
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e., quantum register size).
-- `bit_count::Int` -- number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
-- `instructions::Vector{AbstractInstruction}` -- the sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on qubits.
+- `bit_count::Int` -- Optional: number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
+- `instructions::Vector{AbstractInstruction}` -- Optional: the sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on qubits. Defaults to empty Vector.
+- `name::String` -- Optional: name of the circuit job, used to identify it when sending to a hardware or virtual QPU. 
 
 # Examples
 ```jldoctest
@@ -36,11 +37,13 @@ Base.@kwdef struct QuantumCircuit
     qubit_count::Int
     bit_count::Int = qubit_count
     instructions::Vector{AbstractInstruction} = Vector{AbstractInstruction}([])
+    name::String = "default"
 
     function QuantumCircuit(
         qubit_count::Int,
         bit_count::Int,
         instructions::Vector{InstructionType},
+        name::String,
     ) where {InstructionType<:AbstractInstruction}
         @assert qubit_count > 0 (
             "$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count"
@@ -49,7 +52,7 @@ Base.@kwdef struct QuantumCircuit
             "$(:QuantumCircuit) constructor requires bit_count>0. Received: $bit_count"
         )
 
-        circuit = new(qubit_count, bit_count, [])
+        circuit = new(qubit_count, bit_count, [], name)
         foreach(instr -> ensure_instruction_is_in_circuit(circuit, instr), instructions)
         append!(circuit.instructions, instructions)
         return circuit
@@ -64,6 +67,7 @@ end
 
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count
 get_num_bits(circuit::QuantumCircuit)::Int = circuit.bit_count
+get_name(circuit::QuantumCircuit)::String = circuit.name
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 

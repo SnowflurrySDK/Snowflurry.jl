@@ -297,7 +297,7 @@ function run_job(
 
     circuitID = submit_circuit(client, circuit, shot_count)
 
-    status = poll_for_status(client, circuitID, qpu.status_request_throttle)
+    status, histogram = poll_for_results(client, circuitID, qpu.status_request_throttle)
 
     status_type = get_status_type(status)
 
@@ -309,25 +309,25 @@ function run_job(
         @assert status_type == succeeded_status (
             "Server returned an unrecognized status type: $status_type"
         )
-        return get_result(client, circuitID)
+        return histogram
     end
 end
 
 # 100ms between queries to host by default
 const default_status_request_throttle = (seconds = 0.1) -> sleep(seconds)
 
-function poll_for_status(
+function poll_for_results(
     client::Client,
     circuitID::String,
     request_throttle::Function,
-)::Status
-    status = get_status(client, circuitID)
+)::Tuple{Status,Dict{String,Int}}
+    (status, histogram) = get_status(client, circuitID)
     while get_status_type(status) in [queued_status, running_status]
         request_throttle()
-        status = get_status(client, circuitID)
+        (status, histogram) = get_status(client, circuitID)
     end
 
-    return status
+    return status, histogram
 end
 
 """

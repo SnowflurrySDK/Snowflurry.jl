@@ -99,6 +99,7 @@ export
     ket2dm,
     fock_dm,
     expected_value,
+    get_name,
     get_num_qubits,
     get_num_bits,
     get_num_bodies,

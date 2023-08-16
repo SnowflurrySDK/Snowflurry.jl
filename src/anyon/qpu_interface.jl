@@ -37,7 +37,7 @@ struct MockRequestor <: Requestor
     post_checker::Function
 end
 
-const path_circuits = "circuits"
+const path_jobs = "jobs"
 const path_results = "result"
 
 const queued_status = "queued"
@@ -109,14 +109,14 @@ function get_request(
 end
 
 """
-    serialize_job(circuit::QuantumCircuit,shot_count::Integer)
+    serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 
 Creates a JSON-formatted String containing the circuit configuration to be sent 
-to a `QPU` service, along with the number of shots requested.
+to a `QPU` service located at the URL specified by `host`, along with the number of shots requested.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
+julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)], name = "sigma_x job")
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -124,20 +124,19 @@ q[1]:──X──
           
 q[2]:─────
           
-
-
-
-julia> serialize_job(c,10)
-"{\\\"qubit_count\\\":2,\\\"shot_count\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+julia> serialize_job(c, 10, "http://example.anyonsys.com")
+"{\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"shot_count\\\":10,\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
-function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
+function serialize_job(circuit::QuantumCircuit, shot_count::Integer, host::String)::String
 
     circuit_description = Dict(
+        "name" => get_name(circuit),
+        "type" => "circuit",
+        "machine_id" => host,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
         "shot_count" => shot_count,
-        "qubit_count" => circuit.qubit_count,
     )
 
     for instr in get_circuit_instructions(circuit)
@@ -234,9 +233,9 @@ function submit_circuit(
     shot_count::Integer,
 )::String
 
-    circuit_json = serialize_job(circuit, shot_count)
+    circuit_json = serialize_job(circuit, shot_count, get_host(client))
 
-    path_url = get_host(client) * "/" * path_circuits
+    path_url = get_host(client) * "/" * path_jobs
 
     response = post_request(
         get_requestor(client),
@@ -256,16 +255,19 @@ function submit_circuit(
 end
 
 """
-    get_status(client::Client, circuitID::String)::Dict{String, String}
+    get_status(client::Client,circuitID::String)::Tuple{Status,Dict{String,Int}}
 
 Obtain the status of a circuit computation through a `Client` of a `QPU` service.
 Returns status::Dict containing status["type"]: 
-    -"queued"   : Computation in queue.
-    -"running"  : Computation being processed.
-    -"failed"   : QPU service has returned an error message.
+    -"queued"   : Computation in queue
+    -"running"  : Computation being processed
+    -"failed"   : QPU service has returned an error message
     -"succeeded": Computation is completed, result is available.
 
 In the case of status["type"]=="failed", the server error is contained in status["message"].
+
+In the case of status["type"]=="succeeded", the second element in the return Tuple is 
+the histogram of the job results, as computed on the `QPU`.
 
 # Example
 
@@ -275,13 +277,14 @@ julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3, instru
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client,circuitID)
-Status: succeeded
+(Status: succeeded
+, Dict("001" => 100))
 
 ```
 """
-function get_status(client::Client, circuitID::String)::Status
+function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String,Int}}
 
-    path_url = get_host(client) * "/" * path_circuits * "/" * "$circuitID"
+    path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID"
 
     response =
         get_request(get_requestor(client), path_url, client.user, client.access_token)
@@ -299,16 +302,34 @@ function get_status(client::Client, circuitID::String)::Status
         )
     end
 
-    if body["status"]["type"] != failed_status
-        return Status(type = body["status"]["type"])
-    end
+    if body["status"]["type"] == failed_status
+        message = if haskey(body["status"], "message")
+            body["status"]["message"]
+        else
+            "no failure information available. raw response: '$(string(body))'"
+        end
+        return Status(type = failed_status, message = message), Dict{String,Int}()
 
-    message = if haskey(body["status"], "message")
-        body["status"]["message"]
-    else
-        "no failure information available. raw response: '$(string(body))'"
+    elseif body["status"]["type"] == cancelled_status
+        return Status(type = body["status"]["type"]), Dict{String,Int}()
+
+    elseif body["status"]["type"] == queued_status ||
+           body["status"]["type"] == running_status
+        return Status(type = body["status"]["type"]), Dict{String,Int}()
+
+    else #succeeded_status    
+        @assert body["status"]["type"] == succeeded_status
+        @assert haskey(body, "histogram")
+
+        histogram = Dict{String,Int}()
+
+        # convert from Dict{String,String} to Dict{String,Int}
+        for (key, val) in body["histogram"]
+            histogram[key] = round(Int, val)
+        end
+
+        return Status(type = body["status"]["type"]), histogram
     end
-    return Status(type = failed_status, message = message)
 end
 
 """
@@ -334,8 +355,7 @@ Dict{String, Int64} with 1 entry:
 """
 function get_result(client::Client, circuitID::String)::Dict{String,Int}
 
-    path_url =
-        get_host(client) * "/" * path_circuits * "/" * "$circuitID" * "/" * path_results
+    path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID" * "/" * path_results
 
     response =
         get_request(get_requestor(client), path_url, client.user, client.access_token)
@@ -349,10 +369,7 @@ function get_result(client::Client, circuitID::String)::Dict{String,Int}
     for (key, val) in body["histogram"]
         histogram[key] = round(Int, val)
     end
-
-    return histogram
 end
-
 
 abstract type AbstractQPU end
 
