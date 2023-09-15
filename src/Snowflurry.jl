@@ -133,7 +133,7 @@ export
     get_status_message,
     read_response_body,
     serialize_job,
-    submit_circuit,
+    submit_job,
     get_client,
     print_connectivity,
     get_connectivity,

@@ -72,7 +72,7 @@ AnyonYamaskaQPU
 VirtualQPU
 Client
 get_host
-submit_circuit
+submit_job
 get_status
 run_job
 transpile_and_run_job

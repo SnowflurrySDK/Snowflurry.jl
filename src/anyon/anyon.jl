@@ -297,9 +297,9 @@ function run_job(
 
     client = get_client(qpu)
 
-    circuitID = submit_circuit(client, circuit, shot_count, project_id)
+    jobID = submit_job(client, circuit, shot_count, project_id)
 
-    status, histogram = poll_for_results(client, circuitID, qpu.status_request_throttle)
+    status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
 
     status_type = get_status_type(status)
 
@@ -320,13 +320,13 @@ const default_status_request_throttle = (seconds = 0.1) -> sleep(seconds)
 
 function poll_for_results(
     client::Client,
-    circuitID::String,
+    jobID::String,
     request_throttle::Function,
 )::Tuple{Status,Dict{String,Int}}
-    (status, histogram) = get_status(client, circuitID)
+    (status, histogram) = get_status(client, jobID)
     while get_status_type(status) in [queued_status, running_status]
         request_throttle()
-        (status, histogram) = get_status(client, circuitID)
+        (status, histogram) = get_status(client, jobID)
     end
 
     return status, histogram

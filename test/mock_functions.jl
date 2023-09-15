@@ -198,7 +198,7 @@ stubCancelledResultResponse() = HTTP.Response(
 stubCircuitSubmittedResponse() = HTTP.Response(
     200,
     [],
-    body = "{\"circuitID\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\", \"histogram\":{\"001\":100}}",
+    body = "{\"id\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\", \"histogram\":{\"001\":100}}",
 )
 
 # Returns a function that will yield the given responses in order as it's

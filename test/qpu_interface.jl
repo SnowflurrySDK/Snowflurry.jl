@@ -55,14 +55,14 @@ end
     expected_response = HTTP.Response(
         200,
         [],
-        body = "{\"status\":{\"type\":\"succeeded\"},\"histogram\":{\"001\":100}}",
+        body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"histogram\":{\"001\":100}}",
     )
 
-    circuitID = "1234-abcd"
+    jobID = "1234-abcd"
 
     response = get_request(
         requestor,
-        host * "/" * Snowflurry.path_jobs * "/" * circuitID,
+        host * "/" * Snowflurry.path_jobs * "/" * jobID,
         user,
         access_token,
     )
@@ -82,7 +82,7 @@ end
 
     response = get_request(
         requestor,
-        host * "/" * Snowflurry.path_jobs * "/" * circuitID * "/" * Snowflurry.path_results,
+        host * "/" * Snowflurry.path_jobs * "/" * jobID * "/" * Snowflurry.path_results,
         user,
         access_token,
     )
@@ -95,7 +95,7 @@ end
         "/" *
         Snowflurry.path_jobs *
         "/" *
-        circuitID *
+        jobID *
         "/" *
         string(Snowflurry.path_results, "wrong_ending"),
         user,
@@ -163,11 +163,16 @@ end
 
     @test get_host(test_client) == host
 
-    circuitID = submit_circuit(test_client, circuit, shot_count)
+    jobID = submit_job(test_client, circuit, shot_count)
 
-    status, histogram = get_status(test_client, circuitID)
+    status, histogram = get_status(test_client, jobID)
 
-    @test get_status_type(status) in ["queued", "running", "failed", "succeeded"]
+    @test get_status_type(status) in [
+        Snowflurry.queued_status,
+        Snowflurry.running_status,
+        Snowflurry.failed_status,
+        Snowflurry.succeeded_status,
+    ]
 end
 
 @testset "job status" begin
@@ -182,8 +187,8 @@ end
     requestor = HTTPRequestor(test_get, test_post)
     test_client =
         Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status, histogram = get_status(test_client, "circuitID not used in this test")
-    @test get_status_type(status) == "failed"
+    status, histogram = get_status(test_client, "jobID not used in this test")
+    @test get_status_type(status) == Snowflurry.failed_status
     @test get_status_message(status) == "mocked"
 
     test_get = stub_response_sequence([
@@ -194,19 +199,19 @@ end
     requestor = HTTPRequestor(test_get, test_post)
     test_client =
         Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    @test_throws ArgumentError get_status(test_client, "circuitID not used in this test")
+    @test_throws ArgumentError get_status(test_client, "jobID not used in this test")
 
     malformedResponse = stubFailedStatusResponse()
     # A failure response _should_ have a 'message' field but, if things go very
     # wrong, the user should still get something useful.
-    body = "{\"status\":{\"type\":\"failed\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
+    body = "{\"status\":{\"type\":\"FAILED\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
     malformedResponse.body = collect(UInt8, body)
     test_get = stub_response_sequence([malformedResponse])
     requestor = HTTPRequestor(test_get, test_post)
     test_client =
         Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status, histogram = get_status(test_client, "circuitID not used in this test")
-    @test status.type == "failed"
+    status, histogram = get_status(test_client, "jobID not used in this test")
+    @test status.type == Snowflurry.failed_status
     @test status.message != ""
 end
 
@@ -508,10 +513,10 @@ end
     #verify that run_job blocks until a 'long-running' job completes
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
-            stubStatusResponse("succeeded"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.succeeded_status),
             stubResult(),
         ]),
         post_checker,
@@ -527,9 +532,9 @@ end
     #verify that run_job throws an error if the QPU returns an error
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
             stubFailedStatusResponse(),
             stubFailureResult(),
         ]),
@@ -544,10 +549,10 @@ end
     #verify that run_job throws an error if the job was cancelled
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
-            stubStatusResponse("cancelled"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.cancelled_status),
             stubCancelledResultResponse(),
         ]),
         post_checker,

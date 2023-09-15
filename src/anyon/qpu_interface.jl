@@ -40,11 +40,11 @@ end
 const path_jobs = "jobs"
 const path_results = "result"
 
-const queued_status = "queued"
-const running_status = "running"
-const succeeded_status = "succeeded"
-const failed_status = "failed"
-const cancelled_status = "cancelled"
+const queued_status = "QUEUED"
+const running_status = "RUNNING"
+const succeeded_status = "SUCCEEDED"
+const failed_status = "FAILED"
+const cancelled_status = "CANCELLED"
 
 const possible_status_list =
     [failed_status, succeeded_status, running_status, queued_status, cancelled_status]
@@ -125,7 +125,7 @@ q[1]:──X──
 q[2]:─────
           
 julia> serialize_job(c, 10, "http://example.anyonsys.com")
-"{\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"shot_count\\\":10,\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -223,7 +223,7 @@ get_requestor(client::Client) = client.requestor
 
 
 """
-    submit_circuit(client::Client,circuit::QuantumCircuit,shot_count::Integer)
+    submit_job(client::Client,circuit::QuantumCircuit,shot_count::Integer)
 
 Submit a circuit to a `Client` of `QPU` service, requesting a number of 
 repetitions (shot_count). Returns circuitID.
@@ -231,19 +231,19 @@ repetitions (shot_count). Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
 """
-function submit_circuit(
+function submit_job(
     client::Client,
     circuit::QuantumCircuit,
     shot_count::Integer,
     project_id::String = "",
 )::String
 
-    circuit_json = serialize_job(circuit, shot_count, get_host(client), project_id)
+    job_json = serialize_job(circuit, shot_count, get_host(client), project_id)
 
     path_url = get_host(client) * "/" * path_jobs
 
@@ -252,16 +252,16 @@ function submit_circuit(
         path_url,
         client.user,
         client.access_token,
-        circuit_json,
+        job_json,
     )
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "circuitID") (
-        "Server returned an invalid response, without a circuitID field."
+    @assert haskey(body, "id") (
+        "Server returned an invalid response, without a job ID field."
     )
 
-    return body["circuitID"]
+    return body["id"]
 end
 
 """
@@ -269,25 +269,25 @@ end
 
 Obtain the status of a circuit computation through a `Client` of a `QPU` service.
 Returns status::Dict containing status["type"]: 
-    -"queued"   : Computation in queue
-    -"running"  : Computation being processed
-    -"failed"   : QPU service has returned an error message
-    -"succeeded": Computation is completed, result is available.
+    -"QUEUED"   : Computation in queue
+    -"RUNNING"  : Computation being processed
+    -"FAILED"   : QPU service has returned an error message
+    -"SUCCEEDED": Computation is completed, result is available.
 
-In the case of status["type"]=="failed", the server error is contained in status["message"].
+In the case of status["type"]=="FAILED", the server error is contained in status["message"].
 
-In the case of status["type"]=="succeeded", the second element in the return Tuple is 
+In the case of status["type"]=="SUCCEEDED", the second element in the return Tuple is 
 the histogram of the job results, as computed on the `QPU`.
 
 # Example
 
 
 ```jldoctest
-julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
-julia> get_status(client,circuitID)
-(Status: succeeded
+julia> get_status(client, jobID)
+(Status: SUCCEEDED
 , Dict("001" => 100))
 
 ```
