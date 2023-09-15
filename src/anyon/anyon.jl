@@ -251,7 +251,8 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
-    shot_count::Integer;
+    shot_count::Integer,
+    project_id::String = "";
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
@@ -264,7 +265,7 @@ function transpile_and_run_job(
         throw(DomainError(qpu, message))
     end
 
-    return run_job(qpu, transpiled_circuit, shot_count)
+    return run_job(qpu, transpiled_circuit, shot_count, project_id)
 end
 
 """
@@ -291,11 +292,12 @@ function run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
+    project_id::String = "",
 )::Dict{String,Int}
 
     client = get_client(qpu)
 
-    circuitID = submit_circuit(client, circuit, shot_count)
+    circuitID = submit_circuit(client, circuit, shot_count, project_id)
 
     status, histogram = poll_for_results(client, circuitID, qpu.status_request_throttle)
 

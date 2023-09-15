@@ -129,15 +129,24 @@ julia> serialize_job(c, 10, "http://example.anyonsys.com")
 
 ```
 """
-function serialize_job(circuit::QuantumCircuit, shot_count::Integer, host::String)::String
+function serialize_job(
+    circuit::QuantumCircuit,
+    shot_count::Integer,
+    host::String,
+    project_id::String = "",
+)::String
 
-    circuit_description = Dict(
+    job_description = Dict(
         "name" => get_name(circuit),
         "type" => "circuit",
         "machine_id" => host,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
         "shot_count" => shot_count,
     )
+
+    if project_id != ""
+        job_description["billingaccountID"] = project_id
+    end
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
@@ -156,12 +165,12 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer, host::Strin
                 "parameters" => params,
             )
         end
-        push!(circuit_description["circuit"]["operations"], encoding)
+        push!(job_description["circuit"]["operations"], encoding)
     end
 
-    circuit_json = JSON.json(circuit_description)
+    job_json = JSON.json(job_description)
 
-    return circuit_json
+    return job_json
 end
 
 """
@@ -231,9 +240,10 @@ function submit_circuit(
     client::Client,
     circuit::QuantumCircuit,
     shot_count::Integer,
+    project_id::String = "",
 )::String
 
-    circuit_json = serialize_job(circuit, shot_count, get_host(client))
+    circuit_json = serialize_job(circuit, shot_count, get_host(client), project_id)
 
     path_url = get_host(client) * "/" * path_jobs
 
@@ -383,8 +393,12 @@ is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
 
 get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qpu))
 
-run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
-    throw(NotImplementedError(:run_job, qpu))
+run_job(
+    qpu::AbstractQPU,
+    circuit::QuantumCircuit,
+    shot_count::Integer,
+    project_id::String = "",
+) = throw(NotImplementedError(:run_job, qpu))
 
 get_connectivity(qpu::AbstractQPU) = throw(NotImplementedError(:get_connectivity, qpu))
 
@@ -471,7 +485,8 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::VirtualQPU,
     circuit::QuantumCircuit,
-    shot_count::Integer;
+    shot_count::Integer,
+    project_id::String = "";
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
@@ -481,7 +496,7 @@ function transpile_and_run_job(
 
     @assert passed "All circuits should be native on VirtualQPU"
 
-    return run_job(qpu, transpiled_circuit, shot_count)
+    return run_job(qpu, transpiled_circuit, shot_count, project_id)
 end
 
 """
@@ -505,6 +520,7 @@ function run_job(
     qpu::VirtualQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
+    project_id::String,
 )::Dict{String,Int}
 
     data = simulate_shots(circuit, shot_count)
