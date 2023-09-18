@@ -579,6 +579,24 @@ end
 end
 
 
+@testset "run_job on AnyonYukonQPU with project_id" begin
+
+    requestor = MockRequestor(request_checker, post_checker_with_project_id)
+    test_client =
+        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    shot_count = 100
+    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+
+    project_id = "test_project_id"
+
+    #test basic submission, no transpilation
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3)])
+    histogram = run_job(qpu, circuit, shot_count, project_id)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
+
+end
+
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
