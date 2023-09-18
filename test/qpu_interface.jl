@@ -4,7 +4,7 @@ using HTTP
 
 include("mock_functions.jl")
 
-requestor = MockRequestor(request_checker, post_checker)
+requestor = MockRequestor(request_checker, make_post_checker(expected_json))
 
 # While testing, this throttle can be used to skip delays between status requests.
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
@@ -33,13 +33,13 @@ end
         non_impl_requestor,
         host,
         user,
-        access_token,
+        expected_access_token,
     )
     @test_throws NotImplementedError post_request(
         non_impl_requestor,
         host,
         user,
-        access_token,
+        expected_access_token,
         body,
     )
 
@@ -49,7 +49,7 @@ end
         requestor,
         "erroneous_url",
         user,
-        access_token,
+        expected_access_token,
     )
 
     expected_response = HTTP.Response(
@@ -64,7 +64,7 @@ end
         requestor,
         host * "/" * Snowflurry.path_jobs * "/" * jobID,
         user,
-        access_token,
+        expected_access_token,
     )
 
     compare_responses(expected_response, response)
@@ -73,7 +73,7 @@ end
         requestor,
         host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
         user,
-        access_token,
+        expected_access_token,
     )
 
     #### request from :get_result
@@ -84,7 +84,7 @@ end
         requestor,
         host * "/" * Snowflurry.path_jobs * "/" * jobID * "/" * Snowflurry.path_results,
         user,
-        access_token,
+        expected_access_token,
     )
 
     compare_responses(expected_response, response)
@@ -99,7 +99,7 @@ end
         "/" *
         string(Snowflurry.path_results, "wrong_ending"),
         user,
-        access_token,
+        expected_access_token,
     )
 
 end
@@ -156,8 +156,12 @@ end
 
     @test circuit_json == expected_json
 
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
 
     println(test_client) #coverage for Base.show(::IO,::Client)
 
@@ -185,8 +189,12 @@ end
         stubFailedStatusResponse(),
     ])
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     status, histogram = get_status(test_client, "jobID not used in this test")
     @test get_status_type(status) == Snowflurry.failed_status
     @test get_status_message(status) == "mocked"
@@ -197,8 +205,12 @@ end
     ])
 
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     @test_throws ArgumentError get_status(test_client, "jobID not used in this test")
 
     malformedResponse = stubFailedStatusResponse()
@@ -208,8 +220,12 @@ end
     malformedResponse.body = collect(UInt8, body)
     test_get = stub_response_sequence([malformedResponse])
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     status, histogram = get_status(test_client, "jobID not used in this test")
     @test status.type == Snowflurry.failed_status
     @test status.message != ""
@@ -496,9 +512,13 @@ end
 
 @testset "run_job on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, post_checker)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     shot_count = 100
     qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
@@ -519,10 +539,10 @@ end
             stubStatusResponse(Snowflurry.succeeded_status),
             stubResult(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
         status_request_throttle = no_throttle,
     )
     histogram = run_job(qpu, circuit, shot_count)
@@ -538,10 +558,10 @@ end
             stubFailedStatusResponse(),
             stubFailureResult(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -555,10 +575,10 @@ end
             stubStatusResponse(Snowflurry.cancelled_status),
             stubCancelledResultResponse(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -566,9 +586,13 @@ end
 
 @testset "run_job with Readout on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, post_checker_readout)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json_readout))
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     shot_count = 100
     qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
 
@@ -581,9 +605,14 @@ end
 
 @testset "run_job on AnyonYukonQPU with project_id" begin
 
-    requestor = MockRequestor(request_checker, post_checker_with_project_id)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    requestor =
+        MockRequestor(request_checker, make_post_checker(expected_json_with_project_id))
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     shot_count = 100
     qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
 
@@ -600,18 +629,23 @@ end
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
-    post_checkers_toffoli = [post_checker_toffoli_Yukon, post_checker_toffoli_Yamaska]
-    post_checkers_last_qubit =
-        [post_checker_last_qubit_Yukon, post_checker_last_qubit_Yamaska]
+    post_checkers_toffoli = [
+        make_post_checker(expected_json_Toffoli_Yukon),
+        make_post_checker(expected_json_Toffoli_Yamaska),
+    ]
+    post_checkers_last_qubit = [
+        make_post_checker(expected_json_last_qubit_Yukon),
+        make_post_checker(expected_json_last_qubit_Yamaska),
+    ]
 
     for (QPU, post_checker_toffoli, post_checker_last_qubit) in
         zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(request_checker, post_checker)
+        requestor = MockRequestor(request_checker, make_post_checker(expected_json))
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
         shot_count = 100
@@ -642,7 +676,7 @@ end
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
 
@@ -658,7 +692,7 @@ end
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
         qpu = QPU(test_client, status_request_throttle = no_throttle)

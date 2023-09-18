@@ -2,7 +2,7 @@ using Snowflurry
 using Test
 
 include("mock_functions.jl")
-requestor = MockRequestor(request_checker, post_checker)
+requestor = MockRequestor(request_checker, make_post_checker(expected_json))
 
 target = 1
 destination_bit = 1
@@ -578,7 +578,7 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of native gates" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
 
     qubit_count = 1
     target = 1
@@ -647,7 +647,7 @@ end
 end
 
 @testset "AnyonYukonQPU: sequential transpilation" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
     transpiler = get_transpiler(qpu)
 
     qubit_count = 4
@@ -666,7 +666,7 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
 
     qubit_count = 5
 
@@ -733,8 +733,8 @@ end
 
 @testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin
     qpus = [
-        AnyonYukonQPU(; host = host, user = user, access_token = access_token),
-        AnyonYamaskaQPU(; host = host, user = user, access_token = access_token),
+        AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token),
+        AnyonYamaskaQPU(; host = host, user = user, access_token = expected_access_token),
     ]
 
     for qpu in qpus

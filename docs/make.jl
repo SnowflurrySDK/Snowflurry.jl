@@ -18,6 +18,8 @@ DocMeta.setdocmeta!(
             access_token = "not_a_real_access_token",
             requestor = requestor,
         )
+        requestor_transpilation =
+            MockRequestor(request_checker, make_post_checker(expected_json_transpiled))
         requestor_transpilation = MockRequestor(request_checker, post_checker_transpiled)
         client_anyon = Client(
             host = "http://example.anyonsys.com",
