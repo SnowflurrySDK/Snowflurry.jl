@@ -154,6 +154,7 @@ function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumC
             append!(base_circuit.gates, circuit.gates)
         end
     end
+    return base_circuit
 end
 
 """
@@ -218,6 +219,7 @@ function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::Quantu
             prepend!(base_circuit.gates, circuit.gates)
         end
     end
+    return base_circuit
 end
 
 
