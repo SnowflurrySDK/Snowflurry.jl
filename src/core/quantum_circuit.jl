@@ -132,8 +132,6 @@ q[2]:──X──
 
 
 julia> append!(base, append_1, append_2)
-
-julia> print(base)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──X────Z────*──
@@ -197,8 +195,6 @@ q[2]:──X──
 
 
 julia> prepend!(base, prepend_1, prepend_2)
-
-julia> print(base)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──Z────*────X──
