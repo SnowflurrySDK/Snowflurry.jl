@@ -517,6 +517,8 @@ function apply_operator!(
             @inbounds state.data[basis_index_1+2] = temp1*op.phase
         end
     end
+
+    return state
 end
 
 # optimized application of ControlX gate on state Ket.  
@@ -572,6 +574,8 @@ function apply_control_x!(state::Ket,control_qubit::Int,target_qubit::Int)
             @inbounds state.data[basis_index_1+2] = temp1
         end
     end
+
+    return state
 end
 
 # optimized application of ControlZ gate on state Ket.  
@@ -609,6 +613,8 @@ function apply_control_z!(state::Ket,control_qubit::Int,target_qubit::Int)
             @inbounds state.data[basis_index+2] *= -1
         end
     end
+
+    return state
 end
 
 # optimized application of Toffoli gate on state Ket.  
@@ -696,6 +702,8 @@ function apply_toffoli!(state::Ket,control_qubits::Vector{Int},target_qubit::Int
             @inbounds state.data[basis_1+2] = temp1        
         end
     end
+
+    return state
 end
 
 # specialization for single-target single-control dense gate
@@ -777,6 +785,8 @@ function apply_controlled_gate_operator!(
             @inbounds state.data[basis_index_1+2] = matrix[2] * cval2 + matrix[4] * cval3
         end
     end
+
+    return state
 end
 
 # fall-back to apply_operator! using the equivalent dense full_operator
@@ -827,6 +837,8 @@ function apply_operator!(
         @inbounds state.data[basis_0+1] = matrix[1] * cval_0 + matrix[3] * cval_1;
         @inbounds state.data[basis_1+1] = matrix[2] * cval_0 + matrix[4] * cval_1;
     end
+
+    return state
 end
 
 function apply_operator!(
@@ -901,6 +913,8 @@ function apply_operator!(
         end
 
     end
+
+    return state
 end
 
 
@@ -934,6 +948,8 @@ function apply_operator!(
             @inbounds state.data[state_index + 2] *= diagonal_in_matrix[bitval+1];
         end
     end
+
+    return state
 end
 
 #specialization for N target diagonal gates (size N>2, for N=2^target_count)
@@ -984,6 +1000,8 @@ function apply_operator!(
         end
 
     end
+
+    return state
 end
 
 # specialization for single target anti-diagonal gate (size N=2^target_count=2)
@@ -1027,10 +1045,12 @@ function apply_operator!(
             @inbounds state.data[basis_index_1+2] = anti_diagonal[2]*temp1;
         end
     end
+
+    return state
 end
 
 # IdentityOperator leaves the state Ket unchanged
-apply_operator!(state::Ket,op::IdentityOperator,connected_qubits::Vector{<:Integer})=nothing
+apply_operator!(state::Ket,op::IdentityOperator,connected_qubits::Vector{<:Integer})=state
 
 # Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
 function insert_zero_to_basis_index(basis_index::UInt64, basis_mask::UInt64, qubit_index::UInt64)
