@@ -409,8 +409,6 @@ julia> ψ_0 = fock(0, 2)
 
 
 julia> apply_gate!(ψ_0, sigma_x(1))
-
-julia> print(ψ_0)
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
