@@ -80,6 +80,12 @@ julia> compare_kets(ψ_0,ψ_1)
 true
 
 julia> apply_gate!(ψ_1,sigma_x(1))
+4-element Ket{ComplexF64}:
+1.5000000000000004 + 2.598076211353316im
+2.0000000000000004 + 3.4641016151377544im
+0.5000000000000001 + 0.8660254037844386im
+1.0000000000000002 + 1.7320508075688772im
+
 
 julia> compare_kets(ψ_0,ψ_1) # no longer equivalent after SigmaX gate
 false

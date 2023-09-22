@@ -132,8 +132,6 @@ q[2]:──X──
 
 
 julia> append!(base, append_1, append_2)
-
-julia> print(base)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──X────Z────*──
@@ -154,6 +152,7 @@ function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumC
             append!(base_circuit.gates, circuit.gates)
         end
     end
+    return base_circuit
 end
 
 """
@@ -196,8 +195,6 @@ q[2]:──X──
 
 
 julia> prepend!(base, prepend_1, prepend_2)
-
-julia> print(base)
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──Z────*────X──
@@ -218,6 +215,7 @@ function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::Quantu
             prepend!(base_circuit.gates, circuit.gates)
         end
     end
+    return base_circuit
 end
 
 
