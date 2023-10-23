@@ -5,6 +5,7 @@ DocTestSetup = quote
     ENV["ANYON_QUANTUM_USER"] = "test-user"
     ENV["ANYON_QUANTUM_TOKEN"] = "not-a-real-token"
     ENV["ANYON_QUANTUM_HOST"] = "yukon.anyonsys.com"
+    ENV["ANYON_QUANTUM_PROJECT_ID"] = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
 end
 ```
 
@@ -39,14 +40,16 @@ circuit = QuantumCircuit(qubit_count = 2, instructions = [
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
 host = ENV["ANYON_QUANTUM_HOST"]
+project = ENV["ANYON_QUANTUM_PROJECT_ID"]
 
-qpu = AnyonYukonQPU(host=host, user=user, access_token=token)
+qpu = AnyonYukonQPU(host=host, user=user, access_token=token, project_id=project)
 
 # output
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   6
    connectivity_type:  linear
 ```
