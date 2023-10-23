@@ -153,6 +153,7 @@ export
     post_request,
     get_metadata,
     get_transpiler,
+    get_project_id,
     apply_instruction!,
     get_pauli,
     get_quantum_circuit,

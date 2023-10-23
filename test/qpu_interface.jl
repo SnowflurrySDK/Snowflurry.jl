@@ -52,11 +52,7 @@ end
         expected_access_token,
     )
 
-    expected_response = HTTP.Response(
-        200,
-        [],
-        body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"histogram\":{\"001\":100}}",
-    )
+    expected_response = HTTP.Response(200, [], body = expected_get_status_response_body)
 
     jobID = "1234-abcd"
 
@@ -438,12 +434,14 @@ end
     host = "host"
     user = "user"
     token = "token"
+    project = "project-id"
 
     qpu = AnyonYukonQPU(
         host = host,
         user = user,
         access_token = token,
         status_request_throttle = no_throttle,
+        project_id = project,
     )
     client = get_client(qpu)
 
@@ -462,6 +460,7 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
+        "project_id" => get_project_id(qpu),
         "qubit_count" => get_num_qubits(connectivity),
         "connectivity_type" => get_connectivity_label(connectivity),
     )
@@ -471,12 +470,14 @@ end
     host = "host"
     user = "user"
     token = "token"
+    project = "project-id"
 
     qpu = AnyonYamaskaQPU(
         host = host,
         user = user,
         access_token = token,
         status_request_throttle = no_throttle,
+        project_id = project,
     )
     client = get_client(qpu)
 
@@ -504,6 +505,7 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
+        "project_id" => get_project_id(qpu),
         "qubit_count" => get_num_qubits(connectivity),
         "connectivity_type" => get_connectivity_label(connectivity),
     )
@@ -614,13 +616,16 @@ end
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
-
     project_id = "test_project_id"
+    qpu = AnyonYukonQPU(
+        test_client,
+        status_request_throttle = no_throttle,
+        project_id = project_id,
+    )
 
     #test basic submission, no transpilation
     circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3)])
-    histogram = run_job(qpu, circuit, shot_count, project_id)
+    histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 

@@ -25,20 +25,24 @@ struct AnyonYukonQPU <: AbstractQPU
     client::Client
     status_request_throttle::Function
     connectivity::LineConnectivity
+    project_id::String
 
     AnyonYukonQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
-    ) = new(client, status_request_throttle, LineConnectivity(6))
+        project_id = "",
+    ) = new(client, status_request_throttle, LineConnectivity(6), project_id)
     AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
+        project_id = "",
     ) = new(
         Client(host = host, user = user, access_token = access_token),
         status_request_throttle,
         LineConnectivity(6),
+        project_id,
     )
 end
 
@@ -47,6 +51,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer" => "Anyon Systems Inc.",
     "generation" => "Yukon",
     "serial_number" => "ANYK202201",
+    "project_id" => get_project_id(qpu),
     "qubit_count" => get_num_qubits(qpu.connectivity),
     "connectivity_type" => get_connectivity_label(qpu.connectivity),
 )
@@ -76,20 +81,24 @@ struct AnyonYamaskaQPU <: AbstractQPU
     client::Client
     status_request_throttle::Function
     connectivity::LatticeConnectivity
+    project_id::String
 
     AnyonYamaskaQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
-    ) = new(client, status_request_throttle, LatticeConnectivity(4, 3))
+        project_id = "",
+    ) = new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
     AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
+        project_id = "",
     ) = new(
         Client(host = host, user = user, access_token = access_token),
         status_request_throttle,
         LatticeConnectivity(4, 3),
+        project_id,
     )
 end
 
@@ -97,11 +106,14 @@ get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
     "manufacturer" => "Anyon Systems Inc.",
     "generation" => "Yamaska",
     "serial_number" => "ANYK202301",
+    "project_id" => get_project_id(qpu),
     "qubit_count" => get_num_qubits(qpu.connectivity),
     "connectivity_type" => get_connectivity_label(qpu.connectivity),
 )
 
 get_client(qpu_service::AbstractQPU) = qpu_service.client
+
+get_project_id(qpu_service::AbstractQPU) = qpu_service.project_id
 
 UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU}
 
@@ -119,6 +131,7 @@ function Base.show(io::IO, qpu::UnionAnyonQPU)
     println(io, "   manufacturer:  $(metadata["manufacturer"])")
     println(io, "   generation:    $(metadata["generation"])")
     println(io, "   serial_number: $(metadata["serial_number"])")
+    println(io, "   project_id:    $(metadata["project_id"])")
     println(io, "   qubit_count:   $(metadata["qubit_count"])")
     println(io, "   connectivity_type:  $(metadata["connectivity_type"])")
 end
@@ -251,8 +264,7 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
-    shot_count::Integer,
-    project_id::String = "";
+    shot_count::Integer;
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
@@ -265,7 +277,7 @@ function transpile_and_run_job(
         throw(DomainError(qpu, message))
     end
 
-    return run_job(qpu, transpiled_circuit, shot_count, project_id)
+    return run_job(qpu, transpiled_circuit, shot_count)
 end
 
 """
@@ -292,12 +304,11 @@ function run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
-    project_id::String = "",
 )::Dict{String,Int}
 
     client = get_client(qpu)
 
-    jobID = submit_job(client, circuit, shot_count, project_id)
+    jobID = submit_job(client, circuit, shot_count, get_project_id(qpu))
 
     status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
 

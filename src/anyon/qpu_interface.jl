@@ -301,8 +301,8 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "status")
-    @assert haskey(body["status"], "type")
+    @assert haskey(body, "status") "missing \"status\" key in body: $body"
+    @assert haskey(body["status"], "type") "missing \"type\" key in body: $body"
 
     if !(body["status"]["type"] in possible_status_list)
         throw(
@@ -327,14 +327,15 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
            body["status"]["type"] == running_status
         return Status(type = body["status"]["type"]), Dict{String,Int}()
 
-    else #succeeded_status    
+    else
         @assert body["status"]["type"] == succeeded_status
-        @assert haskey(body, "histogram")
-
-        histogram = Dict{String,Int}()
+        @assert haskey(body, "result") "missing \"result\" key in body: $body"
+        result = body["result"]
 
         # convert from Dict{String,String} to Dict{String,Int}
-        for (key, val) in body["histogram"]
+        histogram = Dict{String,Int}()
+        @assert haskey(result, "histogram") "missing \"histogram\" key in body: $body"
+        for (key, val) in result["histogram"]
             histogram[key] = round(Int, val)
         end
 
@@ -393,12 +394,8 @@ is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
 
 get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qpu))
 
-run_job(
-    qpu::AbstractQPU,
-    circuit::QuantumCircuit,
-    shot_count::Integer,
-    project_id::String = "",
-) = throw(NotImplementedError(:run_job, qpu))
+run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
+    throw(NotImplementedError(:run_job, qpu))
 
 get_connectivity(qpu::AbstractQPU) = throw(NotImplementedError(:get_connectivity, qpu))
 
@@ -485,8 +482,7 @@ Dict{String, Int64} with 1 entry:
 function transpile_and_run_job(
     qpu::VirtualQPU,
     circuit::QuantumCircuit,
-    shot_count::Integer,
-    project_id::String = "";
+    shot_count::Integer;
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
@@ -496,7 +492,7 @@ function transpile_and_run_job(
 
     @assert passed "All circuits should be native on VirtualQPU"
 
-    return run_job(qpu, transpiled_circuit, shot_count, project_id)
+    return run_job(qpu, transpiled_circuit, shot_count)
 end
 
 """
@@ -520,7 +516,6 @@ function run_job(
     qpu::VirtualQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
-    project_id::String,
 )::Dict{String,Int}
 
     data = simulate_shots(circuit, shot_count)
