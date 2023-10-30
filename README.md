@@ -86,8 +86,8 @@ q[2]:
 In Snowflurry, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,  in state $\left|00\right\rangle$. The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it. We now proceed by adding gates to our circuit.
 
 ```julia
-push!(c, [hadamard(1)])
-push!(c, [control_x(1, 2)])
+push!(c, hadamard(1))
+push!(c, control_x(1, 2))
 
 print(c)
 
@@ -140,8 +140,8 @@ The script below puts all the steps above together:
 ```julia
 using Snowflurry, SnowflurryPlots
 c = QuantumCircuit(qubit_count=2)
-push!(c, [hadamard(1)])
-push!(c, [control_x(1, 2)])
+push!(c, hadamard(1))
+push!(c, control_x(1, 2))
 ψ = simulate(c)
 plot_histogram(c, 100)
 ```
