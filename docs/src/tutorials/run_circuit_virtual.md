@@ -11,7 +11,7 @@ In this tutorial, we will the steps involved in running a quantum circuit on bot
 Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more. 
 
 !!! warning 
-    You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library.md#Quantum-Processing-Unit). 
+    You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library/qpu.md#Quantum-Processing-Unit). 
 
 Now that you know what QPU objects are, let's get started by importing `Snowflurry`:
 ```jldoctest get_qpu_metadata_tutorial; output = false

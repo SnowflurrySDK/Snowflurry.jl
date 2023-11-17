@@ -109,7 +109,7 @@ The output of `simulate` function is a `Ket` object. `Ket` is a complex vector t
 ## Histogram
 In the previous section, we used the `simulate` function to calculate the wavefunction of a two-qubit quantum register, after the circuit, `c`, is applied to it. However, in the real world, we do not have direct access to the wavefunction of a quantum register. Rather, we need to run the quantum circuit several times over (several shots) on the quantum processor and measure the qubits states at the end of each shot. The result of each shot is a bitstring that tells us which qubits were measured to be in state `0` and which qubits were measured to be in state `1`. The probability of getting a bitstring then depends on the wavefunction. 
 
-We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) library. For example, we can generate a histogram which shows the measurement
+We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) library. For example, we can generate a histogram which shows the measurement
 output distribution after taking running the circuit `c` for a given number of shots, let's say 100 times, on a quantum
 computer simulator:
 

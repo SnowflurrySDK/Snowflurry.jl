@@ -54,4 +54,4 @@ A typical workflow to execute a quantum circuit on a quantum service consists of
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
 
-Now is the time to start with `Snowflurry` and go over the tutorials. You could also consult with the [Library reference page](./library.md).
+Now is the time to start with `Snowflurry` and go over the tutorials.
