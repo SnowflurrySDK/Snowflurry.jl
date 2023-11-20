@@ -4,7 +4,6 @@ gate
 transpile
 transpile_trivial_gates
 circuit
-submit_circuit
 qpu_interface
 abstract_operator
 sparse_operator

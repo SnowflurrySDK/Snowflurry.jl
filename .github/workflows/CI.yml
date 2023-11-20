@@ -24,9 +24,6 @@ jobs:
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
-          SNOWFLURRY_ID: ${{secrets.SNOWFLURRY_ID}}
-          SNOWFLURRY_TOKEN: ${{secrets.SNOWFLURRY_TOKEN}}
-          SNOWFLURRY_HOST: ${{secrets.SNOWFLURRY_HOST}}
         with:
           path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
@@ -65,9 +62,6 @@ jobs:
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
-          SNOWFLURRY_ID: ${{secrets.SNOWFLURRY_ID}}
-          SNOWFLURRY_TOKEN: ${{secrets.SNOWFLURRY_TOKEN}}
-          SNOWFLURRY_HOST: ${{secrets.SNOWFLURRY_HOST}}
         with:
           path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
