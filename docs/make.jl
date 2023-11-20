@@ -68,7 +68,6 @@ for (formatter,build_dir, name) in formattersAndDirs
             "Developing" => "development.md",
         ],
         doctestfilters = [uuid_regex],
-        strict = true,
         checkdocs = :exports
     )
 end
