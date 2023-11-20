@@ -24,9 +24,9 @@ jobs:
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
-          SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
-          SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
-          SNOWFLAKE_HOST: ${{secrets.SNOWFLAKE_HOST}}
+          SNOWFLURRY_ID: ${{secrets.SNOWFLURRY_ID}}
+          SNOWFLURRY_TOKEN: ${{secrets.SNOWFLURRY_TOKEN}}
+          SNOWFLURRY_HOST: ${{secrets.SNOWFLURRY_HOST}}
         with:
           path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
@@ -35,14 +35,14 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       
-      - name: Build Snowflake
+      - name: Build Snowflurry
         run: >
           julia --project=. -e 
           'using Pkg;
           Pkg.precompile();
           Pkg.instantiate()'
       
-      - name: Test Snowflake
+      - name: Test Snowflurry
         uses: julia-actions/julia-runtest@v1
 
   test:
@@ -65,9 +65,9 @@ jobs:
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
-          SNOWFLAKE_ID: ${{secrets.SNOWFLAKE_ID}}
-          SNOWFLAKE_TOKEN: ${{secrets.SNOWFLAKE_TOKEN}}
-          SNOWFLAKE_HOST: ${{secrets.SNOWFLAKE_HOST}}
+          SNOWFLURRY_ID: ${{secrets.SNOWFLURRY_ID}}
+          SNOWFLURRY_TOKEN: ${{secrets.SNOWFLURRY_TOKEN}}
+          SNOWFLURRY_HOST: ${{secrets.SNOWFLURRY_HOST}}
         with:
           path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
@@ -76,13 +76,13 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       
-      - name: Build Snowflake
+      - name: Build Snowflurry
         run: >
           julia --project=. -e 
           'using Pkg;
           Pkg.instantiate()'
       
-      - name: Test Snowflake
+      - name: Test Snowflurry
         uses: julia-actions/julia-runtest@v1
 
       - uses: julia-actions/julia-processcoverage@v1

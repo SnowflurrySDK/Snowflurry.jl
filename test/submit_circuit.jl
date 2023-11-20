@@ -7,9 +7,9 @@ using Test
     push!(c, iswap(1, 2))
 
     try
-        owner = ENV["SNOWFLAKE_ID"]
-        token = ENV["SNOWFLAKE_TOKEN"]
-        host = ENV["SNOWFLAKE_HOST"]
+        owner = ENV["SNOWFLURRY_ID"]
+        token = ENV["SNOWFLURRY_TOKEN"]
+        host = ENV["SNOWFLURRY_HOST"]
         job_uuid, status =
             submit_circuit(c, owner = owner, token = token, shots = 101, host = host)
         id, st, msg =
