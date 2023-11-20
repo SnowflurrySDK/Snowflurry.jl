@@ -31,7 +31,7 @@ The basic process for setting up a fork is
     Forking creates a new Github repo at the location
     `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
     your Github id. Use the directions on the
-    [development page](docs/dev/development.md) to download a copy to
+    [development page](docs/src/development.md) to download a copy to
     your local machine. You need only do this once.
 1.  Checkout master and create a new branch from this master
     ```shell
@@ -84,7 +84,7 @@ When a pull request is created or updated, various automatic checks will
 run to ensure that the change won't break Snowflurry and meets our coding standards.
 
 Snowflurry contains a continuous integration tool to verify testing. See our
-[development page](docs/dev/development.md) on how to run the continuous
+[development page](docs/src/development.md) on how to run the continuous
 integration checks locally.
 
 Please be aware of the following code standards that will be applied to any
@@ -122,11 +122,3 @@ phase_kickback |    1      1
 - **VS Code Code Style**.
   We highly recommand developing the code in VS Code and use its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
 
-## Request For Comment Process for New Major Features
-
-For larger contributions that will benefit from design reviews, please use the
-[Request for Comment](docs/dev/rfc_process.md) process.
-
-## Developing notebooks
-
-Please refer to our [notebooks guide](docs/dev/notebooks.md) on how to develop iJulia notebooks for documentation.
