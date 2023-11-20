@@ -2,7 +2,6 @@ push!(LOAD_PATH, "../src/")
 
 using Documenter
 using Snowflurry
-using SnowflurryDocumenter
 
 DocMeta.setdocmeta!(
     Snowflurry, 
