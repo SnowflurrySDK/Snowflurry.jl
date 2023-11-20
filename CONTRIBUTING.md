@@ -76,14 +76,14 @@ The basic process for setting up a fork is
 
 ## Julia Coding Style Guide
 
-We adhere to Julia recommanded [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
+We adhere to Julia recommended [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
 
 ## Code Testing Standards
 
 When a pull request is created or updated, various automatic checks will
 run to ensure that the change won't break Snowflurry and meets our coding standards.
 
-Cirq contains a continuous integration tool to verify testing. See our
+Snowflurry contains a continuous integration tool to verify testing. See our
 [development page](docs/dev/development.md) on how to run the continuous
 integration checks locally.
 

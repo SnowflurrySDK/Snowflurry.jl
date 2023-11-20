@@ -2,8 +2,6 @@ push!(LOAD_PATH, "../src/")
 
 using Documenter
 using Snowflurry
-using SnowflurryDocumenter
-
 
 DocMeta.setdocmeta!(
     Snowflurry, 
@@ -34,12 +32,11 @@ DocMeta.setdocmeta!(
 )
 uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 
-formatersAndDirs=[
-    (Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),"build", "HTMLWriter"),
-    (SnowflurryDocumenter.Markdown(),"build_md","SnowflurryMarkdown"),
+formattersAndDirs=[
+    (Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"), "build", "HTMLWriter"),
 ]
 
-for (formatter,build_dir, name) in formatersAndDirs
+for (formatter,build_dir, name) in formattersAndDirs
     println()
     @info "Generating docs using $name"
 
@@ -53,13 +50,13 @@ for (formatter,build_dir, name) in formatersAndDirs
             "Getting Started" => "getting_started.md",
             "Tutorials" => [
                 "Basics"=>"tutorials/basics.md"
-                "Virtual QPU" =>"tutorials/run_circuit_virtual.md"
-                "Real hardware" =>"tutorials/run_circuit_anyon.md"
+                "Virtual QPU" =>"tutorials/virtual_qpu.md"
+                "Real hardware" =>"tutorials/anyon_qpu.md"
             ],
             "Advanced Examples" => [
                 "Asynchronous Jobs"=>"tutorials/advanced/async_jobs.md"
             ],
-            "Library" => [
+            "API Reference" => [
                 "Quantum Toolkit"=>"library/quantum_toolkit.md",
                 "Quantum Gates"=>"library/quantum_gates.md",
                 "Quantum Circuits"=>"library/quantum_circuit.md",
