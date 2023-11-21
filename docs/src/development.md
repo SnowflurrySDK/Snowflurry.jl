@@ -79,7 +79,7 @@ If you haven't already, instantiate the project with Julia's package manager.
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.Instantiate()'
-``` .
+```
 
 You can run coverage locally from the project directory using
 
