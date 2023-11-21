@@ -61,7 +61,7 @@ q[1]:──H──
 q[2]:─────
 
 ```
-!!! note "Indexing in Julia"
+!!! warning "Indexing in Julia"
 	Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
 Note the exclamation mark at the end of `push!` which emphasizes the fact that we have called a mutating function that will change the argument `c` (our quantum circuit). 
