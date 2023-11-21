@@ -15,6 +15,8 @@ In the previous tutorial, we learnt how to run a quantum circuit on a virtual QP
 In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines. 
 
 ## Anyon QPU
+!!! note
+   This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
 
 !!! note 
     This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
