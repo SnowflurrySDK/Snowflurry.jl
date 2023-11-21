@@ -40,7 +40,7 @@ Quantum Processing Unit:
 
 ```
 
-!!! danger 
+!!! danger "Keep your credentials safe!"
     If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
 
 
