@@ -32,42 +32,36 @@ DocMeta.setdocmeta!(
 )
 uuid_regex = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 
-formattersAndDirs=[
-    (Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"), "build", "HTMLWriter"),
-]
+println()
+@info "Generating docs using HTMLWriter"
 
-for (formatter,build_dir, name) in formattersAndDirs
-    println()
-    @info "Generating docs using $name"
-
-    makedocs(
-        sitename = "Snowflurry",
-        format = formatter,
-        modules = [Snowflurry],
-        build = build_dir,
-        pages = [
-            "Home" => "index.md",
-            "Getting Started" => "getting_started.md",
-            "Tutorials" => [
-                "Basics"=>"tutorials/basics.md"
-                "Virtual QPU" =>"tutorials/virtual_qpu.md"
-                "Real hardware" =>"tutorials/anyon_qpu.md"
-            ],
-            "Advanced Examples" => [
-                "Asynchronous Jobs"=>"tutorials/advanced/async_jobs.md"
-            ],
-            "API Reference" => [
-                "Quantum Toolkit"=>"library/quantum_toolkit.md",
-                "Quantum Gates"=>"library/quantum_gates.md",
-                "Quantum Circuits"=>"library/quantum_circuit.md",
-                "QPU"=>"library/qpu.md",
-                "Pauli Simulator"=>"library/pauli_sim.md",
-                "Visualization"=>"library/viz.md",
-            ],
-
-            "Developing" => "development.md",
+makedocs(
+    sitename = "Snowflurry",
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false"),
+    modules = [Snowflurry],
+    build = "build",
+    pages = [
+        "Home" => "index.md",
+        "Getting Started" => "getting_started.md",
+        "Tutorials" => [
+            "Basics"=>"tutorials/basics.md"
+            "Virtual QPU" =>"tutorials/virtual_qpu.md"
+            "Real hardware" =>"tutorials/anyon_qpu.md"
         ],
-        doctestfilters = [uuid_regex],
-        checkdocs = :exports
-    )
-end
+        "Advanced Examples" => [
+            "Asynchronous Jobs"=>"tutorials/advanced/async_jobs.md"
+        ],
+        "API Reference" => [
+            "Quantum Toolkit"=>"library/quantum_toolkit.md",
+            "Quantum Gates"=>"library/quantum_gates.md",
+            "Quantum Circuits"=>"library/quantum_circuit.md",
+            "QPU"=>"library/qpu.md",
+            "Pauli Simulator"=>"library/pauli_sim.md",
+            "Visualization"=>"library/viz.md",
+        ],
+
+        "Developing" => "development.md",
+    ],
+    doctestfilters = [uuid_regex],
+    checkdocs = :exports
+)
