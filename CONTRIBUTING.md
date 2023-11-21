@@ -44,21 +44,20 @@ The basic process for setting up a fork is
     first update your local master and then merge the local master
     into your branch:
 
-    ````shell # Track the upstream repo (if your local repo hasn't):
+    ```shell 
+    # Track the upstream repo (if your local repo hasn't):
     git remote add upstream https://github.com/SnowflurrySDK/Snowflurry.jl.git
 
-        # Update your local master.
-        git fetch upstream
-        git checkout master
-        git merge upstream/master
-        # Merge local master into your branch.
-        git checkout new_branch_name
-        git merge master
-        ```
-        You may need to fix merge conflicts for both of these merge
-        commands.
-
-    ````
+    # Update your local master.
+    git fetch upstream
+    git checkout master
+    git merge upstream/master
+    # Merge local master into your branch.
+    git checkout new_branch_name
+    git merge master
+    
+    #You may need to fix merge conflicts for both of these merge commands.
+    ```
 
 1.  Finally, push your change to your clone
     ```shell
