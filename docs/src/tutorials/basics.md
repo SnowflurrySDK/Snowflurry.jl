@@ -38,10 +38,11 @@ q[2]:
      
 
 ```
-We have not yet added any quantum operation to our circuit and it looks empty! So, let's add some quantum operations!
 
 !!! note
 	In Snowflurry, we assume all qubits are initialized to be in state 0 (ground state). 
+
+We have not yet added any quantum operation to our circuit and it looks empty! So, let's add some quantum operations!
 
 ## Quantum Gates
 
