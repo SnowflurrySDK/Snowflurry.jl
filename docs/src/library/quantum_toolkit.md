@@ -2,7 +2,7 @@
 
 ## Basic Quantum Objects
 
-There are three basic quantum objects in Snowflurry to simulate a quantum system. These objects are Ket, Bra, and AbstractOperator.
+There are three basic quantum objects in Snowflurry to simulate a quantum system. These objects are `Ket`, `Bra`, and `AbstractOperator`.
 
 ```@docs
 Ket
