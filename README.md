@@ -152,7 +152,7 @@ See what we have planned by looking at the [Snowflurry Github Project](https://g
 
 # Snowflurry Contributors Community
 
-We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to contribute page](./CONTRIBUTING.md).
+We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to Contribute page](./CONTRIBUTING.md).
 
 We are dedicated to cultivating an open and inclusive community to build software for near term quantum computers. Please read our code of conduct for the rules of engagement within our community.
 
