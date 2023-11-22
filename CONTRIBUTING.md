@@ -118,6 +118,6 @@ phase_kickback |    1      1
   Code should be covered by tests.
   We use [Coverage.jl](https://github.com/JuliaCI/Coverage.jl) to compute
   coverage. We don't require 100% coverage, but expect better than 80% code coverage.
-- **VS Code Code Style**.
-  We highly recommand developing the code in VS Code and use its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
+- **VS Code Coding Style**.
+  We highly recommend developing the code in VS Code and using its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
 
