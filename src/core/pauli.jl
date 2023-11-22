@@ -1,5 +1,5 @@
-using AbstractAlgebra: GFElem, Generic.MatSpaceElem, GF, zero_matrix, nrows,
-    identity_matrix, lift
+using AbstractAlgebra:
+    GFElem, Generic.MatSpaceElem, GF, zero_matrix, nrows, identity_matrix, lift
 
 const GFInt = GFElem{Int}
 const GFMatrix = MatSpaceElem{GFInt}
@@ -75,28 +75,39 @@ Pauli Group Element:
 
 ```
 """
-function get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
-    negative_exponent::Integer=0)::PauliGroupElement
+function get_pauli(
+    circuit::QuantumCircuit;
+    imaginary_exponent::Integer = 0,
+    negative_exponent::Integer = 0,
+)::PauliGroupElement
 
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
     num_qubits = get_num_qubits(circuit)
-    pauli = unsafe_get_pauli(Identity(), 1, num_qubits, GF(2)(imaginary_exponent),
-        GF(2)(negative_exponent))
-    
+    pauli = unsafe_get_pauli(
+        Identity(),
+        1,
+        num_qubits,
+        GF(2)(imaginary_exponent),
+        GF(2)(negative_exponent),
+    )
+
     for gate in get_circuit_gates(circuit)
         if !(get_gate_symbol(gate) isa Union{Identity,SigmaX,SigmaY,SigmaZ})
             throw(NotImplementedError(:get_pauli, get_gate_symbol(gate)))
         end
 
         target = get_connected_qubits(gate)[1]
-        new_pauli = unsafe_get_pauli(get_gate_symbol(gate), target, num_qubits, GF(2)(0), GF(2)(0))
-        pauli = new_pauli*pauli
+        new_pauli =
+            unsafe_get_pauli(get_gate_symbol(gate), target, num_qubits, GF(2)(0), GF(2)(0))
+        pauli = new_pauli * pauli
     end
     return pauli
 end
 
-function assert_exponents_are_in_the_field(imaginary_exponent::Integer,
-    negative_exponent::Integer)
+function assert_exponents_are_in_the_field(
+    imaginary_exponent::Integer,
+    negative_exponent::Integer,
+)
 
     if imaginary_exponent > 1 || imaginary_exponent < 0
         throw(ErrorException("the imaginary exponent must be 0 or 1"))
@@ -133,8 +144,13 @@ Pauli Group Element:
 
 ```
 """
-function get_pauli(gate::AbstractGateSymbol, target::Int, num_qubits::Integer; imaginary_exponent::Integer=0,
-    negative_exponent::Integer=0)::PauliGroupElement
+function get_pauli(
+    gate::AbstractGateSymbol,
+    target::Int,
+    num_qubits::Integer;
+    imaginary_exponent::Integer = 0,
+    negative_exponent::Integer = 0,
+)::PauliGroupElement
 
     if !(gate isa Union{Identity,SigmaX,SigmaY,SigmaZ})
         throw(NotImplementedError(:get_pauli, gate))
@@ -145,46 +161,81 @@ function get_pauli(gate::AbstractGateSymbol, target::Int, num_qubits::Integer; i
     end
 
     assert_exponents_are_in_the_field(imaginary_exponent, negative_exponent)
-    return unsafe_get_pauli(gate, target, num_qubits, GF(2)(imaginary_exponent),
-        GF(2)(negative_exponent))
+    return unsafe_get_pauli(
+        gate,
+        target,
+        num_qubits,
+        GF(2)(imaginary_exponent),
+        GF(2)(negative_exponent),
+    )
 end
 
-function get_pauli(gate::Gate, num_qubits::Integer; imaginary_exponent::Integer=0,
-    negative_exponent::Integer=0)::PauliGroupElement
+function get_pauli(
+    gate::Gate,
+    num_qubits::Integer;
+    imaginary_exponent::Integer = 0,
+    negative_exponent::Integer = 0,
+)::PauliGroupElement
     connected_qubits = get_connected_qubits(gate)
     @assert length(connected_qubits) == 1
-    return get_pauli(get_gate_symbol(gate), connected_qubits[1], num_qubits; imaginary_exponent=imaginary_exponent, negative_exponent=negative_exponent)
+    return get_pauli(
+        get_gate_symbol(gate),
+        connected_qubits[1],
+        num_qubits;
+        imaginary_exponent = imaginary_exponent,
+        negative_exponent = negative_exponent,
+    )
 end
 
-function unsafe_get_pauli(::Identity, ::Int, num_qubits::Integer,
-    imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
-    
-    u = zero_matrix(GF(2), 2*num_qubits, 1)
+function unsafe_get_pauli(
+    ::Identity,
+    ::Int,
+    num_qubits::Integer,
+    imaginary_exponent::GFInt,
+    negative_exponent::GFInt,
+)::PauliGroupElement
+
+    u = zero_matrix(GF(2), 2 * num_qubits, 1)
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(::SigmaX, target::Int, num_qubits::Integer,
-    imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
-    
-    u = zero_matrix(GF(2), 2*num_qubits, 1)
+function unsafe_get_pauli(
+    ::SigmaX,
+    target::Int,
+    num_qubits::Integer,
+    imaginary_exponent::GFInt,
+    negative_exponent::GFInt,
+)::PauliGroupElement
+
+    u = zero_matrix(GF(2), 2 * num_qubits, 1)
     u[num_qubits+target, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(::SigmaY, target::Int, num_qubits::Integer,
-        imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
-    u = zero_matrix(GF(2), 2*num_qubits, 1)
+function unsafe_get_pauli(
+    ::SigmaY,
+    target::Int,
+    num_qubits::Integer,
+    imaginary_exponent::GFInt,
+    negative_exponent::GFInt,
+)::PauliGroupElement
+    u = zero_matrix(GF(2), 2 * num_qubits, 1)
     u[target, 1] = 1
     u[num_qubits+target, 1] = 1
-    negative_exponent += imaginary_exponent+1
+    negative_exponent += imaginary_exponent + 1
     imaginary_exponent += 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
 
-function unsafe_get_pauli(::SigmaZ, target::Int, num_qubits::Integer,
-    imaginary_exponent::GFInt, negative_exponent::GFInt)::PauliGroupElement
-    
-    u = zero_matrix(GF(2), 2*num_qubits, 1)
+function unsafe_get_pauli(
+    ::SigmaZ,
+    target::Int,
+    num_qubits::Integer,
+    imaginary_exponent::GFInt,
+    negative_exponent::GFInt,
+)::PauliGroupElement
+
+    u = zero_matrix(GF(2), 2 * num_qubits, 1)
     u[target, 1] = 1
     return PauliGroupElement(u, imaginary_exponent, negative_exponent)
 end
@@ -220,19 +271,24 @@ Pauli Group Element:
 """
 function Base.:*(p1::PauliGroupElement, p2::PauliGroupElement)::PauliGroupElement
 
-    new_delta = p1.delta+p2.delta
+    new_delta = p1.delta + p2.delta
     if nrows(p1.u) != nrows(p2.u)
-        throw(ErrorException("the Pauli group elements must be associated with the "
-        *"same number of qubits"))
+        throw(
+            ErrorException(
+                "the Pauli group elements must be associated with the " *
+                "same number of qubits",
+            ),
+        )
     end
-    new_u = p1.u+p2.u
+    new_u = p1.u + p2.u
     twice_num_qubits = nrows(new_u)
-    num_qubits = Int(twice_num_qubits/2)
+    num_qubits = Int(twice_num_qubits / 2)
     capital_u = zero_matrix(GF(2), twice_num_qubits, twice_num_qubits)
     capital_u[1:num_qubits, num_qubits+1:twice_num_qubits] =
         identity_matrix(GF(2), num_qubits)
-    new_epsilon = p1.epsilon+p2.epsilon+p1.delta*p2.delta+transpose(p2.u)*capital_u*p1.u
-    return PauliGroupElement(new_u, new_delta, new_epsilon[1,1])
+    new_epsilon =
+        p1.epsilon + p2.epsilon + p1.delta * p2.delta + transpose(p2.u) * capital_u * p1.u
+    return PauliGroupElement(new_u, new_delta, new_epsilon[1, 1])
 end
 
 function Base.:(==)(lhs::PauliGroupElement, rhs::PauliGroupElement)::Bool
@@ -255,8 +311,8 @@ end
 
 function convert_to_pauli_circuit(pauli::PauliGroupElement)::PauliCircuit
     u = pauli.u
-    num_qubits = Int(nrows(u)/2)
-    circuit = QuantumCircuit(qubit_count=num_qubits)
+    num_qubits = Int(nrows(u) / 2)
+    circuit = QuantumCircuit(qubit_count = num_qubits)
     imaginary_exponent = pauli.delta
     negative_exponent = pauli.epsilon
 

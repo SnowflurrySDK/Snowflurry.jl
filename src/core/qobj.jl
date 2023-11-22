@@ -26,19 +26,20 @@ julia> ψ = fock(2, 3)
 ```
 """
 struct Ket{T<:Complex}
-    data::Vector{T} 
+    data::Vector{T}
 end
 
 # overload constructor to enable initilization from Real-valued array
-Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1},x))
+Ket(x::Vector{T}) where {T<:Real} = Ket{Complex{T}}(convert(Array{Complex{T},1}, x))
 
 # overload constructor to enable initialization from Integer-valued array
 # default output is Ket{ComplexF64}
-Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer}=Ket(Vector{S}(x))
+Ket(x::Vector{T}, S::Type{<:Complex} = ComplexF64) where {T<:Integer} = Ket(Vector{S}(x))
 
 # overload constructor to enable initialization from Complex{Integer}-valued array
 # default output is Ket{ComplexF64}
-Ket(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Complex{Int}}=Ket(Vector{S}(x))
+Ket(x::Vector{T}, S::Type{<:Complex} = ComplexF64) where {T<:Complex{Int}} =
+    Ket(Vector{S}(x))
 
 function Base.show(io::IO, x::Ket)
     println(io, "$(length(x.data))-element Ket{$(eltype(x.data))}:")
@@ -92,21 +93,21 @@ false
 
 ```
 """
-function compare_kets(ψ_0::Ket,ψ_1::Ket)
-    
-    @assert length(ψ_0)==length(ψ_1) ("Input Kets must be of same dimension")
+function compare_kets(ψ_0::Ket, ψ_1::Ket)
+
+    @assert length(ψ_0) == length(ψ_1) ("Input Kets must be of same dimension")
 
     # calculate possible global phase offset angle
     # from first component 
-    θ_0=atan(imag(ψ_0.data[1]),real(ψ_0.data[1]) )
-    θ_1=atan(imag(ψ_1.data[1]),real(ψ_1.data[1]) )
+    θ_0 = atan(imag(ψ_0.data[1]), real(ψ_0.data[1]))
+    θ_1 = atan(imag(ψ_1.data[1]), real(ψ_1.data[1]))
 
-    δ=θ_0-θ_1
+    δ = θ_0 - θ_1
 
     #apply phase offset
-    ψ_1_prime=exp(im*δ)*ψ_1
+    ψ_1_prime = exp(im * δ) * ψ_1
 
-    return ψ_0≈ψ_1_prime
+    return ψ_0 ≈ ψ_1_prime
 end
 
 """
@@ -146,9 +147,9 @@ struct Bra{T<:Complex}
     # constructor overload from Ket{Complex{T}}
     Bra(x::Ket{T}) where {T<:Complex} = new{T}(adjoint(x.data))
     # This constructor is used when a Bra is multiplied by an AbstractOperator
-    Bra(x::LinearAlgebra.Adjoint{T, SVector{N,T}}) where {N,T<:Complex} = new{T}(x) 
+    Bra(x::LinearAlgebra.Adjoint{T,SVector{N,T}}) where {N,T<:Complex} = new{T}(x)
     # This constructor is used when a Bra is multiplied by a SparseOperator or initialized with adjoint of vector
-    Bra(x::LinearAlgebra.Adjoint{T, Vector{T}}) where {T<:Complex} = new{T}(x) 
+    Bra(x::LinearAlgebra.Adjoint{T,Vector{T}}) where {T<:Complex} = new{T}(x)
 end
 
 function Base.show(io::IO, x::Bra)
@@ -179,25 +180,27 @@ Underlying data ComplexF64:
 
 ```
 """
-struct SparseOperator{N,T<:Complex}<:AbstractOperator
-    data::  SparseMatrixCSC{T, Int64}
+struct SparseOperator{N,T<:Complex} <: AbstractOperator
+    data::SparseMatrixCSC{T,Int64}
 end
 
 function SparseOperator(x::SparseArrays.SparseMatrixCSC{T,Int64}) where {T<:Complex}
-    @assert size(x)[1]==size(x)[2] "Input Matrix is not square"
- 
+    @assert size(x)[1] == size(x)[2] "Input Matrix is not square"
+
     SparseOperator{size(x)[1],T}(x)
 end
 
 # Constructor from Real-valued Matrix
-SparseOperator(x::Matrix{T}) where {T<:Real} = SparseOperator(SparseArrays.sparse(Complex.(x)))
+SparseOperator(x::Matrix{T}) where {T<:Real} =
+    SparseOperator(SparseArrays.sparse(Complex.(x)))
 # Constructor from Complex-valued Matrix
 SparseOperator(x::Matrix{T}) where {T<:Complex} = SparseOperator(SparseArrays.sparse(x))
 # Constructor from Integer-valued Matrix
 # default output is Operator{ComplexF64}
-SparseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SparseOperator(Matrix{S}(x))
+SparseOperator(x::Matrix{T}, S::Type{<:Complex} = ComplexF64) where {T<:Integer} =
+    SparseOperator(Matrix{S}(x))
 
-get_matrix(op::SparseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+get_matrix(op::SparseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T}, op.data)
 
 """
     sparse(x::AbstractOperator)
@@ -213,7 +216,8 @@ Underlying data ComplexF64:
       ⋅       -1.0 + 0.0im
 ```
 """
-SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
+SparseArrays.sparse(x::AbstractOperator) =
+    SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
 """
     DenseOperator{N,T<:Complex}<:AbstractOperator
@@ -245,14 +249,17 @@ struct DenseOperator{N,T<:Complex} <: AbstractOperator
 end
 
 # Constructor from Real-valued Matrix
-DenseOperator(x::Matrix{T}) where {T<:Real} = DenseOperator(convert(SMatrix{size(x)...,Complex{T}},x) )
+DenseOperator(x::Matrix{T}) where {T<:Real} =
+    DenseOperator(convert(SMatrix{size(x)...,Complex{T}}, x))
 
 # Constructor from Complex-valued Matrix
-DenseOperator(x::Matrix{T}) where {T<:Complex} = DenseOperator(convert(SMatrix{size(x)...,T},x) )
+DenseOperator(x::Matrix{T}) where {T<:Complex} =
+    DenseOperator(convert(SMatrix{size(x)...,T}, x))
 
 # Constructor from Integer-valued Matrix
 # default output is Operator{ComplexF64}
-DenseOperator(x::Matrix{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DenseOperator(Matrix{S}(x))
+DenseOperator(x::Matrix{T}, S::Type{<:Complex} = ComplexF64) where {T<:Integer} =
+    DenseOperator(Matrix{S}(x))
 
 # Construction of DenseOperator using AbstractOperator
 DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
@@ -262,11 +269,12 @@ DenseOperator(op::AbstractOperator) = DenseOperator(get_matrix(op))
 # so that an input of type DenseOperator is not copied
 DenseOperator(op::DenseOperator) = op
 
-DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex}=DenseOperator(SMatrix{N,N,T}(m))
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Complex} = DenseOperator(SMatrix{N,N,T}(m))
 
-DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real}=DenseOperator(SMatrix{N,N,Complex{T}}(m))
+DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real} =
+    DenseOperator(SMatrix{N,N,Complex{T}}(m))
 
-get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T},op.data)
+get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T}, op.data)
 
 """
     SwapLikeOperator{N,T<:Complex}<:AbstractOperator
@@ -288,29 +296,38 @@ Equivalent DenseOperator:
 
 ```
 """
-struct SwapLikeOperator{N,T<:Complex}<:AbstractOperator
+struct SwapLikeOperator{N,T<:Complex} <: AbstractOperator
     phase::T
 end
 
 SwapLikeOperator(phase::T) where {T<:Complex} = SwapLikeOperator{4,T}(phase)
 
 # Constructor from Real phase value, or other numeric types.
-SwapLikeOperator(phase::T) where {T<:Real} = SwapLikeOperator{4,Complex{T}}(Complex{T}(phase))
+SwapLikeOperator(phase::T) where {T<:Real} =
+    SwapLikeOperator{4,Complex{T}}(Complex{T}(phase))
 
 # Constructor from Complex{Int} or Complex{Bool} such as Complex(1) or `im` 
-SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Union{Complex{Bool},Complex{Int}}} = 
-    SwapLikeOperator(S(phase))
+SwapLikeOperator(
+    phase::T,
+    S::Type{<:Complex} = ComplexF64,
+) where {T<:Union{Complex{Bool},Complex{Int}}} = SwapLikeOperator(S(phase))
 
 # Constructor from Integer-valued phase
 # default output is Operator{ComplexF64}
-SwapLikeOperator(phase::T,S::Type{<:Complex}=ComplexF64) where {T<:Integer} = SwapLikeOperator(S(phase))
+SwapLikeOperator(phase::T, S::Type{<:Complex} = ComplexF64) where {T<:Integer} =
+    SwapLikeOperator(S(phase))
 
 # Cast SwapLikeOperator to DenseOperator
-DenseOperator(op::SwapLikeOperator{N,T}) where {N,T<:Complex}=DenseOperator(
-    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, op.phase, 0.0] [0.0, op.phase, 0.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+DenseOperator(op::SwapLikeOperator{N,T}) where {N,T<:Complex} = DenseOperator(
+    T[[1.0, 0.0, 0.0, 0.0] [0.0, 0.0, op.phase, 0.0] [0.0, op.phase, 0.0, 0.0] [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ]],
 )
 
-get_matrix(op::SwapLikeOperator)=get_matrix(DenseOperator(op))
+get_matrix(op::SwapLikeOperator) = get_matrix(DenseOperator(op))
 
 """
     IdentityOperator{N,T<:Complex}<:AbstractOperator
@@ -329,13 +346,13 @@ Equivalent DenseOperator:
 
 ```
 """
-struct IdentityOperator{N,T<:Complex}<: AbstractOperator end
+struct IdentityOperator{N,T<:Complex} <: AbstractOperator end
 
-IdentityOperator(T::Type=ComplexF64)=IdentityOperator{2,T}()
+IdentityOperator(T::Type = ComplexF64) = IdentityOperator{2,T}()
 
-DenseOperator(::IdentityOperator{2,T}) where {T<:Complex}=eye(T)
+DenseOperator(::IdentityOperator{2,T}) where {T<:Complex} = eye(T)
 
-get_matrix(op::IdentityOperator)=get_matrix(DenseOperator(op))
+get_matrix(op::IdentityOperator) = get_matrix(DenseOperator(op))
 
 """
 
@@ -366,7 +383,7 @@ julia> Y[2,2]
 
 ```
 """
-Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i,j]
+Base.getindex(op::AbstractOperator, i::Integer, j::Integer) = DenseOperator(op).data[i, j]
 
 """
 
@@ -398,20 +415,27 @@ struct DiagonalOperator{N,T<:Complex} <: AbstractOperator
 end
 
 # Constructor from Real-valued Vector
-DiagonalOperator(x::Vector{T}) where {T<:Real} = DiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
+DiagonalOperator(x::Vector{T}) where {T<:Real} =
+    DiagonalOperator(convert(SVector{length(x),Complex{T}}, x))
 
 # Constructor from Complex-valued Vector
-DiagonalOperator(x::Vector{T}) where {T<:Complex} = DiagonalOperator(convert(SVector{length(x),T},x) )
+DiagonalOperator(x::Vector{T}) where {T<:Complex} =
+    DiagonalOperator(convert(SVector{length(x),T}, x))
 
 # Constructor from Integer-valued Vector
 # default output is DiagonalOperator{ComplexF64}
-DiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = DiagonalOperator(Vector{S}(x))
+DiagonalOperator(x::Vector{T}, S::Type{<:Complex} = ComplexF64) where {T<:Integer} =
+    DiagonalOperator(Vector{S}(x))
 
-function Base.getindex(diag_op::DiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
+function Base.getindex(
+    diag_op::DiagonalOperator{N,T},
+    i::Integer,
+    j::Integer,
+) where {N,T<:Complex}
     if j == i
         return diag_op.data[i]
     else
-        return T(0.)
+        return T(0.0)
     end
 end
 
@@ -435,14 +459,13 @@ Underlying data type: ComplexF64:
 struct AntiDiagonalOperator{N,T<:Complex} <: AbstractOperator
     data::SVector{N,T}
 
-    function AntiDiagonalOperator(
-        x::Union{
-            Vector{T},
-            SVector{N,T},
-            }
-        ) where {N,T<:Complex}
-        if Val(N)!=Val(2)
-            throw(DomainError("$(:AntiDiagonalOperator) only implemented for single target (N=2). Received N=$N"))
+    function AntiDiagonalOperator(x::Union{Vector{T},SVector{N,T}}) where {N,T<:Complex}
+        if Val(N) != Val(2)
+            throw(
+                DomainError(
+                    "$(:AntiDiagonalOperator) only implemented for single target (N=2). Received N=$N",
+                ),
+            )
         else
             return new{N,T}(x)
         end
@@ -452,20 +475,26 @@ end
 
 # Constructor from Integer-valued Vector
 # default output is AntiDiagonalOperator{N,ComplexF64}
-AntiDiagonalOperator(x::Vector{T},S::Type{<:Complex}=ComplexF64) where {T<:Integer} = 
-    AntiDiagonalOperator(convert(SVector{length(x),S},x) )
+AntiDiagonalOperator(x::Vector{T}, S::Type{<:Complex} = ComplexF64) where {T<:Integer} =
+    AntiDiagonalOperator(convert(SVector{length(x),S}, x))
 
 # Constructor from Real-valued Vector
-AntiDiagonalOperator(x::Vector{T}) where {T<:Real} = AntiDiagonalOperator(convert(SVector{length(x),Complex{T}},x) )
+AntiDiagonalOperator(x::Vector{T}) where {T<:Real} =
+    AntiDiagonalOperator(convert(SVector{length(x),Complex{T}}, x))
 
 # Constructor from Complex-valued Vector
-AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} = AntiDiagonalOperator(convert(SVector{length(x),T},x) )
+AntiDiagonalOperator(x::Vector{T}) where {T<:Complex} =
+    AntiDiagonalOperator(convert(SVector{length(x),T}, x))
 
-function Base.getindex(anti_diag_op::AntiDiagonalOperator{N,T}, i::Integer, j::Integer) where {N,T<:Complex}
-    if N-j+1 == i
+function Base.getindex(
+    anti_diag_op::AntiDiagonalOperator{N,T},
+    i::Integer,
+    j::Integer,
+) where {N,T<:Complex}
+    if N - j + 1 == i
         return anti_diag_op.data[i]
     else
-        return T(0.)
+        return T(0.0)
     end
 end
 
@@ -478,7 +507,7 @@ Base.adjoint(x::Ket) = Bra(x)
 Base.adjoint(x::Bra) = Ket(adjoint(x.data))
 
 Base.adjoint(A::AbstractOperator) = typeof(A)(adjoint(A.data))
-Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex}=
+Base.adjoint(A::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
     AntiDiagonalOperator(SVector{N,T}(reverse(adjoint(A.data))))
 
 Base.adjoint(A::SwapLikeOperator) = typeof(A)(adjoint(A.phase))
@@ -515,26 +544,34 @@ false
 ```
 """
 is_hermitian(A::AbstractOperator) = ishermitian(DenseOperator(A).data)
-is_hermitian(A::DenseOperator)  = LinearAlgebra.ishermitian(A.data)
+is_hermitian(A::DenseOperator) = LinearAlgebra.ishermitian(A.data)
 is_hermitian(A::SparseOperator) = LinearAlgebra.ishermitian(A.data)
 
-Base.:*(s::Number, x::Ket) = Ket(s*x.data)
-Base.:*(x::Ket,s::Number) = Base.:*(s,x)
-Base.:isapprox(x::Ket, y::Ket; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::Bra, y::Bra; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
+Base.:*(s::Number, x::Ket) = Ket(s * x.data)
+Base.:*(x::Ket, s::Number) = Base.:*(s, x)
+Base.:isapprox(x::Ket, y::Ket; atol::Real = 1.0e-6) = isapprox(x.data, y.data, atol = atol)
+Base.:isapprox(x::Bra, y::Bra; atol::Real = 1.0e-6) = isapprox(x.data, y.data, atol = atol)
 
 # generic cases
-Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), DenseOperator(y), atol=atol)
+Base.:isapprox(x::AbstractOperator, y::AbstractOperator; atol::Real = 1.0e-6) =
+    isapprox(DenseOperator(x), DenseOperator(y), atol = atol)
 
 # specializations
-Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::SparseOperator, y::SparseOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real=1.0e-6) = isapprox(x.data, y.data, atol=atol)
-Base.:isapprox(x::SwapLikeOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x.phase, y.phase, atol=atol)
+Base.:isapprox(x::DenseOperator, y::DenseOperator; atol::Real = 1.0e-6) =
+    isapprox(x.data, y.data, atol = atol)
+Base.:isapprox(x::SparseOperator, y::SparseOperator; atol::Real = 1.0e-6) =
+    isapprox(x.data, y.data, atol = atol)
+Base.:isapprox(x::DiagonalOperator, y::DiagonalOperator; atol::Real = 1.0e-6) =
+    isapprox(x.data, y.data, atol = atol)
+Base.:isapprox(x::AntiDiagonalOperator, y::AntiDiagonalOperator; atol::Real = 1.0e-6) =
+    isapprox(x.data, y.data, atol = atol)
+Base.:isapprox(x::SwapLikeOperator, y::SwapLikeOperator; atol::Real = 1.0e-6) =
+    isapprox(x.phase, y.phase, atol = atol)
 
-Base.:isapprox(x::SwapLikeOperator, y::AbstractOperator; atol::Real=1.0e-6) = isapprox(DenseOperator(x), y, atol=atol)
-Base.:isapprox(x::AbstractOperator, y::SwapLikeOperator; atol::Real=1.0e-6) = isapprox(x, DenseOperator(y), atol=atol)
+Base.:isapprox(x::SwapLikeOperator, y::AbstractOperator; atol::Real = 1.0e-6) =
+    isapprox(DenseOperator(x), y, atol = atol)
+Base.:isapprox(x::AbstractOperator, y::SwapLikeOperator; atol::Real = 1.0e-6) =
+    isapprox(x, DenseOperator(y), atol = atol)
 
 
 Base.:-(x::Ket) = -1.0 * x
@@ -553,82 +590,94 @@ Base.:*(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) * DenseOper
 
 # specializations
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,T}) where {N,T<:Complex} =
-    DenseOperator(A.data*B.data)
+    DenseOperator(A.data * B.data)
 
-Base.:*(A::DenseOperator, B::DenseOperator) =
-    throw(DimensionMismatch(
-        "Cannot multiply Operators of dissimilar sizes."*
-        " A has size $(size(A)) and B has size $(size(B))."))
-Base.:+(A::DenseOperator, B::DenseOperator) =
-    throw(DimensionMismatch("Cannot sum Operators of dissimilar sizes."*
-        " A has size $(size(A)) and B has size $(size(B))."))
-Base.:-(A::DenseOperator, B::DenseOperator) =
-    throw(DimensionMismatch("Cannot take difference of Operators of dissimilar sizes."*
-        " A has size $(size(A)) and B has size $(size(B))."))
+Base.:*(A::DenseOperator, B::DenseOperator) = throw(
+    DimensionMismatch(
+        "Cannot multiply Operators of dissimilar sizes." *
+        " A has size $(size(A)) and B has size $(size(B)).",
+    ),
+)
+Base.:+(A::DenseOperator, B::DenseOperator) = throw(
+    DimensionMismatch(
+        "Cannot sum Operators of dissimilar sizes." *
+        " A has size $(size(A)) and B has size $(size(B)).",
+    ),
+)
+Base.:-(A::DenseOperator, B::DenseOperator) = throw(
+    DimensionMismatch(
+        "Cannot take difference of Operators of dissimilar sizes." *
+        " A has size $(size(A)) and B has size $(size(B)).",
+    ),
+)
 
 Base.:*(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
-    DenseOperator( *(promote(A.data,B.data)...) )
+    DenseOperator(*(promote(A.data, B.data)...))
 Base.:*(A::DiagonalOperator{N,T}, B::DiagonalOperator{N,T}) where {N,T<:Complex} =
-    DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,B.data)]))
+    DiagonalOperator(SVector{N,T}([a * b for (a, b) in zip(A.data, B.data)]))
 Base.:*(A::AntiDiagonalOperator{N,T}, B::AntiDiagonalOperator{N,T}) where {N,T<:Complex} =
-    DiagonalOperator(SVector{N,T}([a*b for (a,b) in zip(A.data,reverse(B.data))]))
-Base.:*(A::SparseOperator{N,T}, B::SparseOperator{N,T}) where {N,T<:Complex} = 
-    SparseOperator{N,T}(A.data*B.data)
+    DiagonalOperator(SVector{N,T}([a * b for (a, b) in zip(A.data, reverse(B.data))]))
+Base.:*(A::SparseOperator{N,T}, B::SparseOperator{N,T}) where {N,T<:Complex} =
+    SparseOperator{N,T}(A.data * B.data)
 
 Base.:*(A::IdentityOperator, B::IdentityOperator) = A
 function Base.:*(A::IdentityOperator, B::AbstractOperator)
-    if size(A)!=size(B)
-        throw(DimensionMismatch("Cannot multiply Operators of dissimilar sizes."*
-        " A has size $(size(A)) and B has size $(size(B))."))
+    if size(A) != size(B)
+        throw(
+            DimensionMismatch(
+                "Cannot multiply Operators of dissimilar sizes." *
+                " A has size $(size(A)) and B has size $(size(B)).",
+            ),
+        )
     end
 
-    if typeof(A[1,1]) != typeof(B[1,1])
+    if typeof(A[1, 1]) != typeof(B[1, 1])
         # build promoted Operator of same type as input
-        output_type=typeof(promote(A[1,1],B[1,1])[1])
+        output_type = typeof(promote(A[1, 1], B[1, 1])[1])
 
-        return output_type(1.0)*B
+        return output_type(1.0) * B
     else
         return B
     end
 end
-Base.:*(A::AbstractOperator, B::IdentityOperator) = B*A
+Base.:*(A::AbstractOperator, B::IdentityOperator) = B * A
 
-Base.:*(s::Number, A::DenseOperator) = DenseOperator(s*A.data)
-Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s*A.data)
-Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s*A.data)
-Base.:*(s::Number, A::SparseOperator) = SparseOperator(s*A.data)
-Base.:*(s::Number, A::SwapLikeOperator) = s*DenseOperator(A)
-Base.:*(s::Number, A::IdentityOperator) = s*DenseOperator(A)
+Base.:*(s::Number, A::DenseOperator) = DenseOperator(s * A.data)
+Base.:*(s::Number, A::DiagonalOperator) = DiagonalOperator(s * A.data)
+Base.:*(s::Number, A::AntiDiagonalOperator) = AntiDiagonalOperator(s * A.data)
+Base.:*(s::Number, A::SparseOperator) = SparseOperator(s * A.data)
+Base.:*(s::Number, A::SwapLikeOperator) = s * DenseOperator(A)
+Base.:*(s::Number, A::IdentityOperator) = s * DenseOperator(A)
 
 
-Base.:*(A::AbstractOperator,s::Number) = Base.:*(s, A)
+Base.:*(A::AbstractOperator, s::Number) = Base.:*(s, A)
 
 # generic cases
 Base.:+(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) + DenseOperator(B)
 Base.:-(A::AbstractOperator, B::AbstractOperator) = DenseOperator(A) - DenseOperator(B)
 
 # specializations
-Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
-    DenseOperator(+(promote(A.data,B.data)...))
+Base.:+(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
+    DenseOperator(+(promote(A.data, B.data)...))
 
-Base.:+(A::T, B::T) where {T<:DenseOperator}= T(A.data+B.data)
-Base.:+(A::T, B::T) where {T<:SparseOperator}= T(A.data+B.data)
-Base.:+(A::T, B::T) where {T<:DiagonalOperator}= T(A.data+B.data)
-Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data+B.data)
-Base.:+(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)+DenseOperator(B)
+Base.:+(A::T, B::T) where {T<:DenseOperator} = T(A.data + B.data)
+Base.:+(A::T, B::T) where {T<:SparseOperator} = T(A.data + B.data)
+Base.:+(A::T, B::T) where {T<:DiagonalOperator} = T(A.data + B.data)
+Base.:+(A::T, B::T) where {T<:AntiDiagonalOperator} = AntiDiagonalOperator(A.data + B.data)
+Base.:+(A::T, B::T) where {T<:SwapLikeOperator} = DenseOperator(A) + DenseOperator(B)
 
 
 # specializations
-Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} = 
-    DenseOperator(-(promote(A.data,B.data)...))
+Base.:-(A::DenseOperator{N,T}, B::DenseOperator{N,S}) where {N,T<:Complex,S<:Complex} =
+    DenseOperator(-(promote(A.data, B.data)...))
 
-Base.:-(A::T, B::T) where {T<:DenseOperator}= T(A.data-B.data)
-Base.:-(A::T, B::T) where {T<:SparseOperator}= T(A.data-B.data)
-Base.:-(A::T, B::T) where {T<:DiagonalOperator}= T(A.data-B.data)
-Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator}= AntiDiagonalOperator(A.data-B.data)
-Base.:-(A::T, B::T) where {T<:SwapLikeOperator}= DenseOperator(A)-DenseOperator(B)
+Base.:-(A::T, B::T) where {T<:DenseOperator} = T(A.data - B.data)
+Base.:-(A::T, B::T) where {T<:SparseOperator} = T(A.data - B.data)
+Base.:-(A::T, B::T) where {T<:DiagonalOperator} = T(A.data - B.data)
+Base.:-(A::T, B::T) where {T<:AntiDiagonalOperator} = AntiDiagonalOperator(A.data - B.data)
+Base.:-(A::T, B::T) where {T<:SwapLikeOperator} = DenseOperator(A) - DenseOperator(B)
 
-Base.length(x::Union{Ket, Bra}) = length(x.data)
+Base.length(x::Union{Ket,Bra}) = length(x.data)
 
 """
     exp(A::AbstractOperator)
@@ -691,7 +740,7 @@ julia> eigenvector_1 = F.vectors[:, 1]
 LinearAlgebra.eigen(A::AbstractOperator) = LinearAlgebra.eigen(DenseOperator(A))
 # specializations
 LinearAlgebra.eigen(A::DenseOperator) = LinearAlgebra.eigen(Matrix(A.data))
-LinearAlgebra.eigen(A::SparseOperator;kwargs...) = Arpack.eigs(A.data;kwargs...)
+LinearAlgebra.eigen(A::SparseOperator; kwargs...) = Arpack.eigs(A.data; kwargs...)
 
 """
     tr(A::AbstractOperator)
@@ -712,8 +761,8 @@ julia> trace = tr(I)
 
 ```
 """
-LinearAlgebra.tr(A::AbstractOperator)=LinearAlgebra.tr(DenseOperator(A))
-LinearAlgebra.tr(A::DenseOperator{N,T}) where {N,T<:Complex}=LinearAlgebra.tr(A.data)
+LinearAlgebra.tr(A::AbstractOperator) = LinearAlgebra.tr(DenseOperator(A))
+LinearAlgebra.tr(A::DenseOperator{N,T}) where {N,T<:Complex} = LinearAlgebra.tr(A.data)
 
 
 """
@@ -740,7 +789,7 @@ julia> expected_value(A, ψ)
 -1.0 + 0.0im
 ```
 """
-expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
+expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi) * A * psi)
 
 
 
@@ -748,17 +797,17 @@ expected_value(A::AbstractOperator, psi::Ket) = (Bra(psi)*A*psi)
 Base.:size(M::AbstractOperator) = size(M.data)
 
 # specializations
-Base.:size(M::DiagonalOperator)     = (length(M.data),length(M.data))
-Base.:size(M::AntiDiagonalOperator) = (length(M.data),length(M.data))
-Base.:size(M::SwapLikeOperator) = (4,4)
-Base.:size(M::IdentityOperator) = (2,2)
+Base.:size(M::DiagonalOperator) = (length(M.data), length(M.data))
+Base.:size(M::AntiDiagonalOperator) = (length(M.data), length(M.data))
+Base.:size(M::SwapLikeOperator) = (4, 4)
+Base.:size(M::IdentityOperator) = (2, 2)
 
 
 # iterator for Ket object
 Base.iterate(x::Ket, state = 1) =
     state > length(x.data) ? nothing : (x.data[state], state + 1)
 
-    """
+"""
     kron(x, y)
 
 Compute the Kronecker product of two [`Kets`](@ref Ket) or two 
@@ -801,7 +850,8 @@ Underlying data ComplexF64:
 """
 Base.kron(x::Ket, y::Ket) = Ket(kron(x.data, y.data))
 
-Base.kron(x::AbstractOperator, y::AbstractOperator) = kron(DenseOperator(x), DenseOperator(y))
+Base.kron(x::AbstractOperator, y::AbstractOperator) =
+    kron(DenseOperator(x), DenseOperator(y))
 
 Base.kron(x::DenseOperator, y::DenseOperator) = DenseOperator(kron(x.data, y.data))
 
@@ -862,7 +912,11 @@ Underlying data ComplexF64:
 
 ```
 """
-function get_embed_operator(op::T, target_body_index::Int, system::MultiBodySystem) where {T<:Union{DenseOperator, SparseOperator}}
+function get_embed_operator(
+    op::T,
+    target_body_index::Int,
+    system::MultiBodySystem,
+) where {T<:Union{DenseOperator,SparseOperator}}
     n_body = length(system.hilbert_space_structure)
     @assert target_body_index <= n_body
 
@@ -890,11 +944,10 @@ function get_embed_operator(op::T, target_body_index::Int, system::MultiBodySyst
 end
 
 
-get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem)=
+get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem) =
     get_embed_operator(DenseOperator(op), target_body_index, system)
 
-get_matrix(op::AbstractOperator) = 
-    throw(NotImplementedError(:get_matrix,op))
+get_matrix(op::AbstractOperator) = throw(NotImplementedError(:get_matrix, op))
 
 function Base.show(io::IO, x::DenseOperator)
     println(io, "$(size(x.data))-element Snowflurry.DenseOperator:")
@@ -915,7 +968,7 @@ end
 function Base.show(io::IO, x::SparseOperator)
     println(io, "$(size(x.data))-element Snowflurry.SparseOperator:")
     println(io, "Underlying data $(eltype(x.data)):")
-    Base.print_array(io,x.data)
+    Base.print_array(io, x.data)
 end
 
 
@@ -925,7 +978,7 @@ function Base.show(io::IO, x::SwapLikeOperator)
     (nrow, ncol) = size(x)
 
     println(io, "Equivalent DenseOperator:")
-    denseop=DenseOperator(x)
+    denseop = DenseOperator(x)
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
             if j == 1
@@ -944,7 +997,7 @@ function Base.show(io::IO, x::IdentityOperator)
     (nrow, ncol) = size(x)
 
     println(io, "Equivalent DenseOperator:")
-    denseop=DenseOperator(x)
+    denseop = DenseOperator(x)
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
             if j == 1
@@ -958,20 +1011,23 @@ function Base.show(io::IO, x::IdentityOperator)
 end
 
 function Base.show(io::IO, x::DiagonalOperator)
-    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflurry.DiagonalOperator:")
+    println(
+        io,
+        "($(length(x.data)),$(length(x.data)))-element Snowflurry.DiagonalOperator:",
+    )
     println(io, "Underlying data type: $(eltype(x.data)):")
-    nrow=length(x.data) 
-    ncol=nrow
+    nrow = length(x.data)
+    ncol = nrow
     for i in range(1, stop = nrow)
         for j in range(1, stop = ncol)
             if j == i
-                if j==1
+                if j == 1
                     print(io, "$(x.data[i])")
                 else
                     print(io, "    $(x.data[i])")
                 end
             else
-                if j==1
+                if j == 1
                     print(io, ".")
                 else
                     print(io, "    .")
@@ -983,13 +1039,13 @@ function Base.show(io::IO, x::DiagonalOperator)
 end
 
 function get_matrix(op::DiagonalOperator{N,T}) where {N,T<:Complex}
-    matrix=zeros(T,N,N)
-    nrow=length(op.data) 
-    ncol=nrow
-    for i in 1:nrow
-        for j in 1:ncol
+    matrix = zeros(T, N, N)
+    nrow = length(op.data)
+    ncol = nrow
+    for i = 1:nrow
+        for j = 1:ncol
             if i == j
-                matrix[i,j]= op.data[i]
+                matrix[i, j] = op.data[i]
             end
         end
     end
@@ -997,13 +1053,16 @@ function get_matrix(op::DiagonalOperator{N,T}) where {N,T<:Complex}
 end
 
 function Base.show(io::IO, x::AntiDiagonalOperator)
-    println(io, "($(length(x.data)),$(length(x.data)))-element Snowflurry.AntiDiagonalOperator:")
+    println(
+        io,
+        "($(length(x.data)),$(length(x.data)))-element Snowflurry.AntiDiagonalOperator:",
+    )
     println(io, "Underlying data type: $(eltype(x.data)):")
-    nrow=length(x.data) 
-    ncol=nrow
-    for i in 1:nrow
-        for j in 1:ncol
-            if ncol-j+1 == i
+    nrow = length(x.data)
+    ncol = nrow
+    for i = 1:nrow
+        for j = 1:ncol
+            if ncol - j + 1 == i
                 print(io, "    $(x.data[i])")
             else
                 print(io, "    .")
@@ -1014,13 +1073,13 @@ function Base.show(io::IO, x::AntiDiagonalOperator)
 end
 
 function get_matrix(op::AntiDiagonalOperator{N,T}) where {N,T<:Complex}
-    matrix=zeros(T,N,N)
-    nrow=length(op.data) 
-    ncol=nrow
-    for i in 1:nrow
-        for j in 1:ncol
-            if ncol-j+1 == i
-                matrix[i,j]= op.data[i]
+    matrix = zeros(T, N, N)
+    nrow = length(op.data)
+    ncol = nrow
+    for i = 1:nrow
+        for j = 1:ncol
+            if ncol - j + 1 == i
+                matrix[i, j] = op.data[i]
             end
         end
     end
@@ -1052,8 +1111,12 @@ function get_num_qubits(x::AbstractOperator)
     end
     qubit_count = log2(num_rows)
     if mod(qubit_count, 1) != 0
-        throw(DomainError(qubit_count,
-            "$(typeof(x)) does not correspond to an integer number of qubits"))
+        throw(
+            DomainError(
+                qubit_count,
+                "$(typeof(x)) does not correspond to an integer number of qubits",
+            ),
+        )
     end
     return Int(qubit_count)
 end
@@ -1077,11 +1140,15 @@ julia> get_num_qubits(ψ)
 
 ```
 """
-function get_num_qubits(x::Union{Ket, Bra})
+function get_num_qubits(x::Union{Ket,Bra})
     qubit_count = log2(length(x))
     if mod(qubit_count, 1) != 0
-        throw(DomainError(qubit_count,
-            "Ket or Bra does not correspond to an integer number of qubits"))
+        throw(
+            DomainError(
+                qubit_count,
+                "Ket or Bra does not correspond to an integer number of qubits",
+            ),
+        )
     end
     return Int(qubit_count)
 end
@@ -1107,15 +1174,19 @@ julia> get_num_bodies(ρ, 3)
 
 ```
 """
-function get_num_bodies(x::AbstractOperator, hilbert_space_size_per_body=2)
+function get_num_bodies(x::AbstractOperator, hilbert_space_size_per_body = 2)
     (num_rows, num_columns) = size(x)
     if num_rows != num_columns
         throw(ErrorException("$(typeof(x)) is not square"))
     end
     num_bodies = log(hilbert_space_size_per_body, num_rows)
     if mod(num_bodies, 1) != 0
-        throw(DomainError(num_bodies,
-            "$(typeof(x)) does not correspond to an integer number of bodies"))
+        throw(
+            DomainError(
+                num_bodies,
+                "$(typeof(x)) does not correspond to an integer number of bodies",
+            ),
+        )
     end
     return Int(num_bodies)
 end
@@ -1145,11 +1216,15 @@ julia> get_num_bodies(ψ, 3)
 
 ```
 """
-function get_num_bodies(x::Union{Ket, Bra}, hilbert_space_size_per_body=2)
+function get_num_bodies(x::Union{Ket,Bra}, hilbert_space_size_per_body = 2)
     num_bodies = log(hilbert_space_size_per_body, length(x))
     if mod(num_bodies, 1) != 0
-        throw(DomainError(num_bodies,
-            "Ket or Bra does not correspond to an integer number of bodies"))
+        throw(
+            DomainError(
+                num_bodies,
+                "Ket or Bra does not correspond to an integer number of bodies",
+            ),
+        )
     end
     return Int(num_bodies)
 end
@@ -1183,7 +1258,7 @@ julia> ψ = fock(1, 3,ComplexF32) # specifying a type other than ComplexF64
 0.0f0 + 0.0f0im
 ```
 """
-function fock(i, hspace_size,T::Type{<:Complex}=ComplexF64)
+function fock(i, hspace_size, T::Type{<:Complex} = ComplexF64)
     d = fill(T(0.0), hspace_size)
     d[i+1] = 1.0
     return Ket(d)
@@ -1206,7 +1281,7 @@ julia> ψ = spin_up()
 
 ```
 """
-spin_up(T::Type{<:Complex}=ComplexF64) = fock(0,2,T)
+spin_up(T::Type{<:Complex} = ComplexF64) = fock(0, 2, T)
 
 """
     spin_down(T::Type{<:Complex}=ComplexF64)
@@ -1225,17 +1300,17 @@ julia> ψ = spin_down()
 
 ```
 """
-spin_down(T::Type{<:Complex}=ComplexF64) = fock(1,2,T)
+spin_down(T::Type{<:Complex} = ComplexF64) = fock(1, 2, T)
 
 """
     create(hspace_size,T::Type{<:Complex}=ComplexF64)
 
 Returns the bosonic creation operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
-function create(hspace_size,T::Type{<:Complex}=ComplexF64)
-    a_dag = zeros(T, hspace_size,hspace_size)
-    for i in 2:hspace_size
-        a_dag[i,i-1]=sqrt((i-1.0))
+function create(hspace_size, T::Type{<:Complex} = ComplexF64)
+    a_dag = zeros(T, hspace_size, hspace_size)
+    for i = 2:hspace_size
+        a_dag[i, i-1] = sqrt((i - 1.0))
     end
     return DenseOperator(a_dag)
 end
@@ -1245,10 +1320,10 @@ end
 
 Returns the bosonic annhilation operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
-function destroy(hspace_size,T::Type{<:Complex}=ComplexF64)
-    a= zeros(T, hspace_size,hspace_size)
-    for i in 2:hspace_size
-        a[i-1,i]=sqrt((i-1.0))
+function destroy(hspace_size, T::Type{<:Complex} = ComplexF64)
+    a = zeros(T, hspace_size, hspace_size)
+    for i = 2:hspace_size
+        a[i-1, i] = sqrt((i - 1.0))
     end
     return DenseOperator(a)
 end
@@ -1258,10 +1333,10 @@ end
 
 Returns the number operator for a Fock space of size `hspace_size`, of default type ComplexF64.
 """
-function number_op(hspace_size,T::Type{<:Complex}=ComplexF64)
-    n= zeros(T, hspace_size,hspace_size)
-    for i in 2:hspace_size
-        n[i,i]=i-1.0
+function number_op(hspace_size, T::Type{<:Complex} = ComplexF64)
+    n = zeros(T, hspace_size, hspace_size)
+    for i = 2:hspace_size
+        n[i, i] = i - 1.0
     end
     return DenseOperator(n)
 end
@@ -1303,12 +1378,12 @@ julia> expected_value(number_op(20),ψ)
 ```
 """
 function coherent(alpha, hspace_size)
-    ψ = fock(0,hspace_size)
-    for i  in 1:hspace_size-1
-        ψ+=(alpha^i)/(sqrt(factorial(i)))*fock(i,hspace_size)
+    ψ = fock(0, hspace_size)
+    for i = 1:hspace_size-1
+        ψ += (alpha^i) / (sqrt(factorial(i))) * fock(i, hspace_size)
     end
-    ψ = exp(-0.5*abs2(alpha))*ψ
-    return ψ 
+    ψ = exp(-0.5 * abs2(alpha)) * ψ
+    return ψ
 end
 
 """
@@ -1332,8 +1407,8 @@ julia> normalize!(ψ)
 
 """
 function LinearAlgebra.normalize!(x::Ket)
-    a = LinearAlgebra.norm(x.data,2)
-    x = 1.0/a*x
+    a = LinearAlgebra.norm(x.data, 2)
+    x = 1.0 / a * x
     return x
 end
 
@@ -1385,22 +1460,28 @@ julia> get_measurement_probabilities(ψ, target_qubit)
 
 ```
 """
-function get_measurement_probabilities(x::Ket{Complex{T}})::AbstractVector{T} where T<:Real
+function get_measurement_probabilities(
+    x::Ket{Complex{T}},
+)::AbstractVector{T} where {T<:Real}
     return real.(adjoint.(x) .* x)
 end
 
-function get_measurement_probabilities(x::Ket{Complex{T}},
+function get_measurement_probabilities(
+    x::Ket{Complex{T}},
     target_bodies::Vector{U},
-    hspace_size_per_body::U = 2)::AbstractVector{T} where {T<:Real, U<:Integer}
+    hspace_size_per_body::U = 2,
+)::AbstractVector{T} where {T<:Real,U<:Integer}
 
     num_bodies = get_num_bodies(x, hspace_size_per_body)
     hspace_size_per_body_list = fill(hspace_size_per_body, num_bodies)
     return get_measurement_probabilities(x, target_bodies, hspace_size_per_body_list)
 end
 
-function get_measurement_probabilities(x::Ket{Complex{T}},
+function get_measurement_probabilities(
+    x::Ket{Complex{T}},
     target_bodies::Vector{U},
-    hspace_size_per_body::Vector{U})::AbstractVector{T} where {T<:Real, U<:Integer}
+    hspace_size_per_body::Vector{U},
+)::AbstractVector{T} where {T<:Real,U<:Integer}
 
     throw_if_targets_are_invalid(x, target_bodies, hspace_size_per_body)
     amplitudes = get_measurement_probabilities(x)
@@ -1413,8 +1494,8 @@ function get_measurement_probabilities(x::Ket{Complex{T}},
         bitstring = zeros(U, num_bodies)
         target_amplitudes = zeros(T, num_target_amplitudes)
         for single_amplitude in amplitudes
-            target_index = get_target_amplitude_index(bitstring, target_bodies,
-                hspace_size_per_body)
+            target_index =
+                get_target_amplitude_index(bitstring, target_bodies, hspace_size_per_body)
             target_amplitudes[target_index] += single_amplitude
             increment_bitstring!(bitstring, hspace_size_per_body)
         end
@@ -1422,9 +1503,11 @@ function get_measurement_probabilities(x::Ket{Complex{T}},
     end
 end
 
-function throw_if_targets_are_invalid(x::Ket{Complex{T}},
+function throw_if_targets_are_invalid(
+    x::Ket{Complex{T}},
     target_bodies::Vector{U},
-    hspace_size_per_body::Vector{U}) where {T<:Real, U<:Integer}
+    hspace_size_per_body::Vector{U},
+) where {T<:Real,U<:Integer}
 
     expected_ket_length = prod(hspace_size_per_body)
     if expected_ket_length != length(x)
@@ -1445,13 +1528,19 @@ function throw_if_targets_are_invalid(x::Ket{Complex{T}},
 
     num_bodies = length(hspace_size_per_body)
     if target_bodies[end] > num_bodies
-        throw(ErrorException("elements of target_bodies cannot be greater than the "*
-            "number of bodies"))
+        throw(
+            ErrorException(
+                "elements of target_bodies cannot be greater than the " *
+                "number of bodies",
+            ),
+        )
     end
 end
 
-function get_num_target_amplitudes(target_bodies::Vector{T},
-    hspace_size_per_body::Vector{T}) where T<:Integer
+function get_num_target_amplitudes(
+    target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T},
+) where {T<:Integer}
 
     num_amplitudes = 1
     for target_index in target_bodies
@@ -1460,27 +1549,31 @@ function get_num_target_amplitudes(target_bodies::Vector{T},
     return num_amplitudes
 end
 
-function get_target_amplitude_index(bitstring::Vector{T}, target_bodies::Vector{T},
-    hspace_size_per_body::Vector{T}) where T<:Integer
+function get_target_amplitude_index(
+    bitstring::Vector{T},
+    target_bodies::Vector{T},
+    hspace_size_per_body::Vector{T},
+) where {T<:Integer}
 
     amplitude_index = 1
     previous_base = 1
     for i_body in reverse(target_bodies)
-        amplitude_index +=
-            bitstring[i_body]*previous_base
+        amplitude_index += bitstring[i_body] * previous_base
         previous_base *= hspace_size_per_body[i_body]
     end
     return amplitude_index
 end
 
-function increment_bitstring!(bitstring::Vector{T},
-    hspace_size_per_bit::Vector{T}) where T<:Integer
+function increment_bitstring!(
+    bitstring::Vector{T},
+    hspace_size_per_bit::Vector{T},
+) where {T<:Integer}
 
     num_bits = length(bitstring)
     i_bit = num_bits
     finished_updating = false
     while i_bit > 0 && !finished_updating
-        if bitstring[i_bit] == hspace_size_per_bit[i_bit]-1
+        if bitstring[i_bit] == hspace_size_per_bit[i_bit] - 1
             bitstring[i_bit] = 0
             i_bit -= 1
         else
@@ -1517,7 +1610,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-commute(A::AbstractOperator, B::AbstractOperator)= A*B-B*A 
+commute(A::AbstractOperator, B::AbstractOperator) = A * B - B * A
 
 
 """
@@ -1540,7 +1633,7 @@ Underlying data type: ComplexF64:
 
 ```
 """
-anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A 
+anticommute(A::AbstractOperator, B::AbstractOperator) = A * B + B * A
 
 
 """
@@ -1549,7 +1642,7 @@ anticommute(A::AbstractOperator, B::AbstractOperator)=A*B+B*A
 Returns the density matrix corresponding to the pure state ψ.
 """
 function ket2dm(ψ::Ket)
-    return ψ*Bra(ψ)
+    return ψ * Bra(ψ)
 end
 
 """
@@ -1568,7 +1661,7 @@ Underlying data ComplexF64:
 
 ```
 """
-fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i,hspace_size))
+fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i, hspace_size))
 
 """
     wigner(ρ::AbstractOperator, p::Real, q::Real)
@@ -1592,14 +1685,14 @@ prob: -0.561815
 """
 function wigner(ρ::AbstractOperator, p::Real, q::Real)
     hilbert_size, _ = size(ρ)
-    eta = q + p*im
+    eta = q + p * im
     w = 0.0
-    for m in 1:hilbert_size
-        for n in 1:m
-            if (n==m)
-                w = w + real(ρ[m,n]*moyal(eta, m, n))
+    for m = 1:hilbert_size
+        for n = 1:m
+            if (n == m)
+                w = w + real(ρ[m, n] * moyal(eta, m, n))
             else
-                w = w + 2.0*real(ρ[m,n]*moyal(eta, m, n))
+                w = w + 2.0 * real(ρ[m, n] * moyal(eta, m, n))
             end
         end
     end
@@ -1613,9 +1706,14 @@ Returns the Moyal function `w_mn(eta)` for Fock states `m` and `n`.
 
 
 """
-function moyal(eta, m,n)
-    L = genlaguerre(4.0*abs2(eta),m-n, n)
-    w_mn = 2.0*(-1)^n/pi*sqrt(factorial(big(n))/factorial(big(m)))*(2.0*conj(eta))^(m-n)*exp(-2.0*abs2(eta))*L
+function moyal(eta, m, n)
+    L = genlaguerre(4.0 * abs2(eta), m - n, n)
+    w_mn =
+        2.0 * (-1)^n / pi *
+        sqrt(factorial(big(n)) / factorial(big(m))) *
+        (2.0 * conj(eta))^(m - n) *
+        exp(-2.0 * abs2(eta)) *
+        L
     return w_mn
 end
 
@@ -1626,22 +1724,22 @@ end
 Returns the generalized Laguerre polynomial of degree `n` for `x` using a recursive
 method. See [https://en.wikipedia.org/wiki/Laguerre_polynomials](https://en.wikipedia.org/wiki/Laguerre_polynomials).
 """
-function genlaguerre(x,alpha, n)
-    result =0.0
+function genlaguerre(x, alpha, n)
+    result = 0.0
     L_0 = 1
-    L_1 = 1.0+alpha-x
-    if (n==0)
+    L_1 = 1.0 + alpha - x
+    if (n == 0)
         return L_0
     end
-    if (n==1)
+    if (n == 1)
         return L_1
     end
 
-    for k in 1:n-1
-        result = (2.0*k+1.0+alpha-x)*L_1-(k+alpha)*L_0
-        result = result/ (k+1.0)
+    for k = 1:n-1
+        result = (2.0 * k + 1.0 + alpha - x) * L_1 - (k + alpha) * L_0
+        result = result / (k + 1.0)
         L_0 = L_1
         L_1 = result
-    end        
+    end
     return result
 end

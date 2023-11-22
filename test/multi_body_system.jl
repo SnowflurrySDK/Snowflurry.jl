@@ -42,7 +42,7 @@ end
     qubit_count = 2
     hilber_space_size_per_qubit = 2
     system = MultiBodySystem(qubit_count, hilber_space_size_per_qubit)
-    
+
     ##Get embedded operators
     target_qubit = 1
     X = get_embed_operator(sparse(sigma_x()), target_qubit, system)
@@ -52,4 +52,3 @@ end
     # Bit-flip on qubit 1 
     @test (X * Ψ_init) ≈ kron(Ψ_down, Ψ_up)
 end
-
