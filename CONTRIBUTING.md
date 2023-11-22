@@ -21,14 +21,14 @@ use GitHub pull requests for this purpose.
 information on using pull requests.
 
 The preferred manner for submitting pull requests is for users to fork
-the Snowflurry [repo](https://github.com/SnowflurrySDK/Snowflurry.jl) and then use a
-branch from this fork to create a pull request to the main Snowflurry repo.
+the Snowflurry [repository](https://github.com/SnowflurrySDK/Snowflurry.jl) and then use a
+branch from this fork to create a pull request to the main Snowflurry repository.
 
 The basic process for setting up a fork is
 
-1.  Fork the Snowflurry repo (Fork button in upper right corner of
-    [repo page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
-    Forking creates a new Github repo at the location
+1.  Fork the Snowflurry repository (Fork button in upper right corner of
+    [repository page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
+    Forking creates a new Github repository at the location
     `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
     your Github id. Use the directions on the
     [development page](docs/src/development.md) to download a copy to
@@ -40,12 +40,12 @@ The basic process for setting up a fork is
     where `new_branch_name` is the name of your new branch.
 1.  Do your work and commit your changes to this branch.
 1.  If you have drifted out of sync with the master from the
-    main Snowflurry repo you may need to merge in changes. To do this,
+    main Snowflurry repository you may need to merge in changes. To do this,
     first update your local master and then merge the local master
     into your branch:
 
     ```shell 
-    # Track the upstream repo (if your local repo hasn't):
+    # Track the upstream repository (if your local repository hasn't):
     git remote add upstream https://github.com/SnowflurrySDK/Snowflurry.jl.git
 
     # Update your local master.
