@@ -1,6 +1,9 @@
 using Coverage
 using Pkg
 using Snowflurry
+using JuliaFormatter
+
+format(".")
 
 function print_missed_lines(fcs::Vector{FileCoverage})
     for fc in fcs
@@ -8,20 +11,22 @@ function print_missed_lines(fcs::Vector{FileCoverage})
     end
 end
 
-function print_missed_lines(fc::FileCoverage;num_char_to_print::Integer=100)
+function print_missed_lines(fc::FileCoverage; num_char_to_print::Integer = 100)
 
-    coverage=fc.coverage
+    coverage = fc.coverage
 
     a = open("$(fc.filename)", "r")
     lines = readlines(a)
 
-    for (i,counts) in enumerate(coverage)
-        if counts==0
+    for (i, counts) in enumerate(coverage)
+        if counts == 0
             print("File: $(fc.filename), \tline number: ")
-            printstyled("$(i)",color=:red)
-            printstyled(" : $(
-                lines[i][1:minimum([num_char_to_print,length(lines[i])])])\n",
-                color=:cyan)
+            printstyled("$(i)", color = :red)
+            printstyled(
+                " : $(
+        lines[i][1:minimum([num_char_to_print,length(lines[i])])])\n",
+                color = :cyan,
+            )
         end
     end
 end
@@ -33,10 +38,7 @@ Pkg.test(coverage = true)
 coverage = process_folder("src")
 
 # process '*.info' files, if you collected them
-coverage = merge_coverage_counts(
-    coverage,
-    LCOV.readfolder("test"),
-)
+coverage = merge_coverage_counts(coverage, LCOV.readfolder("test"))
 LCOV.writefile("lcov.info", coverage)
 
 # Get total coverage for all Julia files
@@ -51,7 +53,7 @@ println("Covered lines: $(covered_lines)")
 println("Total lines: $(total_lines)")
 println("Coverage percentage: $(covered_lines/total_lines)")
 
-if ~(isapprox(covered_lines/total_lines,1.0))
+if ~(isapprox(covered_lines / total_lines, 1.0))
     println("\n\tDetailed results, missed lines: \n")
 
     print_missed_lines(coverage)
