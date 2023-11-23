@@ -211,7 +211,7 @@ julia> z = sparse(sigma_z())
 Underlying data ComplexF64:
  1.0 + 0.0im        ⋅     
       ⋅       -1.0 + 0.0im
-
+```
 """
 SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 
