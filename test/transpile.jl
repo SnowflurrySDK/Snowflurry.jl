@@ -611,7 +611,7 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    results = Dict{Int, Vector{DataType}}([])
+    results = Dict{Int,Vector{DataType}}([])
 
     for gate in get_circuit_gates(transpiled_circuit)
 
