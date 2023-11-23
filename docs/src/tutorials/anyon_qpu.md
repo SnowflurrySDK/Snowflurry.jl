@@ -145,7 +145,7 @@ result = run_job(qpu, c_transpiled, shot_count)
 println(result)
 ```
 which should print something like:
-```text
+```julia
 Dict("11" => 97, "00" => 83, "01" => 11, "10" => 9)
 ```
 
