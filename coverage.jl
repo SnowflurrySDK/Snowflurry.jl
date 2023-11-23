@@ -1,9 +1,6 @@
 using Coverage
 using Pkg
 using Snowflurry
-using JuliaFormatter
-
-format(".")
 
 function print_missed_lines(fcs::Vector{FileCoverage})
     for fc in fcs
