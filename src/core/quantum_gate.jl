@@ -1474,7 +1474,7 @@ phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*ph
     universal(theta, phi, lambda)
 
 Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
-See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](http://mjg.global.s3.amazonaws.com/static/projects/refs/Quantum_Computation_and_Quantum_Information.pdf).
+See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The `Operator` is defined as:
 ```math
@@ -1863,7 +1863,7 @@ get_gate_parameters(gate::PhaseShift)=Dict("lambda" =>gate.phi)
     universal(target, theta, phi, lambda)
 
 Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
-See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](http://mjg.global.s3.amazonaws.com/static/projects/refs/Quantum_Computation_and_Quantum_Information.pdf).
+See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 
