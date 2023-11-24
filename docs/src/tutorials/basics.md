@@ -38,10 +38,11 @@ q[2]:
      
 
 ```
-We have not yet added any quantum operation to our circuit and it looks empty! So, let's add some quantum operations!
 
 !!! note
 	In Snowflurry, we assume all qubits are initialized to be in state 0 (ground state). 
+
+We have not yet added any quantum operation to our circuit and it looks empty! So, let's add some quantum operations!
 
 ## Quantum Gates
 
@@ -60,7 +61,7 @@ q[1]:──H──
 q[2]:─────
 
 ```
-!!! note
+!!! warning "Indexing in Julia"
 	Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
 Note the exclamation mark at the end of `push!` which emphasizes the fact that we have called a mutating function that will change the argument `c` (our quantum circuit). 
@@ -88,7 +89,7 @@ q[1]:──H────*──
 q[2]:───────X──
                
 ```
-Voila! You just made your first quantum circuit with `Snowflurry` that does something interesting:
+Voilà! You just made your first quantum circuit with `Snowflurry` that does something interesting.
 
 It puts a two-qubit register in a maximally-entangled quantum state ($\frac{\left|00\right\rangle+\left|11\right\rangle}{\sqrt{2}}$). This state is one of the four celebrated [Bell States](https://en.wikipedia.org/wiki/Bell_state) or the EPR states. These states do not have classical counterparts and are among the building blocks of many interesting ideas in quantum computing and quantum communication.
 
@@ -109,7 +110,7 @@ The output of `simulate` function is a `Ket` object. `Ket` is a complex vector t
 ## Histogram
 In the previous section, we used the `simulate` function to calculate the wavefunction of a two-qubit quantum register, after the circuit, `c`, is applied to it. However, in the real world, we do not have direct access to the wavefunction of a quantum register. Rather, we need to run the quantum circuit several times over (several shots) on the quantum processor and measure the qubits states at the end of each shot. The result of each shot is a bitstring that tells us which qubits were measured to be in state `0` and which qubits were measured to be in state `1`. The probability of getting a bitstring then depends on the wavefunction. 
 
-We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflurryPlots](https://github.com/QuantumJulia/SnowflurryPlots.jl) library. For example, we can generate a histogram which shows the measurement
+We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) library. For example, we can generate a histogram which shows the measurement
 output distribution after taking running the circuit `c` for a given number of shots, let's say 100 times, on a quantum
 computer simulator:
 

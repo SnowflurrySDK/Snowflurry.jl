@@ -21,17 +21,17 @@ use GitHub pull requests for this purpose.
 information on using pull requests.
 
 The preferred manner for submitting pull requests is for users to fork
-the Snowflurry [repo](https://github.com/SnowflurrySDK/Snowflurry.jl) and then use a
-branch from this fork to create a pull request to the main Snowflurry repo.
+the Snowflurry [repository](https://github.com/SnowflurrySDK/Snowflurry.jl) and then use a
+branch from this fork to create a pull request to the main Snowflurry repository.
 
 The basic process for setting up a fork is
 
-1.  Fork the Snowflurry repo (Fork button in upper right corner of
-    [repo page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
-    Forking creates a new Github repo at the location
+1.  Fork the Snowflurry repository (Fork button in upper right corner of
+    [repository page](https://github.com/SnowflurrySDK/Snowflurry.jl)).
+    Forking creates a new Github repository at the location
     `https://github.com/USERNAME/Snowflurry.jl` where `USERNAME` is
     your Github id. Use the directions on the
-    [development page](docs/dev/development.md) to download a copy to
+    [development page](docs/src/development.md) to download a copy to
     your local machine. You need only do this once.
 1.  Checkout master and create a new branch from this master
     ```shell
@@ -40,25 +40,24 @@ The basic process for setting up a fork is
     where `new_branch_name` is the name of your new branch.
 1.  Do your work and commit your changes to this branch.
 1.  If you have drifted out of sync with the master from the
-    main Snowflurry repo you may need to merge in changes. To do this,
+    main Snowflurry repository you may need to merge in changes. To do this,
     first update your local master and then merge the local master
     into your branch:
 
-    ````shell # Track the upstream repo (if your local repo hasn't):
+    ```shell 
+    # Track the upstream repository (if your local repository hasn't):
     git remote add upstream https://github.com/SnowflurrySDK/Snowflurry.jl.git
 
-        # Update your local master.
-        git fetch upstream
-        git checkout master
-        git merge upstream/master
-        # Merge local master into your branch.
-        git checkout new_branch_name
-        git merge master
-        ```
-        You may need to fix merge conflicts for both of these merge
-        commands.
-
-    ````
+    # Update your local master.
+    git fetch upstream
+    git checkout master
+    git merge upstream/master
+    # Merge local master into your branch.
+    git checkout new_branch_name
+    git merge master
+    
+    #You may need to fix merge conflicts for both of these merge commands.
+    ```
 
 1.  Finally, push your change to your clone
     ```shell
@@ -76,15 +75,15 @@ The basic process for setting up a fork is
 
 ## Julia Coding Style Guide
 
-We adhere to Julia recommanded [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
+We adhere to Julia recommended [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
 
 ## Code Testing Standards
 
 When a pull request is created or updated, various automatic checks will
 run to ensure that the change won't break Snowflurry and meets our coding standards.
 
-Cirq contains a continuous integration tool to verify testing. See our
-[development page](docs/dev/development.md) on how to run the continuous
+Snowflurry contains a continuous integration tool to verify testing. See our
+[development page](docs/src/development.md) on how to run the continuous
 integration checks locally.
 
 Please be aware of the following code standards that will be applied to any
@@ -119,14 +118,6 @@ phase_kickback |    1      1
   Code should be covered by tests.
   We use [Coverage.jl](https://github.com/JuliaCI/Coverage.jl) to compute
   coverage. We don't require 100% coverage, but expect better than 80% code coverage.
-- **VS Code Code Style**.
-  We highly recommand developing the code in VS Code and use its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
+- **VS Code Coding Style**.
+  We highly recommend developing the code in VS Code and using its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
 
-## Request For Comment Process for New Major Features
-
-For larger contributions that will benefit from design reviews, please use the
-[Request for Comment](docs/dev/rfc_process.md) process.
-
-## Developing notebooks
-
-Please refer to our [notebooks guide](docs/dev/notebooks.md) on how to develop iJulia notebooks for documentation.

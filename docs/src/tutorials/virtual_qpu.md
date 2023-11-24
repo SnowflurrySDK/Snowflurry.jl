@@ -11,7 +11,7 @@ In this tutorial, we will the steps involved in running a quantum circuit on bot
 Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more. 
 
 !!! warning 
-    You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library.md#Quantum-Processing-Unit). 
+    You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library/qpu.md#Quantum-Processing-Unit). 
 
 Now that you know what QPU objects are, let's get started by importing `Snowflurry`:
 ```jldoctest get_qpu_metadata_tutorial; output = false
@@ -23,7 +23,7 @@ using Snowflurry
 ### Virtual QPU
 Next, we are going to create a virtual QPU which will run on our local machine:
 
-```jldoctest get_qpu_metadata_tutorial; output = false
+```jldoctest get_qpu_metadata_tutorial; output = true
 qpu_v=VirtualQPU()
 # output
 Quantum Simulator:
@@ -54,7 +54,7 @@ Dict{String, String} with 2 entries:
 
 Now, let's create a circuit to create a Bell pair as was explained in the previous tutorial:
 
-```jldoctest get_qpu_metadata_tutorial; output = false
+```jldoctest get_qpu_metadata_tutorial; output = true
 c=QuantumCircuit(qubit_count=2)
 push!(c,hadamard(1),control_x(1,2))
 # output
@@ -66,13 +66,13 @@ q[2]:───────X──
 ```               
 We can then run this circuit on the virtual qpu for let's say 101 shots. 
 
-```
+```julia
 shots_count=100
 result=run_job(qpu_v,c,shots_count)
 ```
 The `result` object is a `Dict{String, Int64}` that summarizes how many times each state was measured in the shots run on the QPU:
 
-```
+```julia
 print(result)
 
 Dict("00" => 53, "11" => 47)

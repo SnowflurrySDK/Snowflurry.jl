@@ -14,7 +14,7 @@ Each descendant of `AbstractGateSymbol` must implement at least the following me
 
 # Examples
 A struct must be defined for each new `GateSymbol` type, such as the following X_45 `GateSymbol` which
-applies a 45° rotation about the X axis:
+applies a ``45°`` rotation about the ``X`` axis:
 
 ```jldoctest gate_struct
 julia> struct X45 <: AbstractGateSymbol
@@ -1249,7 +1249,7 @@ hadamard(T::Type{<:Complex}=ComplexF64) = DenseOperator(T(1.0 / sqrt(2.0)) * T[[
 """
     pi_8()
 
-Return the `Operator` for the π/8 gate, which is defined as:
+Return the `Operator` for the ``π/8`` gate, which is defined as:
 ```math
 T = \\begin{bmatrix}
     1 & 0 \\\\
@@ -1262,7 +1262,7 @@ pi_8(T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*pi/4.0)])
 """
     pi_8_dagger()
 
-Return the adjoint `DiagonalOperator` of the π/8 gate, which is defined as:
+Return the adjoint `DiagonalOperator` of the ``π/8`` gate, which is defined as:
 ```math
 T^\\dagger = \\begin{bmatrix}
     1 & 0 \\\\
@@ -1314,7 +1314,7 @@ eye(size::Integer, T::Type{<:Complex}=ComplexF64) = DenseOperator(Matrix{T}(1.0I
 """
     x_90()
 
-Return the `Operator` which applies a π/2 rotation about the X axis.
+Return the `Operator` which applies a ``π/2`` rotation about the ``X`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1329,7 +1329,7 @@ x_90(T::Type{<:Complex}=ComplexF64) = rotation(pi/2, 0,T)
 """
     x_minus_90()
 
-Return the `Operator` which applies a -π/2 rotation about the X axis.
+Return the `Operator` which applies a ``-π/2`` rotation about the ``X`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1344,7 +1344,7 @@ x_minus_90(T::Type{<:Complex}=ComplexF64) = rotation(-pi/2, 0,T)
 """
     y_90()
 
-Return the `Operator` which applies a π/2 rotation about the Y axis.
+Return the `Operator` which applies a ``π/2`` rotation about the ``Y`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1359,7 +1359,7 @@ y_90(T::Type{<:Complex}=ComplexF64) = rotation(pi/2, pi/2,T)
 """
     y_minus_90()
 
-Return the `Operator` which applies a -π/2 rotation about the Y axis.
+Return the `Operator` which applies a ``-π/2`` rotation about the ``Y`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1374,7 +1374,7 @@ y_minus_90(T::Type{<:Complex}=ComplexF64) = rotation(-pi/2, pi/2,T)
 """
     z_90()
 
-Return the `Operator` which applies a π/2 rotation about the Z axis.
+Return the `Operator` which applies a ``π/2`` rotation about the ``Z`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1389,7 +1389,7 @@ z_90(T::Type{<:Complex}=ComplexF64) = phase_shift(pi/2, T)
 """
     z_minus_90()
 
-Return the `Operator` which applies a -π/2 rotation about the Z axis.
+Return the `Operator` which applies a ``-π/2`` rotation about the ``Z`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1404,13 +1404,13 @@ z_minus_90(T::Type{<:Complex}=ComplexF64) = phase_shift(-pi/2, T)
 """
     rotation(theta, phi)
 
-Return the `Operator` which applies a rotation `theta` about the cos(`phi`)X+sin(`phi`)Y axis.
+Return the `Operator` which applies a rotation `theta` about an axis ``\\vec{n}`` defined by: ``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
 
 The `Operator` is defined as:
 ```math
 R(\\theta, \\phi) = \\begin{bmatrix}
     \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
-        -i e^{-i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+        -i e^{-i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]
     -i e^{i\\phi} \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
         \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
 \\end{bmatrix}.
@@ -1424,13 +1424,13 @@ rotation(theta::Real, phi::Real,T::Type{<:Complex}=ComplexF64) = DenseOperator(
 """
     rotation_x(theta)
 
-Return the `Operator` which applies a rotation `theta` about the X axis.
+Return the `Operator` which applies a rotation `theta` about the ``X`` axis.
 
 The `Operator` is defined as:
 ```math
 R_x(\\theta) = \\begin{bmatrix}
 \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
-    -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]
 -i\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
     \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
 \\end{bmatrix}.
@@ -1441,13 +1441,13 @@ rotation_x(theta::Real,T::Type{<:Complex}=ComplexF64) = rotation(theta, 0,T)
 """
     rotation_y(theta)
 
-Return the `Operator` that applies a rotation `theta` about the Y axis of the `target` qubit.
+Return the `Operator` that applies a rotation `theta` about the ``Y`` axis of the `target` qubit.
 
 The `Operator` is defined as:
 ```math
 R_y(\\theta) = \\begin{bmatrix}
 \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
-    -\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+    -\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]
 \\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
     \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
 \\end{bmatrix}.
@@ -1463,7 +1463,7 @@ Return the `DiagonalOperator` that applies a phase shift `phi`.
 The `DiagonalOperator` is defined as:
 ```math
 P(\\phi) = \\begin{bmatrix}
-    1 & 0 \\\\[0.5em]      
+    1 & 0 \\\\[0.5em]
     0 & e^{i\\phi}
 \\end{bmatrix}.
 ```
@@ -1474,13 +1474,13 @@ phase_shift(phi,T::Type{<:Complex}=ComplexF64) = DiagonalOperator(T[1.,exp(im*ph
     universal(theta, phi, lambda)
 
 Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
-See: https://qiskit.org/textbook/ch-states/single-qubit-gates.html#generalU
+See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The `Operator` is defined as:
 ```math
 U(\\theta, \\phi, \\lambda) = \\begin{bmatrix}
     \\mathrm{cos}\\left(\\frac{\\theta}{2}\\right) &
-        -e^{i\\lambda}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]      
+        -e^{i\\lambda}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) \\\\[0.5em]
     e^{i\\phi}\\mathrm{sin}\\left(\\frac{\\theta}{2}\\right) &
         e^{i\\left(\\phi+\\lambda\\right)}\\mathrm{cos}\\left(\\frac{\\theta}{2}\\right)
 \\end{bmatrix}.
@@ -1674,7 +1674,7 @@ get_operator(::Hadamard,T::Type{<:Complex}=ComplexF64) = hadamard(T)
 """
     pi_8(target)
 
-Return a π/8 `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `DiagonalOperator` to the `target` qubit.
+Return a ``π/8`` `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `DiagonalOperator` to the `target` qubit.
 """
 pi_8(target::Integer) = Gate(Pi8(), [target])
 
@@ -1688,7 +1688,7 @@ Base.inv(::Pi8) = Pi8Dagger()
 """
     pi_8_dagger(target)
 
-Return an adjoint π/8 `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
+Return an adjoint ``π/8`` `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
 pi_8_dagger(target::Integer) = Gate(Pi8Dagger(), [target])
 
@@ -1702,7 +1702,7 @@ Base.inv(::Pi8Dagger) = Pi8()
 """
     x_90(target)
 
-Return a `Gate` that applies a 90° rotation about the X axis as defined by the [`x_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``X`` axis as defined by the [`x_90()`](@ref) `Operator`.
 """
 x_90(target::Integer) = Gate(X90(), [target])
 
@@ -1715,7 +1715,7 @@ Base.inv(::X90) = XM90()
 """
     x_minus_90(target)
 
-Return a `Gate` that applies a -90° rotation about the X axis as defined by the [`x_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``X`` axis as defined by the [`x_minus_90()`](@ref) `Operator`.
 """
 x_minus_90(target::Integer) = Gate(XM90(), [target])
 
@@ -1728,7 +1728,7 @@ Base.inv(::XM90) = X90()
 """
     y_90(target)
 
-Return a `Gate` that applies a 90° rotation about the Y axis as defined by the [`y_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``Y`` axis as defined by the [`y_90()`](@ref) `Operator`.
 """
 y_90(target::Integer) = Gate(Y90(), [target])
 
@@ -1741,7 +1741,7 @@ Base.inv(::Y90) = YM90()
 """
     y_minus_90(target)
 
-Return a `Gate` that applies a -90° rotation about the Y axis as defined by the [`y_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``Y`` axis as defined by the [`y_minus_90()`](@ref) `Operator`.
 """
 y_minus_90(target::Integer) = Gate(YM90(), [target])
 
@@ -1754,7 +1754,7 @@ Base.inv(::YM90) = Y90()
 """
     z_90(target)
 
-Return a `Gate` that applies a 90° rotation about the Z axis as defined by the [`z_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``Z`` axis as defined by the [`z_90()`](@ref) `Operator`.
 """
 z_90(target::Integer) = Gate(Z90(), [target])
 
@@ -1767,7 +1767,7 @@ Base.inv(::Z90) = ZM90()
 """
     z_minus_90(target)
 
-Return a `Gate` that applies a -90° rotation about the Z axis as defined by the [`z_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``Z`` axis as defined by the [`z_minus_90()`](@ref) `Operator`.
 """
 z_minus_90(target::Integer) = Gate(ZM90(), [target])
 
@@ -1781,7 +1781,7 @@ Base.inv(::ZM90) = Z90()
 """
     rotation(target, theta, phi)
 
-Return a gate that applies a rotation `theta` to the `target` qubit about the cos(`phi`)X+sin(`phi`)Y axis.
+Return a gate that applies a rotation `theta` to the `target` qubit about an axis ``\\vec{n}`` defined by: ``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
 
 The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
@@ -1807,7 +1807,7 @@ get_gate_parameters(gate::Rotation)=Dict(
     """
     rotation_x(target, theta)
 
-Return a `Gate` that applies a rotation `theta` about the X axis of the `target` qubit.
+Return a `Gate` that applies a rotation `theta` about the ``X`` axis of the `target` qubit.
 
 The corresponding `Operator` is [`rotation_x(theta)`](@ref).
 """    
@@ -1826,7 +1826,7 @@ get_gate_parameters(gate::RotationX)=Dict("theta" =>gate.theta)
     """
     rotation_y(target, theta)
 
-Return a `Gate` that applies a rotation `theta` about the Y axis of the `target` qubit.
+Return a `Gate` that applies a rotation `theta` about the ``Y`` axis of the `target` qubit.
 
 The corresponding `Operator` is [`rotation_y(theta)`](@ref).
 """ 
@@ -1863,7 +1863,7 @@ get_gate_parameters(gate::PhaseShift)=Dict("lambda" =>gate.phi)
     universal(target, theta, phi, lambda)
 
 Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
-See: https://qiskit.org/textbook/ch-states/single-qubit-gates.html#generalU
+See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """ 

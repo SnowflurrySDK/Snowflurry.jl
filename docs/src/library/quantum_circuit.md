@@ -1,0 +1,20 @@
+# Quantum Circuit
+```@docs
+QuantumCircuit
+push!
+pop!
+append!
+prepend!
+simulate
+simulate_shots
+get_measurement_probabilities(circuit::QuantumCircuit)
+inv(circuit::QuantumCircuit)
+get_num_gates_per_type
+get_num_gates
+serialize_job
+transpile
+compare_circuits
+circuit_contains_gate_type
+permute_qubits!
+permute_qubits
+```

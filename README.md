@@ -15,7 +15,7 @@ The following installation steps are for people interested in using Snowflurry i
 
 Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
+We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-Term Support (LTS) release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing `Snowflurry.jl` package
 Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from Github. This is achieved by typing the following commands in the Julia REPL:
@@ -152,9 +152,9 @@ See what we have planned by looking at the [Snowflurry Github Project](https://g
 
 # Snowflurry Contributors Community
 
-We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to contribute page](./CONTRIBUTING.md).
+We welcome contributions! If you are interested in contributing to this project, a good place to start is to read our [How to Contribute page](./CONTRIBUTING.md).
 
-We are dedicated to cultivating an open and inclusive community to build software for near term quantum computers. Please read our code of conduct for the rules of engagement within our community.
+We are dedicated to cultivating an open and inclusive community to build software for near term quantum computers. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) for the rules of engagement within our community.
 
 # Alpha Disclaimer
 

@@ -165,7 +165,9 @@ abstract type AbstractOperator end
 
 A structure representing a quantum operator with a sparse (CSR) matrix representation, with element type T.
 The equivalent dense matrix would have size NxN.
-!!! warning "apply_operator() is not implemented for this operator type. Try using DenseOperator instead."
+
+!!! warning 
+    The `apply_operator()` method is not implemented for this operator type. Try using `DenseOperator` instead.
 
 # Examples
 ```jldoctest
@@ -209,7 +211,7 @@ julia> z = sparse(sigma_z())
 Underlying data ComplexF64:
  1.0 + 0.0im        ⋅     
       ⋅       -1.0 + 0.0im
-
+```
 """
 SparseArrays.sparse(x::AbstractOperator)=SparseOperator(SparseArrays.sparse(DenseOperator(x).data))
 

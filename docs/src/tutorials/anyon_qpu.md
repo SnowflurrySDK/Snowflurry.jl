@@ -16,6 +16,9 @@ In this tutorial, we will learn how to submit a job to real hardware. At the mom
 
 ## Anyon QPU
 
+!!! note 
+    This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
+
 The current release of `Snowflurry` supports Anyon's Yukon quantum processor which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers. 
 
 
@@ -37,7 +40,7 @@ Quantum Processing Unit:
 
 ```
 
-!!! warning
+!!! danger "Keep your credentials safe!"
     If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
 
 
@@ -134,7 +137,7 @@ q[1]:──Z_90────────────X_90────Z_90───
 q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90────X_90────Z_90──
 ```
 
-The final circuit `c_final` is now ready to be submitted to the QPU:
+The final circuit `c_transpiled` is now ready to be submitted to the QPU:
 
 ```julia
 shot_count = 200
@@ -142,7 +145,7 @@ result = run_job(qpu, c_transpiled, shot_count)
 println(result)
 ```
 which should print something like:
-```text
+```julia
 Dict("11" => 97, "00" => 83, "01" => 11, "10" => 9)
 ```
 

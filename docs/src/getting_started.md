@@ -16,10 +16,13 @@ The following installation steps are for people interested in using Snowflurry i
 
 Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-term support release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
+We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-Term Support (LTS) release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing the Snowflurry package
-Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from Github. This can be achieved by typing the following commands in the Julia REPL:
+!!! note
+    Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from Github. 
+
+You can add `Snowflurry` to the current project by typing the following commands in the Julia REPL:
 
 ```julia
 import Pkg
@@ -54,4 +57,4 @@ A typical workflow to execute a quantum circuit on a quantum service consists of
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
 
-Now is the time to start with `Snowflurry` and go over the tutorials. You could also consult with the [Library reference page](./library.md).
+Now is the time to start with `Snowflurry` and go over the tutorials.
