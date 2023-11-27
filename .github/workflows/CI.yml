@@ -31,14 +31,14 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      
+
       - name: Build Snowflurry
         run: >
           julia --project=. -e 
           'using Pkg;
           Pkg.precompile();
           Pkg.instantiate()'
-      
+
       - name: Test Snowflurry
         uses: julia-actions/julia-runtest@v1
 
@@ -85,3 +85,26 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
+
+  format:
+    name: JuliaFormatter on Julia 1.9 - x64 - ${{ github.event_name }}
+    runs-on: ubuntu-latest
+     # don't run on draft PRs
+    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
+    strategy:
+      fail-fast: true
+      max-parallel: 2
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.9'
+          arch: "x64"
+      - name: Format Snowflurry
+        run: |
+          julia  -e 'import Pkg; Pkg.add("JuliaFormatter")'
+          julia  -e 'using JuliaFormatter; print("Running JuliaFormatter.format()..."); format(".")'
+          echo "Checking for differences..."
+          git diff --exit-code
+          echo "No differences found -- SUCCESS"
+

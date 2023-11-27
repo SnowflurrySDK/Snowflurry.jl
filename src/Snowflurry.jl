@@ -72,8 +72,8 @@ export
 
     # Functions
     controlled,
-    commute, 
-    anticommute, 
+    commute,
+    anticommute,
     get_gate_symbol,
     get_embed_operator,
     get_matrix,
@@ -106,7 +106,7 @@ export
     get_measurement_probabilities,
     genlaguerre,
     moyal,
-    wigner, 
+    wigner,
     tr,
     get_operator,
     simulate,
@@ -119,7 +119,6 @@ export
     compare_kets,
     permute_qubits!,
     permute_qubits,
-   
     transpile,
     get_status_type,
     get_status_message,
@@ -146,7 +145,6 @@ export
     get_metadata,
     get_transpiler,
     apply_gate!,
-
     get_pauli,
     get_quantum_circuit,
     get_negative_exponent,
@@ -180,7 +178,7 @@ export
     control_z,
     control_x,
     toffoli
-    
+
 
 using PrecompileTools
 
@@ -190,22 +188,22 @@ using PrecompileTools
     user = "test_user"
     access_token = "not_a_real_access_token"
 
-    theta = π/5
-    phi = π/7
-    lambda = π/9
+    theta = π / 5
+    phi = π / 7
+    lambda = π / 9
 
     qubit_count = 6
     target = 1
-    
-    gates_list=[
+
+    gates_list = [
         identity_gate(1),
         hadamard(1),
-        phase_shift(1,-phi/2),
+        phase_shift(1, -phi / 2),
         pi_8(1),
         pi_8_dagger(1),
-        rotation(1,theta,phi),
-        rotation_x(1,theta),
-        rotation_y(1,theta),
+        rotation(1, theta, phi),
+        rotation_x(1, theta),
+        rotation_y(1, theta),
         sigma_x(1),
         sigma_y(1),
         sigma_z(1),
@@ -216,22 +214,22 @@ using PrecompileTools
         y_minus_90(1),
         z_90(1),
         z_minus_90(1),
-        control_x(1,2),
-        control_z(4,6),
-        toffoli(1,2,6),
-        swap(2,5),
-        iswap(4,1),
-        iswap_dagger(6,3),
+        control_x(1, 2),
+        control_z(4, 6),
+        toffoli(1, 2, 6),
+        swap(2, 5),
+        iswap(4, 1),
+        iswap_dagger(6, 3),
     ]
-    
 
-    qpu = AnyonYukonQPU(;host=host, user=user, access_token=access_token)
-    transpiler = get_transpiler(qpu) 
+
+    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    transpiler = get_transpiler(qpu)
 
     for gate in gates_list
-    
-        circuit = QuantumCircuit(qubit_count=qubit_count,gates=[gate])
-        transpiled_circuit = transpile(transpiler,circuit)
+
+        circuit = QuantumCircuit(qubit_count = qubit_count, gates = [gate])
+        transpiled_circuit = transpile(transpiler, circuit)
 
         simulate(circuit)
     end

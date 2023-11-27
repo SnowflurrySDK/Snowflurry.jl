@@ -5,14 +5,14 @@ using JSON
 
 Base.@kwdef struct Status
     type::String
-    message::String=""
+    message::String = ""
 end
 
-get_status_type(s::Status)=s.type
-get_status_message(s::Status)=s.message
+get_status_type(s::Status) = s.type
+get_status_message(s::Status) = s.message
 
 function Base.show(io::IO, status::Status)
-    if status.message ==""
+    if status.message == ""
         println(io, "Status: $(status.type)")
     else
         println(io, "Status: $(status.type)")
@@ -22,43 +22,35 @@ end
 
 abstract type Requestor end
 
-get_request(requestor::Requestor,::String,::String,::String) = 
-    throw(NotImplementedError(:get_request,requestor))
-post_request(requestor::Requestor,::String,::String,::String,::String) =
-    throw(NotImplementedError(:post_request,requestor))
+get_request(requestor::Requestor, ::String, ::String, ::String) =
+    throw(NotImplementedError(:get_request, requestor))
+post_request(requestor::Requestor, ::String, ::String, ::String, ::String) =
+    throw(NotImplementedError(:post_request, requestor))
 
-struct HTTPRequestor<:Requestor
+struct HTTPRequestor <: Requestor
     getter::Function
     poster::Function
 end
 
-struct MockRequestor<:Requestor 
+struct MockRequestor <: Requestor
     request_checker::Function
     post_checker::Function
 end
 
-const path_circuits ="circuits"
-const path_results  ="result"
+const path_circuits = "circuits"
+const path_results = "result"
 
-const queued_status     ="queued"
-const running_status    ="running"
-const succeeded_status  ="succeeded"
-const failed_status     ="failed"
-const cancelled_status  ="cancelled"
+const queued_status = "queued"
+const running_status = "running"
+const succeeded_status = "succeeded"
+const failed_status = "failed"
+const cancelled_status = "cancelled"
 
-const possible_status_list=[
-    failed_status,
-    succeeded_status,
-    running_status,
-    queued_status,
-    cancelled_status,
-]
+const possible_status_list =
+    [failed_status, succeeded_status, running_status, queued_status, cancelled_status]
 
-function encode_to_basic_authorization(
-    user::String,
-    password::String
-    )::String
-  return "Basic " * base64encode(user * ":" * password)
+function encode_to_basic_authorization(user::String, password::String)::String
+    return "Basic " * base64encode(user * ":" * password)
 end
 
 function post_request(
@@ -66,16 +58,16 @@ function post_request(
     url::String,
     user::String,
     access_token::String,
-    body::String
-    )::HTTP.Response
+    body::String,
+)::HTTP.Response
 
     return requestor.poster(
-        url, 
-        headers=Dict(
-            "Authorization"=>encode_to_basic_authorization(user, access_token),
-            "Content-Type"=>"application/json"
-            ),
-        body=body,
+        url,
+        headers = Dict(
+            "Authorization" => encode_to_basic_authorization(user, access_token),
+            "Content-Type" => "application/json",
+        ),
+        body = body,
     )
 end
 
@@ -84,10 +76,10 @@ function post_request(
     url::String,
     user::String,
     access_token::String,
-    body::String
-    )::HTTP.Response
+    body::String,
+)::HTTP.Response
 
-    return mock_requester.post_checker(url,user,access_token,body)
+    return mock_requester.post_checker(url, user, access_token, body)
 end
 
 function get_request(
@@ -95,14 +87,14 @@ function get_request(
     url::String,
     user::String,
     access_token::String,
-    )::HTTP.Response
+)::HTTP.Response
 
     return requestor.getter(
-        url, 
-        headers=Dict(
-            "Authorization"=>encode_to_basic_authorization(user, access_token),
-            "Content-Type"=>"application/json"
-            ),
+        url,
+        headers = Dict(
+            "Authorization" => encode_to_basic_authorization(user, access_token),
+            "Content-Type" => "application/json",
+        ),
     )
 end
 
@@ -111,9 +103,9 @@ function get_request(
     url::String,
     user::String,
     access_token::String,
-    )::HTTP.Response
+)::HTTP.Response
 
-    return mock_requestor.request_checker(url,user,access_token)
+    return mock_requestor.request_checker(url, user, access_token)
 end
 
 """
@@ -139,28 +131,26 @@ julia> serialize_job(c,10)
 
 ```
 """
-function serialize_job(circuit::QuantumCircuit,shot_count::Integer)::String
-  
-    circuit_description=Dict(
-        "circuit"=>Dict{String,Any}(
-                "operations"=>Vector{Dict{String,Any}}()
-            ),
-        "shot_count"=>shot_count
+function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
+
+    circuit_description = Dict(
+        "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
+        "shot_count" => shot_count,
     )
 
     for gate in get_circuit_gates(circuit)
         push!(
             circuit_description["circuit"]["operations"],
             Dict{String,Any}(
-                "type"=> get_instruction_symbol(get_gate_symbol(gate)),
+                "type" => get_instruction_symbol(get_gate_symbol(gate)),
                 #server-side qubit numbering starts at 0
-                "qubits"=> [n-1 for n in get_connected_qubits(gate)],
-                "parameters"=> get_gate_parameters(get_gate_symbol(gate))  
-            )
+                "qubits" => [n - 1 for n in get_connected_qubits(gate)],
+                "parameters" => get_gate_parameters(get_gate_symbol(gate)),
+            ),
         )
     end
 
-    circuit_json=JSON.json(circuit_description)
+    circuit_json = JSON.json(circuit_description)
 
     return circuit_json
 end
@@ -184,11 +174,11 @@ Client for QPU service:
   
 ```
 """
-Base.@kwdef struct Client 
+Base.@kwdef struct Client
     host::String
     user::String
     access_token::String
-    requestor::Requestor=HTTPRequestor(HTTP.get, HTTP.post)
+    requestor::Requestor = HTTPRequestor(HTTP.get, HTTP.post)
 end
 
 function Base.show(io::IO, client::Client)
@@ -211,8 +201,8 @@ julia> get_host(c)
 
 ```
 """
-get_host(client::Client)        =client.host
-get_requestor(client::Client)   =client.requestor
+get_host(client::Client) = client.host
+get_requestor(client::Client) = client.requestor
 
 
 """
@@ -229,22 +219,29 @@ julia> submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),cont
 
 ```
 """
-function submit_circuit(client::Client,circuit::QuantumCircuit,shot_count::Integer)::String
+function submit_circuit(
+    client::Client,
+    circuit::QuantumCircuit,
+    shot_count::Integer,
+)::String
 
-    circuit_json=serialize_job(circuit,shot_count)
-  
-    path_url=get_host(client)*"/"*path_circuits
-    
-    response=post_request(
+    circuit_json = serialize_job(circuit, shot_count)
+
+    path_url = get_host(client) * "/" * path_circuits
+
+    response = post_request(
         get_requestor(client),
         path_url,
         client.user,
         client.access_token,
-        circuit_json)
+        circuit_json,
+    )
 
-    body=JSON.parse(read_response_body(response.body))
+    body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body,"circuitID") ("Server returned an invalid response, without a circuitID field.")
+    @assert haskey(body, "circuitID") (
+        "Server returned an invalid response, without a circuitID field."
+    )
 
     return body["circuitID"]
 end
@@ -273,28 +270,28 @@ Status: succeeded
 
 ```
 """
-function get_status(client::Client,circuitID::String)::Status
+function get_status(client::Client, circuitID::String)::Status
 
-    path_url=get_host(client)*"/"*path_circuits*"/"*"$circuitID"
-    
-    response=get_request(
-        get_requestor(client),
-        path_url,
-        client.user,
-        client.access_token
-        )
+    path_url = get_host(client) * "/" * path_circuits * "/" * "$circuitID"
 
-    body=JSON.parse(read_response_body(response.body))
+    response =
+        get_request(get_requestor(client), path_url, client.user, client.access_token)
 
-    @assert haskey(body,"status")
-    @assert haskey(body["status"],"type")
+    body = JSON.parse(read_response_body(response.body))
+
+    @assert haskey(body, "status")
+    @assert haskey(body["status"], "type")
 
     if !(body["status"]["type"] in possible_status_list)
-        throw(ArgumentError("Server returned unrecognized status type: $(body["status"]["type"])"))
+        throw(
+            ArgumentError(
+                "Server returned unrecognized status type: $(body["status"]["type"])",
+            ),
+        )
     end
 
     if body["status"]["type"] != failed_status
-        return Status(type=body["status"]["type"])
+        return Status(type = body["status"]["type"])
     end
 
     message = if haskey(body["status"], "message")
@@ -302,7 +299,7 @@ function get_status(client::Client,circuitID::String)::Status
     else
         "no failure information available. raw response: '$(string(body))'"
     end
-    return Status(type=failed_status,message=message)
+    return Status(type = failed_status, message = message)
 end
 
 """
@@ -326,25 +323,22 @@ Dict{String, Int64} with 1 entry:
 
 ```
 """
-function get_result(client::Client,circuitID::String)::Dict{String, Int}
+function get_result(client::Client, circuitID::String)::Dict{String,Int}
 
-    path_url=get_host(client)*"/"*path_circuits*"/"*"$circuitID"*"/"*path_results
-    
-    response=get_request(
-        get_requestor(client),
-        path_url,
-        client.user,
-        client.access_token
-        )
+    path_url =
+        get_host(client) * "/" * path_circuits * "/" * "$circuitID" * "/" * path_results
 
-    body=JSON.parse(read_response_body(response.body))
+    response =
+        get_request(get_requestor(client), path_url, client.user, client.access_token)
 
-    histogram=Dict{String,Int}()
-    @assert haskey(body,"histogram")
+    body = JSON.parse(read_response_body(response.body))
+
+    histogram = Dict{String,Int}()
+    @assert haskey(body, "histogram")
 
     # convert from Dict{String,String} to Dict{String,Int}
-    for (key,val) in body["histogram"]
-        histogram[key]=round(Int, val)
+    for (key, val) in body["histogram"]
+        histogram[key] = round(Int, val)
     end
 
     return histogram
@@ -353,23 +347,19 @@ end
 
 abstract type AbstractQPU end
 
-get_metadata(qpu::AbstractQPU) =
-    throw(NotImplementedError(:get_metadata,qpu))
+get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
 
-is_native_gate(qpu::AbstractQPU,::Gate) =
-    throw(NotImplementedError(:is_native_gate,qpu))
+is_native_gate(qpu::AbstractQPU, ::Gate) = throw(NotImplementedError(:is_native_gate, qpu))
 
-is_native_circuit(qpu::AbstractQPU,::QuantumCircuit) =
-    throw(NotImplementedError(:is_native_circuit,qpu))
+is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
+    throw(NotImplementedError(:is_native_circuit, qpu))
 
-get_transpiler(qpu::AbstractQPU) =
-    throw(NotImplementedError(:get_transpiler,qpu))
+get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qpu))
 
 run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
-    throw(NotImplementedError(:run_job,qpu))
+    throw(NotImplementedError(:run_job, qpu))
 
-get_connectivity(qpu::AbstractQPU) = 
-    throw(NotImplementedError(:get_connectivity,qpu))
+get_connectivity(qpu::AbstractQPU) = throw(NotImplementedError(:get_connectivity, qpu))
 
 """
     VirtualQPU
@@ -388,39 +378,41 @@ Quantum Simulator:
 """
 struct VirtualQPU <: AbstractQPU end
 
-get_metadata(qpu::VirtualQPU) = Dict{String,String}(
-    "developers"  =>"Anyon Systems Inc.",
-    "package"     =>"Snowflurry.jl",
-)
+get_metadata(qpu::VirtualQPU) =
+    Dict{String,String}("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
-is_native_gate(::VirtualQPU,::Gate)::Bool = true
+is_native_gate(::VirtualQPU, ::Gate)::Bool = true
 
-is_native_circuit(::VirtualQPU,::QuantumCircuit)::Tuple{Bool,String} = (true,"")
+is_native_circuit(::VirtualQPU, ::QuantumCircuit)::Tuple{Bool,String} = (true, "")
 
-get_transpiler(::VirtualQPU)=TrivialTranspiler()
+get_transpiler(::VirtualQPU) = TrivialTranspiler()
 
 get_connectivity(::VirtualQPU) = AllToAllConnectivity()
 get_connectivity_label(::AllToAllConnectivity) = all2all_connectivity_label
 
 
 function Base.show(io::IO, qpu::VirtualQPU)
-    metadata=get_metadata(qpu)
+    metadata = get_metadata(qpu)
 
     println(io, "Quantum Simulator:")
     println(io, "   developers:  $(metadata["developers"])")
     println(io, "   package:     $(metadata["package"])")
 end
 
-read_response_body(body::Base.CodeUnits{UInt8, String})=
-    read_response_body(convert(Vector{UInt8},body))
+read_response_body(body::Base.CodeUnits{UInt8,String}) =
+    read_response_body(convert(Vector{UInt8}, body))
 
 function read_response_body(body::Vector{UInt8})::String
     # convert response body from binary to ASCII
-    read_buffer=IOBuffer(reinterpret(UInt8, body))
-    body_string=String(readuntil(read_buffer, 0x00))
+    read_buffer = IOBuffer(reinterpret(UInt8, body))
+    body_string = String(readuntil(read_buffer, 0x00))
 
-    if length(body_string)!=length(body)
-        throw(ArgumentError("Server returned an erroneous message, with nul terminator before end of string."))
+    if length(body_string) != length(body)
+        throw(
+            ArgumentError(
+                "Server returned an erroneous message, with nul terminator before end of string.",
+            ),
+        )
     end
 
     return body_string
@@ -446,11 +438,11 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function transpile_and_run_job(
-    qpu::VirtualQPU, 
+    qpu::VirtualQPU,
     circuit::QuantumCircuit,
     shot_count::Integer;
-    transpiler::Transpiler=get_transpiler(qpu)
-    )::Dict{String,Int}
+    transpiler::Transpiler = get_transpiler(qpu),
+)::Dict{String,Int}
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -458,7 +450,7 @@ function transpile_and_run_job(
 
     @assert passed "All circuits should be native on VirtualQPU"
 
-    return run_job(qpu, transpiled_circuit,shot_count)
+    return run_job(qpu, transpiled_circuit, shot_count)
 end
 
 """
@@ -478,20 +470,23 @@ Dict{String, Int64} with 1 entry:
 
 ```
 """
-function run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer)::Dict{String,Int}
-    
-    data=simulate_shots(circuit, shot_count)
-    
-    histogram=Dict{String,Int}()
+function run_job(
+    qpu::VirtualQPU,
+    circuit::QuantumCircuit,
+    shot_count::Integer,
+)::Dict{String,Int}
+
+    data = simulate_shots(circuit, shot_count)
+
+    histogram = Dict{String,Int}()
 
     for label in data
-        if haskey(histogram,label)
-            histogram[label]+=1
+        if haskey(histogram, label)
+            histogram[label] += 1
         else
-            histogram[label]=1
+            histogram[label] = 1
         end
     end
 
     return histogram
 end
-

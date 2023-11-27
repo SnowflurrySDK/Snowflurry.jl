@@ -19,6 +19,9 @@ In this tutorial, we will learn how to submit a job to real hardware. At the mom
 !!! note 
     This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
 
+!!! note 
+    This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
+
 The current release of `Snowflurry` supports Anyon's Yukon quantum processor which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers. 
 
 

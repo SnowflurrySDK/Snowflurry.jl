@@ -2,8 +2,8 @@ using Snowflurry
 
 abstract type Transpiler end
 
-transpile(t::Transpiler,::QuantumCircuit)::QuantumCircuit= 
-    throw(NotImplementedError(:transpile,t))
+transpile(t::Transpiler, ::QuantumCircuit)::QuantumCircuit =
+    throw(NotImplementedError(:transpile, t))
 
 """
     SequentialTranspiler(Vector{<:Transpiler})
@@ -64,18 +64,21 @@ q[3]:─────────────────X──
 
 
 ```
-"""  
-struct SequentialTranspiler<:Transpiler
+"""
+struct SequentialTranspiler <: Transpiler
     stages::Vector{<:Transpiler}
 
     function SequentialTranspiler(stages::Vector{<:Transpiler})
-        @assert length(stages)>0
+        @assert length(stages) > 0
 
         new(stages)
     end
 end
 
-function transpile(transpiler::SequentialTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    transpiler::SequentialTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
     for stage in transpiler.stages
         circuit = transpile(stage, circuit)
     end
@@ -83,33 +86,41 @@ function transpile(transpiler::SequentialTranspiler, circuit::QuantumCircuit)::Q
     return circuit
 end
 
-struct CompressSingleQubitGatesTranspiler<:Transpiler end
+struct CompressSingleQubitGatesTranspiler <: Transpiler end
 
 # convert a single-target gate to a Universal gate
-function as_universal_gate(target::Integer,op::AbstractOperator)::Gate{Universal}
-    @assert size(op)==(2,2)
-    
-    matrix=get_matrix(op)
+function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universal}
+    @assert size(op) == (2, 2)
+
+    matrix = get_matrix(op)
 
     #find global phase offset angle
-    alpha=atan(imag(matrix[1,1]),real(matrix[1,1]) )
-    
-    #remove global offset
-    matrix*=exp(-im*alpha)
-    
-    theta=(2*acos(real(matrix[1,1])))
+    alpha = atan(imag(matrix[1, 1]), real(matrix[1, 1]))
 
-    if (isapprox(theta,0.,atol=1e-6))||(isapprox(theta,2*π,atol=1e-6))
-        lambda=0
-        phi   =real(exp(-im*π/2)log( matrix[2,2]/cos(theta/2)))
+    #remove global offset
+    matrix *= exp(-im * alpha)
+
+    theta = (2 * acos(real(matrix[1, 1])))
+
+    if (isapprox(theta, 0.0, atol = 1e-6)) || (isapprox(theta, 2 * π, atol = 1e-6))
+        lambda = 0
+        phi = real(exp(-im * π / 2)log(matrix[2, 2] / cos(theta / 2)))
     else
-        lambda=real(exp(-im*π/2)*log(-matrix[1,2]/sin(theta/2)))
-        phi   =real(exp(-im*π/2)*log( matrix[2,1]/sin(theta/2)))
+        lambda = real(exp(-im * π / 2) * log(-matrix[1, 2] / sin(theta / 2)))
+        phi = real(exp(-im * π / 2) * log(matrix[2, 1] / sin(theta / 2)))
     end
 
     # test if universal gate can be constructed from this operator
-    @assert isapprox(real(matrix[2,2]),real(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
-    @assert isapprox(imag(matrix[2,2]),imag(exp(im*(lambda+phi))*cos(theta/2)),atol=1e-6)
+    @assert isapprox(
+        real(matrix[2, 2]),
+        real(exp(im * (lambda + phi)) * cos(theta / 2)),
+        atol = 1e-6,
+    )
+    @assert isapprox(
+        imag(matrix[2, 2]),
+        imag(exp(im * (lambda + phi)) * cos(theta / 2)),
+        atol = 1e-6,
+    )
 
     return universal(target, theta, phi, lambda)
 end
@@ -117,49 +128,44 @@ end
 # compress (combine) several single-target gates with a common target to a Universal gate
 # does not assert gates having common target
 function unsafe_compress_to_universal(gates::Vector{Gate}, target::Int)::Gate{Universal}
-    combined_op=eye()
+    combined_op = eye()
 
     for gate in gates
         symbol = get_gate_symbol(gate)
-        @assert get_num_connected_qubits(symbol)==1 ("Received gate with multiple targets: $(gate)")
-        targets=get_connected_qubits(gate)
-        @assert length(targets)==1 ("Received gate with multiple targets: $gate")
-        @assert targets[1]==target ("Gates in array do not share common target")
+        @assert get_num_connected_qubits(symbol) == 1 (
+            "Received gate with multiple targets: $(gate)"
+        )
+        targets = get_connected_qubits(gate)
+        @assert length(targets) == 1 ("Received gate with multiple targets: $gate")
+        @assert targets[1] == target ("Gates in array do not share common target")
 
-        combined_op=get_operator(get_gate_symbol(gate))*combined_op
+        combined_op = get_operator(get_gate_symbol(gate)) * combined_op
     end
 
-    return as_universal_gate(target,combined_op)
+    return as_universal_gate(target, combined_op)
 end
 
-set_of_rz_gates=[
-    Z90,
-    ZM90,
-    SigmaZ,
-    Pi8,
-    Pi8Dagger,
-    PhaseShift
-]
+set_of_rz_gates = [Z90, ZM90, SigmaZ, Pi8, Pi8Dagger, PhaseShift]
 
-is_multi_target(symbol::AbstractGateSymbol) = get_num_connected_qubits(symbol)>1
+is_multi_target(symbol::AbstractGateSymbol) = get_num_connected_qubits(symbol) > 1
 is_multi_target(gate::Gate) = is_multi_target(get_gate_symbol(gate))
 
-function is_not_rz_gate(::Gate{SymbolType})::Bool where SymbolType<:AbstractGateSymbol
+function is_not_rz_gate(::Gate{SymbolType})::Bool where {SymbolType<:AbstractGateSymbol}
     return !(SymbolType in set_of_rz_gates)
 end
 
-is_multi_target_or_not_rz(gate::Gate)= is_multi_target(gate) || is_not_rz_gate(gate)
+is_multi_target_or_not_rz(gate::Gate) = is_multi_target(gate) || is_not_rz_gate(gate)
 
 function find_and_compress_blocks(
     circuit::QuantumCircuit,
     is_boundary::Function,
-    compression_function::Function
-    )::QuantumCircuit
+    compression_function::Function,
+)::QuantumCircuit
 
-    gates=get_circuit_gates(circuit)
+    gates = get_circuit_gates(circuit)
 
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     # Split circuit into blocks of single-target gates that
     # share a common target, separated by boundaries. 
@@ -186,11 +192,11 @@ function find_and_compress_blocks(
     #                       consecutive blocks, each separated by 
     #                       an entry in 'boundaries'   
     #     
-    blocks_per_target=Dict{Int,Vector{Vector{Int}}}(Dict())
+    blocks_per_target = Dict{Int,Vector{Vector{Int}}}(Dict())
 
     #initialize empty blocks at all targets
-    for target in 1:qubit_count
-        blocks_per_target[target]=[[]]
+    for target = 1:qubit_count
+        blocks_per_target[target] = [[]]
     end
 
     ######################################################
@@ -200,87 +206,87 @@ function find_and_compress_blocks(
     #       i_gate  : the gate's index in 'gates'
     #       targets : the targets of gate[i_gate]
     #               
-    boundaries=Vector{Tuple{Int,Vector{Int}}}([]) 
+    boundaries = Vector{Tuple{Int,Vector{Int}}}([])
 
-    current_block=[1 for _ in 1:qubit_count]
+    current_block = [1 for _ = 1:qubit_count]
 
-    can_be_placed=Dict(target=>[true] for target in 1:qubit_count)
+    can_be_placed = Dict(target => [true] for target = 1:qubit_count)
 
-    placed_gates=[false for _ in 1:length(gates)]
+    placed_gates = [false for _ = 1:length(gates)]
 
-    for (i_gate,gate) in enumerate(gates)
-        targets=get_connected_qubits(gate)
+    for (i_gate, gate) in enumerate(gates)
+        targets = get_connected_qubits(gate)
 
         if is_boundary(gate)
 
             # add group boundary at each of those targets
-            push!(boundaries,(i_gate,targets))
-            
+            push!(boundaries, (i_gate, targets))
+
             for target in targets
                 # create new empty group at those targets
-                push!(blocks_per_target[target],[])
+                push!(blocks_per_target[target], [])
 
                 # disallow placement until boundary is passed
-                push!(can_be_placed[target],false)
+                push!(can_be_placed[target], false)
             end
-                
+
         else
-            target=targets[1]
-            
+            target = targets[1]
+
             # inside a group, common-target gates are put in blocks.
             # append gate to last block
-            push!(blocks_per_target[target][end],i_gate)
+            push!(blocks_per_target[target][end], i_gate)
         end
     end
 
     # reverse so pop! returns first boundary
-    boundaries=reverse(boundaries)
+    boundaries = reverse(boundaries)
 
-    iteration_count=0
+    iteration_count = 0
 
     #build compressed circuit
     while true
-        iteration_count+=1
+        iteration_count += 1
 
         #place allowed blocks
-        for target in 1:qubit_count
+        for target = 1:qubit_count
 
-            block_index=current_block[target]
+            block_index = current_block[target]
 
             if can_be_placed[target][block_index]
 
-                block=blocks_per_target[target][block_index]
+                block = blocks_per_target[target][block_index]
 
-                gates_block::Vector{Gate} = [ convert(Gate, gates[i]) for i in block]
+                gates_block::Vector{Gate} = [convert(Gate, gates[i]) for i in block]
 
-                if length(block)>1
+                if length(block) > 1
                     push!(output_circuit, compression_function(gates_block, target))
-                    
-                    for i_gate in block
-                        placed_gates[i_gate]=true
-                    end
-                elseif length(block)==1
-                    #no need to compress individual gate
-                    push!(output_circuit,gates_block[1])
 
-                    placed_gates[block[1]]=true
+                    for i_gate in block
+                        placed_gates[i_gate] = true
+                    end
+                elseif length(block) == 1
+                    #no need to compress individual gate
+                    push!(output_circuit, gates_block[1])
+
+                    placed_gates[block[1]] = true
                 end
 
-                can_be_placed[target][block_index]=false
+                can_be_placed[target][block_index] = false
             end
         end
 
         if !isempty(boundaries)
             # pass boundary
-            (i_gate,targets)=pop!(boundaries)
+            (i_gate, targets) = pop!(boundaries)
 
-            push!(output_circuit,gates[i_gate])
-            placed_gates[i_gate]=true
+            push!(output_circuit, gates[i_gate])
+            placed_gates[i_gate] = true
 
             #unlock next blocks for those targets (boundary passed)
             for target in targets
-                current_block[target]+=1
-                can_be_placed[target][current_block[target]]=true
+                current_block[target] += 1
+                can_be_placed[target][current_block[target]] = true
             end
 
         end
@@ -289,7 +295,7 @@ function find_and_compress_blocks(
             break
         end
 
-        @assert iteration_count<length(gates)+1 ("Failed to construct output")
+        @assert iteration_count < length(gates) + 1 ("Failed to construct output")
     end
 
     return output_circuit
@@ -363,12 +369,15 @@ true
 
 ```
 """
-function transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit   
-    return find_and_compress_blocks(circuit,is_multi_target,unsafe_compress_to_universal)
+function transpile(
+    ::CompressSingleQubitGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+    return find_and_compress_blocks(circuit, is_multi_target, unsafe_compress_to_universal)
 end
 
 function cast_to_cz(gate::AbstractGateSymbol, _::Vector{Int})
-    throw(NotImplementedError(:cast_to_cz,gate))
+    throw(NotImplementedError(:cast_to_cz, gate))
 end
 
 function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{Gate}
@@ -421,8 +430,8 @@ q[2]:──Y_m90────Z─────────────Y_90──�
 ```
 """
 function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{Swap}
@@ -440,11 +449,7 @@ function cast_to_cz(::ControlX, connected_qubits::Vector{Int})::AbstractVector{G
     q1 = connected_qubits[1]
     q2 = connected_qubits[2]
 
-    return Vector{Gate}([
-        hadamard(q2),
-        control_z(q1, q2),
-        hadamard(q2),
-    ])
+    return Vector{Gate}([hadamard(q2), control_z(q1, q2), hadamard(q2)])
 end
 
 struct CastCXToCZGateTranspiler <: Transpiler end
@@ -477,8 +482,8 @@ q[2]:──H────Z────H──
 ```
 """
 function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{ControlX}
@@ -540,8 +545,8 @@ q[2]:───────────X_m90────Z────────
 ```
 """
 function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{ISwap}
@@ -567,7 +572,7 @@ function cast_to_cx(gate::Toffoli, connected_qubits::Vector{Int})::AbstractVecto
 
     return Vector{Gate}([
         h(q3),
-        cnot(q2,q3),
+        cnot(q2, q3),
         t_dag(q3),
         cnot(q1, q3),
         t(q3),
@@ -620,12 +625,12 @@ q[3]:──H────X────T†────X────T────X
 ```
 """
 function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{Toffoli}
-            push!(output, cast_to_cx(get_gate_symbol(gate),get_connected_qubits(gate))...)
+            push!(output, cast_to_cx(get_gate_symbol(gate), get_connected_qubits(gate))...)
         else
             push!(output, gate)
         end
@@ -634,101 +639,91 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
-struct CastToPhaseShiftAndHalfRotationXTranspiler<:Transpiler 
+struct CastToPhaseShiftAndHalfRotationXTranspiler <: Transpiler
     atol::Real
 end
 
-CastToPhaseShiftAndHalfRotationXTranspiler()=CastToPhaseShiftAndHalfRotationXTranspiler(1e-6)
+CastToPhaseShiftAndHalfRotationXTranspiler() =
+    CastToPhaseShiftAndHalfRotationXTranspiler(1e-6)
 
-function simplify_rz_gate(
-    gate::Gate{PhaseShift};
-    atol=1e-6)::Union{Gate, Nothing}
+function simplify_rz_gate(gate::Gate{PhaseShift}; atol = 1e-6)::Union{Gate,Nothing}
 
     target = get_connected_qubits(gate)[1]
-    phase_angle = get_gate_symbol(gate).phi; 
-    
-    phase_angle=phase_angle%(2*π)
+    phase_angle = get_gate_symbol(gate).phi
 
-    if isapprox(phase_angle,π/2,atol=atol) || isapprox(phase_angle,-3*π/2,atol=atol)
+    phase_angle = phase_angle % (2 * π)
+
+    if isapprox(phase_angle, π / 2, atol = atol) ||
+       isapprox(phase_angle, -3 * π / 2, atol = atol)
         return z_90(target)
 
-    elseif isapprox(abs(phase_angle),π,atol=atol) 
+    elseif isapprox(abs(phase_angle), π, atol = atol)
         return sigma_z(target)
 
-    elseif isapprox(phase_angle,-π/2,atol=atol) || isapprox(phase_angle,3*π/2,atol=atol)
+    elseif isapprox(phase_angle, -π / 2, atol = atol) ||
+           isapprox(phase_angle, 3 * π / 2, atol = atol)
         return z_minus_90(target)
 
-    elseif isapprox(phase_angle,π/4,atol=atol) 
+    elseif isapprox(phase_angle, π / 4, atol = atol)
         return pi_8(target)
-        
-    elseif isapprox(phase_angle,-π/4,atol=atol) 
+
+    elseif isapprox(phase_angle, -π / 4, atol = atol)
         return pi_8_dagger(target)
 
-    elseif isapprox(phase_angle,0.,atol=atol) 
+    elseif isapprox(phase_angle, 0.0, atol = atol)
         return nothing
 
     else
-        return phase_shift(target,phase_angle)
-    
+        return phase_shift(target, phase_angle)
+
     end
 end
 
-function simplify_rx_gate(
-    gate::Gate{RotationX};
-    atol=1e-6)::Union{Gate, Nothing}
+function simplify_rx_gate(gate::Gate{RotationX}; atol = 1e-6)::Union{Gate,Nothing}
 
     target = get_connected_qubits(gate)[1]
     theta = get_gate_symbol(gate).theta
-    
-    if isapprox(theta,π/2,atol=atol) 
+
+    if isapprox(theta, π / 2, atol = atol)
         return x_90(target)
 
-    elseif isapprox(abs(theta),π,atol=atol) 
+    elseif isapprox(abs(theta), π, atol = atol)
         return sigma_x(target)
 
-    elseif isapprox(theta,-π/2,atol=atol) 
+    elseif isapprox(theta, -π / 2, atol = atol)
         return x_minus_90(target)
-    
-    elseif isapprox(theta,0.,atol=atol) 
+
+    elseif isapprox(theta, 0.0, atol = atol)
         return nothing
 
     else
-        return rotation_x(target,theta)
-    
+        return rotation_x(target, theta)
+
     end
 end
 
 
-function cast_to_phase_shift_and_half_rotation_x(gate::Universal, target::Int;atol=1e-6)
-    params=get_gate_parameters(gate)
-   
-    theta   =params["theta"]
-    phi     =params["phi"]
-    lambda  =params["lambda"]
+function cast_to_phase_shift_and_half_rotation_x(gate::Universal, target::Int; atol = 1e-6)
+    params = get_gate_parameters(gate)
 
-    gate_array=Vector{Gate}([])
+    theta = params["theta"]
+    phi = params["phi"]
+    lambda = params["lambda"]
 
-    if !(isapprox(lambda,0.,atol=atol))
-        push!(
-            gate_array,
-            simplify_rz_gate(phase_shift(target,lambda);atol=atol)
-        )
+    gate_array = Vector{Gate}([])
+
+    if !(isapprox(lambda, 0.0, atol = atol))
+        push!(gate_array, simplify_rz_gate(phase_shift(target, lambda); atol = atol))
     end
 
-    if !(isapprox(theta,0.,atol=atol))
-        push!(gate_array,x_90(target))
-        push!(
-            gate_array,
-            simplify_rz_gate(phase_shift(target,theta);atol=atol)
-        )
-        push!(gate_array,x_minus_90(target))
+    if !(isapprox(theta, 0.0, atol = atol))
+        push!(gate_array, x_90(target))
+        push!(gate_array, simplify_rz_gate(phase_shift(target, theta); atol = atol))
+        push!(gate_array, x_minus_90(target))
     end
 
-    if !(isapprox(phi,0.,atol=atol))
-        push!(
-            gate_array,
-            simplify_rz_gate(phase_shift(target,phi);atol=atol)
-        )
+    if !(isapprox(phi, 0.0, atol = atol))
+        push!(gate_array, simplify_rz_gate(phase_shift(target, phi); atol = atol))
     end
 
     return gate_array
@@ -816,29 +811,35 @@ true
 
 ```
 """
-function transpile(transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    gates=get_circuit_gates(circuit)
-    
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+    gates = get_circuit_gates(circuit)
 
-    atol=transpiler_stage.atol
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+
+    atol = transpiler_stage.atol
 
     for gate in gates
 
-        targets=get_connected_qubits(gate)
+        targets = get_connected_qubits(gate)
 
-        if length(targets)>1
-            push!(output_circuit,gate)
+        if length(targets) > 1
+            push!(output_circuit, gate)
         else
             if !(gate isa Snowflurry.Gate{Universal})
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
+                gate = get_gate_symbol(
+                    as_universal_gate(targets[1], get_operator(get_gate_symbol(gate))),
+                )
             else
-                gate=get_gate_symbol(gate)
+                gate = get_gate_symbol(gate)
             end
 
-            gate_array=cast_to_phase_shift_and_half_rotation_x(gate, targets[1];atol=atol)
+            gate_array =
+                cast_to_phase_shift_and_half_rotation_x(gate, targets[1]; atol = atol)
             push!(output_circuit, gate_array...)
         end
     end
@@ -849,24 +850,24 @@ end
 # Cast a Universal gate as U=Rz(β)Rx(γ)Rz(δ)
 # See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
 function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
-    params=get_gate_parameters(gate)
-   
-    γ=params["theta"]
-    β=params["phi"]+π/2
-    δ=params["lambda"]-π/2
-   
-    gate_array=Vector{Gate}([])
+    params = get_gate_parameters(gate)
 
-    push!(gate_array,phase_shift(target,δ))
+    γ = params["theta"]
+    β = params["phi"] + π / 2
+    δ = params["lambda"] - π / 2
 
-    push!(gate_array,rotation_x(target,γ))
+    gate_array = Vector{Gate}([])
 
-    push!(gate_array,phase_shift(target,β))
+    push!(gate_array, phase_shift(target, δ))
+
+    push!(gate_array, rotation_x(target, γ))
+
+    push!(gate_array, phase_shift(target, β))
 
     return gate_array
 end
 
-struct CastUniversalToRzRxRzTranspiler<:Transpiler end
+struct CastUniversalToRzRxRzTranspiler <: Transpiler end
 
 """
     transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -922,27 +923,32 @@ true
 
 ```
 """
-function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    ::CastUniversalToRzRxRzTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    gates=get_circuit_gates(circuit)
-    
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+    gates = get_circuit_gates(circuit)
+
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in gates
 
-        targets=get_connected_qubits(gate)
+        targets = get_connected_qubits(gate)
 
-        if length(targets)>1
-            push!(output_circuit,gate)
+        if length(targets) > 1
+            push!(output_circuit, gate)
         else
             if !(gate isa Snowflurry.Gate{Universal})
-                gate=get_gate_symbol(as_universal_gate(targets[1],get_operator(get_gate_symbol(gate))))
+                gate = get_gate_symbol(
+                    as_universal_gate(targets[1], get_operator(get_gate_symbol(gate))),
+                )
             else
-                gate=get_gate_symbol(gate)
+                gate = get_gate_symbol(gate)
             end
 
-            gate_array=cast_to_rz_rx_rz(gate, targets[1])
+            gate_array = cast_to_rz_rx_rz(gate, targets[1])
             push!(output_circuit, gate_array...)
         end
     end
@@ -951,22 +957,22 @@ function transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::
 end
 
 function cast_rx_to_rz_and_half_rotation_x(gate::Gate{RotationX})::Vector{Gate}
-    target=get_connected_qubits(gate)[1]
+    target = get_connected_qubits(gate)[1]
 
-    theta   = get_gate_symbol(gate).theta
+    theta = get_gate_symbol(gate).theta
 
-    gate_array=Vector{Gate}([])
+    gate_array = Vector{Gate}([])
 
-    push!(gate_array,z_90(target))
-    push!(gate_array,x_90(target))
-    push!(gate_array,phase_shift(target,theta))
-    push!(gate_array,x_minus_90(target))
-    push!(gate_array,z_minus_90(target))
+    push!(gate_array, z_90(target))
+    push!(gate_array, x_90(target))
+    push!(gate_array, phase_shift(target, theta))
+    push!(gate_array, x_minus_90(target))
+    push!(gate_array, z_minus_90(target))
 
     return gate_array
 end
 
-struct CastRxToRzAndHalfRotationXTranspiler<:Transpiler end
+struct CastRxToRzAndHalfRotationXTranspiler <: Transpiler end
 
 
 """
@@ -1003,20 +1009,23 @@ true
 
 ```
 """
-function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    ::CastRxToRzAndHalfRotationXTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    gates=get_circuit_gates(circuit)
-    
-    qubit_count=get_num_qubits(circuit)
-    output_circuit=QuantumCircuit(qubit_count=qubit_count)
+    gates = get_circuit_gates(circuit)
+
+    qubit_count = get_num_qubits(circuit)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in gates
-        
+
         if gate isa Snowflurry.Gate{RotationX}
-            gate_array=cast_rx_to_rz_and_half_rotation_x(gate)
+            gate_array = cast_rx_to_rz_and_half_rotation_x(gate)
             push!(output_circuit, gate_array...)
         else
-            push!(output_circuit,gate)
+            push!(output_circuit, gate)
         end
     end
 
@@ -1024,11 +1033,11 @@ function transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircu
 end
 
 
-struct SimplifyRxGatesTranspiler<:Transpiler 
+struct SimplifyRxGatesTranspiler <: Transpiler
     atol::Real
 end
 
-SimplifyRxGatesTranspiler()=SimplifyRxGatesTranspiler(1e-6)
+SimplifyRxGatesTranspiler() = SimplifyRxGatesTranspiler(1e-6)
 
 """
     transpile(::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -1107,22 +1116,22 @@ true
 
 ```
 """
-function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    transpiler_stage::SimplifyRxGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
-    atol=transpiler_stage.atol
+    atol = transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{RotationX}
-            new_gate=simplify_rx_gate(
-                gate,
-                atol=atol
-            )
+            new_gate = simplify_rx_gate(gate, atol = atol)
 
             if !isnothing(new_gate)
-                push!(output,new_gate)
+                push!(output, new_gate)
             end
         else
             push!(output, gate)
@@ -1132,36 +1141,37 @@ function transpile(transpiler_stage::SimplifyRxGatesTranspiler, circuit::Quantum
     return output
 end
 
-struct SwapQubitsForAdjacencyTranspiler<:Transpiler 
+struct SwapQubitsForAdjacencyTranspiler <: Transpiler
     connectivity::AbstractConnectivity
 end
 
 function remap_qubits_to_adjacent(
     connected_qubits::Vector{Int},
-    connectivity::AbstractConnectivity
-    )::Tuple{Vector{Int},Vector{Int},Vector{Vector{Int}}}
-    
-    min_qubit=minimum(connected_qubits)
+    connectivity::AbstractConnectivity,
+)::Tuple{Vector{Int},Vector{Int},Vector{Vector{Int}}}
 
-    distances = [get_qubits_distance(min_qubit,pos,connectivity) for pos in connected_qubits]
+    min_qubit = minimum(connected_qubits)
 
-    sorting_order=sortperm(distances)
+    distances =
+        [get_qubits_distance(min_qubit, pos, connectivity) for pos in connected_qubits]
+
+    sorting_order = sortperm(distances)
 
     # this contains an array of consecutive elements,
     # in the same unsorted order as the input,
     # meaning: sortperm(connected_qubits)==sortperm(mapped_indices)
-    mapped_indices=sortperm(sorting_order)
-    
+    mapped_indices = sortperm(sorting_order)
+
     # create paths so that connected_qubits become adjacent on this connectivity
-    paths=[[connected_qubits[sorting_order[1]]]]
+    paths = [[connected_qubits[sorting_order[1]]]]
     for pos in connected_qubits[sorting_order[2:end]]
         path = path_search(min_qubit, pos, connectivity)
         push!(paths, path[1:end-1])
         min_qubit = path[end-1]
     end
 
-    adjacent_mapping=[path[end] for path in paths]
-    paths=[path[1:end-1] for path in paths]
+    adjacent_mapping = [path[end] for path in paths]
+    paths = [path[1:end-1] for path in paths]
 
     # reorder in same unsorted order as input
     adjacent_mapping = adjacent_mapping[mapped_indices]
@@ -1171,22 +1181,22 @@ function remap_qubits_to_adjacent(
 end
 
 function remap_connections_using_swaps(
-    gates_block::Vector{<: Gate},
+    gates_block::Vector{<:Gate},
     adjacent_mapping::Vector{Int},
     paths::Vector{Vector{Int}},
-    )::Vector{Gate}
+)::Vector{Gate}
 
-    for (current_qubit_num,path) in zip(adjacent_mapping,paths)
-        
+    for (current_qubit_num, path) in zip(adjacent_mapping, paths)
+
         while !isempty(path)
-            next_pos=pop!(path)
-            
+            next_pos = pop!(path)
+
             # surround current gates_block with swap gates 
             # to bring one step closer
-            gates_block=vcat(
+            gates_block = vcat(
                 swap(current_qubit_num, next_pos),
                 gates_block,
-                swap(current_qubit_num, next_pos)
+                swap(current_qubit_num, next_pos),
             )
 
             current_qubit_num = next_pos
@@ -1252,46 +1262,42 @@ true
 ```
 """
 function transpile(
-    transpiler::SwapQubitsForAdjacencyTranspiler, 
-    circuit::QuantumCircuit
-    )::QuantumCircuit
+    transpiler::SwapQubitsForAdjacencyTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
     gates = get_circuit_gates(circuit)
-    
+
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     for gate in gates
-        
+
         connected_qubits = get_connected_qubits(gate)
 
         if length(connected_qubits) > 1
 
-            (adjacent_mapping, sorting_order, paths) = 
+            (adjacent_mapping, sorting_order, paths) =
                 remap_qubits_to_adjacent(connected_qubits, transpiler.connectivity)
-            
-            mapping_dict=Dict(
-                [
-                    old_number => new_number for (old_number, new_number) in 
-                        zip(connected_qubits, adjacent_mapping)
-                ]
-            )
-    
+
+            mapping_dict = Dict([
+                old_number => new_number for
+                (old_number, new_number) in zip(connected_qubits, adjacent_mapping)
+            ])
+
             gates_block = [move_gate(gate, mapping_dict)]
 
             @assert get_connected_qubits(gates_block[1]) == adjacent_mapping (
-                "Failed to construct gate: $(typeof((gates_block[1])))")
+                "Failed to construct gate: $(typeof((gates_block[1])))"
+            )
 
             # leaving first (minimum) qubit unchanged,
             # add swaps starting from the farthest qubit
             adjacent_mapping = adjacent_mapping[reverse(sorting_order[2:end])]
             paths = paths[reverse(sorting_order[2:end])]
-            
-            gates_block = remap_connections_using_swaps(
-                gates_block,
-                adjacent_mapping,
-                paths
-            )
+
+            gates_block =
+                remap_connections_using_swaps(gates_block, adjacent_mapping, paths)
 
             push!(output_circuit, gates_block...)
         else
@@ -1303,11 +1309,11 @@ function transpile(
     return output_circuit
 end
 
-struct SimplifyRzGatesTranspiler<:Transpiler 
+struct SimplifyRzGatesTranspiler <: Transpiler
     atol::Real
 end
 
-SimplifyRzGatesTranspiler()=SimplifyRzGatesTranspiler(1e-6)
+SimplifyRzGatesTranspiler() = SimplifyRzGatesTranspiler(1e-6)
 
 """
     transpile(::SimplifyRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -1388,23 +1394,20 @@ true
 ```
 """
 function transpile(
-    transpiler_stage::SimplifyRzGatesTranspiler, 
-    circuit::QuantumCircuit
-    )::QuantumCircuit
+    transpiler_stage::SimplifyRzGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
-    atol=transpiler_stage.atol
+    atol = transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
         if gate isa Snowflurry.Gate{PhaseShift}
-            new_gate=simplify_rz_gate(
-                gate,
-                atol=atol
-            )
+            new_gate = simplify_rz_gate(gate, atol = atol)
             if !isnothing(new_gate)
-                push!(output,new_gate)
+                push!(output, new_gate)
             end
         else
             push!(output, gate)
@@ -1414,25 +1417,29 @@ function transpile(
     return output
 end
 
-struct CompressRzGatesTranspiler<:Transpiler end
+struct CompressRzGatesTranspiler <: Transpiler end
 
 # construct a PhaseShift gate from an input Operator
-function as_phase_shift_gate(target::Integer,op::AbstractOperator)::Gate{PhaseShift}
-    @assert size(op)==(2,2) ("Received multi-target Operator: $op")
-    
-    matrix=get_matrix(op)
+function as_phase_shift_gate(target::Integer, op::AbstractOperator)::Gate{PhaseShift}
+    @assert size(op) == (2, 2) ("Received multi-target Operator: $op")
 
-    @assert matrix[1,2]≈ComplexF64(0.) ("Failed to build a PhaseShift gate from input Operator: $op")
-    @assert matrix[2,1]≈ComplexF64(0.) ("Failed to build a PhaseShift gate from input Operator: $op")
+    matrix = get_matrix(op)
+
+    @assert matrix[1, 2] ≈ ComplexF64(0.0) (
+        "Failed to build a PhaseShift gate from input Operator: $op"
+    )
+    @assert matrix[2, 1] ≈ ComplexF64(0.0) (
+        "Failed to build a PhaseShift gate from input Operator: $op"
+    )
 
     #find global phase offset angle
-    alpha=atan(imag(matrix[1,1]),real(matrix[1,1]) )
-    
+    alpha = atan(imag(matrix[1, 1]), real(matrix[1, 1]))
+
     #remove global offset
-    matrix*=exp(-im*alpha)
-    
+    matrix *= exp(-im * alpha)
+
     #find relative phase offset angle
-    phi=atan(imag(matrix[2,2]),real(matrix[2,2]) )
+    phi = atan(imag(matrix[2, 2]), real(matrix[2, 2]))
 
     return phase_shift(target, phi)
 end
@@ -1440,13 +1447,13 @@ end
 # compress (combine) several Rz-type gates with a common target to a PhaseShift gate
 # Warning: does not assert gates having common target
 function unsafe_compress_to_rz(gates::Vector{Gate}, target::Int)::Gate{PhaseShift}
-    combined_op=eye()
+    combined_op = eye()
 
     for gate in gates
-        combined_op=get_operator(get_gate_symbol(gate))*combined_op
+        combined_op = get_operator(get_gate_symbol(gate)) * combined_op
     end
-    
-    return as_phase_shift_gate(target,combined_op)
+
+    return as_phase_shift_gate(target, combined_op)
 end
 
 """
@@ -1509,17 +1516,21 @@ true
 """
 function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-    if length(get_circuit_gates(circuit))==1
+    if length(get_circuit_gates(circuit)) == 1
         # no compression needed for individual gate
         return circuit
     end
-    
-    return find_and_compress_blocks(circuit,is_multi_target_or_not_rz,unsafe_compress_to_rz)
+
+    return find_and_compress_blocks(
+        circuit,
+        is_multi_target_or_not_rz,
+        unsafe_compress_to_rz,
+    )
 end
 
-struct TrivialTranspiler<:Transpiler end
+struct TrivialTranspiler <: Transpiler end
 
-transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit=circuit 
+transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit = circuit
 
 struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
 
@@ -1562,10 +1573,13 @@ q[2]:──H────X──
 
 ```
 """
-function transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    ::RemoveSwapBySwappingGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
     gates = get_circuit_gates(circuit)
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count=qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count)
     qubit_mapping = Dict{Int,Int}()
     reverse_transpiled_gates = Vector{Gate}([])
 
@@ -1603,41 +1617,41 @@ function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, connected_qubits::V
     qubit_mapping[connected_qubits[2]] = outlet_qubit_2
 end
 
-struct SimplifyTrivialGatesTranspiler<:Transpiler 
+struct SimplifyTrivialGatesTranspiler <: Transpiler
     atol::Real
 end
 
-SimplifyTrivialGatesTranspiler()=SimplifyTrivialGatesTranspiler(1e-6)
+SimplifyTrivialGatesTranspiler() = SimplifyTrivialGatesTranspiler(1e-6)
 
-function is_trivial_gate(gate::Gate;atol=1e-6)::Bool
+function is_trivial_gate(gate::Gate; atol = 1e-6)::Bool
 
     symbol = get_gate_symbol(gate)
-    
-    params=get_gate_parameters(symbol)
+
+    params = get_gate_parameters(symbol)
 
     if symbol isa Identity
         return true
     elseif symbol isa Universal
-        if isapprox( params["theta"],   0.;atol=atol) && 
-            isapprox(params["phi"],     0.;atol=atol) &&
-            isapprox(params["lambda"],  0.;atol=atol)
+        if isapprox(params["theta"], 0.0; atol = atol) &&
+           isapprox(params["phi"], 0.0; atol = atol) &&
+           isapprox(params["lambda"], 0.0; atol = atol)
             return true
         end
     elseif symbol isa Rotation
-        if isapprox( params["theta"],   0.;atol=atol) && 
-            isapprox(params["phi"],     0.;atol=atol)
+        if isapprox(params["theta"], 0.0; atol = atol) &&
+           isapprox(params["phi"], 0.0; atol = atol)
             return true
         end
     elseif symbol isa RotationX || symbol isa RotationY
-        if isapprox(params["theta"],0.;atol=atol) 
+        if isapprox(params["theta"], 0.0; atol = atol)
             return true
         end
     elseif symbol isa PhaseShift
-        if isapprox(params["lambda"],0.;atol=atol)
+        if isapprox(params["lambda"], 0.0; atol = atol)
             return true
         end
     end
-    
+
     return false
 end
 
@@ -1713,16 +1727,17 @@ true
 ```
 """
 function transpile(
-    transpiler_stage::SimplifyTrivialGatesTranspiler, 
-    circuit::QuantumCircuit)::QuantumCircuit
+    transpiler_stage::SimplifyTrivialGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
 
-    qubit_count=get_num_qubits(circuit)
-    output=QuantumCircuit(qubit_count=qubit_count)
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count)
 
-    atol=transpiler_stage.atol
+    atol = transpiler_stage.atol
 
     for gate in get_circuit_gates(circuit)
-        if ~is_trivial_gate(gate;atol=atol)
+        if ~is_trivial_gate(gate; atol = atol)
             push!(output, gate)
         end
     end
@@ -1730,15 +1745,13 @@ function transpile(
     return output
 end
 
-struct UnsupportedGatesTranspiler<:Transpiler end
+struct UnsupportedGatesTranspiler <: Transpiler end
 
-function transpile(
-    ::UnsupportedGatesTranspiler, 
-    circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     for gate in get_circuit_gates(circuit)
         if get_gate_symbol(gate) isa Controlled
-            throw(NotImplementedError(:Transpiler,gate))
+            throw(NotImplementedError(:Transpiler, gate))
         end
     end
 

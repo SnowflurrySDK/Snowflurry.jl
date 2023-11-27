@@ -20,10 +20,15 @@ q[2]:
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
     gates::Vector{Gate} = Vector{Gate}([])
-    
-    function QuantumCircuit(qubit_count::Int,gates::Vector{GateType}) where GateType <: Gate
-        @assert qubit_count>0 ("$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count")
-    
+
+    function QuantumCircuit(
+        qubit_count::Int,
+        gates::Vector{GateType},
+    ) where {GateType<:Gate}
+        @assert qubit_count > 0 (
+            "$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count"
+        )
+
         circuit = new(qubit_count, [])
         foreach(gate -> ensure_gate_is_in_circuit(circuit, gate), gates)
         append!(circuit.gates, gates)
@@ -32,8 +37,8 @@ Base.@kwdef struct QuantumCircuit
 end
 
 
-get_num_qubits(circuit::QuantumCircuit)=circuit.qubit_count
-get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{Gate}=circuit.gates
+get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
+get_circuit_gates(circuit::QuantumCircuit)::AbstractVector{Gate} = circuit.gates
 
 """
     push!(circuit::QuantumCircuit, gates::AbstractGateSymbol...)
@@ -145,9 +150,13 @@ q[2]:────────────X──
 function Base.append!(base_circuit::QuantumCircuit, circuits_to_append::QuantumCircuit...)
     for circuit in circuits_to_append
         if base_circuit.qubit_count < circuit.qubit_count
-            throw(ErrorException("the circuit to append has more qubits "*
-                "($(circuit.qubit_count)) than the base circuit "*
-                "($(base_circuit.qubit_count) qubits)"))
+            throw(
+                ErrorException(
+                    "the circuit to append has more qubits " *
+                    "($(circuit.qubit_count)) than the base circuit " *
+                    "($(base_circuit.qubit_count) qubits)",
+                ),
+            )
         else
             append!(base_circuit.gates, circuit.gates)
         end
@@ -208,9 +217,13 @@ q[2]:───────X───────
 function Base.prepend!(base_circuit::QuantumCircuit, circuits_to_prepend::QuantumCircuit...)
     for circuit in reverse(circuits_to_prepend)
         if base_circuit.qubit_count < circuit.qubit_count
-            throw(ErrorException("the circuit to prepend has more qubits "*
-                "($(circuit.qubit_count)) than the base circuit "*
-                "($(base_circuit.qubit_count) qubits)"))
+            throw(
+                ErrorException(
+                    "the circuit to prepend has more qubits " *
+                    "($(circuit.qubit_count)) than the base circuit " *
+                    "($(base_circuit.qubit_count) qubits)",
+                ),
+            )
         else
             prepend!(base_circuit.gates, circuit.gates)
         end
@@ -279,27 +292,29 @@ true
 
 ```
 """
-function compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
+function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
-    num_qubits=get_num_qubits(c0)
+    num_qubits = get_num_qubits(c0)
 
-    @assert num_qubits==get_num_qubits(c1) ("Input circuits have diffent number of qubits")
+    @assert num_qubits == get_num_qubits(c1) (
+        "Input circuits have diffent number of qubits"
+    )
 
     #non-normalized ket with different scalar at each position
-    ψ_0=Ket([v for v in 1:2^num_qubits])
-        
-    for gate in get_circuit_gates(c0) 
+    ψ_0 = Ket([v for v = 1:2^num_qubits])
+
+    for gate in get_circuit_gates(c0)
         apply_gate!(ψ_0, gate)
     end
 
-    ψ_1=Ket([v for v in 1:2^num_qubits])
+    ψ_1 = Ket([v for v = 1:2^num_qubits])
 
-    for gate in get_circuit_gates(c1) 
-        apply_gate!(ψ_1, gate)        
+    for gate in get_circuit_gates(c1)
+        apply_gate!(ψ_1, gate)
     end
 
     # check equality allowing a global phase offset
-    return compare_kets(ψ_0,ψ_1)
+    return compare_kets(ψ_0, ψ_1)
 end
 
 """
@@ -321,7 +336,10 @@ julia> circuit_contains_gate_type(circuit, Snowflurry.ControlZ)
 false
 ```
 """
-function circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
+function circuit_contains_gate_type(
+    circuit::QuantumCircuit,
+    gate_type::Type{<:AbstractGateSymbol},
+)::Bool
     for gate in get_circuit_gates(circuit)
         if get_gate_symbol(gate) isa gate_type
             return true
@@ -339,138 +357,140 @@ function ensure_gate_is_in_circuit(circuit::QuantumCircuit, gate::Gate)
     end
 end
 
-formatter(str_label,args...) = @eval @sprintf($str_label,$args...)
+formatter(str_label, args...) = @eval @sprintf($str_label, $args...)
 
 function format_label(
     symbol_specs::Vector{String},
     num_targets::Int,
     gate_params::Dict{String,<:Real};
-    precision::Integer=4,
-    )::Vector{String}
+    precision::Integer = 4,
+)::Vector{String}
 
-    num_params=length(gate_params)
+    num_params = length(gate_params)
 
-    symbol_gate=symbol_specs[num_targets] #label with %s fields is at index=num_targets
-    fields=symbol_specs[num_targets+1:end]
-    repetitions=length(fields)
+    symbol_gate = symbol_specs[num_targets] #label with %s fields is at index=num_targets
+    fields = symbol_specs[num_targets+1:end]
+    repetitions = length(fields)
 
     # create format specifier of correct precision: 
     # for instance: "U(θ=%s,ϕ=%s,λ=%s)" is converted to
     # "U(θ=%.2f,ϕ=%.2f,λ=%.2f)" for precision=2
-    precisionStr=string("%.",precision,"f")
-    precisionArray=[precisionStr for _ in 1:repetitions]
-    str_label_with_precision=formatter(symbol_gate,precisionArray...)
+    precisionStr = string("%.", precision, "f")
+    precisionArray = [precisionStr for _ = 1:repetitions]
+    str_label_with_precision = formatter(symbol_gate, precisionArray...)
 
     # construct array of values in the order found in fields
-    parameter_values=Vector{Real}([])
+    parameter_values = Vector{Real}([])
 
     for key in fields
-        push!(parameter_values,gate_params[key])
+        push!(parameter_values, gate_params[key])
     end
 
     # construct label using gate_params
-    label_with_params=formatter(str_label_with_precision,parameter_values...)
+    label_with_params = formatter(str_label_with_precision, parameter_values...)
 
-    if num_targets==1
+    if num_targets == 1
         return [label_with_params]
     else
-        return vcat(symbol_specs[1:end-num_params-1],label_with_params)
+        return vcat(symbol_specs[1:end-num_params-1], label_with_params)
     end
 end
 
-function get_display_symbol(gate::AbstractGateSymbol;precision::Integer=4)
+function get_display_symbol(gate::AbstractGateSymbol; precision::Integer = 4)
 
-    gate_params=get_gate_parameters(gate)
+    gate_params = get_gate_parameters(gate)
 
-    num_targets=get_num_connected_qubits(gate)
+    num_targets = get_num_connected_qubits(gate)
 
-    symbol_specs=gates_display_symbols[typeof(gate)]
+    symbol_specs = gates_display_symbols[typeof(gate)]
 
-    return format_label(symbol_specs,num_targets,gate_params;precision=precision)
+    return format_label(symbol_specs, num_targets, gate_params; precision = precision)
 end
 
-function get_display_symbol(gate::Controlled;precision::Integer=4)
+function get_display_symbol(gate::Controlled; precision::Integer = 4)
 
     # build new display symbol using existing symbol pertaining to kernel
-    symbol_specs=get_display_symbol(gate.kernel,precision=precision)
+    symbol_specs = get_display_symbol(gate.kernel, precision = precision)
 
-    num_target_qubits=get_num_target_qubits(gate)
-    
-    gate_params=get_gate_parameters(gate)
+    num_target_qubits = get_num_target_qubits(gate)
+
+    gate_params = get_gate_parameters(gate)
 
     return vcat(
-        [control_display_symbol for _ in 1:get_num_control_qubits(gate)],
+        [control_display_symbol for _ = 1:get_num_control_qubits(gate)],
         [
             format_label(
                 symbol_specs,
                 num_target_qubits,
                 gate_params;
-                precision=precision
-            )...
-        ])
+                precision = precision,
+            )...,
+        ],
+    )
 end
 
-const control_display_symbol ="*"
+const control_display_symbol = "*"
 
-gates_display_symbols=Dict(
-    Identity    =>["I"],
-    SigmaX      =>["X"],
-    SigmaY      =>["Y"],
-    SigmaZ      =>["Z"],
-    Hadamard    =>["H"],
-    Pi8         =>["T"],
-    Pi8Dagger   =>["T†"],
-    X90         =>["X_90"],
-    XM90         =>["X_m90"],
-    Y90         =>["Y_90"],
-    YM90         =>["Y_m90"],
-    Z90         =>["Z_90"],
-    ZM90         =>["Z_m90"],
-    Rotation    =>["R(θ=%s,ϕ=%s)","theta","phi"],
-    RotationX   =>["Rx(%s)","theta"],
-    RotationY   =>["Ry(%s)","theta"],
-    PhaseShift  =>["Rz(%s)","lambda"],
-    Universal   =>["U(θ=%s,ϕ=%s,λ=%s)","theta","phi","lambda"],
-    ControlZ    =>[control_display_symbol, "Z"],
-    ControlX    =>[control_display_symbol, "X"],
-    ISwap       =>["x", "x"],
-    ISwapDagger =>["x†", "x†"],
-    Toffoli     =>[control_display_symbol, control_display_symbol, "X"],
-    Swap       =>["☒", "☒"],
+gates_display_symbols = Dict(
+    Identity => ["I"],
+    SigmaX => ["X"],
+    SigmaY => ["Y"],
+    SigmaZ => ["Z"],
+    Hadamard => ["H"],
+    Pi8 => ["T"],
+    Pi8Dagger => ["T†"],
+    X90 => ["X_90"],
+    XM90 => ["X_m90"],
+    Y90 => ["Y_90"],
+    YM90 => ["Y_m90"],
+    Z90 => ["Z_90"],
+    ZM90 => ["Z_m90"],
+    Rotation => ["R(θ=%s,ϕ=%s)", "theta", "phi"],
+    RotationX => ["Rx(%s)", "theta"],
+    RotationY => ["Ry(%s)", "theta"],
+    PhaseShift => ["Rz(%s)", "lambda"],
+    Universal => ["U(θ=%s,ϕ=%s,λ=%s)", "theta", "phi", "lambda"],
+    ControlZ => [control_display_symbol, "Z"],
+    ControlX => [control_display_symbol, "X"],
+    ISwap => ["x", "x"],
+    ISwapDagger => ["x†", "x†"],
+    Toffoli => [control_display_symbol, control_display_symbol, "X"],
+    Swap => ["☒", "☒"],
 )
 
-get_instruction_symbol(gate::AbstractGateSymbol)=gates_instruction_symbols[typeof(gate)]
+get_instruction_symbol(gate::AbstractGateSymbol) = gates_instruction_symbols[typeof(gate)]
 
-gates_instruction_symbols=Dict(
-    Identity    =>"i",
-    SigmaX      =>"x",
-    SigmaY      =>"y",
-    SigmaZ      =>"z",
-    Hadamard    =>"h",
-    Pi8         =>"t",
-    Pi8Dagger   =>"t_dag",
-    X90         =>"x_90",
-    XM90        =>"x_minus_90",
-    Y90         =>"y_90",
-    YM90        =>"y_minus_90",
-    Z90         =>"z_90",
-    ZM90        =>"z_minus_90",
-    Rotation    =>"r",
-    RotationX   =>"rx",
-    RotationY   =>"ry",
-    PhaseShift  =>"rz",
-    Universal   =>"u",
-    ControlZ    =>"cz",
-    ControlX    =>"cx",
-    ISwap       =>"iswap",
-    ISwapDagger =>"iswap_dag",
-    Toffoli     =>"ccx",
-    Swap        =>"swap",
-    )
+gates_instruction_symbols = Dict(
+    Identity => "i",
+    SigmaX => "x",
+    SigmaY => "y",
+    SigmaZ => "z",
+    Hadamard => "h",
+    Pi8 => "t",
+    Pi8Dagger => "t_dag",
+    X90 => "x_90",
+    XM90 => "x_minus_90",
+    Y90 => "y_90",
+    YM90 => "y_minus_90",
+    Z90 => "z_90",
+    ZM90 => "z_minus_90",
+    Rotation => "r",
+    RotationX => "rx",
+    RotationY => "ry",
+    PhaseShift => "rz",
+    Universal => "u",
+    ControlZ => "cz",
+    ControlX => "cx",
+    ISwap => "iswap",
+    ISwapDagger => "iswap_dag",
+    Toffoli => "ccx",
+    Swap => "swap",
+)
 
-instruction_to_gate_symbol_types=Dict( v => k for (k,v) in gates_instruction_symbols)
+instruction_to_gate_symbol_types = Dict(v => k for (k, v) in gates_instruction_symbols)
 
-get_symbol_for_instruction(instruction::String)::DataType=instruction_to_gate_symbol_types[instruction]
+get_symbol_for_instruction(instruction::String)::DataType =
+    instruction_to_gate_symbol_types[instruction]
 
 
 """
@@ -519,7 +539,7 @@ function Base.pop!(circuit::QuantumCircuit)
     return circuit
 end
 
-function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer=10)
+function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer = 10)
     println(io, "Quantum Circuit Object:")
     println(io, "   qubit_count: $(get_num_qubits(circuit)) ")
     print_circuit_diagram(io, circuit, padding_width)
@@ -530,7 +550,7 @@ function print_circuit_diagram(io::IO, circuit::QuantumCircuit, padding_width::I
     split_circuit_layouts = get_split_circuit_layout(io, circuit_layout, padding_width)
     num_splits = length(split_circuit_layouts)
 
-    for i_split in 1:num_splits
+    for i_split = 1:num_splits
         if num_splits > 1
             println(io, "Part $i_split of $num_splits")
         end
@@ -548,12 +568,22 @@ function get_circuit_layout(circuit::QuantumCircuit)
     wire_count = 2 * get_num_qubits(circuit)
     circuit_layout = fill("", (wire_count, length(get_circuit_gates(circuit)) + 1))
     add_qubit_labels_to_circuit_layout!(circuit_layout, get_num_qubits(circuit))
-    
+
     for (i_step, gate) in enumerate(get_circuit_gates(circuit))
-        longest_symbol_length=get_longest_symbol_length(gate)
-        add_wires_to_circuit_layout!(circuit_layout, i_step, get_num_qubits(circuit),longest_symbol_length)
-        add_coupling_lines_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
-        add_target_to_circuit_layout!(circuit_layout, gate, i_step,longest_symbol_length)
+        longest_symbol_length = get_longest_symbol_length(gate)
+        add_wires_to_circuit_layout!(
+            circuit_layout,
+            i_step,
+            get_num_qubits(circuit),
+            longest_symbol_length,
+        )
+        add_coupling_lines_to_circuit_layout!(
+            circuit_layout,
+            gate,
+            i_step,
+            longest_symbol_length,
+        )
+        add_target_to_circuit_layout!(circuit_layout, gate, i_step, longest_symbol_length)
     end
     return circuit_layout
 end
@@ -575,13 +605,13 @@ end
 
 function add_qubit_labels_to_circuit_layout!(
     circuit_layout::Array{String},
-    num_qubits::Integer
-    )
+    num_qubits::Integer,
+)
 
     max_num_digits = ndigits(num_qubits)
     for i_qubit in range(1, length = num_qubits)
         num_digits = ndigits(i_qubit)
-        padding = max_num_digits-num_digits
+        padding = max_num_digits - num_digits
         id_wire = 2 * (i_qubit - 1) + 1
         circuit_layout[id_wire, 1] = "q[$i_qubit]:" * " "^padding
         circuit_layout[id_wire+1, 1] = String(fill(' ', length(circuit_layout[id_wire, 1])))
@@ -589,13 +619,13 @@ function add_qubit_labels_to_circuit_layout!(
 end
 
 function add_wires_to_circuit_layout!(
-    circuit_layout::Array{String}, 
+    circuit_layout::Array{String},
     i_step::Integer,
     num_qubits::Integer,
-    longest_symbol_length::Integer
-    )
+    longest_symbol_length::Integer,
+)
 
-    num_chars = 4+longest_symbol_length
+    num_chars = 4 + longest_symbol_length
     for i_qubit in range(1, length = num_qubits)
         id_wire = 2 * (i_qubit - 1) + 1
         # qubit wire
@@ -606,50 +636,57 @@ function add_wires_to_circuit_layout!(
 end
 
 function add_coupling_lines_to_circuit_layout!(
-    circuit_layout::Array{String}, 
+    circuit_layout::Array{String},
     gate::Gate,
     i_step::Integer,
-    longest_symbol_length::Integer
-    )
-    
-    length_difference = longest_symbol_length-1
-    num_left_chars = 2 + floor(Int, length_difference/2)
-    num_right_chars = 2 + ceil(Int, length_difference/2)
-    min_wire = 2*(minimum(get_connected_qubits(gate))-1)+1
-    max_wire = 2*(maximum(get_connected_qubits(gate))-1)+1
-    for i_wire in min_wire+1:max_wire-1
+    longest_symbol_length::Integer,
+)
+
+    length_difference = longest_symbol_length - 1
+    num_left_chars = 2 + floor(Int, length_difference / 2)
+    num_right_chars = 2 + ceil(Int, length_difference / 2)
+    min_wire = 2 * (minimum(get_connected_qubits(gate)) - 1) + 1
+    max_wire = 2 * (maximum(get_connected_qubits(gate)) - 1) + 1
+    for i_wire = min_wire+1:max_wire-1
         if iseven(i_wire)
-            circuit_layout[i_wire, i_step+1] = ' '^num_left_chars * "|" *
-                ' '^num_right_chars
+            circuit_layout[i_wire, i_step+1] =
+                ' '^num_left_chars * "|" * ' '^num_right_chars
         else
-            circuit_layout[i_wire, i_step+1] = '─'^num_left_chars * "|" *
-                '─'^num_right_chars
+            circuit_layout[i_wire, i_step+1] =
+                '─'^num_left_chars * "|" * '─'^num_right_chars
         end
     end
 end
 
-function add_target_to_circuit_layout!(circuit_layout::Array{String}, gate::Gate,
-    i_step::Integer, longest_symbol_length::Integer)
-    
-    symbols_gate=get_display_symbol(get_gate_symbol(gate))
+function add_target_to_circuit_layout!(
+    circuit_layout::Array{String},
+    gate::Gate,
+    i_step::Integer,
+    longest_symbol_length::Integer,
+)
+
+    symbols_gate = get_display_symbol(get_gate_symbol(gate))
 
     for (i_target, target) in enumerate(get_connected_qubits(gate))
         symbol_length = length(symbols_gate[i_target])
-        length_difference = longest_symbol_length-symbol_length
-        num_left_dashes = 2 + floor(Int, length_difference/2)
-        num_right_dashes = 2 + ceil(Int, length_difference/2)
-        id_wire = 2*(target-1)+1
-        circuit_layout[id_wire, i_step+1] = '─'^num_left_dashes *
-            "$(symbols_gate[i_target])" * '─'^num_right_dashes
+        length_difference = longest_symbol_length - symbol_length
+        num_left_dashes = 2 + floor(Int, length_difference / 2)
+        num_right_dashes = 2 + ceil(Int, length_difference / 2)
+        id_wire = 2 * (target - 1) + 1
+        circuit_layout[id_wire, i_step+1] =
+            '─'^num_left_dashes * "$(symbols_gate[i_target])" * '─'^num_right_dashes
     end
 end
 
 
-function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
-    padding_width::Integer)
+function get_split_circuit_layout(
+    io::IO,
+    circuit_layout::Array{String},
+    padding_width::Integer,
+)
 
     (display_height, display_width) = displaysize(io)
-    useable_width = display_width-padding_width
+    useable_width = display_width - padding_width
     num_steps = size(circuit_layout, 2)
     num_qubit_label_chars = length(circuit_layout[1, 1])
     char_count = num_qubit_label_chars
@@ -663,14 +700,18 @@ function get_split_circuit_layout(io::IO, circuit_layout::Array{String},
         num_chars_in_step = length(step)
         char_count += num_chars_in_step
         if char_count > useable_width
-            push!(split_layout, hcat(circuit_layout[:,1],
-                circuit_layout[:,first_gate_step:i_step-1]))
+            push!(
+                split_layout,
+                hcat(circuit_layout[:, 1], circuit_layout[:, first_gate_step:i_step-1]),
+            )
             char_count = num_qubit_label_chars + num_chars_in_step
             first_gate_step = i_step
         end
         if i_step == num_steps
-            push!(split_layout, hcat(circuit_layout[:,1],
-                circuit_layout[:,first_gate_step:i_step]))
+            push!(
+                split_layout,
+                hcat(circuit_layout[:, 1], circuit_layout[:, first_gate_step:i_step]),
+            )
         end
     end
     return split_layout
@@ -722,8 +763,8 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for gate in get_circuit_gates(circuit) 
-        apply_gate!(ψ, gate)        
+    for gate in get_circuit_gates(circuit)
+        apply_gate!(ψ, gate)
     end
     return ψ
 end
@@ -854,9 +895,11 @@ function get_measurement_probabilities(circuit::QuantumCircuit)::AbstractVector{
     return get_measurement_probabilities(ket)
 end
 
-function get_measurement_probabilities(circuit::QuantumCircuit,
-    target_qubits::Vector{<:Integer})::AbstractVector{<:Real}
-    
+function get_measurement_probabilities(
+    circuit::QuantumCircuit,
+    target_qubits::Vector{<:Integer},
+)::AbstractVector{<:Real}
+
     ket = simulate(circuit)
     return get_measurement_probabilities(ket, target_qubits)
 end
@@ -897,12 +940,9 @@ q[2]:──X─────────────────
 """
 function Base.inv(circuit::QuantumCircuit)
 
-    inverse_gates = Vector{Gate}( 
-        [Base.inv(g) for g in reverse(get_circuit_gates(circuit))] 
-    )
+    inverse_gates = Vector{Gate}([Base.inv(g) for g in reverse(get_circuit_gates(circuit))])
 
-    return QuantumCircuit(qubit_count=get_num_qubits(circuit),
-        gates=inverse_gates)
+    return QuantumCircuit(qubit_count = get_num_qubits(circuit), gates = inverse_gates)
 end
 
 """
@@ -937,10 +977,12 @@ Dict{String, Int64} with 2 entries:
 
 ```
 """
-function get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
-    gate_counts = Dict{String, Int}()
+function get_num_gates_per_type(
+    circuit::QuantumCircuit,
+)::AbstractDict{<:AbstractString,<:Integer}
+    gate_counts = Dict{String,Int}()
     for gate in get_circuit_gates(circuit)
-        instruction_symbol=get_instruction_symbol(get_gate_symbol(gate))
+        instruction_symbol = get_instruction_symbol(get_gate_symbol(gate))
         if haskey(gate_counts, instruction_symbol)
             gate_counts[instruction_symbol] += 1
         else
@@ -976,7 +1018,7 @@ julia> get_num_gates(c)
 
 ```
 """
-get_num_gates(circuit::QuantumCircuit)::Integer=length(get_circuit_gates(circuit))
+get_num_gates(circuit::QuantumCircuit)::Integer = length(get_circuit_gates(circuit))
 
 """
     permute_qubits!(circuit::QuantumCircuit,
@@ -1020,15 +1062,19 @@ q[3]:──X────────────
 
 ```
 """
-function permute_qubits!(circuit::QuantumCircuit,
-    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+function permute_qubits!(
+    circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T},
+) where {T<:Integer}
 
     assert_qubit_mapping_is_valid(qubit_mapping, get_num_qubits(circuit))
     unsafe_permute_qubits!(circuit, qubit_mapping)
 end
 
-function assert_qubit_mapping_is_valid(qubit_mapping::AbstractDict{T,T},
-    qubit_count::Integer) where T<:Integer
+function assert_qubit_mapping_is_valid(
+    qubit_mapping::AbstractDict{T,T},
+    qubit_count::Integer,
+) where {T<:Integer}
 
     sorted_keys = sort(collect(keys(qubit_mapping)))
     sorted_values = sort(collect(values(qubit_mapping)))
@@ -1036,13 +1082,18 @@ function assert_qubit_mapping_is_valid(qubit_mapping::AbstractDict{T,T},
         throw(ErrorException("the qubit mapping is invalid"))
     end
     if last(sorted_keys) < 1 || first(sorted_keys) > qubit_count
-        throw(ErrorException("the qubit mapping has a value that does not fit in the "*
-            "circuit"))
+        throw(
+            ErrorException(
+                "the qubit mapping has a value that does not fit in the " * "circuit",
+            ),
+        )
     end
 end
 
-function unsafe_permute_qubits!(circuit::QuantumCircuit,
-    qubit_mapping::AbstractDict{T,T}) where T<:Integer
+function unsafe_permute_qubits!(
+    circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T},
+) where {T<:Integer}
 
     gates_list = get_circuit_gates(circuit)
     for (i_gate, gate) in enumerate(gates_list)
@@ -1094,8 +1145,10 @@ q[3]:──X────────────
 
 ```
 """
-function permute_qubits(circuit::QuantumCircuit,
-    qubit_mapping::AbstractDict{T,T})::QuantumCircuit where T<:Integer
+function permute_qubits(
+    circuit::QuantumCircuit,
+    qubit_mapping::AbstractDict{T,T},
+)::QuantumCircuit where {T<:Integer}
 
     circuit_copy = deepcopy(circuit)
     permute_qubits!(circuit_copy, qubit_mapping)
