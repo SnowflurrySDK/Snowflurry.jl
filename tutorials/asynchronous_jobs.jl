@@ -1,6 +1,6 @@
 using Snowflurry
 
-circuit = QuantumCircuit(qubit_count = 2, gates = [hadamard(1), control_x(1, 2)])
+circuit = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), control_x(1, 2)])
 
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]

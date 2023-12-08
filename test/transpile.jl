@@ -75,11 +75,11 @@ end
     # attempt compression of all pairs of single qubit gates
     for first_gate in single_qubit_gates
         for second_gate in single_qubit_gates
-            circuit = QuantumCircuit(qubit_count = 2, gates = [first_gate, second_gate])
+            circuit = QuantumCircuit(qubit_count = 2, instructions = [first_gate, second_gate])
 
             transpiled_circuit = transpile(transpiler, circuit)
 
-            gates = get_circuit_gates(transpiled_circuit)
+            gates = get_circuit_instructions(transpiled_circuit)
 
             @test length(gates) == 1
 
@@ -94,27 +94,27 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_gates(transpiled_circuit)
+    gates = get_circuit_instructions(transpiled_circuit)
 
     @test length(gates) == 0
 
     # circuit with single gate is unchanged
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_gates(transpiled_circuit)
+    gates = get_circuit_instructions(transpiled_circuit)
 
     @test length(gates) == 1
 
     @test circuit_contains_gate_type(transpiled_circuit, Snowflurry.SigmaX)
 
     # circuit with single gate and boundary is unchanged
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), control_x(1, 2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), control_x(1, 2)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_gates(transpiled_circuit)
+    gates = get_circuit_instructions(transpiled_circuit)
 
     @test length(gates) == 2
 
@@ -138,21 +138,21 @@ end
     input_gate = sigma_x(1)
 
     #compressing single input gate does nothing
-    circuit = QuantumCircuit(qubit_count = 2, gates = [input_gate])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [input_gate])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     @test compare_circuits(circuit, transpiled_circuit)
 
     #compressing gates on different targets does nothing
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), sigma_x(2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_x(2)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     @test compare_circuits(circuit, transpiled_circuit)
 
     #compressing one single and one multi target gates does nothing
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), control_x(1, 2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), control_x(1, 2)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -170,7 +170,7 @@ end
 
             truncated_input = gates_list[1:end_pos]
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = truncated_input)
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
 
             transpiled_circuit = transpile(transpiler, circuit)
 
@@ -202,12 +202,12 @@ end
 
         circuit = QuantumCircuit(
             qubit_count = qubit_count,
-            gates = [universal(target, theta, phi, lambda)],
+            instructions = [universal(target, theta, phi, lambda)],
         )
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == gates_in_output
 
@@ -219,7 +219,7 @@ end
     end
 
     #from non-Universal gate
-    circuit = QuantumCircuit(qubit_count = qubit_count, gates = [sigma_x(target)])
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [sigma_x(target)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -228,7 +228,7 @@ end
     #from single and multiple-target gates
     circuit = QuantumCircuit(
         qubit_count = 2,
-        gates = [universal(1, π / 2, π / 4, π / 8), control_x(1, 2)],
+        instructions = [universal(1, π / 2, π / 4, π / 8), control_x(1, 2)],
     )
 
     transpiled_circuit = transpile(transpiler, circuit)
@@ -254,7 +254,7 @@ end
 
     for theta in list_params
         circuit =
-            QuantumCircuit(qubit_count = qubit_count, gates = [rotation_x(target, theta)])
+            QuantumCircuit(qubit_count = qubit_count, instructions = [rotation_x(target, theta)])
 
         transpiled_circuit = transpile(transpiler, circuit)
 
@@ -262,7 +262,7 @@ end
 
         @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.RotationX)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == 5
 
@@ -295,12 +295,12 @@ end
     for (theta, phi, lambda, gates_in_output) in list_params
         circuit = QuantumCircuit(
             qubit_count = qubit_count,
-            gates = [universal(target, theta, phi, lambda)],
+            instructions = [universal(target, theta, phi, lambda)],
         )
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == gates_in_output
 
@@ -316,26 +316,26 @@ end
 
     for gate in single_qubit_gates
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = [gate])
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [gate])
 
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test compare_circuits(circuit, transpiled_circuit)
     end
 
-    circuit = QuantumCircuit(qubit_count = 2, gates = [universal(1, 1e-3, 1e-3, 1e-3)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [universal(1, 1e-3, 1e-3, 1e-3)])
 
     # with default tolerance        
     transpiled_circuit_default_tol = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit_default_tol)) == 5
+    @test length(get_circuit_instructions(transpiled_circuit_default_tol)) == 5
 
     # with user-defined tolerance
     transpiler = CastToPhaseShiftAndHalfRotationXTranspiler(1e-1)
 
     transpiled_circuit_high_tol = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit_high_tol)) == 0
+    @test length(get_circuit_instructions(transpiled_circuit_high_tol)) == 0
 
 end
 
@@ -367,16 +367,16 @@ end
     ]
 
     for (input_gates, gates_in_output) in test_specs
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = input_gates)
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = input_gates)
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == gates_in_output
 
         if !(compare_circuits(circuit, transpiled_circuit))
-            println("gates in input: $(get_circuit_gates(circuit))")
+            println("gates in input: $(get_circuit_instructions(circuit))")
         end
 
         @test compare_circuits(circuit, transpiled_circuit)
@@ -429,16 +429,16 @@ end
     ]
 
     for (input_gates, gates_in_output) in test_specs
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = input_gates)
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = input_gates)
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == gates_in_output
 
         if !(compare_circuits(circuit, transpiled_circuit))
-            println("gates in input: $(get_circuit_gates(circuit))")
+            println("gates in input: $(get_circuit_instructions(circuit))")
         end
 
         @test compare_circuits(circuit, transpiled_circuit)
@@ -477,14 +477,14 @@ end
     Snowflurry.gates_display_symbols[MultiParamMultiTargetGateSymbol] =
         ["*", "x", "MM(θ=%s,phi=%s)", "theta", "phi"]
 
-    Snowflurry.gates_instruction_symbols[MultiParamMultiTargetGateSymbol] = "mm"
+    Snowflurry.instruction_symbols[MultiParamMultiTargetGateSymbol] = "mm"
 
     qubit_count = 6
     nrows = 2
     ncols = 3
     circuit = QuantumCircuit(
         qubit_count = qubit_count,
-        gates = [Gate(MultiParamMultiTargetGateSymbol(π, π / 3), [1, 3, 5])],
+        instructions = [Gate(MultiParamMultiTargetGateSymbol(π, π / 3), [1, 3, 5])],
     )
 
     # test printout for multi-target multi-param gate
@@ -557,12 +557,12 @@ end
         vcat((input_gates_native, true), (input_gates_foreign, false))
         for gate in gates_list
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = [gate])
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [gate])
             transpiled_circuit = transpile(transpiler, circuit)
 
             @test compare_circuits(circuit, transpiled_circuit)
 
-            gates_in_output = get_circuit_gates(transpiled_circuit)
+            gates_in_output = get_circuit_instructions(transpiled_circuit)
 
             if input_is_native
                 test_is_not_rz = [
@@ -575,7 +575,7 @@ end
             end
 
             for gate in gates_in_output
-                @test is_native_gate(qpu, gate)
+                @test is_native_instruction(qpu, gate)
             end
         end
     end
@@ -590,7 +590,7 @@ end
     for gates_list in test_circuits
         for end_pos ∈ 1:length(gates_list)
             truncated_input = gates_list[1:end_pos]
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = truncated_input)
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
             transpiled_circuit = transpile(transpiler, circuit)
             @test compare_circuits(circuit, transpiled_circuit)
         end
@@ -606,14 +606,14 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = qubit_count,
-        gates = vcat(hadamard(1), [control_x(i, i + 1) for i ∈ 1:qubit_count-1]),
+        instructions = vcat(hadamard(1), [control_x(i, i + 1) for i ∈ 1:qubit_count-1]),
     )
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     results = Dict{Int,Vector{DataType}}([])
 
-    for gate in get_circuit_gates(transpiled_circuit)
+    for gate in get_circuit_instructions(transpiled_circuit)
 
         targets = get_connected_qubits(gate)
 
@@ -673,11 +673,11 @@ end
                     continue
                 end
                 circuit =
-                    QuantumCircuit(qubit_count = qubit_count, gates = [control_z(t_0, t_1)])
+                    QuantumCircuit(qubit_count = qubit_count, instructions = [control_z(t_0, t_1)])
                 transpiled_circuit = transpile(transpiler, circuit)
                 @test compare_circuits(circuit, transpiled_circuit)
 
-                gates_in_output = get_circuit_gates(transpiled_circuit)
+                gates_in_output = get_circuit_instructions(transpiled_circuit)
 
                 for gate in gates_in_output
                     connected_qubits = get_connected_qubits(gate)
@@ -707,7 +707,7 @@ end
 
             truncated_input = gates_list[1:end_pos]
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = truncated_input)
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
 
             transpiled_circuit = transpile(transpiler, circuit)
 
@@ -727,9 +727,9 @@ end
     transpiler = CastSwapToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, gates = [swap(1, 2)]),
-        QuantumCircuit(qubit_count = 2, gates = [swap(1, 2), x_90(1), swap(1, 2)]),
-        QuantumCircuit(qubit_count = 2, gates = [iswap(1, 2), swap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [swap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [swap(1, 2), x_90(1), swap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2), swap(1, 2)]),
     ]
 
     for circuit in circuits
@@ -744,12 +744,12 @@ end
     transpiler = CastCXToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, gates = [control_x(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2)]),
         QuantumCircuit(
             qubit_count = 2,
-            gates = [control_x(1, 2), x_90(1), control_x(1, 2)],
+            instructions = [control_x(1, 2), x_90(1), control_x(1, 2)],
         ),
-        QuantumCircuit(qubit_count = 2, gates = [iswap(1, 2), control_x(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2), control_x(1, 2)]),
     ]
 
     for circuit in circuits
@@ -764,9 +764,9 @@ end
     transpiler = CastISwapToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, gates = [iswap(1, 2)]),
-        QuantumCircuit(qubit_count = 2, gates = [iswap(1, 2), x_90(1), iswap(1, 2)]),
-        QuantumCircuit(qubit_count = 2, gates = [control_x(1, 2), iswap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2), x_90(1), iswap(1, 2)]),
+        QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), iswap(1, 2)]),
     ]
 
     for circuit in circuits
@@ -783,15 +783,15 @@ end
     circuits = [
         QuantumCircuit(
             qubit_count = 3,
-            gates = [toffoli(1, 2, 3), iswap(1, 2), toffoli(2, 1, 3)],
+            instructions = [toffoli(1, 2, 3), iswap(1, 2), toffoli(2, 1, 3)],
         ),
         QuantumCircuit(
             qubit_count = 3,
-            gates = [toffoli(1, 3, 2), x_90(1), toffoli(2, 3, 1)],
+            instructions = [toffoli(1, 3, 2), x_90(1), toffoli(2, 3, 1)],
         ),
         QuantumCircuit(
             qubit_count = 3,
-            gates = [toffoli(3, 1, 2), control_x(1, 2), toffoli(3, 2, 1)],
+            instructions = [toffoli(3, 1, 2), control_x(1, 2), toffoli(3, 2, 1)],
         ),
     ]
 
@@ -830,7 +830,7 @@ end
 
             truncated_input = input_gates[1:end_pos]
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = truncated_input)
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
 
             transpiled_circuit = transpile(transpiler, circuit)
 
@@ -888,29 +888,29 @@ end
     ]
 
     for (input_gate, type_result) in test_inputs
-        circuit = QuantumCircuit(qubit_count = target, gates = [input_gate])
+        circuit = QuantumCircuit(qubit_count = target, instructions = [input_gate])
 
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test compare_circuits(circuit, transpiled_circuit)
 
-        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
+        @test get_gate_symbol(get_circuit_instructions(transpiled_circuit)[1]) isa type_result
     end
 
-    circuit = QuantumCircuit(qubit_count = target, gates = [rotation_x(target, 0.0)])
+    circuit = QuantumCircuit(qubit_count = target, instructions = [rotation_x(target, 0.0)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     @test compare_circuits(circuit, transpiled_circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 0
+    @test length(get_circuit_instructions(transpiled_circuit)) == 0
 
     # with default tolerance
-    circuit = QuantumCircuit(qubit_count = target, gates = [rotation_x(target, 1e-3)])
+    circuit = QuantumCircuit(qubit_count = target, instructions = [rotation_x(target, 1e-3)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 1
+    @test length(get_circuit_instructions(transpiled_circuit)) == 1
 
     # with user-defined tolerance
 
@@ -918,7 +918,7 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 0
+    @test length(get_circuit_instructions(transpiled_circuit)) == 0
 end
 
 @testset "simplify_rz_gate" begin
@@ -981,29 +981,29 @@ end
     ]
 
     for (input_gate, type_result) in test_inputs
-        circuit = QuantumCircuit(qubit_count = target, gates = [input_gate])
+        circuit = QuantumCircuit(qubit_count = target, instructions = [input_gate])
 
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test compare_circuits(circuit, transpiled_circuit)
 
-        @test get_gate_symbol(get_circuit_gates(transpiled_circuit)[1]) isa type_result
+        @test get_gate_symbol(get_circuit_instructions(transpiled_circuit)[1]) isa type_result
     end
 
-    circuit = QuantumCircuit(qubit_count = target, gates = [phase_shift(target, 0.0)])
+    circuit = QuantumCircuit(qubit_count = target, instructions = [phase_shift(target, 0.0)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     @test compare_circuits(circuit, transpiled_circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 0
+    @test length(get_circuit_instructions(transpiled_circuit)) == 0
 
     # with default tolerance
-    circuit = QuantumCircuit(qubit_count = target, gates = [phase_shift(target, 1e-3)])
+    circuit = QuantumCircuit(qubit_count = target, instructions = [phase_shift(target, 1e-3)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 1
+    @test length(get_circuit_instructions(transpiled_circuit)) == 1
 
     # with user-defined tolerance
 
@@ -1011,7 +1011,7 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    @test length(get_circuit_gates(transpiled_circuit)) == 0
+    @test length(get_circuit_instructions(transpiled_circuit)) == 0
 end
 
 @testset "unsafe_compress_to_rz" begin
@@ -1085,14 +1085,14 @@ gates_in_output = [9, 8]
 
             truncated_input = gates_list[1:end_pos]
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, gates = truncated_input)
+            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
 
             transpiled_circuit = transpile(transpiler, circuit)
 
             @test compare_circuits(circuit, transpiled_circuit)
 
             if end_pos == length(gates_list)
-                @test length(get_circuit_gates(transpiled_circuit)) == gates_in_output
+                @test length(get_circuit_instructions(transpiled_circuit)) == gates_in_output
             end
         end
     end
@@ -1103,7 +1103,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 4,
-        gates = [
+        instructions = [
             hadamard(1),
             sigma_x(3),
             control_x(1, 4),
@@ -1120,7 +1120,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 4,
-        gates = [
+        instructions = [
             hadamard(1),
             sigma_x(3),
             control_x(1, 4),
@@ -1138,7 +1138,7 @@ end
 
 @testset "UnsupportedGatesTranspiler" begin
 
-    circuit = QuantumCircuit(qubit_count = 4, gates = [controlled(hadamard(2), [1])])
+    circuit = QuantumCircuit(qubit_count = 4, instructions = [controlled(hadamard(2), [1])])
 
     @test_throws NotImplementedError transpile(UnsupportedGatesTranspiler(), circuit)
 

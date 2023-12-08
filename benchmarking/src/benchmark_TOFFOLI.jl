@@ -7,7 +7,7 @@ include("SnowflurryBenchmarking.jl")
 
 @task "TOFFOLI" nqubits = nqubits begin
     map(nqubits) do k
-        t = @benchmark apply_gate!(
+        t = @benchmark apply_instruction!(
             ψ,
             toffoli(control_qubit_1, control_qubit_2, target_qubit_1),
         ) setup = (ψ = rand_state($k))
