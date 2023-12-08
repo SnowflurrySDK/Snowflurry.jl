@@ -130,12 +130,15 @@ end
     push!(c, swap(1, 2))
     inverse_c = inv(c)
 
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[1])) == "swap"
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[1])) ==
+          "swap"
     @test get_connected_qubits(get_circuit_instructions(inverse_c)[1]) == [1, 2]
 
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[2])) == "cx"
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[2])) ==
+          "cx"
     @test get_connected_qubits(get_circuit_instructions(inverse_c)[2]) == [1, 2]
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[3])) == "rx"
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[3])) ==
+          "rx"
     @test get_connected_qubits(get_circuit_instructions(inverse_c)[3]) == [1]
     @test get_gate_parameters(get_gate_symbol(get_circuit_instructions(inverse_c)[3]))["theta"] ≈
           -pi / 2
@@ -183,8 +186,10 @@ end
     circuit_3 = QuantumCircuit(qubit_count = 2, instructions = [hadamard(2)])
     append!(circuit, circuit_2, circuit_3)
 
-    expected_circuit =
-        QuantumCircuit(qubit_count = 2, instructions = [sigma_x(2), sigma_x(1), hadamard(2)])
+    expected_circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [sigma_x(2), sigma_x(1), hadamard(2)],
+    )
     @test compare_circuits(circuit, expected_circuit)
 end
 
@@ -197,8 +202,10 @@ end
     circuit_3 = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1)])
     prepend!(circuit, circuit_2, circuit_3)
 
-    expected_circuit =
-        QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), hadamard(1), sigma_x(2)])
+    expected_circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [sigma_x(1), hadamard(1), sigma_x(2)],
+    )
     @test compare_circuits(circuit, expected_circuit)
 end
 

@@ -65,7 +65,10 @@ end
     #default tolerance
     transpiler = SimplifyTrivialGatesTranspiler()
 
-    circuit = QuantumCircuit(qubit_count = 2, instructions = [universal(target, 1e-3, 1e-3, 1e-3)])
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [universal(target, 1e-3, 1e-3, 1e-3)],
+    )
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -78,7 +81,10 @@ end
     # user-defined tolerance
     transpiler = SimplifyTrivialGatesTranspiler(1e-1)
 
-    circuit = QuantumCircuit(qubit_count = 2, instructions = [universal(target, 1e-3, 1e-3, 1e-3)])
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [universal(target, 1e-3, 1e-3, 1e-3)],
+    )
 
     transpiled_circuit = transpile(transpiler, circuit)
 

@@ -7,7 +7,8 @@ include("SnowflurryBenchmarking.jl")
 
 @task "H" nqubits = nqubits begin
     map(nqubits) do k
-        t = @benchmark apply_instruction!(ψ, hadamard(target_qubit_1)) setup = (ψ = rand_state($k))
+        t = @benchmark apply_instruction!(ψ, hadamard(target_qubit_1)) setup =
+            (ψ = rand_state($k))
         minimum(t).time
     end
 end

@@ -38,7 +38,8 @@ end
 
 
 get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
-get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} = circuit.instructions
+get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
+    circuit.instructions
 
 """
     push!(circuit::QuantumCircuit, gates::AbstractGateSymbol...)
@@ -93,7 +94,10 @@ function Base.push!(circuit::QuantumCircuit, instructions::AbstractInstruction..
     return circuit
 end
 
-function Base.append!(circuit::QuantumCircuit, instructions::Vector{InstructionType}) where {InstructionType <: AbstractInstruction}
+function Base.append!(
+    circuit::QuantumCircuit,
+    instructions::Vector{InstructionType},
+) where {InstructionType<:AbstractInstruction}
     foreach(instr -> ensure_instruction_is_in_circuit(circuit, instr), instructions)
     append!(circuit.instructions, instructions)
     return circuit
@@ -108,7 +112,7 @@ The `circuits_to_append` cannot contain more qubits than the `base_circuit`.
 
 # Examples
 ```jldoctest
-julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──X──
@@ -118,7 +122,7 @@ q[2]:─────
 
 
 
-julia> append_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
+julia> append_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──Z──
@@ -126,7 +130,7 @@ q[1]:──Z──
 
 
 
-julia> append_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+julia> append_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──*──
@@ -175,7 +179,7 @@ than the `base_circuit`.
 
 # Examples
 ```jldoctest
-julia> base = QuantumCircuit(qubit_count=2, gates=[sigma_x(1)])
+julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──X──
@@ -185,7 +189,7 @@ q[2]:─────
 
 
 
-julia> prepend_1 = QuantumCircuit(qubit_count=1, gates=[sigma_z(1)])
+julia> prepend_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──Z──
@@ -193,7 +197,7 @@ q[1]:──Z──
 
 
 
-julia> prepend_2 = QuantumCircuit(qubit_count=2, gates=[control_x(1,2)])
+julia> prepend_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──*──
@@ -244,7 +248,7 @@ targets can also be equivalent.
 
 # Examples
 ```jldoctest
-julia> c0 = QuantumCircuit(qubit_count = 1, gates=[sigma_x(1),sigma_y(1)])
+julia> c0 = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──X────Y──
@@ -252,7 +256,7 @@ q[1]:──X────Y──
 
 
 
-julia> c1 = QuantumCircuit(qubit_count = 1, gates=[phase_shift(1,π)])
+julia> c1 = QuantumCircuit(qubit_count = 1, instructions=[phase_shift(1,π)])
 Quantum Circuit Object:
    qubit_count: 1  
 q[1]:──Rz(3.1416)──
@@ -263,7 +267,7 @@ q[1]:──Rz(3.1416)──
 julia> compare_circuits(c0,c1)
 true            
 
-julia> c0 = QuantumCircuit(qubit_count = 3, gates=[sigma_x(1),sigma_y(1),control_x(2,3)])
+julia> c0 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),sigma_y(1),control_x(2,3)])
 Quantum Circuit Object:
    qubit_count: 3 
 q[1]:──X────Y───────
@@ -275,7 +279,7 @@ q[3]:────────────X──
 
 
 
-julia> c1 = QuantumCircuit(qubit_count = 3, gates=[control_x(2,3),sigma_x(1),sigma_y(1)])
+julia> c1 = QuantumCircuit(qubit_count = 3, instructions=[control_x(2,3),sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 3 
 q[1]:───────X────Y──
@@ -324,7 +328,7 @@ Determines whether a type of gate is present in a circuit.
 
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count = 1, gates=[sigma_x(1),sigma_y(1)])
+julia> circuit = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
 q[1]:──X────Y──
@@ -349,7 +353,10 @@ function circuit_contains_gate_type(
     return false
 end
 
-function ensure_instruction_is_in_circuit(circuit::QuantumCircuit, instruction::Instruction) where {Instruction<:AbstractInstruction}
+function ensure_instruction_is_in_circuit(
+    circuit::QuantumCircuit,
+    instruction::Instruction,
+) where {Instruction<:AbstractInstruction}
     for target in get_connected_qubits(instruction)
         if target > get_num_qubits(circuit)
             throw(DomainError(target, "The instruction does not fit in the circuit"))
@@ -396,7 +403,10 @@ function format_label(
     end
 end
 
-function get_display_symbols(gate::AbstractGateSymbol; precision::Integer = 4)::Vector{String}
+function get_display_symbols(
+    gate::AbstractGateSymbol;
+    precision::Integer = 4,
+)::Vector{String}
 
     gate_params = get_gate_parameters(gate)
 
@@ -435,7 +445,12 @@ function get_display_symbols(::Readout; precision::Integer = 4)::Vector{String}
 
     symbol_specs = gates_display_symbols[Readout]
 
-    return format_label(symbol_specs, num_targets, Dict{String,Int}(); precision = precision)
+    return format_label(
+        symbol_specs,
+        num_targets,
+        Dict{String,Int}();
+        precision = precision,
+    )
 end
 
 const control_display_symbol = "*"
@@ -683,7 +698,13 @@ function add_target_to_circuit_layout!(
 
     gate_symbols = get_display_symbols(get_gate_symbol(gate))
 
-    append_symbol_to_circuit_layout!(gate_symbols, get_connected_qubits(gate), circuit_layout, i_step, longest_symbol_length)
+    append_symbol_to_circuit_layout!(
+        gate_symbols,
+        get_connected_qubits(gate),
+        circuit_layout,
+        i_step,
+        longest_symbol_length,
+    )
 
 end
 
@@ -696,12 +717,18 @@ function add_target_to_circuit_layout!(
 
     readout_symbols = get_display_symbols(readout)
 
-    append_symbol_to_circuit_layout!(readout_symbols, get_connected_qubits(readout), circuit_layout, i_step, longest_symbol_length)
+    append_symbol_to_circuit_layout!(
+        readout_symbols,
+        get_connected_qubits(readout),
+        circuit_layout,
+        i_step,
+        longest_symbol_length,
+    )
 
 end
 
 function append_symbol_to_circuit_layout!(
-    symbolsVec::Vector{String}, 
+    symbolsVec::Vector{String},
     connected_qubits::Vector{Int},
     circuit_layout::Array{String},
     i_step::Integer,
@@ -980,9 +1007,14 @@ q[2]:──X─────────────────
 """
 function Base.inv(circuit::QuantumCircuit)
 
-    inverse_gates = Vector{AbstractInstruction}([Base.inv(g) for g in reverse(get_circuit_instructions(circuit))])
+    inverse_gates = Vector{AbstractInstruction}([
+        Base.inv(g) for g in reverse(get_circuit_instructions(circuit))
+    ])
 
-    return QuantumCircuit(qubit_count = get_num_qubits(circuit), instructions = inverse_gates)
+    return QuantumCircuit(
+        qubit_count = get_num_qubits(circuit),
+        instructions = inverse_gates,
+    )
 end
 
 """

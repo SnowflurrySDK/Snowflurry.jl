@@ -200,7 +200,7 @@ function is_native_instruction(qpu::UnionAnyonQPU, gate::Gate)::Bool
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool=true
+is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool = true
 
 function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
@@ -240,7 +240,7 @@ message.
 ```jldoctest  
 julia> qpu=AnyonYukonQPU(client_anyon);
 
-julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -279,7 +279,7 @@ message.
 ```jldoctest  
 julia> qpu=AnyonYukonQPU(client);
 
-julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 

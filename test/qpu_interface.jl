@@ -622,7 +622,8 @@ end
         qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
-        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [sigma_x(qubit_count)])
+        circuit =
+            QuantumCircuit(qubit_count = qubit_count, instructions = [sigma_x(qubit_count)])
 
         transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
     end
