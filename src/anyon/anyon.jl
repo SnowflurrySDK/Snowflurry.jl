@@ -188,7 +188,7 @@ function get_qubits_distance(
     return maximum([0, length(path_search(target_1, target_2, connectivity)) - 1])
 end
 
-function is_native_gate(qpu::UnionAnyonQPU, gate::Gate)::Bool
+function is_native_instruction(qpu::UnionAnyonQPU, gate::Gate)::Bool
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
@@ -200,6 +200,8 @@ function is_native_gate(qpu::UnionAnyonQPU, gate::Gate)::Bool
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
+is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool=true
+
 function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
     qubit_count_qpu = get_num_qubits(qpu)
@@ -210,11 +212,11 @@ function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{B
         )
     end
 
-    for gate in get_circuit_gates(circuit)
-        if !is_native_gate(qpu, gate)
+    for instr in get_circuit_instructions(circuit)
+        if !is_native_instruction(qpu, instr)
             return (
                 false,
-                "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))",
+                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr)) is not native on $(typeof(qpu))",
             )
         end
     end

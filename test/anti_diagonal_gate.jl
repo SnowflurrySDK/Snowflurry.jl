@@ -93,7 +93,7 @@ end
 
     println(y_operator)
 
-    apply_gate!(ψ, Y_gate)
+    apply_instruction!(ψ, Y_gate)
 
     ψ_result = Ket([
         0.0 - 5.0im,

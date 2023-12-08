@@ -138,11 +138,11 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
         "shot_count" => shot_count,
     )
 
-    for gate in get_circuit_gates(circuit)
+    for gate in get_circuit_instructions(circuit)
         push!(
             circuit_description["circuit"]["operations"],
             Dict{String,Any}(
-                "type" => get_instruction_symbol(get_gate_symbol(gate)),
+                "type" => get_instruction_symbol(gate),
                 #server-side qubit numbering starts at 0
                 "qubits" => [n - 1 for n in get_connected_qubits(gate)],
                 "parameters" => get_gate_parameters(get_gate_symbol(gate)),
@@ -349,7 +349,7 @@ abstract type AbstractQPU end
 
 get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
 
-is_native_gate(qpu::AbstractQPU, ::Gate) = throw(NotImplementedError(:is_native_gate, qpu))
+is_native_instruction(qpu::AbstractQPU, ::AbstractInstruction) = throw(NotImplementedError(:is_native_instruction, qpu))
 
 is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
     throw(NotImplementedError(:is_native_circuit, qpu))
@@ -381,7 +381,7 @@ struct VirtualQPU <: AbstractQPU end
 get_metadata(qpu::VirtualQPU) =
     Dict{String,String}("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
-is_native_gate(::VirtualQPU, ::Gate)::Bool = true
+is_native_instruction(::VirtualQPU, ::AbstractInstruction)::Bool = true
 
 is_native_circuit(::VirtualQPU, ::QuantumCircuit)::Tuple{Bool,String} = (true, "")
 

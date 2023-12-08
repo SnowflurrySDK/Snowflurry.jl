@@ -91,14 +91,18 @@ function get_pauli(
         GF(2)(negative_exponent),
     )
 
-    for gate in get_circuit_gates(circuit)
-        if !(get_gate_symbol(gate) isa Union{Identity,SigmaX,SigmaY,SigmaZ})
-            throw(NotImplementedError(:get_pauli, get_gate_symbol(gate)))
+    for instr in get_circuit_instructions(circuit)
+        if !(instr isa Gate) # a Readout has no Pauli equivalent
+            throw(NotImplementedError(:get_pauli, instr))
         end
 
-        target = get_connected_qubits(gate)[1]
+        if !(get_gate_symbol(instr) isa Union{Identity,SigmaX,SigmaY,SigmaZ})
+            throw(NotImplementedError(:get_pauli, get_gate_symbol(instr)))
+        end
+
+        target = get_connected_qubits(instr)[1]
         new_pauli =
-            unsafe_get_pauli(get_gate_symbol(gate), target, num_qubits, GF(2)(0), GF(2)(0))
+            unsafe_get_pauli(get_gate_symbol(instr), target, num_qubits, GF(2)(0), GF(2)(0))
         pauli = new_pauli * pauli
     end
     return pauli
@@ -170,6 +174,7 @@ function get_pauli(
     )
 end
 
+#TODO implement for readout?
 function get_pauli(
     gate::Gate,
     num_qubits::Integer;
@@ -443,7 +448,7 @@ function Base.show(io::IO, pauli::PauliGroupElement)
     if displayable_pauli.imaginary_exponent == 1
         print(io, "im")
     end
-    for gate in get_circuit_gates(displayable_pauli.circuit)
+    for gate in get_circuit_instructions(displayable_pauli.circuit)
         connected_qubits = get_connected_qubits(gate)
         @assert length(connected_qubits) == 1
         print_pauli_gate(io, get_gate_symbol(gate), connected_qubits[1])
