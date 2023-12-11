@@ -149,12 +149,25 @@ set_of_rz_gates = [Z90, ZM90, SigmaZ, Pi8, Pi8Dagger, PhaseShift]
 
 is_multi_target(symbol::AbstractGateSymbol) = get_num_connected_qubits(symbol) > 1
 is_multi_target(gate::Gate) = is_multi_target(get_gate_symbol(gate))
+is_multi_target(readout::Readout) = false
+is_multi_target(instr::AbstractInstruction) =
+    throw(NotImplementedError(:is_multi_target, instr))
 
 function is_not_rz_gate(::Gate{SymbolType})::Bool where {SymbolType<:AbstractGateSymbol}
     return !(SymbolType in set_of_rz_gates)
 end
 
-is_multi_target_or_not_rz(gate::Gate) = is_multi_target(gate) || is_not_rz_gate(gate)
+is_not_rz_gate(readout::Readout) = true
+is_not_rz_gate(instr::AbstractInstruction) =
+    throw(NotImplementedError(:is_not_rz_gate, instr))
+
+is_multi_target_or_not_rz(instr::AbstractInstruction) =
+    is_multi_target(instr) || is_not_rz_gate(instr)
+
+is_readout(instr::AbstractInstruction) = typeof(instr) == Readout
+
+is_multi_target_or_readout(instr::AbstractInstruction) =
+    is_multi_target(instr) || is_readout(instr)
 
 function find_and_compress_blocks(
     circuit::QuantumCircuit,
@@ -162,7 +175,7 @@ function find_and_compress_blocks(
     compression_function::Function,
 )::QuantumCircuit
 
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
@@ -212,15 +225,15 @@ function find_and_compress_blocks(
 
     can_be_placed = Dict(target => [true] for target = 1:qubit_count)
 
-    placed_gates = [false for _ = 1:length(gates)]
+    placed_instructions = [false for _ = 1:length(instructions)]
 
-    for (i_gate, gate) in enumerate(gates)
-        targets = get_connected_qubits(gate)
+    for (i_instr, instr) in enumerate(instructions)
+        targets = get_connected_qubits(instr)
 
-        if is_boundary(gate)
+        if is_boundary(instr)
 
             # add group boundary at each of those targets
-            push!(boundaries, (i_gate, targets))
+            push!(boundaries, (i_instr, targets))
 
             for target in targets
                 # create new empty group at those targets
@@ -235,7 +248,7 @@ function find_and_compress_blocks(
 
             # inside a group, common-target gates are put in blocks.
             # append gate to last block
-            push!(blocks_per_target[target][end], i_gate)
+            push!(blocks_per_target[target][end], i_instr)
         end
     end
 
@@ -257,19 +270,20 @@ function find_and_compress_blocks(
 
                 block = blocks_per_target[target][block_index]
 
-                gates_block::Vector{Gate} = [convert(Gate, gates[i]) for i in block]
+                instructions_block::Vector{Gate} =
+                    [convert(Gate, instructions[i]) for i in block]
 
                 if length(block) > 1
-                    push!(output_circuit, compression_function(gates_block, target))
+                    push!(output_circuit, compression_function(instructions_block, target))
 
-                    for i_gate in block
-                        placed_gates[i_gate] = true
+                    for i_instr in block
+                        placed_instructions[i_instr] = true
                     end
                 elseif length(block) == 1
                     #no need to compress individual gate
-                    push!(output_circuit, gates_block[1])
+                    push!(output_circuit, instructions_block[1])
 
-                    placed_gates[block[1]] = true
+                    placed_instructions[block[1]] = true
                 end
 
                 can_be_placed[target][block_index] = false
@@ -278,10 +292,10 @@ function find_and_compress_blocks(
 
         if !isempty(boundaries)
             # pass boundary
-            (i_gate, targets) = pop!(boundaries)
+            (i_instr, targets) = pop!(boundaries)
 
-            push!(output_circuit, gates[i_gate])
-            placed_gates[i_gate] = true
+            push!(output_circuit, instructions[i_instr])
+            placed_instructions[i_instr] = true
 
             #unlock next blocks for those targets (boundary passed)
             for target in targets
@@ -291,11 +305,11 @@ function find_and_compress_blocks(
 
         end
 
-        if all(placed_gates)
+        if all(placed_instructions)
             break
         end
 
-        @assert iteration_count < length(gates) + 1 ("Failed to construct output")
+        @assert iteration_count < length(instructions) + 1 ("Failed to construct output")
     end
 
     return output_circuit
@@ -373,7 +387,11 @@ function transpile(
     ::CompressSingleQubitGatesTranspiler,
     circuit::QuantumCircuit,
 )::QuantumCircuit
-    return find_and_compress_blocks(circuit, is_multi_target, unsafe_compress_to_universal)
+    return find_and_compress_blocks(
+        circuit,
+        is_multi_target_or_readout,
+        unsafe_compress_to_universal,
+    )
 end
 
 function cast_to_cz(gate::AbstractGateSymbol, _::Vector{Int})
@@ -433,11 +451,14 @@ function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::Quant
     qubit_count = get_num_qubits(circuit)
     output = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{Swap}
-            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{Swap}
+            push!(
+                output,
+                cast_to_cz(get_gate_symbol(instr), get_connected_qubits(instr))...,
+            )
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -485,11 +506,14 @@ function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::Quantum
     qubit_count = get_num_qubits(circuit)
     output = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{ControlX}
-            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{ControlX}
+            push!(
+                output,
+                cast_to_cz(get_gate_symbol(instr), get_connected_qubits(instr))...,
+            )
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -548,11 +572,14 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     qubit_count = get_num_qubits(circuit)
     output = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{ISwap}
-            push!(output, cast_to_cz(get_gate_symbol(gate), get_connected_qubits(gate))...)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{ISwap}
+            push!(
+                output,
+                cast_to_cz(get_gate_symbol(instr), get_connected_qubits(instr))...,
+            )
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -628,11 +655,14 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     qubit_count = get_num_qubits(circuit)
     output = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{Toffoli}
-            push!(output, cast_to_cx(get_gate_symbol(gate), get_connected_qubits(gate))...)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{Toffoli}
+            push!(
+                output,
+                cast_to_cx(get_gate_symbol(instr), get_connected_qubits(instr))...,
+            )
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -816,30 +846,30 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
     atol = transpiler_stage.atol
 
-    for gate in gates
+    for instr in instructions
 
-        targets = get_connected_qubits(gate)
+        targets = get_connected_qubits(instr)
 
-        if length(targets) > 1
-            push!(output_circuit, gate)
+        if length(targets) > 1 || instr isa Readout
+            push!(output_circuit, instr)
         else
-            if !(gate isa Snowflurry.Gate{Universal})
-                gate = get_gate_symbol(
-                    as_universal_gate(targets[1], get_operator(get_gate_symbol(gate))),
+            if !(instr isa Snowflurry.Gate{Universal} || instr isa Readout)
+                instr = get_gate_symbol(
+                    as_universal_gate(targets[1], get_operator(get_gate_symbol(instr))),
                 )
             else
-                gate = get_gate_symbol(gate)
+                instr = get_gate_symbol(instr)
             end
 
             gate_array =
-                cast_to_phase_shift_and_half_rotation_x(gate, targets[1]; atol = atol)
+                cast_to_phase_shift_and_half_rotation_x(instr, targets[1]; atol = atol)
             push!(output_circuit, gate_array...)
         end
     end
@@ -928,27 +958,27 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in gates
+    for instr in instructions
 
-        targets = get_connected_qubits(gate)
+        targets = get_connected_qubits(instr)
 
-        if length(targets) > 1
-            push!(output_circuit, gate)
+        if length(targets) > 1 || instr isa Readout
+            push!(output_circuit, instr)
         else
-            if !(gate isa Snowflurry.Gate{Universal})
-                gate = get_gate_symbol(
-                    as_universal_gate(targets[1], get_operator(get_gate_symbol(gate))),
+            if !(instr isa Snowflurry.Gate{Universal})
+                instr = get_gate_symbol(
+                    as_universal_gate(targets[1], get_operator(get_gate_symbol(instr))),
                 )
             else
-                gate = get_gate_symbol(gate)
+                instr = get_gate_symbol(instr)
             end
 
-            gate_array = cast_to_rz_rx_rz(gate, targets[1])
+            gate_array = cast_to_rz_rx_rz(instr, targets[1])
             push!(output_circuit, gate_array...)
         end
     end
@@ -1014,18 +1044,18 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in gates
+    for instr in instructions
 
-        if gate isa Snowflurry.Gate{RotationX}
-            gate_array = cast_rx_to_rz_and_half_rotation_x(gate)
+        if instr isa Snowflurry.Gate{RotationX}
+            gate_array = cast_rx_to_rz_and_half_rotation_x(instr)
             push!(output_circuit, gate_array...)
         else
-            push!(output_circuit, gate)
+            push!(output_circuit, instr)
         end
     end
 
@@ -1126,15 +1156,15 @@ function transpile(
 
     atol = transpiler_stage.atol
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{RotationX}
-            new_gate = simplify_rx_gate(gate, atol = atol)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{RotationX}
+            new_gate = simplify_rx_gate(instr, atol = atol)
 
             if !isnothing(new_gate)
                 push!(output, new_gate)
             end
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -1266,14 +1296,14 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
 
-    for gate in gates
+    for instr in instructions
 
-        connected_qubits = get_connected_qubits(gate)
+        connected_qubits = get_connected_qubits(instr)
 
         if length(connected_qubits) > 1
 
@@ -1285,7 +1315,7 @@ function transpile(
                 (old_number, new_number) in zip(connected_qubits, adjacent_mapping)
             ])
 
-            gates_block = [move_instruction(gate, mapping_dict)]
+            gates_block = [move_instruction(instr, mapping_dict)]
 
             @assert get_connected_qubits(gates_block[1]) == adjacent_mapping (
                 "Failed to construct gate: $(typeof((gates_block[1])))"
@@ -1302,7 +1332,7 @@ function transpile(
             push!(output_circuit, gates_block...)
         else
             # no effect for single-target gate
-            push!(output_circuit, gate)
+            push!(output_circuit, instr)
         end
     end
 
@@ -1403,14 +1433,14 @@ function transpile(
 
     atol = transpiler_stage.atol
 
-    for gate in get_circuit_instructions(circuit)
-        if gate isa Snowflurry.Gate{PhaseShift}
-            new_gate = simplify_rz_gate(gate, atol = atol)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{PhaseShift}
+            new_gate = simplify_rz_gate(instr, atol = atol)
             if !isnothing(new_gate)
                 push!(output, new_gate)
             end
         else
-            push!(output, gate)
+            push!(output, instr)
         end
     end
 
@@ -1577,21 +1607,21 @@ function transpile(
     ::RemoveSwapBySwappingGatesTranspiler,
     circuit::QuantumCircuit,
 )::QuantumCircuit
-    gates = get_circuit_instructions(circuit)
+    instructions = get_circuit_instructions(circuit)
     qubit_count = get_num_qubits(circuit)
     output_circuit = QuantumCircuit(qubit_count = qubit_count)
     qubit_mapping = Dict{Int,Int}()
-    reverse_transpiled_gates = Vector{Gate}([])
+    reverse_transpiled_instructions = Vector{Gate}([])
 
-    for gate in reverse(gates)
-        if gate isa Snowflurry.Gate{Swap}
-            update_qubit_mapping!(qubit_mapping, get_connected_qubits(gate))
+    for instr in reverse(instructions)
+        if instr isa Snowflurry.Gate{Swap}
+            update_qubit_mapping!(qubit_mapping, get_connected_qubits(instr))
         else
-            moved_gate = move_instruction(gate, qubit_mapping)
-            push!(reverse_transpiled_gates, moved_gate)
+            moved_instr = move_instruction(instr, qubit_mapping)
+            push!(reverse_transpiled_instructions, moved_instr)
         end
     end
-    push!(output_circuit, reverse(reverse_transpiled_gates)...)
+    push!(output_circuit, reverse(reverse_transpiled_instructions)...)
     return output_circuit
 end
 
@@ -1736,9 +1766,9 @@ function transpile(
 
     atol = transpiler_stage.atol
 
-    for gate in get_circuit_instructions(circuit)
-        if ~is_trivial_gate(gate; atol = atol)
-            push!(output, gate)
+    for instr in get_circuit_instructions(circuit)
+        if (instr isa Readout) || ~is_trivial_gate(instr; atol = atol)
+            push!(output, instr)
         end
     end
 
@@ -1749,11 +1779,50 @@ struct UnsupportedGatesTranspiler <: Transpiler end
 
 function transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-    for gate in get_circuit_instructions(circuit)
-        if get_gate_symbol(gate) isa Controlled
-            throw(NotImplementedError(:Transpiler, gate))
+    for instr in get_circuit_instructions(circuit)
+        if !(instr isa Readout) && get_gate_symbol(instr) isa Controlled
+            throw(NotImplementedError(:Transpiler, instr))
         end
     end
 
     return circuit
+end
+
+struct ReadoutsAreFinalInstructionsTranspiler <: Transpiler end
+
+function transpile(
+    ::ReadoutsAreFinalInstructionsTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    assert_readouts_are_last_instr(circuit)
+
+    return circuit
+end
+
+
+function assert_readouts_are_last_instr(circuit::QuantumCircuit)
+    instructions = get_circuit_instructions(circuit)
+
+    readouts_present_on_qubits = Set{Int}()
+
+    for instr in instructions
+        if typeof(instr) == Readout
+            target_qubit = get_connected_qubits(instr)[1]
+
+            #repeated readouts are not allowed
+            @assert !(target_qubit in readouts_present_on_qubits) "Found multiple Readout on qubit: $target_qubit"
+
+            push!(readouts_present_on_qubits, target_qubit)
+
+        else
+            target_qubits = get_connected_qubits(instr)
+
+            for target_qubit in target_qubits
+                # Gates following readouts are not allowed
+                @assert !(target_qubit in readouts_present_on_qubits) "Cannot preform Gate following Readout on qubit: $target_qubit"
+            end
+        end
+    end
+
 end

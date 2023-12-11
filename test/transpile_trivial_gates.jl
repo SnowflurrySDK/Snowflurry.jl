@@ -51,9 +51,9 @@ lambda = π / 7
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_instructions(transpiled_circuit)
+        instr = get_circuit_instructions(transpiled_circuit)
 
-        @test length(gates) == gates_count_output
+        @test length(instr) == gates_count_output
 
         @test compare_circuits(circuit, transpiled_circuit)
     end
@@ -72,9 +72,9 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_instructions(transpiled_circuit)
+    instructions = get_circuit_instructions(transpiled_circuit)
 
-    @test length(gates) == 1
+    @test length(instructions) == 1
 
     @test compare_circuits(circuit, transpiled_circuit)
 
@@ -88,9 +88,9 @@ end
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_instructions(transpiled_circuit)
+    instructions = get_circuit_instructions(transpiled_circuit)
 
-    @test length(gates) == 0
+    @test length(instructions) == 0
 
 end
 

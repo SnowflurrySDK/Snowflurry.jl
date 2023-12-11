@@ -16,7 +16,7 @@ function move_instruction(
 
     connected_qubits = get_connected_qubits(readout)
 
-    @assert len(connected_qubits) == 1 "a Readout can only be single-qubit"
+    @assert length(connected_qubits) == 1 "a Readout can only be single-qubit"
 
     qubit = connected_qubits[1]
 

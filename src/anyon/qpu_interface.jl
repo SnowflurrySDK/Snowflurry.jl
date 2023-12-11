@@ -138,14 +138,14 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
         "shot_count" => shot_count,
     )
 
-    for gate in get_circuit_instructions(circuit)
+    for instr in get_circuit_instructions(circuit)
         push!(
             circuit_description["circuit"]["operations"],
             Dict{String,Any}(
-                "type" => get_instruction_symbol(gate),
+                "type" => get_instruction_symbol(instr),
                 #server-side qubit numbering starts at 0
-                "qubits" => [n - 1 for n in get_connected_qubits(gate)],
-                "parameters" => get_gate_parameters(get_gate_symbol(gate)),
+                "qubits" => [n - 1 for n in get_connected_qubits(instr)],
+                "parameters" => get_gate_parameters(get_gate_symbol(instr)),
             ),
         )
     end

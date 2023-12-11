@@ -174,7 +174,6 @@ function get_pauli(
     )
 end
 
-#TODO implement for readout?
 function get_pauli(
     gate::Gate,
     num_qubits::Integer;
@@ -448,10 +447,10 @@ function Base.show(io::IO, pauli::PauliGroupElement)
     if displayable_pauli.imaginary_exponent == 1
         print(io, "im")
     end
-    for gate in get_circuit_instructions(displayable_pauli.circuit)
-        connected_qubits = get_connected_qubits(gate)
+    for instr in get_circuit_instructions(displayable_pauli.circuit)
+        connected_qubits = get_connected_qubits(instr)
         @assert length(connected_qubits) == 1
-        print_pauli_gate(io, get_gate_symbol(gate), connected_qubits[1])
+        print_pauli_gate(io, get_gate_symbol(instr), connected_qubits[1])
     end
     println(io)
     println(io)

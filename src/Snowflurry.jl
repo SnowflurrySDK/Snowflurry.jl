@@ -71,6 +71,7 @@ export
     CompressRzGatesTranspiler,
     TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
+    ReadoutsAreFinalInstructionsTranspiler,
     UnsupportedGatesTranspiler,
 
     # Functions

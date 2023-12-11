@@ -341,7 +341,7 @@ julia> qpu=AnyonYukonQPU(client);
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
-), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
+), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler(), UnsupportedGatesTranspiler()])
 ```
 """
 function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
@@ -358,6 +358,7 @@ function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
         CastRxToRzAndHalfRotationXTranspiler(),
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(atol),
+        ReadoutsAreFinalInstructionsTranspiler(),
         UnsupportedGatesTranspiler(),
     ])
 end

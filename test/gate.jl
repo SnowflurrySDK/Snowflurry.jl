@@ -203,6 +203,7 @@ end
     @test get_display_symbols(get_gate_symbol(CX)) == ["*", "X"]
     @test get_operator(get_gate_symbol(CX)) ≈ control_x()
     @test inv(CX) == CX
+    @test Snowflurry.get_num_target_qubits(get_gate_symbol(CX)) == 1
 
     CZ = control_z(1, 2)
     @test get_instruction_symbol(get_gate_symbol(CZ)) == "cz"
@@ -210,6 +211,7 @@ end
     @test get_display_symbols(get_gate_symbol(CZ)) == ["*", "Z"]
     @test get_operator(get_gate_symbol(CZ)) ≈ control_z()
     @test inv(CZ) == CZ
+    @test Snowflurry.get_num_target_qubits(get_gate_symbol(CZ)) == 1
 
     SWAP = swap(1, 2)
     @test get_instruction_symbol(get_gate_symbol(SWAP)) == "swap"
@@ -227,6 +229,7 @@ end
     @test CCX * fock(4, 8) ≈ fock(4, 8)
     @test toffoli(3, 1, 2) * fock(5, 8) ≈ fock(7, 8)
     @test inv(CCX) == CCX
+    @test Snowflurry.get_num_target_qubits(get_gate_symbol(CCX)) == 1
 
     ψ_0 = fock(0, 2)
     ψ_1 = fock(1, 2)

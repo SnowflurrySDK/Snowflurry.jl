@@ -122,11 +122,12 @@ Underlying data ComplexF64:
 
 
 """
+abstract type AbstractGateSymbol end
+
 abstract type AbstractInstruction end
 
-Base.inv(instr::AbstractInstruction) = throw(NotImplementedError(:Base.inv, instr))
-
-abstract type AbstractGateSymbol end
+Base.inv(instr::InstructionType) where {InstructionType<:AbstractInstruction} =
+    throw(NotImplementedError(:inv, instr))
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
@@ -2140,7 +2141,7 @@ end
 function apply_instruction!(::Ket, instr::AbstractInstruction)
     throw(
         NotImplementedError(
-            apply_instruction!,
+            :apply_instruction!,
             "Simulator not implemented for instruction of type $(typeof(instr))",
         ),
     )
@@ -2208,9 +2209,8 @@ function get_transformed_state(state::Ket, gate::Gate)
     return transformed_state
 end
 
-Base.:*(M::AbstractInstruction, x::Ket) = throw(
-    NotImplementedError(Base.:*, "Left-multiply not implemented for type $(typeof(M))"),
-)
+Base.:*(M::InstructionType, x::Ket) where {InstructionType<:AbstractInstruction} =
+    throw(NotImplementedError(:*, "Left-multiply not implemented for type $(typeof(M))"))
 
 """
     inv(gate::AbstractGateSymbol)

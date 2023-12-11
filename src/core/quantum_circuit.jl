@@ -36,6 +36,9 @@ Base.@kwdef struct QuantumCircuit
     end
 end
 
+function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
+    return c0.qubit_count == c1.qubit_count && c0.instructions == c1.instructions
+end
 
 get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
@@ -243,7 +246,10 @@ Tests for equivalence of two circuits based on their effect on an
 arbitrary input state (a Ket). Circuits are equivalent if they both 
 yield the same output for any input, up to a global phase.
 Circuits with different ordering of gates that apply on different 
-targets can also be equivalent.
+targets can also be equivalent. 
+!!! note 
+    If there are `Readouts` are present in either `QuantumCircuit`, 
+    they are ignored by `compare_circuit`.
 
 
 # Examples
@@ -298,6 +304,10 @@ true
 """
 function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
+    if isequal(c0, c1)
+        return true
+    end
+
     num_qubits = get_num_qubits(c0)
 
     @assert num_qubits == get_num_qubits(c1) (
@@ -307,14 +317,18 @@ function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     #non-normalized ket with different scalar at each position
     ψ_0 = Ket([v for v = 1:2^num_qubits])
 
-    for gate in get_circuit_instructions(c0)
-        apply_instruction!(ψ_0, gate)
+    for instr in get_circuit_instructions(c0)
+        if !(instr isa Readout)
+            apply_instruction!(ψ_0, instr)
+        end
     end
 
     ψ_1 = Ket([v for v = 1:2^num_qubits])
 
-    for gate in get_circuit_instructions(c1)
-        apply_instruction!(ψ_1, gate)
+    for instr in get_circuit_instructions(c1)
+        if !(instr isa Readout)
+            apply_instruction!(ψ_1, instr)
+        end
     end
 
     # check equality allowing a global phase offset
@@ -344,8 +358,8 @@ function circuit_contains_gate_type(
     circuit::QuantumCircuit,
     gate_type::Type{<:AbstractGateSymbol},
 )::Bool
-    for gate in get_circuit_instructions(circuit)
-        if get_gate_symbol(gate) isa gate_type
+    for instr in get_circuit_instructions(circuit)
+        if (instr isa Snowflurry.Gate) && get_gate_symbol(instr) isa gate_type
             return true
         end
     end
@@ -830,8 +844,8 @@ function simulate(circuit::QuantumCircuit)
     hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
-    for gate in get_circuit_instructions(circuit)
-        apply_instruction!(ψ, gate)
+    for instr in get_circuit_instructions(circuit)
+        apply_instruction!(ψ, instr)
     end
     return ψ
 end

@@ -639,8 +639,8 @@ end
 
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
 
-    for gate in get_circuit_instructions(circuit)
-        @test is_native_instruction(qpu, gate)
+    for instr in get_circuit_instructions(circuit)
+        @test is_native_instruction(qpu, instr)
     end
 
     histogram = transpile_and_run_job(qpu, circuit, shot_count)

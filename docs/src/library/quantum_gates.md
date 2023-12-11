@@ -1,5 +1,6 @@
 # Quantum Gates
 ```@docs
+AbstractInstruction
 AbstractGateSymbol
 Controlled
 Gate
