@@ -83,3 +83,12 @@ end
     pauli = get_pauli(circuit, imaginary_exponent = 1, negative_exponent = 1)
     print(pauli)
 end
+
+@testset "Readouts are not Pauli Elements" begin
+    circuit = QuantumCircuit(qubit_count = 1, instructions = [Readout(1)])
+    @test_throws NotImplementedError get_pauli(
+        circuit,
+        imaginary_exponent = 1,
+        negative_exponent = 1,
+    )
+end
