@@ -558,6 +558,21 @@ end
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 end
 
+@testset "run_job with Readout on AnyonYukonQPU" begin
+
+    requestor = MockRequestor(request_checker, post_checker_readout)
+    test_client =
+        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    shot_count = 100
+    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), Readout(3)])
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
+end
+
+
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]

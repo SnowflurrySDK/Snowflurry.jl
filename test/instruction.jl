@@ -11,6 +11,6 @@ using Test
     @test_throws NotImplementedError apply_instruction!(Ket([1, 2, 3, 4]), instr)
     @test_throws NotImplementedError Base.:*(instr, Ket([1, 2, 3, 4]))
 
-    @test_throws NotImplementedError is_multi_target(instr)
-    @test_throws NotImplementedError is_not_rz_gate(instr)
+    @test_throws NotImplementedError Snowflurry.is_multi_target(instr)
+    @test_throws NotImplementedError Snowflurry.is_not_rz_gate(instr)
 end
