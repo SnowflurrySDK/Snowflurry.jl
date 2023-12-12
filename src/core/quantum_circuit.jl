@@ -304,6 +304,7 @@ true
 """
 function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
+    # fast-path optimization, identical circuits need not be checked for equivalence
     if isequal(c0, c1)
         return true
     end
