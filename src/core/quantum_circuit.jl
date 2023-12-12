@@ -304,11 +304,6 @@ true
 """
 function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
-    # fast-path optimization, identical circuits need not be checked for equivalence
-    if isequal(c0, c1)
-        return true
-    end
-
     num_qubits = get_num_qubits(c0)
 
     @assert num_qubits == get_num_qubits(c1) (
@@ -318,22 +313,46 @@ function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     #non-normalized ket with different scalar at each position
     ψ_0 = Ket([v for v = 1:2^num_qubits])
 
-    for instr in get_circuit_instructions(c0)
-        if !(instr isa Readout)
-            apply_instruction!(ψ_0, instr)
-        end
-    end
+    readouts_present_on_qubits_c0 = compile_readouts_and_apply_gates!(ψ_0, c0)
 
     ψ_1 = Ket([v for v = 1:2^num_qubits])
 
-    for instr in get_circuit_instructions(c1)
-        if !(instr isa Readout)
-            apply_instruction!(ψ_1, instr)
-        end
+    readouts_present_on_qubits_c1 = compile_readouts_and_apply_gates!(ψ_1, c1)
+
+    if readouts_present_on_qubits_c0 != readouts_present_on_qubits_c1
+        # Performing Readout on different qubits will return different results
+        return false
     end
 
     # check equality allowing a global phase offset
     return compare_kets(ψ_0, ψ_1)
+end
+
+function compile_readouts_and_apply_gates!(ψ::Ket, c::QuantumCircuit)::Set{Int}
+
+    readouts_present_on_qubits = Set{Int}()
+
+    for instr in get_circuit_instructions(c)
+        targets = get_connected_qubits(instr)
+
+        if instr isa Readout
+            push!(readouts_present_on_qubits, targets[1])
+        else
+            for target in targets
+                if target in readouts_present_on_qubits
+                    throw(
+                        ArgumentError(
+                            "compare_circuit cannot evaluate equivalence if a Gate follows a Readout",
+                        ),
+                    )
+                end
+            end
+
+            apply_instruction!(ψ, instr)
+        end
+    end
+
+    return readouts_present_on_qubits
 end
 
 """

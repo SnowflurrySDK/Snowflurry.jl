@@ -23,3 +23,28 @@ using Test
     @test move_instruction(readout, Dict{Int,Int}(1 => 2)) == Readout(2)
 
 end
+
+@testset "Readout: compare_circuit" begin
+
+    c = QuantumCircuit(qubit_count = 1, instructions = [Readout(1), hadamard(1)])
+
+    # cannot assert equivalence if Gate follows readout
+    @test_throws ArgumentError compare_circuits(c, c)
+
+    # Readout on separate line doesn't trigger error
+    c = QuantumCircuit(qubit_count = 2, instructions = [Readout(1), hadamard(2)])
+
+    @test compare_circuits(c, c)
+
+    # Equivalent circuits with Readouts are equivalent 
+    c0 = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [sigma_x(1), Readout(1), sigma_y(2), Readout(2)],
+    )
+    c1 = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [x_90(1), x_90(1), Readout(1), y_90(2), y_90(2), Readout(2)],
+    )
+
+    @test compare_circuits(c0, c1)
+end
