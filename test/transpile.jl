@@ -28,7 +28,6 @@ single_qubit_instructions = [
     y_minus_90(target),
     z_90(target),
     z_minus_90(target),
-    Readout(target),
 ]
 
 test_circuits = [
@@ -63,11 +62,6 @@ test_circuits = [
 
 @testset "as_universal_gate" begin
     for instr in single_qubit_instructions
-
-        if typeof(instr) == Readout
-            continue
-        end
-
         universal_equivalent =
             Snowflurry.as_universal_gate(target, get_operator(get_gate_symbol(instr)))
         @test get_operator(get_gate_symbol(instr)) ≈
@@ -89,16 +83,22 @@ end
 
             gates = get_circuit_instructions(transpiled_circuit)
 
-            hasReadout = typeof(first_gate) == Readout || typeof(second_gate) == Readout
+            @test length(gates) == 1
 
-            @test length(gates) == 1 + Int(hasReadout)
+            @test compare_circuits(circuit, transpiled_circuit)
+            @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
 
-            if hasReadout
-                @test isequal(circuit, transpiled_circuit)
-            else
-                @test compare_circuits(circuit, transpiled_circuit)
-                @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
-            end
+            # presence of Readout should have no effect on transpilation
+            circuit_with_readout = QuantumCircuit(
+                qubit_count = 2,
+                instructions = [first_gate, second_gate, Readout(target)],
+            )
+
+            transpiled_circuit = transpile(transpiler, circuit_with_readout)
+
+            @test compare_circuits(circuit_with_readout, transpiled_circuit)
+            @test length(get_circuit_instructions(transpiled_circuit))==2
+            @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
         end
     end
 
@@ -306,7 +306,7 @@ end
     qubit_count = 2
     transpiler = CastRxToRzAndHalfRotationXTranspiler()
 
-    for instr in single_qubit_instructions
+    for instr in vcat(single_qubit_instructions,[Readout(target)])
         if instr isa Gate{Snowflurry.RotationX}
             continue
         end
@@ -360,7 +360,7 @@ end
     target = 1
     transpiler = CastToPhaseShiftAndHalfRotationXTranspiler()
 
-    for instr in single_qubit_instructions
+    for instr in vcat(single_qubit_instructions,[Readout(target)])
 
         circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [instr])
 
