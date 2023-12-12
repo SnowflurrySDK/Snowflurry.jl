@@ -931,7 +931,7 @@ end
     end
 end
 
-@testset "cast_to_cx: Readout" begin
+@testset "cast_to_cx: Toffoli and Readout" begin
     transpiler = CastToffoliToCXGateTranspiler()
 
     circuits = [
