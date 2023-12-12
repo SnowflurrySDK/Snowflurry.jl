@@ -3,8 +3,6 @@ struct Readout <: AbstractInstruction
     connected_qubit::Int
 end
 
-Base.inv(readout::Readout) = readout
-
 function get_connected_qubits(readout::Readout)::AbstractVector{Int}
     return Vector{Int}([readout.connected_qubit])
 end

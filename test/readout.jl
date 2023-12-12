@@ -8,7 +8,6 @@ using Test
     @test get_symbol_for_instruction("readout") == Readout
     @test get_display_symbols(readout) == ["▽"]
     @test Snowflurry.get_longest_symbol_length(readout) == 1
-    @test Base.inv(readout) === readout
 
     expected =
         "Quantum Circuit Object:\n" *
