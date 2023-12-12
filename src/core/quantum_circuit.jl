@@ -514,7 +514,7 @@ gates_display_symbols = Dict(
     ISwapDagger => ["x†", "x†"],
     Toffoli => [control_display_symbol, control_display_symbol, "X"],
     Swap => ["☒", "☒"],
-    Readout => ["▽"],
+    Readout => ["✲"],
 )
 
 get_instruction_symbol(gate::Gate) = get_instruction_symbol(get_gate_symbol(gate))
