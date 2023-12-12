@@ -47,14 +47,8 @@ end
     )
 
     #Identical circuits with different Readouts are not equivalent
-    c0 = QuantumCircuit(
-        qubit_count = 2,
-        instructions = [sigma_x(1), Readout(1)],
-    )
-    c2 = QuantumCircuit(
-        qubit_count = 2,
-        instructions = [sigma_x(1), Readout(2)],
-    )
+    c0 = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)])
+    c2 = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(2)])
 
     @test !compare_circuits(c0, c2)
 end

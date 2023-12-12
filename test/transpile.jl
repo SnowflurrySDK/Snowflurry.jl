@@ -97,7 +97,7 @@ end
             transpiled_circuit = transpile(transpiler, circuit_with_readout)
 
             @test compare_circuits(circuit_with_readout, transpiled_circuit)
-            @test length(get_circuit_instructions(transpiled_circuit))==2
+            @test length(get_circuit_instructions(transpiled_circuit)) == 2
             @test gates[1] isa Snowflurry.Gate{Snowflurry.Universal}
         end
     end
@@ -306,7 +306,7 @@ end
     qubit_count = 2
     transpiler = CastRxToRzAndHalfRotationXTranspiler()
 
-    for instr in vcat(single_qubit_instructions,[Readout(target)])
+    for instr in vcat(single_qubit_instructions, [Readout(target)])
         if instr isa Gate{Snowflurry.RotationX}
             continue
         end
@@ -360,7 +360,7 @@ end
     target = 1
     transpiler = CastToPhaseShiftAndHalfRotationXTranspiler()
 
-    for instr in vcat(single_qubit_instructions,[Readout(target)])
+    for instr in vcat(single_qubit_instructions, [Readout(target)])
 
         circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [instr])
 
@@ -1080,7 +1080,10 @@ end
     ]
 
     for (input_gate, type_result) in test_inputs
-        circuit = QuantumCircuit(qubit_count = target, instructions = [input_gate, Readout(target)])
+        circuit = QuantumCircuit(
+            qubit_count = target,
+            instructions = [input_gate, Readout(target)],
+        )
 
         transpiled_circuit = transpile(transpiler, circuit)
 
