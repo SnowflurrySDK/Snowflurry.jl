@@ -238,6 +238,16 @@ using PrecompileTools
         simulate(circuit)
     end
 
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [Readout(1)])
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    try
+        # returns DNS error
+        run_job(qpu, circuit, 100)
+    catch e
+        @assert typeof(e) == HTTP.Exceptions.ConnectError
+    end
+
 end
 
 end
