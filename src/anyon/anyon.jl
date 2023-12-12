@@ -292,7 +292,7 @@ function run_job(
     client = get_client(qpu)
 
     circuitID = submit_circuit(client, circuit, shot_count)
-    
+
     @info "Submmited circuit with id $circuitID"
     @debug "Polling for status on job[$circuitID]"
     status = poll_for_status(client, circuitID, qpu.status_request_throttle)
