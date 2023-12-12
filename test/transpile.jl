@@ -1070,22 +1070,24 @@ end
 end
 
 @testset "SimplifyRxGatesTranspiler: Readout" begin
-    transpiler = CastSwapToCZGateTranspiler()
+    transpiler = SimplifyRxGatesTranspiler()
 
-    circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)]),
-        QuantumCircuit(
-            qubit_count = 2,
-            instructions = [rotation_x(target, pi / 2), Readout(1)],
-        ),
+    test_inputs = [
+        (rotation_x(target, pi / 2), Snowflurry.X90)
+        (rotation_x(target, -pi / 2), Snowflurry.XM90)
+        (rotation_x(target, pi), Snowflurry.SigmaX)
+        (rotation_x(target, pi / 3), Snowflurry.RotationX)
     ]
 
-    for circuit in circuits
+    for (input_gate, type_result) in test_inputs
+        circuit = QuantumCircuit(qubit_count = target, instructions = [input_gate, Readout(target)])
+
         transpiled_circuit = transpile(transpiler, circuit)
 
-        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.Swap)
         @test compare_circuits(circuit, transpiled_circuit)
+
+        @test get_gate_symbol(get_circuit_instructions(transpiled_circuit)[1]) isa
+              type_result
     end
 end
 
