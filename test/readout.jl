@@ -56,7 +56,7 @@ end
 @testset "CircuitContainsAReadoutTranspiler" begin
     transpiler = CircuitContainsAReadoutTranspiler()
 
-    c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)])
+    c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), readout(1)])
 
     transpiled_circuit = transpile(transpiler, c)
 

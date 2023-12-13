@@ -256,7 +256,7 @@ using PrecompileTools
     qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
     transpiler = get_transpiler(qpu)
 
-    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [Readout(1)])
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1)])
     transpiled_circuit = transpile(transpiler, circuit)
 
     try

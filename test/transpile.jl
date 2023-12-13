@@ -191,7 +191,7 @@ end
 
     test_instr_with_readout = Vector{Vector{AbstractInstruction}}()
     push!(test_instr_with_readout, test_instructions[1])
-    push!(test_instr_with_readout, vcat(test_instructions[2], [Readout(target)]))
+    push!(test_instr_with_readout, vcat(test_instructions[2], [readout(target)]))
 
     for gates_list in test_instr_with_readout
         for end_pos ∈ 1:length(gates_list)
@@ -609,7 +609,7 @@ end
 
             circuit = QuantumCircuit(
                 qubit_count = qubit_count,
-                instructions = [gate, Readout(target)],
+                instructions = [gate, readout(target)],
             )
             transpiled_circuit = transpile(transpiler, circuit)
 
@@ -648,7 +648,7 @@ end
 
     for gates_list in test_instructions
         for end_pos ∈ 1:length(gates_list)
-            truncated_input = vcat(gates_list[1:end_pos], [Readout(target)])
+            truncated_input = vcat(gates_list[1:end_pos], [readout(target)])
             circuit =
                 QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
             transpiled_circuit = transpile(transpiler, circuit)
@@ -669,7 +669,7 @@ end
         instructions = vcat(
             hadamard(1),
             [control_x(i, i + 1) for i ∈ 1:qubit_count-1],
-            [Readout(target)],
+            [readout(target)],
         ),
     )
 
@@ -678,7 +678,7 @@ end
     results = Dict{Int,Vector{DataType}}([])
 
     for instr in get_circuit_instructions(transpiled_circuit)
-        if instr isa Readout
+        if instr isa Snowflurry.Readout
             continue
         end
 
@@ -741,7 +741,7 @@ end
                 end
                 circuit = QuantumCircuit(
                     qubit_count = qubit_count,
-                    instructions = [control_z(t_0, t_1), Readout(1)],
+                    instructions = [control_z(t_0, t_1), readout(1)],
                 )
                 transpiled_circuit = transpile(transpiler, circuit)
                 @test compare_circuits(circuit, transpiled_circuit)
