@@ -239,7 +239,7 @@ message.
 julia> qpu=AnyonYukonQPU(client_anyon);
 
 julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
-[ Info: Submmited circuit with id 8050e1ed-5e4c-4089-ab53-cccda1658cd0
+[ Info: Submitted circuit with id 8050e1ed-5e4c-4089-ab53-cccda1658cd0
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -279,7 +279,7 @@ message.
 julia> qpu=AnyonYukonQPU(client);
 
 julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
-[ Info: Submmited circuit with id 8050e1ed-5e4c-4089-ab53-cccda1658cd0
+[ Info: Submitted circuit with id 8050e1ed-5e4c-4089-ab53-cccda1658cd0
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -295,7 +295,7 @@ function run_job(
 
     circuitID = submit_circuit(client, circuit, shot_count)
 
-    @info "Submmited circuit with id $circuitID"
+    @info "Submitted circuit with id $circuitID"
     @debug "Polling for status on job[$circuitID]"
     status = poll_for_status(client, circuitID, qpu.status_request_throttle)
 
