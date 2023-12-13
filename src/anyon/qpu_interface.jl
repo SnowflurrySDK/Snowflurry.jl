@@ -140,7 +140,9 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
-            params = Dict{String,Real}()
+            params = Dict{String,Real}(
+                "destination_bit" => get_destination_bit(instr),
+            )
         else
             params = get_gate_parameters(get_gate_symbol(instr))
         end

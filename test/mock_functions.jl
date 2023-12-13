@@ -24,7 +24,7 @@ function post_checker_readout(url::String, user::String, access_token::String, b
 
     expected_url = host * "/" * Snowflurry.path_circuits
     expected_access_token = access_token
-    expected_json = "{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"readout\",\"qubits\":[2]}]}}"
+    expected_json = "{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{\"destination_bit\":3},\"type\":\"readout\",\"qubits\":[2]}]}}"
 
     @assert url == expected_url ("received: \n$url, \nexpected: \n$expected_url")
     @assert access_token == expected_access_token (
