@@ -1826,3 +1826,21 @@ function assert_readouts_are_last_instr(circuit::QuantumCircuit)
     end
 
 end
+
+struct CircuitContainsAReadoutTranspiler <: Transpiler end
+
+function transpile(
+    ::CircuitContainsAReadoutTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            return circuit
+        end
+    end
+
+    throw(
+        ArgumentError("QuantumCircuit is missing a Readout. Would not return any result."),
+    )
+end

@@ -84,7 +84,7 @@ function post_checker_transpiled(
 
     expected_url = host * "/" * Snowflurry.path_circuits
     expected_access_token = access_token
-    expected_json = "{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    expected_json = "{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]},{\"parameters\":{},\"type\":\"readout\",\"qubits\":[2]}]}}"
 
     @assert url == expected_url ("received: \n$url, \nexpected: \n$expected_url")
     @assert access_token == expected_access_token (

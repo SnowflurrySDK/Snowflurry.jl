@@ -52,3 +52,17 @@ end
 
     @test !compare_circuits(c0, c2)
 end
+
+@testset "CircuitContainsAReadoutTranspiler" begin
+    transpiler = CircuitContainsAReadoutTranspiler()
+
+    c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)])
+
+    transpiled_circuit = transpile(transpiler, c)
+
+    @test isequal(c, transpiled_circuit)
+
+    c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
+
+    @test_throws ArgumentError transpile(transpiler, c)
+end

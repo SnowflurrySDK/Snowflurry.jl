@@ -30,7 +30,7 @@ single_qubit_instructions = [
     z_minus_90(target),
 ]
 
-test_circuits = [
+test_instructions = [
     [
         sigma_x(1),
         sigma_y(1),
@@ -56,7 +56,6 @@ test_circuits = [
         swap(2, 4),
         iswap(4, 1),
         iswap_dagger(1, 3),
-        readout(1),
     ],
 ]
 
@@ -190,7 +189,11 @@ end
     qubit_count = 4
     transpiler = CompressSingleQubitGatesTranspiler()
 
-    for gates_list in test_circuits
+    test_instr_with_readout = Vector{Vector{AbstractInstruction}}()
+    push!(test_instr_with_readout, test_instructions[1])
+    push!(test_instr_with_readout, vcat(test_instructions[2], [Readout(target)]))
+
+    for gates_list in test_instr_with_readout
         for end_pos ∈ 1:length(gates_list)
 
             truncated_input = gates_list[1:end_pos]
@@ -589,7 +592,6 @@ end
         y_minus_90(target),
         z_90(target),
         z_minus_90(target),
-        readout(target),
     ]
 
     input_gates_foreign = [
@@ -605,7 +607,10 @@ end
         vcat((input_gates_native, true), (input_gates_foreign, false))
         for gate in gates_list
 
-            circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [gate])
+            circuit = QuantumCircuit(
+                qubit_count = qubit_count,
+                instructions = [gate, Readout(target)],
+            )
             transpiled_circuit = transpile(transpiler, circuit)
 
             @test compare_circuits(circuit, transpiled_circuit)
@@ -639,9 +644,11 @@ end
 
     qubit_count = 4
 
-    for gates_list in test_circuits
+    println("test_instructions: $test_instructions")
+
+    for gates_list in test_instructions
         for end_pos ∈ 1:length(gates_list)
-            truncated_input = gates_list[1:end_pos]
+            truncated_input = vcat(gates_list[1:end_pos], [Readout(target)])
             circuit =
                 QuantumCircuit(qubit_count = qubit_count, instructions = truncated_input)
             transpiled_circuit = transpile(transpiler, circuit)
@@ -659,22 +666,29 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = qubit_count,
-        instructions = vcat(hadamard(1), [control_x(i, i + 1) for i ∈ 1:qubit_count-1]),
+        instructions = vcat(
+            hadamard(1),
+            [control_x(i, i + 1) for i ∈ 1:qubit_count-1],
+            [Readout(target)],
+        ),
     )
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     results = Dict{Int,Vector{DataType}}([])
 
-    for gate in get_circuit_instructions(transpiled_circuit)
+    for instr in get_circuit_instructions(transpiled_circuit)
+        if instr isa Readout
+            continue
+        end
 
-        targets = get_connected_qubits(gate)
+        targets = get_connected_qubits(instr)
 
         for target in targets
             if haskey(results, target)
-                results[target] = push!(results[target], typeof(get_gate_symbol(gate)))
+                results[target] = push!(results[target], typeof(get_gate_symbol(instr)))
             else
-                results[target] = [typeof(get_gate_symbol(gate))]
+                results[target] = [typeof(get_gate_symbol(instr))]
             end
         end
     end
@@ -727,15 +741,15 @@ end
                 end
                 circuit = QuantumCircuit(
                     qubit_count = qubit_count,
-                    instructions = [control_z(t_0, t_1)],
+                    instructions = [control_z(t_0, t_1), Readout(1)],
                 )
                 transpiled_circuit = transpile(transpiler, circuit)
                 @test compare_circuits(circuit, transpiled_circuit)
 
-                gates_in_output = get_circuit_instructions(transpiled_circuit)
+                instructions_in_output = get_circuit_instructions(transpiled_circuit)
 
-                for gate in gates_in_output
-                    connected_qubits = get_connected_qubits(gate)
+                for instr in instructions_in_output
+                    connected_qubits = get_connected_qubits(instr)
                     if length(connected_qubits) > 1
                         (t_2, t_3) = connected_qubits
 
@@ -757,7 +771,7 @@ end
 
     qubit_count = 4
 
-    for gates_list in test_circuits
+    for gates_list in test_instructions
         for end_pos ∈ 1:length(gates_list)
 
             truncated_input = gates_list[1:end_pos]
@@ -968,7 +982,7 @@ end
         readout(1),
     ]
 
-    test_inputs = vcat(test_circuits, [test_inputs])
+    test_inputs = vcat(test_instructions, [test_inputs])
 
     for input_gates in test_inputs
         for end_pos ∈ 1:length(input_gates)
