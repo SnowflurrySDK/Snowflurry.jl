@@ -43,7 +43,6 @@ export
     AbstractControlledGateSymbol,
     Controlled,
     Gate,
-    Readout,
     AnyonYukonQPU,
     AnyonYamaskaQPU,
     VirtualQPU,
@@ -181,8 +180,10 @@ export
     eye,
     control_z,
     control_x,
-    toffoli
+    toffoli,
 
+    # Instructions
+    readout
 
 using PrecompileTools
 

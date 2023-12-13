@@ -56,7 +56,7 @@ test_circuits = [
         swap(2, 4),
         iswap(4, 1),
         iswap_dagger(1, 3),
-        Readout(1),
+        readout(1),
     ],
 ]
 
@@ -91,7 +91,7 @@ end
             # presence of Readout should have no effect on transpilation
             circuit_with_readout = QuantumCircuit(
                 qubit_count = 2,
-                instructions = [first_gate, second_gate, Readout(target)],
+                instructions = [first_gate, second_gate, readout(target)],
             )
 
             transpiled_circuit = transpile(transpiler, circuit_with_readout)
@@ -172,13 +172,13 @@ end
     @test compare_circuits(circuit, transpiled_circuit)
 
     #compressing one gate and one readout does nothing
-    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), readout(1)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
     @test compare_circuits(circuit, transpiled_circuit)
 
-    circuit = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), Readout(1)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), readout(1)])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -306,7 +306,7 @@ end
     qubit_count = 2
     transpiler = CastRxToRzAndHalfRotationXTranspiler()
 
-    for instr in vcat(single_qubit_instructions, [Readout(target)])
+    for instr in vcat(single_qubit_instructions, [readout(target)])
         if instr isa Gate{Snowflurry.RotationX}
             continue
         end
@@ -360,7 +360,7 @@ end
     target = 1
     transpiler = CastToPhaseShiftAndHalfRotationXTranspiler()
 
-    for instr in vcat(single_qubit_instructions, [Readout(target)])
+    for instr in vcat(single_qubit_instructions, [readout(target)])
 
         circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [instr])
 
@@ -589,7 +589,7 @@ end
         y_minus_90(target),
         z_90(target),
         z_minus_90(target),
-        Readout(target),
+        readout(target),
     ]
 
     input_gates_foreign = [
@@ -617,7 +617,7 @@ end
                 count_of_non_rz_gates = 0
 
                 for instr in instructions_in_output
-                    if !(instr isa Readout) &&
+                    if !(instr isa Snowflurry.Readout) &&
                        !(typeof(get_gate_symbol(instr)) in Snowflurry.set_of_rz_gates)
                         count_of_non_rz_gates += 1
                     end
@@ -800,15 +800,15 @@ end
     transpiler = CastSwapToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 2, instructions = [swap(1, 2), Readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [swap(1, 2), readout(1)]),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [swap(1, 2), x_90(1), swap(1, 2), Readout(1)],
+            instructions = [swap(1, 2), x_90(1), swap(1, 2), readout(1)],
         ),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [iswap(1, 2), swap(1, 2), Readout(1)],
+            instructions = [iswap(1, 2), swap(1, 2), readout(1)],
         ),
     ]
 
@@ -844,15 +844,15 @@ end
     transpiler = CastCXToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), Readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), readout(1)]),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [control_x(1, 2), x_90(1), control_x(1, 2), Readout(1)],
+            instructions = [control_x(1, 2), x_90(1), control_x(1, 2), readout(1)],
         ),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [iswap(1, 2), control_x(1, 2), Readout(1)],
+            instructions = [iswap(1, 2), control_x(1, 2), readout(1)],
         ),
     ]
 
@@ -885,15 +885,15 @@ end
     transpiler = CastISwapToCZGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2), Readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2), readout(1)]),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [iswap(1, 2), x_90(1), iswap(1, 2), Readout(1)],
+            instructions = [iswap(1, 2), x_90(1), iswap(1, 2), readout(1)],
         ),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [control_x(1, 2), iswap(1, 2), Readout(1)],
+            instructions = [control_x(1, 2), iswap(1, 2), readout(1)],
         ),
     ]
 
@@ -935,8 +935,8 @@ end
     transpiler = CastToffoliToCXGateTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), Readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), readout(1)]),
     ]
 
     for circuit in circuits
@@ -965,7 +965,7 @@ end
         control_z(5, 1),
         hadamard(1),
         sigma_x(4),
-        Readout(1),
+        readout(1),
     ]
 
     test_inputs = vcat(test_circuits, [test_inputs])
@@ -1082,7 +1082,7 @@ end
     for (input_gate, type_result) in test_inputs
         circuit = QuantumCircuit(
             qubit_count = target,
-            instructions = [input_gate, Readout(target)],
+            instructions = [input_gate, readout(target)],
         )
 
         transpiled_circuit = transpile(transpiler, circuit)
@@ -1194,10 +1194,10 @@ end
     transpiler = SimplifyRzGatesTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [Readout(1)]),
+        QuantumCircuit(qubit_count = 2, instructions = [readout(1)]),
         QuantumCircuit(
             qubit_count = 2,
-            instructions = [phase_shift(target, pi / 2), Readout(1)],
+            instructions = [phase_shift(target, pi / 2), readout(1)],
         ),
     ]
 
@@ -1265,7 +1265,7 @@ test_circuits_Rz_type = [
         x_90(3),
         control_x(1, 4),
         toffoli(1, 4, 3),
-        Readout(1),
+        readout(1),
     ],
 ]
 
@@ -1347,15 +1347,15 @@ end
     transpiler = ReadoutsAreFinalInstructionsTranspiler()
 
     circuits = [
-        QuantumCircuit(qubit_count = 4, instructions = [Readout(1)]),
-        QuantumCircuit(qubit_count = 4, instructions = [sigma_x(1), Readout(1)]),
+        QuantumCircuit(qubit_count = 4, instructions = [readout(1)]),
+        QuantumCircuit(qubit_count = 4, instructions = [sigma_x(1), readout(1)]),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), Readout(1), hadamard(2)],
+            instructions = [sigma_x(1), readout(1), hadamard(2)],
         ),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), Readout(1), hadamard(2), Readout(2)],
+            instructions = [sigma_x(1), readout(1), hadamard(2), readout(2)],
         ),
     ]
 
@@ -1367,22 +1367,22 @@ end
 
     ### error cases
     circuits = [
-        QuantumCircuit(qubit_count = 4, instructions = [Readout(1), Readout(1)]),
+        QuantumCircuit(qubit_count = 4, instructions = [readout(1), readout(1)]),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), Readout(1), Readout(1)],
+            instructions = [sigma_x(1), readout(1), readout(1)],
         ),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), Readout(1), Readout(2), hadamard(2)],
+            instructions = [sigma_x(1), readout(1), readout(2), hadamard(2)],
         ),
         QuantumCircuit(
             qubit_count = 4,
             instructions = [
                 sigma_x(1),
-                Readout(1),
+                readout(1),
                 hadamard(2),
-                Readout(2),
+                readout(2),
                 rotation_x(1, pi),
             ],
         ),
