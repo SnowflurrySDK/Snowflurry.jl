@@ -15,7 +15,7 @@ shot_count = 200
 result_1 = transpile_and_run_job(qpu, circuit, shot_count)
 println(result_1)
 
-# alternarively, one can explicitly transpile a circuit and run the transpiled circuit. 
+# Alternatively, one can explicitly transpile a circuit and run the transpiled circuit. 
 
 transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
