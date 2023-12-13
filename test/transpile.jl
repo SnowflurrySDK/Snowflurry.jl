@@ -1361,24 +1361,24 @@ end
 
 end
 
+readout_test_circuits = [
+    QuantumCircuit(qubit_count = 4, instructions = [default_readout]),
+    QuantumCircuit(qubit_count = 4, instructions = [sigma_x(1), default_readout]),
+    QuantumCircuit(
+        qubit_count = 4,
+        instructions = [sigma_x(1), default_readout, hadamard(2)],
+    ),
+    QuantumCircuit(
+        qubit_count = 4,
+        instructions = [sigma_x(1), default_readout, hadamard(2), readout(2, 2)],
+    ),
+]
+
 @testset "ReadoutsAreFinalInstructionsTranspiler " begin
 
     transpiler = ReadoutsAreFinalInstructionsTranspiler()
 
-    circuits = [
-        QuantumCircuit(qubit_count = 4, instructions = [default_readout]),
-        QuantumCircuit(qubit_count = 4, instructions = [sigma_x(1), default_readout]),
-        QuantumCircuit(
-            qubit_count = 4,
-            instructions = [sigma_x(1), default_readout, hadamard(2)],
-        ),
-        QuantumCircuit(
-            qubit_count = 4,
-            instructions = [sigma_x(1), default_readout, hadamard(2), readout(2, 2)],
-        ),
-    ]
-
-    for circuit in circuits
+    for circuit in readout_test_circuits
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test isequal(circuit, transpiled_circuit)
@@ -1409,6 +1409,54 @@ end
 
     for circuit in circuits
         @test_throws AssertionError transpile(transpiler, circuit)
+    end
+
+end
+
+
+@testset "ReadoutsDoNotConflictTranspiler " begin
+
+    transpiler = ReadoutsDoNotConflictTranspiler()
+
+    for circuit in readout_test_circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test isequal(circuit, transpiled_circuit)
+    end
+
+    ### error cases
+    circuits = [
+        QuantumCircuit(
+            qubit_count = 4,
+            instructions = [default_readout, readout(2, destination_bit)],
+        ),
+        QuantumCircuit(
+            qubit_count = 4,
+            instructions = [sigma_x(1), default_readout, readout(2, destination_bit)],
+        ),
+        QuantumCircuit(
+            qubit_count = 4,
+            instructions = [
+                sigma_x(1),
+                default_readout,
+                readout(2, destination_bit),
+                hadamard(2),
+            ],
+        ),
+        QuantumCircuit(
+            qubit_count = 4,
+            instructions = [
+                sigma_x(1),
+                default_readout,
+                hadamard(2),
+                readout(2, destination_bit),
+                rotation_x(1, pi),
+            ],
+        ),
+    ]
+
+    for circuit in circuits
+        @test_throws ArgumentError transpile(transpiler, circuit)
     end
 
 end

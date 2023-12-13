@@ -71,6 +71,7 @@ export
     TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
     ReadoutsAreFinalInstructionsTranspiler,
+    ReadoutsDoNotConflictTranspiler,
     CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
 
@@ -230,6 +231,7 @@ using PrecompileTools
     ]
 
     transpiler_allowing_no_readout = SequentialTranspiler([
+        ReadoutsDoNotConflictTranspiler(),
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
