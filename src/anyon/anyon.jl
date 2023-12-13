@@ -240,7 +240,7 @@ message.
 ```jldoctest  
 julia> qpu=AnyonYukonQPU(client_anyon);
 
-julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1), readout(3)]) ,100)
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1), readout(3, 3)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
