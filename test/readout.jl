@@ -2,7 +2,7 @@ using Snowflurry
 using Test
 
 @testset "Readout: getters and Base functions" begin
-    readout = readout(1, 1)
+    test_readout = readout(1, 1)
 
     @test get_instruction_symbol(test_readout) == "readout"
     @test get_symbol_for_instruction("readout") == Snowflurry.Readout
@@ -20,7 +20,7 @@ using Test
     print(io, QuantumCircuit(qubit_count = 1, instructions = [test_readout]))
     @test String(take!(io)) == expected
 
-    @test move_instruction(readout, Dict{Int,Int}(1 => 2)) == readout(2, 1)
+    @test move_instruction(test_readout, Dict{Int,Int}(1 => 2)) == readout(2, 1)
 
 end
 

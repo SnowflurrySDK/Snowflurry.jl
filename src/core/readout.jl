@@ -4,7 +4,7 @@ struct Readout <: AbstractInstruction
     destination_bit::Int
 end
 
-readout(qubit::Int) = Readout(qubit)
+readout(qubit::Int, bit::Int) = Readout(qubit, bit)
 
 function get_connected_qubits(readout::Readout)::AbstractVector{Int}
     return Vector{Int}([readout.connected_qubit])
@@ -27,5 +27,5 @@ function move_instruction(
         qubit = qubit_mapping[qubit]
     end
 
-    return readout(qubit, get_destination_bit(readout))
+    return readout(qubit, get_destination_bit(original_readout))
 end

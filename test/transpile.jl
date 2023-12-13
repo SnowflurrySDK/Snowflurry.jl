@@ -7,7 +7,7 @@ requestor = MockRequestor(request_checker, post_checker)
 target = 1
 destination_bit = 1
 
-default_readout = Readout(target, destination_bit)
+default_readout = readout(target, destination_bit)
 
 theta = π / 5
 phi = π / 7
@@ -181,7 +181,8 @@ end
 
     @test compare_circuits(circuit, transpiled_circuit)
 
-    circuit = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), default_readout])
+    circuit =
+        QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2), default_readout])
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -1373,7 +1374,7 @@ end
         ),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), default_readout, hadamard(2), Readout(2, 2)],
+            instructions = [sigma_x(1), default_readout, hadamard(2), readout(2, 2)],
         ),
     ]
 
@@ -1392,7 +1393,7 @@ end
         ),
         QuantumCircuit(
             qubit_count = 4,
-            instructions = [sigma_x(1), default_readout, Readout(2, 2), hadamard(2)],
+            instructions = [sigma_x(1), default_readout, readout(2, 2), hadamard(2)],
         ),
         QuantumCircuit(
             qubit_count = 4,
@@ -1400,7 +1401,7 @@ end
                 sigma_x(1),
                 default_readout,
                 hadamard(2),
-                Readout(2, 2),
+                readout(2, 2),
                 rotation_x(1, pi),
             ],
         ),
