@@ -595,13 +595,16 @@ end
         qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
-        circuit = QuantumCircuit(qubit_count = get_num_qubits(qpu) + 1)
+        circuit = QuantumCircuit(
+            qubit_count = get_num_qubits(qpu) + 1,
+            instructions = [Readout(1)],
+        )
         @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
         # submit circuit with a non-native gate on this qpu (no transpilation)
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) - 1,
-            instructions = [toffoli(1, 2, 3)],
+            instructions = [toffoli(1, 2, 3), Readout(1)],
         )
         @test_throws DomainError transpile_and_run_job(
             qpu,
@@ -637,8 +640,10 @@ end
         qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
-        circuit =
-            QuantumCircuit(qubit_count = qubit_count, instructions = [sigma_x(qubit_count)])
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count,
+            instructions = [sigma_x(qubit_count), Readout(1)],
+        )
 
         transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
     end
