@@ -140,7 +140,6 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
-            params = Dict{String,Real}()
             encoding = Dict{String,Any}(
                 "type" => get_instruction_symbol(instr),
                 #server-side qubit numbering starts at 0
