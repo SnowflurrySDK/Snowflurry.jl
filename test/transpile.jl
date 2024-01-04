@@ -56,6 +56,7 @@ test_instructions = [
         swap(2, 4),
         iswap(4, 1),
         iswap_dagger(1, 3),
+        # readout(1),
     ],
 ]
 
@@ -592,6 +593,7 @@ end
         y_minus_90(target),
         z_90(target),
         z_minus_90(target),
+        # readout(target),
     ]
 
     input_gates_foreign = [
