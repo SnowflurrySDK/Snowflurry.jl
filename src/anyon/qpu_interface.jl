@@ -116,7 +116,7 @@ to a `QPU` service, along with the number of shots requested.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count = 2,gates=[sigma_x(1)])
+julia> c = QuantumCircuit(qubit_count = 2,instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──X──
@@ -139,14 +139,19 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
         "qubit_count" => circuit.qubit_count,
     )
 
-    for gate in get_circuit_gates(circuit)
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            params = Dict{String,Real}()
+        else
+            params = get_gate_parameters(get_gate_symbol(instr))
+        end
         push!(
             circuit_description["circuit"]["operations"],
             Dict{String,Any}(
-                "type" => get_instruction_symbol(get_gate_symbol(gate)),
+                "type" => get_instruction_symbol(instr),
                 #server-side qubit numbering starts at 0
-                "qubits" => [n - 1 for n in get_connected_qubits(gate)],
-                "parameters" => get_gate_parameters(get_gate_symbol(gate)),
+                "qubits" => [n - 1 for n in get_connected_qubits(instr)],
+                "parameters" => params,
             ),
         )
     end
@@ -215,7 +220,7 @@ repetitions (shot_count). Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+julia> submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -263,7 +268,7 @@ In the case of status["type"]=="failed", the server error is contained in status
 
 
 ```jldoctest
-julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client,circuitID)
@@ -313,7 +318,7 @@ by circuit identifier circuitID.
 
 
 ```jldoctest 
-julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]),100)
+julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client,circuitID);
@@ -350,7 +355,8 @@ abstract type AbstractQPU end
 
 get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
 
-is_native_gate(qpu::AbstractQPU, ::Gate) = throw(NotImplementedError(:is_native_gate, qpu))
+is_native_instruction(qpu::AbstractQPU, ::AbstractInstruction) =
+    throw(NotImplementedError(:is_native_instruction, qpu))
 
 is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
     throw(NotImplementedError(:is_native_circuit, qpu))
@@ -382,7 +388,7 @@ struct VirtualQPU <: AbstractQPU end
 get_metadata(qpu::VirtualQPU) =
     Dict{String,String}("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
-is_native_gate(::VirtualQPU, ::Gate)::Bool = true
+is_native_instruction(::VirtualQPU, ::AbstractInstruction)::Bool = true
 
 is_native_circuit(::VirtualQPU, ::QuantumCircuit)::Tuple{Bool,String} = (true, "")
 
@@ -432,7 +438,7 @@ completed circuit calculations, or an error message.
 ```jldoctest 
 julia> qpu=VirtualQPU();
 
-julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -465,7 +471,7 @@ completed circuit calculations.
 ```jldoctest 
 julia> qpu=VirtualQPU();
 
-julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 

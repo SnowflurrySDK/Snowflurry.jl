@@ -80,7 +80,7 @@ julia> ψ_1 = exp(im*δ)*ψ_0
 julia> compare_kets(ψ_0,ψ_1)
 true
 
-julia> apply_gate!(ψ_1,sigma_x(1))
+julia> apply_instruction!(ψ_1,sigma_x(1))
 4-element Ket{ComplexF64}:
 1.5000000000000004 + 2.598076211353316im
 2.0000000000000004 + 3.4641016151377544im

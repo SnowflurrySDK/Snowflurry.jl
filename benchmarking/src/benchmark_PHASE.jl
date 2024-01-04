@@ -7,7 +7,7 @@ include("SnowflurryBenchmarking.jl")
 
 @task "PHASE" nqubits = nqubits begin
     map(nqubits) do k
-        t = @benchmark apply_gate!(ψ, phase_shift(target_qubit_1, ϕ)) setup =
+        t = @benchmark apply_instruction!(ψ, phase_shift(target_qubit_1, ϕ)) setup =
             (ψ = rand_state($k))
         minimum(t).time
     end

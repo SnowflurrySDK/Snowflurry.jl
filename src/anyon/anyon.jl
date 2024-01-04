@@ -188,7 +188,7 @@ function get_qubits_distance(
     return maximum([0, length(path_search(target_1, target_2, connectivity)) - 1])
 end
 
-function is_native_gate(qpu::UnionAnyonQPU, gate::Gate)::Bool
+function is_native_instruction(qpu::UnionAnyonQPU, gate::Gate)::Bool
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
@@ -200,6 +200,8 @@ function is_native_gate(qpu::UnionAnyonQPU, gate::Gate)::Bool
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
+is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool = true
+
 function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
     qubit_count_qpu = get_num_qubits(qpu)
@@ -210,11 +212,11 @@ function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{B
         )
     end
 
-    for gate in get_circuit_gates(circuit)
-        if !is_native_gate(qpu, gate)
+    for instr in get_circuit_instructions(circuit)
+        if !is_native_instruction(qpu, instr)
             return (
                 false,
-                "Gate type $(typeof(gate)) with targets $(get_connected_qubits(gate)) is not native on $(typeof(qpu))",
+                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr)) is not native on $(typeof(qpu))",
             )
         end
     end
@@ -238,7 +240,7 @@ message.
 ```jldoctest  
 julia> qpu=AnyonYukonQPU(client_anyon);
 
-julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -277,7 +279,7 @@ message.
 ```jldoctest  
 julia> qpu=AnyonYukonQPU(client);
 
-julia> run_job(qpu,QuantumCircuit(qubit_count=3,gates=[sigma_x(3),control_z(2,1)]) ,100)
+julia> run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -339,7 +341,7 @@ julia> qpu=AnyonYukonQPU(client);
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
-), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), UnsupportedGatesTranspiler()])
+), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler(), UnsupportedGatesTranspiler()])
 ```
 """
 function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
@@ -356,6 +358,7 @@ function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
         CastRxToRzAndHalfRotationXTranspiler(),
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(atol),
+        ReadoutsAreFinalInstructionsTranspiler(),
         UnsupportedGatesTranspiler(),
     ])
 end

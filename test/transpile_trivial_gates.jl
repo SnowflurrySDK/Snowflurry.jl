@@ -47,13 +47,13 @@ lambda = π / 7
 
     for (gates_input, gates_count_output) in inputs
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = gates_input)
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = gates_input)
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        instr = get_circuit_instructions(transpiled_circuit)
 
-        @test length(gates) == gates_count_output
+        @test length(instr) == gates_count_output
 
         @test compare_circuits(circuit, transpiled_circuit)
     end
@@ -65,26 +65,32 @@ end
     #default tolerance
     transpiler = SimplifyTrivialGatesTranspiler()
 
-    circuit = QuantumCircuit(qubit_count = 2, gates = [universal(target, 1e-3, 1e-3, 1e-3)])
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [universal(target, 1e-3, 1e-3, 1e-3)],
+    )
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_gates(transpiled_circuit)
+    instructions = get_circuit_instructions(transpiled_circuit)
 
-    @test length(gates) == 1
+    @test length(instructions) == 1
 
     @test compare_circuits(circuit, transpiled_circuit)
 
     # user-defined tolerance
     transpiler = SimplifyTrivialGatesTranspiler(1e-1)
 
-    circuit = QuantumCircuit(qubit_count = 2, gates = [universal(target, 1e-3, 1e-3, 1e-3)])
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [universal(target, 1e-3, 1e-3, 1e-3)],
+    )
 
     transpiled_circuit = transpile(transpiler, circuit)
 
-    gates = get_circuit_gates(transpiled_circuit)
+    instructions = get_circuit_instructions(transpiled_circuit)
 
-    @test length(gates) == 0
+    @test length(instructions) == 0
 
 end
 
@@ -119,11 +125,11 @@ end
 
     for (gates_input, gates_count_output) in inputs
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = gates_input)
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = gates_input)
 
         transpiled_circuit = transpile(transpiler, circuit)
 
-        gates = get_circuit_gates(transpiled_circuit)
+        gates = get_circuit_instructions(transpiled_circuit)
 
         @test length(gates) == gates_count_output
 

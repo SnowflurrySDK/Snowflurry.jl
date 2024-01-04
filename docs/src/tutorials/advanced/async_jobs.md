@@ -29,7 +29,7 @@ We will start by importing Snowflurry, building our circuit and defining our QPU
 ```jldoctest asynchronous_job; output = false
 using Snowflurry
 
-circuit = QuantumCircuit(qubit_count=2, gates=[
+circuit = QuantumCircuit(qubit_count=2, instructions=[
     hadamard(1),
     control_x(1, 2),
 ])

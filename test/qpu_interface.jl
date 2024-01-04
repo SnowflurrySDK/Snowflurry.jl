@@ -145,7 +145,7 @@ end
 
 @testset "basic submission" begin
 
-    circuit = QuantumCircuit(qubit_count = 3, gates = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
 
     shot_count = 100
 
@@ -499,7 +499,7 @@ end
     @test get_client(qpu) == test_client
 
     #test basic submission, no transpilation
-    circuit = QuantumCircuit(qubit_count = 3, gates = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
     histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
@@ -558,6 +558,21 @@ end
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 end
 
+@testset "run_job with Readout on AnyonYukonQPU" begin
+
+    requestor = MockRequestor(request_checker, post_checker_readout)
+    test_client =
+        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    shot_count = 100
+    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3)])
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
+end
+
+
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
@@ -586,7 +601,7 @@ end
         # submit circuit with a non-native gate on this qpu (no transpilation)
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) - 1,
-            gates = [toffoli(1, 2, 3)],
+            instructions = [toffoli(1, 2, 3)],
         )
         @test_throws DomainError transpile_and_run_job(
             qpu,
@@ -622,7 +637,8 @@ end
         qpu = QPU(test_client, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = [sigma_x(qubit_count)])
+        circuit =
+            QuantumCircuit(qubit_count = qubit_count, instructions = [sigma_x(qubit_count)])
 
         transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
     end
@@ -630,7 +646,7 @@ end
 
 @testset "run on VirtualQPU" begin
 
-    circuit = QuantumCircuit(qubit_count = 3, gates = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
 
     shot_count = 100
 
@@ -638,8 +654,8 @@ end
 
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
 
-    for gate in get_circuit_gates(circuit)
-        @test is_native_gate(qpu, gate)
+    for instr in get_circuit_instructions(circuit)
+        @test is_native_instruction(qpu, instr)
     end
 
     histogram = transpile_and_run_job(qpu, circuit, shot_count)
@@ -658,7 +674,7 @@ end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError get_connectivity(NonExistentQPU())
-    @test_throws NotImplementedError is_native_gate(NonExistentQPU(), sigma_x(1))
+    @test_throws NotImplementedError is_native_instruction(NonExistentQPU(), sigma_x(1))
     @test_throws NotImplementedError is_native_circuit(
         NonExistentQPU(),
         QuantumCircuit(qubit_count = 1),

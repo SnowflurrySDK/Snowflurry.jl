@@ -5,11 +5,11 @@ using Test
 
     c = QuantumCircuit(qubit_count = 1)
 
-    @test length(get_circuit_gates(c)) == 0
+    @test length(get_circuit_instructions(c)) == 0
 
-    @test_throws DomainError QuantumCircuit(qubit_count = 1, gates = [sigma_x(5)])
+    @test_throws DomainError QuantumCircuit(qubit_count = 1, instructions = [sigma_x(5)])
 
-    @test_throws AssertionError QuantumCircuit(qubit_count = 0, gates = [sigma_x(5)])
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0, instructions = [sigma_x(5)])
 
     @test_throws AssertionError QuantumCircuit(qubit_count = 0)
 
@@ -19,20 +19,20 @@ end
     c = QuantumCircuit(qubit_count = 3)
     print(c)
     push!(c, hadamard(1))
-    @test length(get_circuit_gates(c)) == 1
+    @test length(get_circuit_instructions(c)) == 1
 
     push!(c, control_x(1, 2))
-    @test length(get_circuit_gates(c)) == 2
+    @test length(get_circuit_instructions(c)) == 2
     pop!(c)
-    @test length(get_circuit_gates(c)) == 1
+    @test length(get_circuit_instructions(c)) == 1
 
     push!(c, control_x(1, 2))
-    @test length(get_circuit_gates(c)) == 2
+    @test length(get_circuit_instructions(c)) == 2
 
     print(c)
 
     push!(c, controlled(swap(2, 3), [1]))
-    @test length(get_circuit_gates(c)) == 3
+    @test length(get_circuit_instructions(c)) == 3
 
     print(c)
 
@@ -64,7 +64,7 @@ end
     push!(circuit, control_x(1, 2))
     push!(circuit, controlled(hadamard(2), [1]))
 
-    println(get_circuit_gates(circuit))
+    println(get_circuit_instructions(circuit))
 
     @test circuit_contains_gate_type(circuit, Snowflurry.Hadamard)
     @test circuit_contains_gate_type(circuit, Snowflurry.ControlX)
@@ -130,14 +130,17 @@ end
     push!(c, swap(1, 2))
     inverse_c = inv(c)
 
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_gates(inverse_c)[1])) == "swap"
-    @test get_connected_qubits(get_circuit_gates(inverse_c)[1]) == [1, 2]
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[1])) ==
+          "swap"
+    @test get_connected_qubits(get_circuit_instructions(inverse_c)[1]) == [1, 2]
 
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_gates(inverse_c)[2])) == "cx"
-    @test get_connected_qubits(get_circuit_gates(inverse_c)[2]) == [1, 2]
-    @test get_instruction_symbol(get_gate_symbol(get_circuit_gates(inverse_c)[3])) == "rx"
-    @test get_connected_qubits(get_circuit_gates(inverse_c)[3]) == [1]
-    @test get_gate_parameters(get_gate_symbol(get_circuit_gates(inverse_c)[3]))["theta"] ≈
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[2])) ==
+          "cx"
+    @test get_connected_qubits(get_circuit_instructions(inverse_c)[2]) == [1, 2]
+    @test get_instruction_symbol(get_gate_symbol(get_circuit_instructions(inverse_c)[3])) ==
+          "rx"
+    @test get_connected_qubits(get_circuit_instructions(inverse_c)[3]) == [1]
+    @test get_gate_parameters(get_gate_symbol(get_circuit_instructions(inverse_c)[3]))["theta"] ≈
           -pi / 2
 end
 
@@ -175,63 +178,67 @@ end
 end
 
 @testset "append" begin
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(2)])
     wide_circuit = QuantumCircuit(qubit_count = 3)
     @test_throws ErrorException append!(circuit, wide_circuit)
 
-    circuit_2 = QuantumCircuit(qubit_count = 1, gates = [sigma_x(1)])
-    circuit_3 = QuantumCircuit(qubit_count = 2, gates = [hadamard(2)])
+    circuit_2 = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1)])
+    circuit_3 = QuantumCircuit(qubit_count = 2, instructions = [hadamard(2)])
     append!(circuit, circuit_2, circuit_3)
 
-    expected_circuit =
-        QuantumCircuit(qubit_count = 2, gates = [sigma_x(2), sigma_x(1), hadamard(2)])
+    expected_circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [sigma_x(2), sigma_x(1), hadamard(2)],
+    )
     @test compare_circuits(circuit, expected_circuit)
 end
 
 @testset "prepend" begin
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(2)])
     wide_circuit = QuantumCircuit(qubit_count = 3)
     @test_throws ErrorException prepend!(circuit, wide_circuit)
 
-    circuit_2 = QuantumCircuit(qubit_count = 1, gates = [sigma_x(1)])
-    circuit_3 = QuantumCircuit(qubit_count = 2, gates = [hadamard(1)])
+    circuit_2 = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1)])
+    circuit_3 = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1)])
     prepend!(circuit, circuit_2, circuit_3)
 
-    expected_circuit =
-        QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), hadamard(1), sigma_x(2)])
+    expected_circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [sigma_x(1), hadamard(1), sigma_x(2)],
+    )
     @test compare_circuits(circuit, expected_circuit)
 end
 
 @testset "permute_qubits!" begin
     circuit = QuantumCircuit(
         qubit_count = 5,
-        gates = [sigma_x(2), sigma_y(3), sigma_z(1), hadamard(4)],
+        instructions = [sigma_x(2), sigma_y(3), sigma_z(1), hadamard(4)],
     )
     map = Dict(1 => 3, 3 => 1, 2 => 5, 5 => 2)
     permute_qubits!(circuit, map)
     expected_circuit = QuantumCircuit(
         qubit_count = 5,
-        gates = [sigma_x(5), sigma_y(1), sigma_z(3), hadamard(4)],
+        instructions = [sigma_x(5), sigma_y(1), sigma_z(3), hadamard(4)],
     )
     @test compare_circuits(circuit, expected_circuit)
 
-    circuit = QuantumCircuit(qubit_count = 1, gates = [sigma_x(1)])
+    circuit = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1)])
     map = Dict(1 => 2)
     @test_throws ErrorException permute_qubits!(circuit, map)
 
-    circuit = QuantumCircuit(qubit_count = 1, gates = [sigma_x(1)])
+    circuit = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1)])
     map = Dict(2 => 1)
     @test_throws ErrorException permute_qubits!(circuit, map)
 
-    circuit = QuantumCircuit(qubit_count = 1, gates = [sigma_x(1)])
+    circuit = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1)])
     map = Dict(0 => 2)
     @test_throws ErrorException permute_qubits!(circuit, map)
 
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), sigma_y(2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_y(2)])
     map = Dict(1 => 1, 2 => 1)
     @test_throws ErrorException permute_qubits!(circuit, map)
 
-    circuit = QuantumCircuit(qubit_count = 2, gates = [sigma_x(1), sigma_y(2)])
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_y(2)])
     map = Dict(1 => 2)
     @test_throws ErrorException permute_qubits!(circuit, map)
 end
@@ -239,13 +246,13 @@ end
 @testset "permute_qubits" begin
     circuit = QuantumCircuit(
         qubit_count = 5,
-        gates = [sigma_x(2), sigma_y(3), sigma_z(1), hadamard(4)],
+        instructions = [sigma_x(2), sigma_y(3), sigma_z(1), hadamard(4)],
     )
     map = Dict(1 => 3, 3 => 1, 2 => 5, 5 => 2)
     new_circuit = permute_qubits(circuit, map)
     expected_circuit = QuantumCircuit(
         qubit_count = 5,
-        gates = [sigma_x(5), sigma_y(1), sigma_z(3), hadamard(4)],
+        instructions = [sigma_x(5), sigma_y(1), sigma_z(3), hadamard(4)],
     )
     @test compare_circuits(new_circuit, expected_circuit)
 end

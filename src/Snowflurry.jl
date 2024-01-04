@@ -16,6 +16,7 @@ import StatsBase
 
 include("core/qobj.jl")
 include("core/quantum_gate.jl")
+include("core/readout.jl")
 include("core/quantum_circuit.jl")
 include("core/pauli.jl")
 include("core/connectivity.jl")
@@ -37,6 +38,7 @@ export
     SwapLikeOperator,
     MultiBodySystem,
     QuantumCircuit,
+    AbstractInstruction,
     AbstractGateSymbol,
     AbstractControlledGateSymbol,
     Controlled,
@@ -68,6 +70,7 @@ export
     CompressRzGatesTranspiler,
     TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
+    ReadoutsAreFinalInstructionsTranspiler,
     UnsupportedGatesTranspiler,
 
     # Functions
@@ -77,7 +80,7 @@ export
     get_gate_symbol,
     get_embed_operator,
     get_matrix,
-    get_display_symbol,
+    get_display_symbols,
     get_instruction_symbol,
     get_symbol_for_instruction,
     fock,
@@ -101,7 +104,7 @@ export
     get_control_qubits,
     get_qubits_distance,
     get_gate_parameters,
-    move_gate,
+    move_instruction,
     normalize!,
     get_measurement_probabilities,
     genlaguerre,
@@ -113,7 +116,7 @@ export
     simulate_shots,
     get_num_gates,
     get_num_gates_per_type,
-    get_circuit_gates,
+    get_circuit_instructions,
     compare_circuits,
     circuit_contains_gate_type,
     compare_kets,
@@ -134,7 +137,7 @@ export
     get_host,
     get_status,
     get_result,
-    is_native_gate,
+    is_native_instruction,
     is_native_circuit,
     run_job,
     transpile_and_run_job,
@@ -144,7 +147,7 @@ export
     post_request,
     get_metadata,
     get_transpiler,
-    apply_gate!,
+    apply_instruction!,
     get_pauli,
     get_quantum_circuit,
     get_negative_exponent,
@@ -177,8 +180,10 @@ export
     eye,
     control_z,
     control_x,
-    toffoli
+    toffoli,
 
+    # Instructions
+    readout
 
 using PrecompileTools
 
@@ -228,10 +233,20 @@ using PrecompileTools
 
     for gate in gates_list
 
-        circuit = QuantumCircuit(qubit_count = qubit_count, gates = [gate])
+        circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [gate])
         transpiled_circuit = transpile(transpiler, circuit)
 
         simulate(circuit)
+    end
+
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [Readout(1)])
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    try
+        # returns DNS error
+        run_job(qpu, circuit, 100)
+    catch e
+        @assert typeof(e) == HTTP.Exceptions.ConnectError
     end
 
 end

@@ -7,7 +7,7 @@ include("SnowflurryBenchmarking.jl")
 
 @task "RotationX" nqubits = nqubits begin
     map(nqubits) do k
-        t = @benchmark apply_gate!(ψ, rotation_x(target_qubit_1, θ)) setup =
+        t = @benchmark apply_instruction!(ψ, rotation_x(target_qubit_1, θ)) setup =
             (ψ = rand_state($k))
         minimum(t).time
     end

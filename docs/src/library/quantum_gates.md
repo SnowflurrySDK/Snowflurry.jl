@@ -31,8 +31,8 @@ swap
 toffoli
 iswap_dagger
 Base.:*(M::Gate, x::Ket)
-apply_gate!
+apply_instruction!
 get_operator
 inv(gate::AbstractGateSymbol)
-move_gate
+move_instruction
 ```

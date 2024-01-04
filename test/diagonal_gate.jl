@@ -38,12 +38,12 @@ using StaticArrays
     @test composite_op[3, 3] ≈ phase_gate_operator[1, 1]
     @test composite_op[4, 4] ≈ phase_gate_operator[2, 2]
 
-    apply_gate!(ψ, phase_gate)
+    apply_instruction!(ψ, phase_gate)
 
     ψ_z = Ket([v for v = 1:2^qubit_count])
 
     ZGate = sigma_z(target)
-    apply_gate!(ψ_z, ZGate)
+    apply_instruction!(ψ_z, ZGate)
 
     @test ψ ≈ ψ_z
 
@@ -77,7 +77,7 @@ end
     @test get_operator(get_gate_symbol(inv(phase_gate))) ==
           get_operator(get_gate_symbol(phase_shift(target, -ϕ)))
 
-    apply_gate!(ψ, phase_gate)
+    apply_instruction!(ψ, phase_gate)
 
 end
 
@@ -91,7 +91,7 @@ end
     ψ_z = Ket(input_array)
 
     z_gate = sigma_z(target)
-    apply_gate!(ψ_z, z_gate)
+    apply_instruction!(ψ_z, z_gate)
 
     input_array[5:end] = -input_array[5:end]
 
@@ -120,7 +120,7 @@ end
     ψ = Ket([v for v = 1:2^qubit_count])
 
     T_gate = pi_8(target)
-    apply_gate!(ψ, T_gate)
+    apply_instruction!(ψ, T_gate)
 
     ψ_result = Ket([
         1.0 + 0.0im,
@@ -145,12 +145,12 @@ end
         7.0 + 0.0im,
     ])
 
-    @test_throws DomainError apply_gate!(ψ_error, T_gate)
+    @test_throws DomainError apply_instruction!(ψ_error, T_gate)
 
     target_error = 100
 
     T_gate_error = pi_8(target_error)
 
-    @test_throws DomainError apply_gate!(ψ, T_gate_error)
+    @test_throws DomainError apply_instruction!(ψ, T_gate_error)
 
 end

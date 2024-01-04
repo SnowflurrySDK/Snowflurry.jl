@@ -88,13 +88,13 @@ julia> Snowflurry.gates_display_symbols[X45]=["X45"];
 If this `Gate` is to be sent as an instruction to a hardware QPU, 
 an instruction `String` must be defined.
 ```jldoctest gate_struct
-julia> Snowflurry.gates_instruction_symbols[X45]="x45";
+julia> Snowflurry.instruction_symbols[X45]="x45";
 
 ```
 
 A circuit containing this `Gate` can now be constructed:
 ```jldoctest gate_struct
-julia> circuit=QuantumCircuit(qubit_count=2,gates=[x_45_gate])
+julia> circuit=QuantumCircuit(qubit_count=2,instructions=[x_45_gate])
 Quantum Circuit Object:
    qubit_count: 2
 q[1]:──X45──
@@ -123,6 +123,11 @@ Underlying data ComplexF64:
 
 """
 abstract type AbstractGateSymbol end
+
+abstract type AbstractInstruction end
+
+Base.inv(instr::InstructionType) where {InstructionType<:AbstractInstruction} =
+    throw(NotImplementedError(:inv, instr))
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
@@ -169,7 +174,7 @@ Underlying data ComplexF64:
 4.329780281177466e-17 - 0.7071067811865475im    0.7071067811865476 + 0.0im
 ```
 """
-struct Gate{SymbolType<:AbstractGateSymbol}
+struct Gate{SymbolType<:AbstractGateSymbol} <: AbstractInstruction
     symbol::SymbolType
     connected_qubits::Vector{Int}
 
@@ -220,6 +225,9 @@ end
 function get_gate_symbol(gate::Gate)::AbstractGateSymbol
     return gate.symbol
 end
+
+get_connected_qubits(instr::AbstractInstruction)::AbstractVector{Int} =
+    throw(NotImplementedError(:get_connected_qubits, instr))
 
 function get_connected_qubits(gate::Gate)::AbstractVector{Int}
     return gate.connected_qubits
@@ -272,7 +280,7 @@ It can then be used in a `QuantumCircuit` as any other `Gate`, and its display s
 inherited from the display symbol of the single-target `Hadamard` `Gate`:
 
 ```jldoctest controlled_hadamard
-julia> circuit=QuantumCircuit(qubit_count=2,gates=[controlled_hadamard])
+julia> circuit=QuantumCircuit(qubit_count=2,instructions=[controlled_hadamard])
 Quantum Circuit Object:
    qubit_count: 2 
 q[1]:──*──
@@ -358,7 +366,7 @@ end
 get_gate_parameters(gate::Controlled) = get_gate_parameters(gate.kernel)
 
 """
-    move_gate(gate::Gate,
+    move_instruction(gate::Gate,
         qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGateSymbol
 
 Returns a copy of `gate` where the qubits on which the `gate` acts have been updated based
@@ -380,7 +388,7 @@ Underlying data type: ComplexF64:
     1.0 + 0.0im    .
 
 
-julia> move_gate(gate, Dict(1=>2))
+julia> move_instruction(gate, Dict(1=>2))
 Gate Object: Snowflurry.SigmaX
 Connected_qubits	: [2]
 Operator:
@@ -392,7 +400,10 @@ Underlying data type: ComplexF64:
 
 ```
 """
-function move_gate(gate::Gate, qubit_mapping::AbstractDict{T,T})::Gate where {T<:Integer}
+function move_instruction(
+    gate::Gate,
+    qubit_mapping::AbstractDict{T,T},
+)::AbstractInstruction where {T<:Integer}
 
     old_connected_qubits = get_connected_qubits(gate)
     new_connected_qubits = deepcopy(old_connected_qubits)
@@ -412,7 +423,7 @@ struct NotImplementedError{ArgsT} <: Exception
 end
 
 """
-    apply_gate!(state::Ket, gate::Gate)
+    apply_instruction!(state::Ket, gate::Gate)
 
 Update the `state` by applying a `gate` to it.
 
@@ -424,14 +435,14 @@ julia> ψ_0 = fock(0, 2)
 0.0 + 0.0im
 
 
-julia> apply_gate!(ψ_0, sigma_x(1))
+julia> apply_instruction!(ψ_0, sigma_x(1))
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im
 
 ```
 """
-function apply_gate!(state::Ket, gate::Gate)
+function apply_instruction!(state::Ket, gate::Gate)
     qubit_count = get_num_qubits(state)
 
     connected_qubits = get_connected_qubits(gate)
@@ -452,7 +463,10 @@ function apply_gate!(state::Ket, gate::Gate)
     apply_operator!(state, operator, connected_qubits)
 end
 
-function apply_gate!(state::Ket, gate::Gate{Controlled{T}}) where {T<:AbstractGateSymbol}
+function apply_instruction!(
+    state::Ket,
+    gate::Gate{Controlled{T}},
+) where {T<:AbstractGateSymbol}
     qubit_count = get_num_qubits(state)
 
     connected_qubits = get_connected_qubits(gate)
@@ -2090,7 +2104,10 @@ get_num_target_qubits(::Toffoli) = 1
 
 # optimized application of ControlX, ControlZ or Toffoli gate without calling operator 
 # (it is hard-coded in apply_control_x!, apply_control_z! or apply_toffoli!, respectively)
-function apply_gate!(state::Ket, gate::Union{Gate{ControlX},Gate{ControlZ},Gate{Toffoli}})
+function apply_instruction!(
+    state::Ket,
+    gate::Union{Gate{ControlX},Gate{ControlZ},Gate{Toffoli}},
+)
     qubit_count = get_num_qubits(state)
 
     connected_qubits = get_connected_qubits(gate)
@@ -2119,6 +2136,15 @@ function apply_gate!(state::Ket, gate::Union{Gate{ControlX},Gate{ControlZ},Gate{
         @assert length(control_qubits) == 2
         apply_toffoli!(state, control_qubits, target_qubits[1])
     end
+end
+
+function apply_instruction!(::Ket, instr::AbstractInstruction)
+    throw(
+        NotImplementedError(
+            :apply_instruction!,
+            "Simulator not implemented for instruction of type $(typeof(instr))",
+        ),
+    )
 end
 
 """
@@ -2179,9 +2205,12 @@ Base.:*(M::Gate, x::Ket) = get_transformed_state(x, M)
 
 function get_transformed_state(state::Ket, gate::Gate)
     transformed_state = deepcopy(state)
-    apply_gate!(transformed_state, gate)
+    apply_instruction!(transformed_state, gate)
     return transformed_state
 end
+
+Base.:*(M::InstructionType, x::Ket) where {InstructionType<:AbstractInstruction} =
+    throw(NotImplementedError(:*, "Left-multiply not implemented for type $(typeof(M))"))
 
 """
     inv(gate::AbstractGateSymbol)
