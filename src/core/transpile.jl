@@ -1800,7 +1800,6 @@ function transpile(
     return circuit
 end
 
-
 function assert_readouts_are_last_instr(circuit::QuantumCircuit)
     instructions = get_circuit_instructions(circuit)
 

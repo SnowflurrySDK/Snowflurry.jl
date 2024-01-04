@@ -1,4 +1,3 @@
-
 struct Readout <: AbstractInstruction
     connected_qubit::Int
     destination_bit::Int

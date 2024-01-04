@@ -151,7 +151,7 @@ end
 
     circuit_json = serialize_job(circuit, shot_count)
 
-    expected_json = "{\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    expected_json = "{\"qubit_count\":3,\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
 
     @test circuit_json == expected_json
 

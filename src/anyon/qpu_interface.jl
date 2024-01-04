@@ -127,7 +127,7 @@ q[2]:─────
 
 
 julia> serialize_job(c,10)
-"{\\\"shot_count\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"qubit_count\\\":2,\\\"shot_count\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -136,6 +136,7 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
     circuit_description = Dict(
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
         "shot_count" => shot_count,
+        "qubit_count" => circuit.qubit_count,
     )
 
     for instr in get_circuit_instructions(circuit)
