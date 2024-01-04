@@ -71,6 +71,7 @@ export
     TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
     ReadoutsAreFinalInstructionsTranspiler,
+    CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
 
     # Functions
@@ -227,16 +228,42 @@ using PrecompileTools
         iswap_dagger(6, 3),
     ]
 
-
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
-    transpiler = get_transpiler(qpu)
+    transpiler_allowing_no_readout = SequentialTranspiler([
+        CastToffoliToCXGateTranspiler(),
+        CastCXToCZGateTranspiler(),
+        CastISwapToCZGateTranspiler(),
+        SwapQubitsForAdjacencyTranspiler(LineConnectivity(6)),
+        CastSwapToCZGateTranspiler(),
+        CompressSingleQubitGatesTranspiler(),
+        SimplifyTrivialGatesTranspiler(),
+        CastUniversalToRzRxRzTranspiler(),
+        SimplifyRxGatesTranspiler(),
+        CastRxToRzAndHalfRotationXTranspiler(),
+        CompressRzGatesTranspiler(),
+        SimplifyRzGatesTranspiler(),
+        ReadoutsAreFinalInstructionsTranspiler(),
+        UnsupportedGatesTranspiler(),
+    ])
 
     for gate in gates_list
 
         circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [gate])
-        transpiled_circuit = transpile(transpiler, circuit)
+        transpiled_circuit = transpile(transpiler_allowing_no_readout, circuit)
 
         simulate(circuit)
+    end
+
+    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    transpiler = get_transpiler(qpu)
+
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1)])
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    try
+        # returns DNS error
+        run_job(qpu, circuit, 100)
+    catch e
+        @assert typeof(e) == HTTP.Exceptions.ConnectError
     end
 
     circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [Readout(1)])

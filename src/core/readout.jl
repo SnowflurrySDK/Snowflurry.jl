@@ -1,4 +1,3 @@
-
 struct Readout <: AbstractInstruction
     connected_qubit::Int
 end
@@ -10,11 +9,11 @@ function get_connected_qubits(readout::Readout)::AbstractVector{Int}
 end
 
 function move_instruction(
-    readout::Readout,
+    original_readout::Readout,
     qubit_mapping::AbstractDict{T,T},
 )::AbstractInstruction where {T<:Integer}
 
-    connected_qubits = get_connected_qubits(readout)
+    connected_qubits = get_connected_qubits(original_readout)
 
     @assert length(connected_qubits) == 1 "a Readout can only be single-qubit"
 
@@ -24,5 +23,5 @@ function move_instruction(
         qubit = qubit_mapping[qubit]
     end
 
-    return Readout(qubit)
+    return readout(qubit)
 end
