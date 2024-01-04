@@ -566,7 +566,7 @@ end
     shot_count = 100
     qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
 
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3)])
+    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3, 3)])
     histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
@@ -597,14 +597,14 @@ end
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) + 1,
-            instructions = [readout(1)],
+            instructions = [readout(1, 1)],
         )
         @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
         # submit circuit with a non-native gate on this qpu (no transpilation)
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) - 1,
-            instructions = [toffoli(1, 2, 3), readout(1)],
+            instructions = [toffoli(1, 2, 3), readout(1, 1)],
         )
         @test_throws DomainError transpile_and_run_job(
             qpu,
@@ -642,7 +642,7 @@ end
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(
             qubit_count = qubit_count,
-            instructions = [sigma_x(qubit_count), readout(1)],
+            instructions = [sigma_x(qubit_count), readout(1, 1)],
         )
 
         transpile_and_run_job(qpu, circuit, shot_count) # no error thrown

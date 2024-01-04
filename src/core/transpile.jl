@@ -1843,3 +1843,30 @@ function transpile(
         ArgumentError("QuantumCircuit is missing a Readout. Would not return any result."),
     )
 end
+
+struct ReadoutsDoNotConflictTranspiler <: Transpiler end
+
+function transpile(
+    ::ReadoutsDoNotConflictTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    readout_destination_bits = Set{Int}()
+
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            bit = get_destination_bit(instr)
+
+            if bit in readout_destination_bits
+                throw(
+                    ArgumentError(
+                        "Readouts in QuantumCircuit have conflicting destination bit: $bit",
+                    ),
+                )
+            end
+            push!(readout_destination_bits, bit)
+        end
+    end
+
+    return circuit
+end

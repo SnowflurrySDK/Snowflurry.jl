@@ -71,6 +71,7 @@ export
     TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
     ReadoutsAreFinalInstructionsTranspiler,
+    ReadoutsDoNotConflictTranspiler,
     CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
 
@@ -103,6 +104,7 @@ export
     get_num_connected_qubits,
     get_target_qubits,
     get_control_qubits,
+    get_destination_bit,
     get_qubits_distance,
     get_gate_parameters,
     move_instruction,
@@ -229,6 +231,7 @@ using PrecompileTools
     ]
 
     transpiler_allowing_no_readout = SequentialTranspiler([
+        ReadoutsDoNotConflictTranspiler(),
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
@@ -256,17 +259,7 @@ using PrecompileTools
     qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
     transpiler = get_transpiler(qpu)
 
-    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1)])
-    transpiled_circuit = transpile(transpiler, circuit)
-
-    try
-        # returns DNS error
-        run_job(qpu, circuit, 100)
-    catch e
-        @assert typeof(e) == HTTP.Exceptions.ConnectError
-    end
-
-    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [Readout(1)])
+    circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1, 1)])
     transpiled_circuit = transpile(transpiler, circuit)
 
     try
