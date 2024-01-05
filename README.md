@@ -103,6 +103,28 @@ The first line adds a Hadamard gate to circuit object `c` which will operate on 
 
 **Note**: Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
+To finish constructing our circuit, we'll measure the qubits that we're interested in. For this example, we measure both qubits. Measurement in Snowflurry is performed with a `readout` operation, one per qubit.
+
+```julia
+push!(c, readout(1, 1))
+push!(c, readout(2, 2))
+
+print(c)
+
+# output
+Quantum Circuit Object:
+   qubit_count: 2
+q[1]:──H────*────✲───────
+            |
+q[2]:───────X─────────✲──
+
+```
+
+`readout(1, 1)` measures qubit 1 and assigns the result to the first bit of the resultant, classical state. `readout(2, 2)` does the same for qubit 2 and the second state bit. Snowflurry supports readout from any qubit to any result bit with a few caveats:
+- Any `readout` operation must be the final operation applied to its target qubit
+  - We plan to lift this restriction in future versions of Snowflurry
+- Separate `readout` operations must write to separate classical bits
+
 The next step we want to take is to simulate our circuit. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
 
 ```julia
@@ -142,6 +164,8 @@ using Snowflurry, SnowflurryPlots
 c = QuantumCircuit(qubit_count=2)
 push!(c, hadamard(1))
 push!(c, control_x(1, 2))
+push!(c, readout(1, 1))
+push!(c, readout(2, 2))
 ψ = simulate(c)
 plot_histogram(c, 100)
 ```
