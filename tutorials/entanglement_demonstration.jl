@@ -4,6 +4,8 @@ circuit = QuantumCircuit(qubit_count = 2)
 
 push!(circuit, hadamard(1))
 push!(circuit, control_x(1, 2))
+push!(circuit, readout(1, 1))
+push!(circuit, readout(2, 2))
 
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]

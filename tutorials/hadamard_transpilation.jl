@@ -3,6 +3,7 @@ using Snowflurry
 circuit = QuantumCircuit(qubit_count = 1)
 
 push!(circuit, hadamard(1))
+push!(circuit, readout(1, 1))
 
 user = ENV["ANYON_QUANTUM_USER"]
 token = ENV["ANYON_QUANTUM_TOKEN"]
