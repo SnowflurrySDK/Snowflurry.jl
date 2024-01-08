@@ -10,28 +10,23 @@ DocTestSetup = quote
 end
 ```
 
-In the previous tutorial, we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU`.
+In the [previous tutorial](tutorials/virtual_qpu.md), we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU` API.
 
-In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines. 
+In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines.
 
 ## Anyon QPU
 
-!!! note 
-    This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
+!!! note
+	This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware.
 
-!!! note 
-    This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware. 
-
-The current release of `Snowflurry` supports Anyon's Yukon quantum processor which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers. 
-
-
+The current release of `Snowflurry` supports Anyon's Yukon quantum processor which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers.
 
 We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials:
 
 ```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
 
-qpu=AnyonYukonQPU(host="yukon.anyonsys.com",user="USER_NAME", access_token="API_KEY")
+qpu=AnyonYukonQPU(host="http://yukon.anyonsys.com",user="USER_NAME", access_token="API_KEY")
 
 # output
 Quantum Processing Unit:
@@ -44,7 +39,7 @@ Quantum Processing Unit:
 ```
 
 !!! danger "Keep your credentials safe!"
-    If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
+	If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
 
 
 We can now print the `qpu` object to print further information about the hardware:
@@ -81,20 +76,20 @@ We now continue to build a small circuit to create a Bell state as was presented
 
 ```jldoctest anyon_qpu_tutorial; output = true
 c=QuantumCircuit(qubit_count=2)
-push!(c,hadamard(1),control_x(1,2))
+push!(c,hadamard(1),control_x(1,2),readout(1,1),readout(2,2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──H────*──
-            |  
-q[2]:───────X──
-``` 
+q[1]:──H────*────✲───────
+            |            
+q[2]:───────X─────────✲──
+```
 
 ## Circuit Transpilation
 
-The circuit above cannot be directly executed on the quantum processor. This is because the quantum processor only implements a set of *native gates*. This means that any arbitrary gate should first be *transpiled* into a set of *native* gates that can run on the QPU. 
+The circuit above cannot be directly executed on the quantum processor. This is because the quantum processor only implements a set of *native gates*. This means that any arbitrary gate should first be *transpiled* into a set of *native* gates that can run on the QPU.
 
-If you examine the `src/anyon/qpu_interface.jl` file, you notice that Anyon Yukon Processor implements the following set of native gates:
+If you examine the `src/anyon/anyon.jl` file, you notice that Anyon Yukon Processor implements the following set of native gates:
 ```
  set_of_native_gates=[
         PhaseShift,
@@ -113,7 +108,7 @@ If you examine the `src/anyon/qpu_interface.jl` file, you notice that Anyon Yuko
     ]
 ```
 
-Snowflurry is designed to allow users to design and use their own transpilers for different QPUs. Alternatively, a user may opt not to use the default transpilers that are implemented for each QPU driver. 
+Snowflurry is designed to allow users to design and use their own transpilers for different QPUs. Alternatively, a user may opt not to use the default transpilers that are implemented for each QPU driver.
 
 Let's see how we can transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
 
@@ -135,9 +130,9 @@ c_transpiled=transpile(transpiler,c)
 
 Quantum Circuit Object:
    qubit_count: 2 
-q[1]:──Z_90────────────X_90────Z_90────────────────────*──────────────────────────
-                                                       |                          
-q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90────X_90────Z_90──
+q[1]:──Z_90────────────X_90────Z_90────────────────────*────────────────────────────✲───────
+                                                       |                                    
+q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90────X_90────Z_90─────────✲──
 ```
 
 The final circuit `c_transpiled` is now ready to be submitted to the QPU:
@@ -155,5 +150,5 @@ Dict("11" => 97, "00" => 83, "01" => 11, "10" => 9)
 The results show that the samples are mostly sampled between state $\left|00\right\rangle$ and $\left|11\right\rangle$. We do see some finite population in $\left|01\right\rangle$ and $\left|10\right\rangle$ that are due to the error in the computation.
 
 
-!!! note 
-    The user can skip the explicit transpiling step by using the `transpile_and_run` function. This function will use the default transpiler of the QPU and then submit the job to the machine. 
+!!! note
+	The user can skip the explicit transpiling step by using the `transpile_and_run` function. This function will use the default transpiler of the QPU and then submit the job to the machine.

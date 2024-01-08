@@ -103,7 +103,7 @@ The first line adds a Hadamard gate to circuit object `c` which will operate on 
 
 **Note**: Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
-The next step we want to take is to simulate our circuit. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
+The next step we want to take is to execute our circuit. Instead of submitting a job to a remote quantum service, we will use Snowflurry's built-in simulator. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
 
 ```julia
 ψ = simulate(c)
@@ -146,9 +146,11 @@ push!(c, control_x(1, 2))
 plot_histogram(c, 100)
 ```
 
+To execute a circuit on real hardware, consult [our tutorial](https://snowflurrysdk.github.io/Snowflurry.jl/stable/tutorials/run_circuit_anyon.html).
+
 # Roadmap
 
-See what we have planned by looking at the [Snowflurry Github Project](https://github.com/orgs/SnowflurrySDK/projects/8).
+See what we have planned by looking at the [Snowflurry Github Project](https://github.com/orgs/SnowflurrySDK/projects/1).
 
 # Snowflurry Contributors Community
 
