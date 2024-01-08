@@ -20,12 +20,13 @@ function fibonacci(n)
     if n <= 2
         return 1
     end
+
+    # We need to yield here if we want other tasks to run.
+    yield()
     return fibonacci(n - 1) + fibonacci(n - 2)
 end
 
 fibonacci(30)
-
-yield()
 
 result = fetch(task)
 println(result)
