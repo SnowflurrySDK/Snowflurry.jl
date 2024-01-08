@@ -10,7 +10,7 @@ DocTestSetup = quote
 end
 ```
 
-In the [previous tutorial](tutorials/virtual_qpu.md), we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU` API.
+In the [previous tutorial](virtual_qpu.md), we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU` API.
 
 In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines.
 
