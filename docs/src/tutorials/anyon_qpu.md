@@ -151,4 +151,4 @@ The results show that the samples are mostly sampled between state $\left|00\rig
 
 
 !!! note
-	The user can skip the explicit transpiling step by using the `transpile_and_run` function. This function will use the default transpiler of the QPU and then submit the job to the machine.
+	The user can skip the explicit transpiling step by using the `transpile_and_run_job` function. This function will use the default transpiler of the QPU and then submit the job to the machine.
