@@ -7,7 +7,6 @@ Client
 get_host
 submit_circuit
 get_status
-get_result
 run_job
 transpile_and_run_job
 get_transpiler

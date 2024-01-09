@@ -44,29 +44,13 @@ end
 expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
 
 function request_checker(url::String, user::String, access_token::String)
-    myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)(.*)")
+    myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
     match_obj = match(myregex, url)
 
     if !isnothing(match_obj)
-
-        myregex =
-            Regex("(.*)(/$(Snowflurry.path_jobs)/)(.*)(/$(Snowflurry.path_results))\$")
-        match_obj = match(myregex, url)
-
-        if !isnothing(match_obj)
-            # caller is :get_result
-            return HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-        else
-            myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
-            match_obj = match(myregex, url)
-
-            if !isnothing(match_obj)
-                # caller is :get_status
-                return HTTP.Response(200, [], body = expected_get_status_response_body)
-            end
-        end
+        # caller is :get_status
+        return HTTP.Response(200, [], body = expected_get_status_response_body)
     end
-
     throw(NotImplementedError(:get_request, url))
 end
 

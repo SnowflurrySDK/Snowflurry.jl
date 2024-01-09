@@ -43,7 +43,7 @@ end
         body,
     )
 
-    #### request from :get_status
+    #### GET request returning: status, histogram
 
     @test_throws NotImplementedError get_request(
         requestor,
@@ -68,32 +68,6 @@ end
     @test_throws NotImplementedError get_request(
         requestor,
         host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
-        user,
-        expected_access_token,
-    )
-
-    #### request from :get_result
-
-    expected_response = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-
-    response = get_request(
-        requestor,
-        host * "/" * Snowflurry.path_jobs * "/" * jobID * "/" * Snowflurry.path_results,
-        user,
-        expected_access_token,
-    )
-
-    compare_responses(expected_response, response)
-
-    @test_throws NotImplementedError get_request(
-        requestor,
-        host *
-        "/" *
-        Snowflurry.path_jobs *
-        "/" *
-        jobID *
-        "/" *
-        string(Snowflurry.path_results, "wrong_ending"),
         user,
         expected_access_token,
     )

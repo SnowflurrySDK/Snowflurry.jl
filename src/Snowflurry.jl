@@ -142,7 +142,6 @@ export
     path_search,
     get_host,
     get_status,
-    get_result,
     is_native_instruction,
     is_native_circuit,
     run_job,

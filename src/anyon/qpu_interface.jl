@@ -343,45 +343,6 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
     end
 end
 
-"""
-    get_result(client::Client,circuit::String)::Dict{String, Int}
-
-Get the histogram of a completed circuit calculation, through a `Client` of a `QPU` service, 
-by circuit identifier circuitID.
-
-# Example
-
-
-```jldoctest 
-julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3,instructions = [sigma_x(3), control_z(2, 1)]), 100)
-"8050e1ed-5e4c-4089-ab53-cccda1658cd0"
-
-julia> get_status(client, circuitID);
-
-julia> get_result(client, circuitID)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
-
-```
-"""
-function get_result(client::Client, circuitID::String)::Dict{String,Int}
-
-    path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID" * "/" * path_results
-
-    response =
-        get_request(get_requestor(client), path_url, client.user, client.access_token)
-
-    body = JSON.parse(read_response_body(response.body))
-
-    histogram = Dict{String,Int}()
-    @assert haskey(body, "histogram")
-
-    # convert from Dict{String,String} to Dict{String,Int}
-    for (key, val) in body["histogram"]
-        histogram[key] = round(Int, val)
-    end
-end
-
 abstract type AbstractQPU end
 
 get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
