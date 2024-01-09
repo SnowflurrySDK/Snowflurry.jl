@@ -146,7 +146,9 @@ push!(c, control_x(1, 2))
 plot_histogram(c, 100)
 ```
 
-To execute a circuit on real hardware, consult [our tutorial](https://snowflurrysdk.github.io/Snowflurry.jl/stable/tutorials/run_circuit_anyon.html).
+You can learn to execute circuits on simulated hardware by following [the Virtual QPU tutorial](https://snowflurrysdk.github.io/Snowflurry.jl/stable/tutorials/run_circuit_virtual.html).
+
+For selected partners and users who have been granted access to Anyon's hardware, follow [the Virtual QPU tutorial](https://snowflurrysdk.github.io/Snowflurry.jl/stable/tutorials/run_circuit_virtual.html) first, then check out how to run circuits [on real hardware](https://snowflurrysdk.github.io/Snowflurry.jl/stable/tutorials/run_circuit_anyon.html).
 
 # Roadmap
 
