@@ -6,7 +6,7 @@ jobs:
   os-test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
-      # don't run on draft PRs
+    # don't run on draft PRs
     if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
     strategy:
       fail-fast: true
@@ -33,11 +33,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: Build Snowflurry
-        run: >
-          julia --project=. -e 
-          'using Pkg;
-          Pkg.precompile();
-          Pkg.instantiate()'
+        uses: julia-actions/julia-buildpkg@v1
 
       - name: Test Snowflurry
         uses: julia-actions/julia-runtest@v1
@@ -69,13 +65,10 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      
+
       - name: Build Snowflurry
-        run: >
-          julia --project=. -e 
-          'using Pkg;
-          Pkg.instantiate()'
-      
+        uses: julia-actions/julia-buildpkg@v1
+
       - name: Test Snowflurry
         uses: julia-actions/julia-runtest@v1
 
@@ -89,7 +82,7 @@ jobs:
   format:
     name: JuliaFormatter on Julia 1.9 - x64 - ${{ github.event_name }}
     runs-on: ubuntu-latest
-     # don't run on draft PRs
+    # don't run on draft PRs
     if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
     strategy:
       fail-fast: true
@@ -102,8 +95,8 @@ jobs:
           arch: "x64"
       - name: Format Snowflurry
         run: |
-          julia  -e 'import Pkg; Pkg.add("JuliaFormatter")'
-          julia  -e 'using JuliaFormatter; print("Running JuliaFormatter.format()..."); format(".")'
+          julia -e 'import Pkg; Pkg.add("JuliaFormatter")'
+          julia -e 'using JuliaFormatter; print("Running JuliaFormatter.format()..."); format(".")'
           echo "Checking for differences..."
           git diff --exit-code
           echo "No differences found -- SUCCESS"
