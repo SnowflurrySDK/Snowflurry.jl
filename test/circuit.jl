@@ -185,7 +185,7 @@ end
 end
 
 @testset "inv" begin
-    c = QuantumCircuit(qubit_count = 2)
+    c = QuantumCircuit(qubit_count = 2, name = "test-name")
     push!(c, rotation_x(1, pi / 2))
     push!(c, control_x(1, 2))
     push!(c, swap(1, 2))
@@ -203,6 +203,7 @@ end
     @test get_connected_qubits(get_circuit_instructions(inverse_c)[3]) == [1]
     @test get_gate_parameters(get_gate_symbol(get_circuit_instructions(inverse_c)[3]))["theta"] ≈
           -pi / 2
+    @test get_name(inverse_c) == get_name(c) == "test-name"
 end
 
 @testset "get_num_gates_per_type" begin
