@@ -1261,6 +1261,7 @@ function Base.inv(circuit::QuantumCircuit)
     return QuantumCircuit(
         qubit_count = get_num_qubits(circuit),
         instructions = inverse_gates,
+        name = circuit.name,
     )
 end
 
