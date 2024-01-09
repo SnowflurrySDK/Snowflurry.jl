@@ -125,7 +125,7 @@ q[1]:──X──
 q[2]:─────
           
 julia> serialize_job(c, 10, "http://example.anyonsys.com")
-"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"shot_count\\\":10,\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
