@@ -148,6 +148,20 @@ end
     ]
 end
 
+@testset "serialize_job: empty project_id" begin
+
+    circuit = QuantumCircuit(qubit_count = 1)
+
+    shot_count = 100
+
+    @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
+        circuit,
+        shot_count,
+        "http://example.anyonsys.com",
+        "",
+    )
+end
+
 @testset "job status" begin
     # We don't expect a POST during this test. Returning nothing should cause a
     # failure if a POST is attempted
@@ -482,6 +496,37 @@ end
         "qubit_count" => get_num_qubits(connectivity),
         "connectivity_type" => get_connectivity_label(connectivity),
     )
+
+end
+
+@testset "AnyonQPUs with empty project_id" begin
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+
+    for qpu in qpus
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(
+            test_client,
+            status_request_throttle = no_throttle,
+            project_id = "",
+        )
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
+            host = host,
+            user = user,
+            access_token = expected_access_token,
+            status_request_throttle = no_throttle,
+            project_id = "",
+        )
+    end
 
 end
 

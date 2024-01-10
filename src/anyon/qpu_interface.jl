@@ -108,6 +108,8 @@ function get_request(
     return mock_requestor.request_checker(url, user, access_token)
 end
 
+const error_msg_empty_project_id = "project_id cannot be empty"
+
 """
     serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 
@@ -135,6 +137,10 @@ function serialize_job(
     host::String,
     project_id::String,
 )::String
+
+    if project_id == ""
+        throw(ArgumentError(error_msg_empty_project_id))
+    end
 
     job_description = Dict(
         "name" => get_name(circuit),

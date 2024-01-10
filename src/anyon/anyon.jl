@@ -29,23 +29,33 @@ struct AnyonYukonQPU <: AbstractQPU
     connectivity::LineConnectivity
     project_id::String
 
-    AnyonYukonQPU(
+    function AnyonYukonQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
         project_id,
-    ) = new(client, status_request_throttle, LineConnectivity(6), project_id)
-    AnyonYukonQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LineConnectivity(6), project_id)
+    end
+    function AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
         project_id,
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LineConnectivity(6),
-        project_id,
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LineConnectivity(6),
+            project_id,
+        )
+    end
 end
 
 
@@ -87,23 +97,34 @@ struct AnyonYamaskaQPU <: AbstractQPU
     connectivity::LatticeConnectivity
     project_id::String
 
-    AnyonYamaskaQPU(
+    function AnyonYamaskaQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
         project_id,
-    ) = new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
-    AnyonYamaskaQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
+    end
+    function AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
         project_id,
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LatticeConnectivity(4, 3),
-        project_id,
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LatticeConnectivity(4, 3),
+            project_id,
+        )
+    end
 end
 
 get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
