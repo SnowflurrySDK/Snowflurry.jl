@@ -5,13 +5,13 @@ host = "http://example.anyonsys.com"
 user = "test_user"
 expected_access_token = "not_a_real_access_token"
 
-common_substring = "{\"shotCount\":100,\"name\":\"default\",\"machine_id\":\"http://example.anyonsys.com\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
+common_substring = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
 
 expected_json = common_substring * "[" *
     "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
     "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
 
-expected_json_with_project_id = "{\"shotCount\":100,\"name\":\"default\",\"machine_id\":\"http://example.anyonsys.com\",\"billingaccountID\":\"test_project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}]}}"
+expected_json_with_project_id = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"billingaccountID\":\"test_project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}]}}"
 
 expected_json_last_qubit_Yukon = common_substring * "[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]},{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}]}}"
 
