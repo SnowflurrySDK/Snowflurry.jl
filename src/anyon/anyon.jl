@@ -30,9 +30,9 @@ struct AnyonYukonQPU <: AbstractQPU
     project_id::String
 
     function AnyonYukonQPU(
-        client::Client;
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-        project_id,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
@@ -43,8 +43,8 @@ struct AnyonYukonQPU <: AbstractQPU
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-        project_id,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
@@ -98,9 +98,9 @@ struct AnyonYamaskaQPU <: AbstractQPU
     project_id::String
 
     function AnyonYamaskaQPU(
-        client::Client;
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-        project_id,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
@@ -111,8 +111,8 @@ struct AnyonYamaskaQPU <: AbstractQPU
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-        project_id,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
@@ -278,7 +278,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client_anyon);
+julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -317,7 +317,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -376,7 +376,7 @@ Returns the transpiler associated with this QPU.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoNotConflictTranspiler(), CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}

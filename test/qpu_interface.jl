@@ -515,8 +515,7 @@ end
 
         @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(
             test_client,
-            status_request_throttle = no_throttle,
-            project_id = "",
+            "",
         )
 
         @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
@@ -540,11 +539,7 @@ end
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(
-        test_client,
-        status_request_throttle = no_throttle,
-        project_id = project_id,
-    )
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu) == test_client
 
@@ -567,8 +562,8 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
-        project_id = project_id,
     )
     histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
@@ -587,8 +582,8 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
-        project_id = project_id,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 
@@ -605,8 +600,8 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
-        project_id = project_id,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 end
@@ -621,11 +616,7 @@ end
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(
-        test_client,
-        status_request_throttle = no_throttle,
-        project_id = project_id,
-    )
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
 
     circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3, 3)])
     histogram = run_job(qpu, circuit, shot_count)
@@ -657,8 +648,7 @@ end
         )
         shot_count = 100
 
-        qpu =
-            QPU(test_client, status_request_throttle = no_throttle, project_id = project_id)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(
@@ -688,8 +678,7 @@ end
             requestor = requestor,
         )
 
-        qpu =
-            QPU(test_client, status_request_throttle = no_throttle, project_id = project_id)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -704,8 +693,7 @@ end
             access_token = expected_access_token,
             requestor = requestor,
         )
-        qpu =
-            QPU(test_client, status_request_throttle = no_throttle, project_id = project_id)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(

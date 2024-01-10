@@ -126,8 +126,8 @@ q[1]:──X──
           
 q[2]:─────
           
-julia> serialize_job(c, 10, "http://example.anyonsys.com")
-"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineID\\\":\\\"http://example.anyonsys.com\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+julia> serialize_job(c, 10, "http://example.anyonsys.com", "project_id")
+"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineID\\\":\\\"http://example.anyonsys.com\\\",\\\"billing_account_id\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -235,7 +235,7 @@ repetitions (shot_count). Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100, "project_id")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -287,7 +287,7 @@ the histogram of the job results, as computed on the `QPU`.
 
 
 ```jldoctest
-julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100, "project_id")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client, jobID)
