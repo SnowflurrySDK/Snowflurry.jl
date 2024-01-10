@@ -8,6 +8,7 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
@@ -31,14 +32,14 @@ struct AnyonYukonQPU <: AbstractQPU
     AnyonYukonQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
+        project_id,
     ) = new(client, status_request_throttle, LineConnectivity(6), project_id)
     AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
+        project_id,
     ) = new(
         Client(host = host, user = user, access_token = access_token),
         status_request_throttle,
@@ -65,6 +66,7 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
@@ -88,14 +90,14 @@ struct AnyonYamaskaQPU <: AbstractQPU
     AnyonYamaskaQPU(
         client::Client;
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
+        project_id,
     ) = new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
     AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
+        project_id,
     ) = new(
         Client(host = host, user = user, access_token = access_token),
         status_request_throttle,

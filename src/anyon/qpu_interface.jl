@@ -133,20 +133,18 @@ function serialize_job(
     circuit::QuantumCircuit,
     shot_count::Integer,
     host::String,
-    project_id::String = "",
+    project_id::String,
 )::String
 
     job_description = Dict(
         "name" => get_name(circuit),
         "type" => "circuit",
         "machineID" => host,
+        "billing_account_id" => project_id,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
         "shotCount" => shot_count,
     )
 
-    if project_id != ""
-        job_description["billingaccountID"] = project_id
-    end
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
@@ -240,7 +238,7 @@ function submit_job(
     client::Client,
     circuit::QuantumCircuit,
     shot_count::Integer,
-    project_id::String = "",
+    project_id::String,
 )::String
 
     job_json = serialize_job(circuit, shot_count, get_host(client), project_id)
