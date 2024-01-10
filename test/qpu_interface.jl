@@ -120,9 +120,7 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(circuit, shot_count, "http://test.anyonsys.com")
-
-    expected_json = "{\"name\":\"default\",\"machine_id\":\"http://test.anyonsys.com\",\"shot_count\":100,\"type\":\"circuit\",\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    circuit_json = serialize_job(circuit, shot_count, "http://example.anyonsys.com")
 
     @test circuit_json == expected_json
 

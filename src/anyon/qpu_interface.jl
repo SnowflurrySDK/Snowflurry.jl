@@ -125,7 +125,7 @@ q[1]:──X──
 q[2]:─────
           
 julia> serialize_job(c, 10, "http://example.anyonsys.com")
-"{\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"shot_count\\\":10,\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+"{\\\"name\\\":\\\"sigma_x job\\\",\\\"machine_id\\\":\\\"http://example.anyonsys.com\\\",\\\"shotCount\\\":10,\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
@@ -141,7 +141,7 @@ function serialize_job(
         "type" => "circuit",
         "machine_id" => host,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
-        "shot_count" => shot_count,
+        "shotCount" => shot_count,
     )
 
     if project_id != ""
