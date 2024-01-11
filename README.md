@@ -45,7 +45,7 @@ Pkg.add(url="https://github.com/SnowflurrySDK/SnowflurryPlots.jl", rev="main")
 
 # Getting Started
 
-The best way to learn Snowflurry is to use it! Let's try to make a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). We'll use Snowflurry to construct and simulate the circuit then verify our construction.
+The best way to learn Snowflurry is to use it! Let's try to make a two-qubit circuit which produces a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). We'll use Snowflurry to construct and simulate the circuit then verify the produced `Ket`.
 
 The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
 
@@ -97,7 +97,7 @@ The first line adds a Hadamard gate to circuit object `c` which will operate on 
 
 **Note**: Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
-Once we've built our circuit, we can consider what, if any, transpilations we should apply. Transpilation is the process of rewriting the sequence of operations in a circuit to a new sequence. Typically, the new sequence will yield the same quantum state as the old sequence but could optimize the choice of gates used for performance or portability to different hardware. Since the circuit is relatively small and Snowflurry's simulator can handle all gates, we won't run any transpilation.
+Once we've built our circuit, we can consider if it would benefit from applying any transpilation operations. Transpilation is the process of rewriting the sequence of operations in a circuit to a new sequence. As a rule, the new sequence will yield the same quantum state as the old sequence but possibly optimizing the choice of gates used for performance, using only those gates supported by a specific hardware QPU. Since the circuit is relatively small and Snowflurry's simulator can handle all gates, we won't run any transpilation for the time being.
 
 Next, we'll simulate our circuit to see if we've built what we expect.
 
