@@ -1,17 +1,17 @@
 # Run a circuit on a Virtual QPU
 
-In the previous tutorial, we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates. 
+In the previous tutorial, we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates.
 
-We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine. 
+We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine.
 
-In this tutorial, we will the steps involved in running a quantum circuit on both a virtual and a real Quantum Processing Unit (QPU). 
+In this tutorial, we will cover the steps involved in running a quantum circuit on a virtual Quantum Processing Unit (QPU).
 
 
 ## QPU Object
-Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more. 
+Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more.
 
-!!! warning 
-    You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library/qpu.md#Quantum-Processing-Unit). 
+!!! warning
+	You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library/qpu.md#Quantum-Processing-Unit).
 
 Now that you know what QPU objects are, let's get started by importing `Snowflurry`:
 ```jldoctest get_qpu_metadata_tutorial; output = false
@@ -63,8 +63,36 @@ Quantum Circuit Object:
 q[1]:──H────*──
             |  
 q[2]:───────X──
-```               
-We can then run this circuit on the virtual qpu for let's say 101 shots. 
+```
+
+Although we've created a circuit that makes a Bell pair, we need to *meaure*
+something in order to collect any results. In Snowflurry, we can use a
+`readout` instruction to perform a measurement.
+
+```jldoctest get_qpu_metadata_tutorial; output = true
+push!(c,readout(1,1),readout(2,2))
+# output
+Quantum Circuit Object:
+   qubit_count: 2 
+q[1]:──H────*────✲───────
+            |            
+q[2]:───────X─────────✲──
+```
+Here we see that a `readout` instruction can be added to a circuit like any
+other gate. Each readout instruction needs two parameters: which qubit to
+measure and which result bit to write to. For example, `readout(2, 4)` means
+"read qubit 2 and store the result in classical bit 4". So, in this example,
+the first readout reads from qubit 1 and writes that result to bit 1 of the
+result. The second readout does the same for qubit 2 and bit 2 of the result.
+
+In Snowflurry, `readout` instructions can read from any qubit and write to any
+result bit but with some restrictions:
+- Any `readout` operation must be the final operation applied to its target qubit
+  - We plan to lift this restriction in future versions of Snowflurry
+- Separate `readout` operations must write to separate result bits
+
+With our measurements defined, we can now run this circuit on the virtual qpu
+for let's say 100 shots.
 
 ```julia
 shots_count=100
@@ -77,12 +105,14 @@ print(result)
 
 Dict("00" => 53, "11" => 47)
 ```
+Here we see that, after measurement, the classical result bits were set to `00`
+in 53 of the 100 shots. In the other 47 shots, the result bits were set to `11`.
 
 !!! note
-	The reason the number of measured values for states `00` and `11` are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of `00` and `11` are equal. 
+	The reason the number of measured values for states `00` and `11` are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of `00` and `11` are equal.
 
 
 
-The virtual QPU currently mimics an ideal hardware with no error. In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc. 
+The virtual QPU currently mimics an ideal hardware with no error. In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc.
 
-In the next tutorial, we will show how to submit a job to real quantum processing hardware. 
+In the next tutorial, we will show how to submit a job to real quantum processing hardware.

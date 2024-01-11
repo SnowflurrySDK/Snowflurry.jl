@@ -120,4 +120,4 @@ plot_histogram(c, 100)
 ```
 ![Measurement results histogram](../assets/index/index_histogram.png)
 
-In the next tutorial, we will discuss how to run the above circuit on a real quantum processor. 
+In the next tutorial, we will discuss how to run the above circuit on a virtual quantum processor.
