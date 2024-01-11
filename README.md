@@ -45,15 +45,9 @@ Pkg.add(url="https://github.com/SnowflurrySDK/SnowflurryPlots.jl", rev="main")
 
 # Getting Started
 
-A typical workflow to execute a quantum circuit on a quantum service consists of these three steps.
+The best way to learn Snowflurry is to use it! Let's try to make a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). We'll use Snowflurry to construct and simulate the circuit then verify our construction.
 
-- Create: Build the circuit using quantum gates.
-
-- Transpile: transform the circuit into an equivalent one, but with improved performance and ensuring compatibility with the chosen quantum service.
-
-- Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
-
-Now, let's try Snowflurry by making a two-qubit circuit which implements a [Bell/EPR state](https://en.wikipedia.org/wiki/Bell_state). The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
+The quantum circuit for generating a Bell state involves a Hadamard gate on one of the qubits followed by a CNOT gate (see [here](https://en.wikipedia.org/wiki/Quantum_logic_gate) for an introduction to quantum logic gates). This circuit is shown below:
 
 <div style="text-align: center;">
 	<img
@@ -103,7 +97,9 @@ The first line adds a Hadamard gate to circuit object `c` which will operate on 
 
 **Note**: Unlike C++ or Python, indexing in Julia starts from "1" and not "0"!
 
-The next step we want to take is to execute our circuit. Instead of submitting a job to a remote quantum service, we will use Snowflurry's built-in simulator. We do not need to transpile our circuit since our simulator can handle all gates, but for larger circuit you should consider transpilation to reduce the amount of work the simulator has to perform.
+Once we've built our circuit, we can consider what, if any, transpilations we should apply. Transpilation is the process of rewriting the sequence of operations in a circuit to a new sequence. Typically, the new sequence will yield the same quantum state as the old sequence but could optimize the choice of gates used for performance or portability to different hardware. Since the circuit is relatively small and Snowflurry's simulator can handle all gates, we won't run any transpilation.
+
+Next, we'll simulate our circuit to see if we've built what we expect.
 
 ```julia
 ψ = simulate(c)
@@ -117,8 +113,9 @@ print(ψ)
 0.7071067811865475 + 0.0im
 ```
 
-Finally, we can use [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) to generate a histogram which shows the measurement
-output distribution after taking a certain number of shots, in this case 100, on a quantum
+For those who are familar, we recognize that the resultant state is the Bell state; an equal superposition of the $\left|00\right\rangle$ and $\left|11\right\rangle$ states.
+
+Finally, we can use [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) to generate a histogram which shows the measurement output distribution after taking a certain number of shots, in this case 100, on a quantum
 computer simulator:
 
 ```julia
@@ -142,8 +139,6 @@ using Snowflurry, SnowflurryPlots
 c = QuantumCircuit(qubit_count=2)
 push!(c, hadamard(1))
 push!(c, control_x(1, 2))
-push!(c, readout(1, 1))
-push!(c, readout(2, 2))
 ψ = simulate(c)
 plot_histogram(c, 100)
 ```
