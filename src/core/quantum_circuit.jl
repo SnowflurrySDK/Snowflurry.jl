@@ -44,7 +44,9 @@ Base.@kwdef struct QuantumCircuit
 end
 
 function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
-    return c0.qubit_count == c1.qubit_count && c0.instructions == c1.instructions
+    return c0.qubit_count == c1.qubit_count &&
+           c0.bit_count == c1.bit_count &&
+           c0.instructions == c1.instructions
 end
 
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count

@@ -299,3 +299,25 @@ end
     )
     @test compare_circuits(new_circuit, expected_circuit)
 end
+
+@testset "isequal" begin
+
+    c0 = QuantumCircuit(qubit_count = 5, bit_count = 1, instructions = [sigma_x(2)])
+    @test isequal(c0, c0) == true
+
+    c1 = QuantumCircuit(qubit_count = 4, bit_count = 1, instructions = [sigma_x(2)])
+    @test isequal(c0, c1) == false
+
+    c2 = QuantumCircuit(qubit_count = 5, bit_count = 2, instructions = [sigma_x(2)])
+    @test isequal(c0, c2) == false
+
+    c3 = QuantumCircuit(qubit_count = 5, bit_count = 1)
+    @test isequal(c0, c3) == false
+
+    c4 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 1,
+        instructions = [sigma_x(2), readout(1, 1)],
+    )
+    @test isequal(c0, c4) == false
+end
