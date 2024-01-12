@@ -80,6 +80,7 @@ push!(c,hadamard(1),control_x(1,2),readout(1,1),readout(2,2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:──H────*────✲───────
             |            
 q[2]:───────X─────────✲──
@@ -130,6 +131,7 @@ c_transpiled=transpile(transpiler,c)
 
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:──Z_90────────────X_90────Z_90────────────────────*────────────────────────────✲───────
                                                        |                                    
 q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90────X_90────Z_90─────────✲──

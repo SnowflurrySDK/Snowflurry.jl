@@ -12,6 +12,7 @@ using Test
     expected =
         "Quantum Circuit Object:\n" *
         "   qubit_count: 1 \n" *
+        "   bit_count: 1 \n" *
         "q[1]:──✲──\n" *
         "          \n" *
         "\n"

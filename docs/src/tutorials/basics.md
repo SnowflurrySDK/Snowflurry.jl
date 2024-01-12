@@ -17,6 +17,7 @@ c=QuantumCircuit(qubit_count=2)
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:
      
 q[2]:
@@ -32,6 +33,7 @@ print(c)
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:
      
 q[2]:
@@ -56,6 +58,7 @@ push!(c,hadamard(1))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:──H──
           
 q[2]:─────
@@ -72,6 +75,7 @@ print(c)
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2
 q[1]:──H──
           
 q[2]:─────
@@ -84,6 +88,7 @@ push!(c,control_x(1,2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────*──
             |  
 q[2]:───────X──

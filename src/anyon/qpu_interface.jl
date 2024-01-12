@@ -119,6 +119,7 @@ to a `QPU` service, along with the number of shots requested.
 julia> c = QuantumCircuit(qubit_count = 2,instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X──
           
 q[2]:─────

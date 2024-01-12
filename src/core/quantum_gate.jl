@@ -97,6 +97,7 @@ A circuit containing this `Gate` can now be constructed:
 julia> circuit=QuantumCircuit(qubit_count=2,instructions=[x_45_gate])
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:──X45──
 
 q[2]:───────
@@ -283,6 +284,7 @@ inherited from the display symbol of the single-target `Hadamard` `Gate`:
 julia> circuit=QuantumCircuit(qubit_count=2,instructions=[controlled_hadamard])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──*──
        |  
 q[2]:──H──
