@@ -2,17 +2,29 @@ using Snowflurry
 using Test
 
 @testset "Constructor: QuantumCircuit" begin
-
     c = QuantumCircuit(qubit_count = 1)
 
+    @test get_num_qubits(c) == 1
+    @test get_num_bits(c) == 1
     @test length(get_circuit_instructions(c)) == 0
+
+    c = QuantumCircuit(qubit_count = 6, bit_count = 2, instructions = [sigma_x(5)])
+
+    @test get_num_qubits(c) == 6
+    @test get_num_bits(c) == 2
+    @test length(get_circuit_instructions(c)) == 1
 
     @test_throws DomainError QuantumCircuit(qubit_count = 1, instructions = [sigma_x(5)])
 
-    @test_throws AssertionError QuantumCircuit(qubit_count = 0, instructions = [sigma_x(5)])
-
     @test_throws AssertionError QuantumCircuit(qubit_count = 0)
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0, bit_count = 2)
 
+    @test_throws AssertionError QuantumCircuit(qubit_count = 6, bit_count = 0)
+    @test_throws AssertionError QuantumCircuit(
+        qubit_count = 6,
+        bit_count = 0,
+        instructions = [sigma_x(5)],
+    )
 end
 
 @testset "push_pop_gate" begin

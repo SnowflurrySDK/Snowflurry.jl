@@ -2,9 +2,10 @@
 """
     QuantumCircuit(qubit_count)
 
-A data structure to represent a *quantum circuit*.  
+A data structure to represent a *quantum circuit*.
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e., quantum register size).
+- `bit_count::Int` -- number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
 - `gates::Vector{AbstractGateSymbol}` -- the sequence of gates to operate on qubits.
 
 # Examples
@@ -19,17 +20,22 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
+    bit_count::Int = qubit_count
     instructions::Vector{AbstractInstruction} = Vector{AbstractInstruction}([])
 
     function QuantumCircuit(
         qubit_count::Int,
+        bit_count::Int,
         instructions::Vector{InstructionType},
     ) where {InstructionType<:AbstractInstruction}
         @assert qubit_count > 0 (
             "$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count"
         )
+        @assert bit_count > 0 (
+            "$(:QuantumCircuit) constructor requires bit_count>0. Received: $bit_count"
+        )
 
-        circuit = new(qubit_count, [])
+        circuit = new(qubit_count, bit_count, [])
         foreach(instr -> ensure_instruction_is_in_circuit(circuit, instr), instructions)
         append!(circuit.instructions, instructions)
         return circuit
@@ -41,6 +47,7 @@ function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 end
 
 get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
+get_num_bits(circuit::QuantumCircuit) = circuit.bit_count
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 

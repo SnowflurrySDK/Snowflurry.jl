@@ -99,6 +99,7 @@ export
     fock_dm,
     expected_value,
     get_num_qubits,
+    get_num_bits,
     get_num_bodies,
     get_connected_qubits,
     get_num_connected_qubits,
