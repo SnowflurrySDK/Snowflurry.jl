@@ -47,8 +47,8 @@ function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     return c0.qubit_count == c1.qubit_count && c0.instructions == c1.instructions
 end
 
-get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
-get_num_bits(circuit::QuantumCircuit) = circuit.bit_count
+get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count
+get_num_bits(circuit::QuantumCircuit)::Int = circuit.bit_count
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 
@@ -416,8 +416,23 @@ function ensure_instruction_is_in_circuit(
     instruction::Instruction,
 ) where {Instruction<:AbstractInstruction}
     for target in get_connected_qubits(instruction)
-        if target > get_num_qubits(circuit)
-            throw(DomainError(target, "The instruction does not fit in the circuit"))
+        qubit_count = get_num_qubits(circuit)
+        if target > qubit_count
+            throw(DomainError(target, 
+                "The instruction does not fit in the circuit: " *
+                "target qubit: $target, qubit_count: $qubit_count")
+            )
+        end
+    end
+
+    if instruction isa Readout 
+        destination = get_destination_bit(instruction)
+        bit_count = get_num_bits(circuit)
+        if destination > bit_count 
+            throw(DomainError(destination, 
+                "The instruction does not fit in the circuit: " *
+                "destination bit: $destination, bit_count: $bit_count")
+            )
         end
     end
 end

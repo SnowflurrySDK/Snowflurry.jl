@@ -16,11 +16,15 @@ using Test
 
     @test_throws DomainError QuantumCircuit(qubit_count = 1, instructions = [sigma_x(5)])
 
-    @test_throws AssertionError QuantumCircuit(qubit_count = 0)
-    @test_throws AssertionError QuantumCircuit(qubit_count = 0, bit_count = 2)
+    @test_throws AssertionError(
+        "$(:QuantumCircuit) constructor requires qubit_count>0. Received: 0") QuantumCircuit(qubit_count = 0)
+    @test_throws AssertionError(
+        "$(:QuantumCircuit) constructor requires qubit_count>0. Received: 0") QuantumCircuit(qubit_count = 0, bit_count = 2)
 
-    @test_throws AssertionError QuantumCircuit(qubit_count = 6, bit_count = 0)
-    @test_throws AssertionError QuantumCircuit(
+    @test_throws AssertionError(
+        "$(:QuantumCircuit) constructor requires bit_count>0. Received: 0") QuantumCircuit(qubit_count = 6, bit_count = 0)
+    @test_throws AssertionError(
+        "$(:QuantumCircuit) constructor requires bit_count>0. Received: 0") QuantumCircuit(
         qubit_count = 6,
         bit_count = 0,
         instructions = [sigma_x(5)],
@@ -50,7 +54,27 @@ end
 
     append!(c, [sigma_x(2), sigma_y(2)])
 
-    @test_throws DomainError push!(c, sigma_x(5))
+    @test_throws DomainError(5, "The instruction does not fit in the circuit: " *
+    "target qubit: 5, qubit_count: 3")  push!(c, sigma_x(5))
+end
+
+@testset "push_pop_readout" begin
+    c = QuantumCircuit(qubit_count = 3, bit_count=2)
+
+    push!(c, readout(3,2))
+    @test length(get_circuit_instructions(c)) == 1
+
+    pop!(c)
+    @test length(get_circuit_instructions(c)) == 0
+
+    append!(c, [sigma_x(2), readout(2,2)])
+    @test length(get_circuit_instructions(c)) == 2
+
+    @test_throws DomainError(4, "The instruction does not fit in the circuit: " *
+        "target qubit: 4, qubit_count: 3") push!(c, readout(4,1))
+
+    @test_throws DomainError(3, "The instruction does not fit in the circuit: " *
+        "destination bit: 3, bit_count: 2") push!(c, readout(1,3))
 end
 
 @testset "print_circuit" begin
