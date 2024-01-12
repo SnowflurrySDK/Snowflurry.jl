@@ -418,20 +418,26 @@ function ensure_instruction_is_in_circuit(
     for target in get_connected_qubits(instruction)
         qubit_count = get_num_qubits(circuit)
         if target > qubit_count
-            throw(DomainError(target, 
-                "The instruction does not fit in the circuit: " *
-                "target qubit: $target, qubit_count: $qubit_count")
+            throw(
+                DomainError(
+                    target,
+                    "The instruction does not fit in the circuit: " *
+                    "target qubit: $target, qubit_count: $qubit_count",
+                ),
             )
         end
     end
 
-    if instruction isa Readout 
+    if instruction isa Readout
         destination = get_destination_bit(instruction)
         bit_count = get_num_bits(circuit)
-        if destination > bit_count 
-            throw(DomainError(destination, 
-                "The instruction does not fit in the circuit: " *
-                "destination bit: $destination, bit_count: $bit_count")
+        if destination > bit_count
+            throw(
+                DomainError(
+                    destination,
+                    "The instruction does not fit in the circuit: " *
+                    "destination bit: $destination, bit_count: $bit_count",
+                ),
             )
         end
     end
