@@ -1844,6 +1844,63 @@ end
 
 struct ReadoutsAreFinalInstructionsTranspiler <: Transpiler end
 
+"""
+    transpile(::ReadoutsAreFinalInstructionsTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Ensures that each `Readout` `Instruction` is the last operation 
+on each qubit where readouts are present, and that repeated readouts 
+on the same qubit do not occur, or throws an error. 
+It leaves the `QuantumCircuit` unchanged.
+
+# Examples
+```jldoctest
+julia> transpiler = ReadoutsAreFinalInstructionsTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1), readout(1,1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1), readout(1,1), sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲────X──
+                    
+q[2]:───────────────
+                    
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+ERROR: AssertionError: Cannot preform Gate following Readout on qubit: 1
+[...]
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[readout(1,1), readout(1,2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──✲────✲──
+               
+q[2]:──────────
+               
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+ERROR: AssertionError: Found multiple Readout on qubit: 1
+[...]
+```
+"""
 function transpile(
     ::ReadoutsAreFinalInstructionsTranspiler,
     circuit::QuantumCircuit,
@@ -1882,6 +1939,49 @@ end
 
 struct CircuitContainsAReadoutTranspiler <: Transpiler end
 
+"""
+    transpile(::CircuitContainsAReadoutTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Ensures that at least one `Readout` `Instruction` is  present on the `QuantumCircuit`, 
+or throws an error. 
+It leaves the `QuantumCircuit` unchanged.
+
+# Examples
+```jldoctest
+julia> transpiler = CircuitContainsAReadoutTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1), readout(1,1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H──
+          
+q[2]:─────
+          
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+ERROR: ArgumentError: QuantumCircuit is missing a Readout. Would not return any result.
+[...]
+```
+"""
 function transpile(
     ::CircuitContainsAReadoutTranspiler,
     circuit::QuantumCircuit,
@@ -1900,6 +2000,49 @@ end
 
 struct ReadoutsDoNotConflictTranspiler <: Transpiler end
 
+"""
+    transpile(::ReadoutsDoNotConflictTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Ensures that each `Readout` `Instruction` present on the `QuantumCircuit` 
+do not have conflicting destination bit, or throws an error. 
+It leaves the `QuantumCircuit` unchanged.
+
+# Examples
+```jldoctest
+julia> transpiler = ReadoutsDoNotConflictTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1), readout(1,1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H────✲──
+               
+q[2]:──────────
+               
+
+julia> circuit = QuantumCircuit(qubit_count=2, instructions=[readout(1,1), readout(2,1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──✲───────
+               
+q[2]:───────✲──
+               
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+ERROR: ArgumentError: Readouts in QuantumCircuit have conflicting destination bit: 1
+[...]
+```
+"""
 function transpile(
     ::ReadoutsDoNotConflictTranspiler,
     circuit::QuantumCircuit,
