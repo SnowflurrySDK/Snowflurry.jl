@@ -6,7 +6,7 @@ A data structure to represent a *quantum circuit*.
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e., quantum register size).
 - `bit_count::Int` -- number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
-- `gates::Vector{AbstractGateSymbol}` -- the sequence of gates to operate on qubits.
+- `instructions::Vector{AbstractInstruction}` -- the sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on qubits.
 
 # Examples
 ```jldoctest

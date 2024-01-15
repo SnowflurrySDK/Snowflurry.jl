@@ -139,9 +139,10 @@ get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
 
 
 """
-    Gate
+    Gate <: AbstractInstruction
 
-An object that specifies an `AbstractGateSymbol` and its placement inside a `QuantumCircuit`. The placement is the same as the target qubits on which the gate operates.
+`Gate` is an implementation of an `AbstractInstruction` that specifies an `AbstractGateSymbol` and its placement inside a `QuantumCircuit`. 
+The placement corresponds to the target qubit (or qubits) on which the `Gate` operates.
 
 # Examples
 ```jldoctest
