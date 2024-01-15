@@ -2,6 +2,7 @@ using Snowflurry
 using Base64
 using HTTP
 using JSON
+using Pkg
 
 Base.@kwdef struct Status
     type::String
@@ -37,6 +38,8 @@ struct MockRequestor <: Requestor
     post_checker::Function
 end
 
+const user_agent_header_key = "User-Agent"
+
 const path_jobs = "jobs"
 const path_results = "result"
 
@@ -61,11 +64,14 @@ function post_request(
     body::String,
 )::HTTP.Response
 
+    package_version = string(Pkg.project().version)
+
     return requestor.poster(
         url,
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
         body = body,
     )
@@ -89,11 +95,14 @@ function get_request(
     access_token::String,
 )::HTTP.Response
 
+    package_version = string(Pkg.project().version)
+
     return requestor.getter(
         url,
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
     )
 end
