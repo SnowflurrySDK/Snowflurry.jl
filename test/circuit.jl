@@ -2,17 +2,29 @@ using Snowflurry
 using Test
 
 @testset "Constructor: QuantumCircuit" begin
-
     c = QuantumCircuit(qubit_count = 1)
 
+    @test get_num_qubits(c) == 1
+    @test get_num_bits(c) == 1
     @test length(get_circuit_instructions(c)) == 0
+
+    c = QuantumCircuit(qubit_count = 6, bit_count = 2, instructions = [sigma_x(5)])
+
+    @test get_num_qubits(c) == 6
+    @test get_num_bits(c) == 2
+    @test length(get_circuit_instructions(c)) == 1
 
     @test_throws DomainError QuantumCircuit(qubit_count = 1, instructions = [sigma_x(5)])
 
-    @test_throws AssertionError QuantumCircuit(qubit_count = 0, instructions = [sigma_x(5)])
-
     @test_throws AssertionError QuantumCircuit(qubit_count = 0)
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0, bit_count = 2)
 
+    @test_throws AssertionError QuantumCircuit(qubit_count = 6, bit_count = 0)
+    @test_throws AssertionError QuantumCircuit(
+        qubit_count = 6,
+        bit_count = 0,
+        instructions = [sigma_x(5)],
+    )
 end
 
 @testset "push_pop_gate" begin
@@ -38,7 +50,34 @@ end
 
     append!(c, [sigma_x(2), sigma_y(2)])
 
-    @test_throws DomainError push!(c, sigma_x(5))
+    @test_throws DomainError(
+        5,
+        "The instruction does not fit in the circuit: " * "target qubit: 5, qubit_count: 3",
+    ) push!(c, sigma_x(5))
+end
+
+@testset "push_pop_readout" begin
+    c = QuantumCircuit(qubit_count = 3, bit_count = 2)
+
+    push!(c, readout(3, 2))
+    @test length(get_circuit_instructions(c)) == 1
+
+    pop!(c)
+    @test length(get_circuit_instructions(c)) == 0
+
+    append!(c, [sigma_x(2), readout(2, 2)])
+    @test length(get_circuit_instructions(c)) == 2
+
+    @test_throws DomainError(
+        4,
+        "The instruction does not fit in the circuit: " * "target qubit: 4, qubit_count: 3",
+    ) push!(c, readout(4, 1))
+
+    @test_throws DomainError(
+        3,
+        "The instruction does not fit in the circuit: " *
+        "destination bit: 3, bit_count: 2",
+    ) push!(c, readout(1, 3))
 end
 
 @testset "print_circuit" begin
@@ -255,4 +294,26 @@ end
         instructions = [sigma_x(5), sigma_y(1), sigma_z(3), hadamard(4)],
     )
     @test compare_circuits(new_circuit, expected_circuit)
+end
+
+@testset "isequal" begin
+
+    c0 = QuantumCircuit(qubit_count = 5, bit_count = 1, instructions = [sigma_x(2)])
+    @test isequal(c0, c0) == true
+
+    c1 = QuantumCircuit(qubit_count = 4, bit_count = 1, instructions = [sigma_x(2)])
+    @test isequal(c0, c1) == false
+
+    c2 = QuantumCircuit(qubit_count = 5, bit_count = 2, instructions = [sigma_x(2)])
+    @test isequal(c0, c2) == false
+
+    c3 = QuantumCircuit(qubit_count = 5, bit_count = 1)
+    @test isequal(c0, c3) == false
+
+    c4 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 1,
+        instructions = [sigma_x(2), readout(1, 1)],
+    )
+    @test isequal(c0, c4) == false
 end

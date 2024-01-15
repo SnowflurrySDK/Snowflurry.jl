@@ -22,6 +22,7 @@ julia> transpiler=SequentialTranspiler([CompressSingleQubitGatesTranspiler(),Cas
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[sigma_x(1),hadamard(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X────H──
                
 q[2]:──────────
@@ -32,6 +33,7 @@ q[2]:──────────
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z────X_90────Z_90────X_m90────Z──
                                                               
 q[2]:───────────────────────────────────
@@ -42,6 +44,7 @@ q[2]:─────────────────────────
 julia> circuit = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──X────Y─────────Rz(1.0472)──
 
 q[2]:────────────*────────────────
@@ -54,6 +57,7 @@ q[3]:────────────X────────────�
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──Rz(-2.0944)───────
                          
 q[2]:─────────────────*──
@@ -333,6 +337,7 @@ julia> transpiler=CompressSingleQubitGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X────Y──
                
 q[2]:──────────
@@ -343,6 +348,7 @@ q[2]:──────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
                                       
 q[2]:─────────────────────────────────
@@ -356,6 +362,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),sigma_y(1),control_x(2,3),phase_shift(1,π/3)])
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──X────Y─────────Rz(1.0472)──
                                   
 q[2]:────────────*────────────────
@@ -368,6 +375,7 @@ q[3]:────────────X────────────�
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──U(θ=0.0000,ϕ=-2.0944,λ=0.0000)───────
                                             
 q[2]:────────────────────────────────────*──
@@ -433,6 +441,7 @@ julia> transpiler=CastSwapToCZGateTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[swap(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:──☒──
        |
 q[2]:──☒──
@@ -440,6 +449,7 @@ q[2]:──☒──
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:───────────*────Y_m90────────────*────Y_90─────────────*──────────
                 |                     |                     |          
 q[2]:──Y_m90────Z─────────────Y_90────Z────────────Y_m90────Z────Y_90──
@@ -490,6 +500,7 @@ julia> transpiler=CastCXToCZGateTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[control_x(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:──*──
        |
 q[2]:──X──
@@ -497,6 +508,7 @@ q[2]:──X──
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:───────*───────
             |
 q[2]:──H────Z────H──
@@ -554,6 +566,7 @@ julia> transpiler=CastISwapToCZGateTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[iswap(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:──x──
        |
 q[2]:──x──
@@ -561,6 +574,7 @@ q[2]:──x──
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Y_m90─────────────*────Y_90─────────────*────Y_90──────────
                          |                     |                  
 q[2]:───────────X_m90────Z────────────X_m90────Z────────────X_90──
@@ -633,6 +647,7 @@ julia> transpiler=CastToffoliToCXGateTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 3, instructions=[toffoli(1, 2, 3)])
 Quantum Circuit Object:
    qubit_count: 3
+   bit_count: 3
 q[1]:──*──
        |
 q[2]:──*──
@@ -642,6 +657,7 @@ q[3]:──X──
 julia> transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──────────────────*────────────────────*──────────────*─────────T──────────*──
                        |                    |              |                    |  
 q[2]:───────*──────────|─────────*──────────|────T─────────X──────────────T†────X──
@@ -776,6 +792,7 @@ julia> transpiler=CastToPhaseShiftAndHalfRotationXTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X──
           
 q[2]:─────
@@ -786,6 +803,7 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z────X_90────Z────X_m90──
                                                  
 q[2]:───────────────────────────
@@ -796,6 +814,7 @@ q[2]:─────────────────────────
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Y──
           
 q[2]:─────
@@ -806,6 +825,7 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z_90────X_90────Z────X_m90────Z_90──
                                            
 q[2]:──────────────────────────────────────
@@ -819,6 +839,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[universal(1,0.,0.,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
                                       
 q[2]:─────────────────────────────────
@@ -829,6 +850,7 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:
@@ -916,6 +938,7 @@ julia> transpiler=CastUniversalToRzRxRzTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[universal(1,π/2,π/4,π/8)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──U(θ=1.5708,ϕ=0.7854,λ=0.3927)──
                                       
 q[2]:─────────────────────────────────
@@ -924,6 +947,7 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(-1.1781)────Rx(1.5708)────Rz(2.3562)──
                                                 
 q[2]:───────────────────────────────────────────
@@ -935,6 +959,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[universal(1,0,π/4,0)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──U(θ=0.0000,ϕ=0.7854,λ=0.0000)──
                                       
 q[2]:─────────────────────────────────
@@ -943,6 +968,7 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(-1.5708)────Rx(0.0000)────Rz(2.3562)──
                                                 
 q[2]:───────────────────────────────────────────
@@ -1021,6 +1047,7 @@ julia> transpiler=CastRxToRzAndHalfRotationXTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[rotation_x(1,π/8)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rx(0.3927)──
                    
 q[2]:──────────────
@@ -1029,6 +1056,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z_90────X_90────Rz(0.3927)────X_m90────Z_m90──
                                                      
 q[2]:────────────────────────────────────────────────
@@ -1086,6 +1114,7 @@ julia> transpiler=SimplifyRxGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[rotation_x(1,pi/2)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rx(1.5708)──
                    
 q[2]:──────────────
@@ -1094,6 +1123,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X_90──
              
 q[2]:────────
@@ -1105,6 +1135,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[rotation_x(1,pi)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rx(3.1416)──
                    
 q[2]:──────────────
@@ -1114,6 +1145,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X──
           
 q[2]:─────
@@ -1125,6 +1157,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[rotation_x(1,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rx(0.0000)──
                    
 q[2]:──────────────
@@ -1134,6 +1167,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:
@@ -1252,6 +1286,7 @@ julia> transpiler=SwapQubitsForAdjacencyTranspiler(LineConnectivity(6));
 julia> circuit = QuantumCircuit(qubit_count = 6, instructions=[toffoli(4,6,1)])
 Quantum Circuit Object:
    qubit_count: 6 
+   bit_count: 6 
 q[1]:──X──
        |  
 q[2]:──|──
@@ -1271,6 +1306,7 @@ q[6]:──*──
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 6 
+   bit_count: 6 
 q[1]:───────────────────────────X───────────────────────────
                                 |                           
 q[2]:───────☒───────────────────*───────────────────☒───────
@@ -1365,6 +1401,7 @@ julia> transpiler=SimplifyRzGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[phase_shift(1,pi/2)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(1.5708)──
                    
 q[2]:──────────────
@@ -1373,6 +1410,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z_90──
              
 q[2]:────────
@@ -1384,6 +1422,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[phase_shift(1,pi)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(3.1416)──
                    
 q[2]:──────────────
@@ -1392,6 +1431,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z──
           
 q[2]:─────
@@ -1403,6 +1443,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[phase_shift(1,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(0.0000)──
                    
 q[2]:──────────────
@@ -1411,6 +1452,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:
@@ -1503,6 +1545,7 @@ julia> transpiler=CompressRzGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[sigma_z(1),z_90(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z────Z_90──
                   
 q[2]:─────────────
@@ -1511,6 +1554,7 @@ q[2]:─────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(-1.5708)──
                     
 q[2]:───────────────
@@ -1522,6 +1566,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 3, instructions=[sigma_z(1),pi_8(1),control_x(2,3),z_minus_90(1)])
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──Z────T─────────Z_m90──
                              
 q[2]:────────────*───────────
@@ -1532,6 +1577,7 @@ q[3]:────────────X───────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──Rz(2.3562)───────
                         
 q[2]:────────────────*──
@@ -1584,6 +1630,7 @@ julia> transpiler = RemoveSwapBySwappingGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count=2, instructions=[hadamard(1), swap(1,2), sigma_x(2)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────☒───────
             |       
 q[2]:───────☒────X──
@@ -1594,6 +1641,7 @@ q[2]:───────☒────X──
 julia> transpiled_circuit = transpile(transpiler, circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──────────
                
 q[2]:──H────X──
@@ -1704,6 +1752,7 @@ julia> transpiler=SimplifyTrivialGatesTranspiler();
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[identity_gate(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──I──
           
 q[2]:─────
@@ -1711,6 +1760,7 @@ q[2]:─────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:      
@@ -1722,6 +1772,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[phase_shift(1,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Rz(0.0000)──
                    
 q[2]:──────────────
@@ -1730,6 +1781,7 @@ q[2]:──────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:      
@@ -1740,6 +1792,7 @@ true
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions=[universal(1,0.,0.,0.)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
                                       
 q[2]:─────────────────────────────────
@@ -1747,6 +1800,7 @@ q[2]:─────────────────────────
 julia> transpiled_circuit=transpile(transpiler,circuit)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:      

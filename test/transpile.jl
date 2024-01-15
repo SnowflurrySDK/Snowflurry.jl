@@ -549,6 +549,7 @@ end
     @test String(take!(io)) ==
           "circuit: Quantum Circuit Object:\n" *
           "   qubit_count: 6 \n" *
+          "   bit_count: 6 \n" *
           "q[1]:─────────────*─────────────\n" *
           "                  |             \n" *
           "q[2]:─────────────|─────────────\n" *

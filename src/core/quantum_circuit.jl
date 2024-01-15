@@ -2,9 +2,10 @@
 """
     QuantumCircuit(qubit_count)
 
-A data structure to represent a *quantum circuit*.  
+A data structure to represent a *quantum circuit*.
 # Fields
 - `qubit_count::Int` -- number of qubits (i.e., quantum register size).
+- `bit_count::Int` -- number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
 - `gates::Vector{AbstractGateSymbol}` -- the sequence of gates to operate on qubits.
 
 # Examples
@@ -12,6 +13,7 @@ A data structure to represent a *quantum circuit*.
 julia> c = QuantumCircuit(qubit_count = 2)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:
      
 q[2]:
@@ -19,17 +21,22 @@ q[2]:
 """
 Base.@kwdef struct QuantumCircuit
     qubit_count::Int
+    bit_count::Int = qubit_count
     instructions::Vector{AbstractInstruction} = Vector{AbstractInstruction}([])
 
     function QuantumCircuit(
         qubit_count::Int,
+        bit_count::Int,
         instructions::Vector{InstructionType},
     ) where {InstructionType<:AbstractInstruction}
         @assert qubit_count > 0 (
             "$(:QuantumCircuit) constructor requires qubit_count>0. Received: $qubit_count"
         )
+        @assert bit_count > 0 (
+            "$(:QuantumCircuit) constructor requires bit_count>0. Received: $bit_count"
+        )
 
-        circuit = new(qubit_count, [])
+        circuit = new(qubit_count, bit_count, [])
         foreach(instr -> ensure_instruction_is_in_circuit(circuit, instr), instructions)
         append!(circuit.instructions, instructions)
         return circuit
@@ -37,10 +44,13 @@ Base.@kwdef struct QuantumCircuit
 end
 
 function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
-    return c0.qubit_count == c1.qubit_count && c0.instructions == c1.instructions
+    return c0.qubit_count == c1.qubit_count &&
+           c0.bit_count == c1.bit_count &&
+           c0.instructions == c1.instructions
 end
 
-get_num_qubits(circuit::QuantumCircuit) = circuit.qubit_count
+get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count
+get_num_bits(circuit::QuantumCircuit)::Int = circuit.bit_count
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 
@@ -60,6 +70,7 @@ julia> c = QuantumCircuit(qubit_count = 2);
 julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H───────
                
 q[2]:───────X──
@@ -70,6 +81,7 @@ q[2]:───────X──
 julia> push!(c, control_x(1,2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H─────────*──
                  |  
 q[2]:───────X────X──
@@ -82,6 +94,7 @@ julia> gate_list = [sigma_x(1), hadamard(2)];
 julia> push!(c, gate_list...)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H─────────*────X───────
                  |            
 q[2]:───────X────X─────────H──
@@ -118,6 +131,7 @@ The `circuits_to_append` cannot contain more qubits than the `base_circuit`.
 julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X──
           
 q[2]:─────
@@ -128,6 +142,7 @@ q[2]:─────
 julia> append_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
+   bit_count: 1 
 q[1]:──Z──
           
 
@@ -136,6 +151,7 @@ q[1]:──Z──
 julia> append_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──*──
        |  
 q[2]:──X──
@@ -146,6 +162,7 @@ q[2]:──X──
 julia> append!(base, append_1, append_2)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X────Z────*──
                  |  
 q[2]:────────────X──
@@ -185,6 +202,7 @@ than the `base_circuit`.
 julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X──
           
 q[2]:─────
@@ -195,6 +213,7 @@ q[2]:─────
 julia> prepend_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
+   bit_count: 1 
 q[1]:──Z──
           
 
@@ -203,6 +222,7 @@ q[1]:──Z──
 julia> prepend_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──*──
        |  
 q[2]:──X──
@@ -213,6 +233,7 @@ q[2]:──X──
 julia> prepend!(base, prepend_1, prepend_2)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Z────*────X──
             |       
 q[2]:───────X───────
@@ -257,6 +278,7 @@ targets can also be equivalent.
 julia> c0 = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
+   bit_count: 1 
 q[1]:──X────Y──
                
 
@@ -265,6 +287,7 @@ q[1]:──X────Y──
 julia> c1 = QuantumCircuit(qubit_count = 1, instructions=[phase_shift(1,π)])
 Quantum Circuit Object:
    qubit_count: 1  
+   bit_count: 1  
 q[1]:──Rz(3.1416)──
                    
 
@@ -276,6 +299,7 @@ true
 julia> c0 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),sigma_y(1),control_x(2,3)])
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──X────Y───────
                     
 q[2]:────────────*──
@@ -288,6 +312,7 @@ q[3]:────────────X──
 julia> c1 = QuantumCircuit(qubit_count = 3, instructions=[control_x(2,3),sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:───────X────Y──
                     
 q[2]:──*────────────
@@ -365,6 +390,7 @@ Determines whether a type of gate is present in a circuit.
 julia> circuit = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
+   bit_count: 1 
 q[1]:──X────Y──
                
 julia> circuit_contains_gate_type(circuit, Snowflurry.SigmaX)
@@ -392,8 +418,29 @@ function ensure_instruction_is_in_circuit(
     instruction::Instruction,
 ) where {Instruction<:AbstractInstruction}
     for target in get_connected_qubits(instruction)
-        if target > get_num_qubits(circuit)
-            throw(DomainError(target, "The instruction does not fit in the circuit"))
+        qubit_count = get_num_qubits(circuit)
+        if target > qubit_count
+            throw(
+                DomainError(
+                    target,
+                    "The instruction does not fit in the circuit: " *
+                    "target qubit: $target, qubit_count: $qubit_count",
+                ),
+            )
+        end
+    end
+
+    if instruction isa Readout
+        destination = get_destination_bit(instruction)
+        bit_count = get_num_bits(circuit)
+        if destination > bit_count
+            throw(
+                DomainError(
+                    destination,
+                    "The instruction does not fit in the circuit: " *
+                    "destination bit: $destination, bit_count: $bit_count",
+                ),
+            )
         end
     end
 end
@@ -568,6 +615,7 @@ julia> c = QuantumCircuit(qubit_count = 2);
 julia> push!(c, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H───────
                
 q[2]:───────X──
@@ -578,6 +626,7 @@ q[2]:───────X──
 julia> push!(c, control_x(1,2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H─────────*──
                  |  
 q[2]:───────X────X──
@@ -588,6 +637,7 @@ q[2]:───────X────X──
 julia> pop!(c)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H───────
                
 q[2]:───────X──
@@ -605,6 +655,7 @@ end
 function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer = 10)
     println(io, "Quantum Circuit Object:")
     println(io, "   qubit_count: $(get_num_qubits(circuit)) ")
+    println(io, "   bit_count: $(get_num_bits(circuit)) ")
     print_circuit_diagram(io, circuit, padding_width)
 end
 
@@ -835,6 +886,7 @@ julia> c = QuantumCircuit(qubit_count = 2);
 julia> push!(c, hadamard(1))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H──
           
 q[2]:─────
@@ -844,6 +896,7 @@ q[2]:─────
 julia> push!(c, control_x(1,2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────*──
             |  
 q[2]:───────X──
@@ -883,6 +936,7 @@ julia> c = QuantumCircuit(qubit_count = 2);
 julia> push!(c, hadamard(1))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H──
           
 q[2]:─────
@@ -892,6 +946,7 @@ q[2]:─────
 julia> push!(c, control_x(1,2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────*──
             |  
 q[2]:───────X──
@@ -964,6 +1019,7 @@ julia> circuit = QuantumCircuit(qubit_count=2);
 julia> push!(circuit, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H───────
                
 q[2]:───────X──
@@ -1020,6 +1076,7 @@ julia> push!(c, rotation_y(1, pi/4));
 julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──Ry(0.7854)────*──
                      |  
 q[2]:────────────────X──
@@ -1030,6 +1087,7 @@ q[2]:────────────────X──
 julia> inv(c)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──*────Ry(-0.7854)──
        |                 
 q[2]:──X─────────────────
@@ -1069,6 +1127,7 @@ julia> push!(c, control_x(1, 2));
 julia> push!(c, hadamard(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H─────────*───────
                  |       
 q[2]:───────H────X────H──
@@ -1112,6 +1171,7 @@ julia> push!(c, hadamard(1), hadamard(2));
 julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H─────────*──
                  |  
 q[2]:───────H────X──
@@ -1145,6 +1205,7 @@ julia> c = QuantumCircuit(qubit_count=3);
 julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──X────────────
                     
 q[2]:───────H───────
@@ -1158,6 +1219,7 @@ julia> permute_qubits!(c, Dict(1=>3, 3=>1))
 julia> show(c)
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:────────────Y──
                     
 q[2]:───────H───────
@@ -1228,6 +1290,7 @@ julia> c = QuantumCircuit(qubit_count=3);
 julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:──X────────────
                     
 q[2]:───────H───────
@@ -1240,6 +1303,7 @@ q[3]:────────────Y──
 julia> permute_qubits(c, Dict(1=>3, 3=>1))
 Quantum Circuit Object:
    qubit_count: 3 
+   bit_count: 3 
 q[1]:────────────Y──
                     
 q[2]:───────H───────

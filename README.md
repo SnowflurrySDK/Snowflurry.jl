@@ -72,6 +72,7 @@ print(c)
 # output
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:
 
 q[2]:
@@ -88,6 +89,7 @@ print(c)
 # output
 Quantum Circuit Object:
    qubit_count: 2
+   bit_count: 2
 q[1]:──H────*──
             |
 q[2]:───────X──

@@ -37,6 +37,7 @@ julia> circuit = QuantumCircuit(qubit_count=2);
 julia> push!(circuit, sigma_x(1), sigma_y(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X───────
                
 q[2]:───────Y──
@@ -62,6 +63,7 @@ julia> circuit = QuantumCircuit(qubit_count=1);
 julia> push!(circuit, sigma_x(1), sigma_z(1))
 Quantum Circuit Object:
    qubit_count: 1 
+   bit_count: 1 
 q[1]:──X────Z──
                
 
@@ -353,6 +355,7 @@ julia> circuit = QuantumCircuit(qubit_count=2);
 julia> push!(circuit, sigma_x(1), sigma_y(2))
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X───────
                
 q[2]:───────Y──
@@ -369,6 +372,7 @@ Pauli Group Element:
 julia> get_quantum_circuit(pauli)
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──X───────
                
 q[2]:───────Y──

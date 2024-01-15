@@ -60,6 +60,7 @@ push!(c,hadamard(1),control_x(1,2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────*──
             |  
 q[2]:───────X──
@@ -74,6 +75,7 @@ push!(c,readout(1,1),readout(2,2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
+   bit_count: 2 
 q[1]:──H────*────✲───────
             |            
 q[2]:───────X─────────✲──
