@@ -1884,7 +1884,7 @@ q[2]:───────────────
                     
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
-ERROR: AssertionError: Cannot preform Gate following `Readout` on qubit: 1
+ERROR: AssertionError: Cannot perform `Gate` following `Readout` on qubit: 1
 [...]
 
 julia> circuit = QuantumCircuit(qubit_count=2, instructions=[readout(1,1), readout(1,2)])
@@ -1930,7 +1930,7 @@ function assert_readouts_are_last_instr(circuit::QuantumCircuit)
 
             for target_qubit in target_qubits
                 # Gates following readouts are not allowed
-                @assert !(target_qubit in readouts_present_on_qubits) "Cannot preform `Gate` following `Readout` on qubit: $target_qubit"
+                @assert !(target_qubit in readouts_present_on_qubits) "Cannot perform `Gate` following `Readout` on qubit: $target_qubit"
             end
         end
     end
