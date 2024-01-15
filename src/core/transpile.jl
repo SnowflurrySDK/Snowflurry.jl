@@ -1884,7 +1884,7 @@ q[2]:───────────────
                     
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
-ERROR: AssertionError: Cannot preform Gate following Readout on qubit: 1
+ERROR: AssertionError: Cannot preform Gate following `Readout` on qubit: 1
 [...]
 
 julia> circuit = QuantumCircuit(qubit_count=2, instructions=[readout(1,1), readout(1,2)])
@@ -1897,7 +1897,7 @@ q[2]:──────────
                
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
-ERROR: AssertionError: Found multiple Readout on qubit: 1
+ERROR: AssertionError: Found multiple `Readouts` on qubit: 1
 [...]
 ```
 """
@@ -1921,7 +1921,7 @@ function assert_readouts_are_last_instr(circuit::QuantumCircuit)
             target_qubit = get_connected_qubits(instr)[1]
 
             #repeated readouts are not allowed
-            @assert !(target_qubit in readouts_present_on_qubits) "Found multiple Readout on qubit: $target_qubit"
+            @assert !(target_qubit in readouts_present_on_qubits) "Found multiple `Readouts` on qubit: $target_qubit"
 
             push!(readouts_present_on_qubits, target_qubit)
 
@@ -1930,7 +1930,7 @@ function assert_readouts_are_last_instr(circuit::QuantumCircuit)
 
             for target_qubit in target_qubits
                 # Gates following readouts are not allowed
-                @assert !(target_qubit in readouts_present_on_qubits) "Cannot preform Gate following Readout on qubit: $target_qubit"
+                @assert !(target_qubit in readouts_present_on_qubits) "Cannot preform `Gate` following `Readout` on qubit: $target_qubit"
             end
         end
     end
@@ -1978,7 +1978,7 @@ q[2]:─────
           
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
-ERROR: ArgumentError: QuantumCircuit is missing a Readout. Would not return any result.
+ERROR: ArgumentError: QuantumCircuit is missing a `Readout`. Would not return any result.
 [...]
 ```
 """
@@ -1994,7 +1994,7 @@ function transpile(
     end
 
     throw(
-        ArgumentError("QuantumCircuit is missing a Readout. Would not return any result."),
+        ArgumentError("QuantumCircuit is missing a `Readout`. Would not return any result."),
     )
 end
 
@@ -2039,7 +2039,7 @@ q[2]:───────✲──
                
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
-ERROR: ArgumentError: Readouts in QuantumCircuit have conflicting destination bit: 1
+ERROR: ArgumentError: `Readouts` in `QuantumCircuit` have conflicting destination bit: 1
 [...]
 ```
 """
@@ -2057,7 +2057,7 @@ function transpile(
             if bit in readout_destination_bits
                 throw(
                     ArgumentError(
-                        "Readouts in QuantumCircuit have conflicting destination bit: $bit",
+                        "`Readouts` in `QuantumCircuit` have conflicting destination bit: $bit",
                     ),
                 )
             end
