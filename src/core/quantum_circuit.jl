@@ -269,8 +269,10 @@ yield the same output for any input, up to a global phase.
 Circuits with different ordering of gates that apply on different 
 targets can also be equivalent. 
 !!! note 
-    If there are `Readouts` are present in either `QuantumCircuit`, 
-    they are ignored by `compare_circuit`.
+    If there are `Readouts` are present on either `QuantumCircuit`, 
+    `compare_circuits` checks that both circuits have readouts targeting
+    the same qubits, and that no operations exist on those qubits following
+    readouts.
 
 
 # Examples
@@ -324,6 +326,30 @@ q[3]:──X────────────
 
 julia> compare_circuits(c0,c1)
 true    
+
+julia> c2 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),readout(1,1)])
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X────✲──
+               
+q[2]:──────────
+               
+q[3]:──────────
+               
+julia> c3 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X──
+          
+q[2]:─────
+          
+q[3]:─────
+          
+
+julia> compare_circuits(c2,c3)
+false    
 
 ```
 """

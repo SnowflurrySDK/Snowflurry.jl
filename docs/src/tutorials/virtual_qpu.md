@@ -66,7 +66,7 @@ q[1]:──H────*──
 q[2]:───────X──
 ```
 
-Although we've created a circuit that makes a Bell pair, we need to *meaure*
+Although we've created a circuit that makes a Bell pair, we need to *measure*
 something in order to collect any results. In Snowflurry, we can use a
 `readout` instruction to perform a measurement.
 
