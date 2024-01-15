@@ -1994,7 +1994,9 @@ function transpile(
     end
 
     throw(
-        ArgumentError("QuantumCircuit is missing a `Readout`. Would not return any result."),
+        ArgumentError(
+            "QuantumCircuit is missing a `Readout`. Would not return any result.",
+        ),
     )
 end
 
