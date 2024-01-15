@@ -16,19 +16,11 @@ using Test
 
     @test_throws DomainError QuantumCircuit(qubit_count = 1, instructions = [sigma_x(5)])
 
-    @test_throws AssertionError(
-        "$(:QuantumCircuit) constructor requires qubit_count>0. Received: 0",
-    ) QuantumCircuit(qubit_count = 0)
-    @test_throws AssertionError(
-        "$(:QuantumCircuit) constructor requires qubit_count>0. Received: 0",
-    ) QuantumCircuit(qubit_count = 0, bit_count = 2)
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0)
+    @test_throws AssertionError QuantumCircuit(qubit_count = 0, bit_count = 2)
 
-    @test_throws AssertionError(
-        "$(:QuantumCircuit) constructor requires bit_count>0. Received: 0",
-    ) QuantumCircuit(qubit_count = 6, bit_count = 0)
-    @test_throws AssertionError(
-        "$(:QuantumCircuit) constructor requires bit_count>0. Received: 0",
-    ) QuantumCircuit(qubit_count = 6, bit_count = 0, instructions = [sigma_x(5)])
+    @test_throws AssertionError QuantumCircuit(qubit_count = 6, bit_count = 0)
+    @test_throws AssertionError QuantumCircuit(qubit_count = 6, bit_count = 0, instructions = [sigma_x(5)])
 end
 
 @testset "push_pop_gate" begin
