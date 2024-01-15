@@ -110,7 +110,7 @@ simulate(c)
 0.7071067811865475 + 0.0im
 ```
 
-The output of `simulate` function is a `Ket` object. `Ket` is a complex vector that represents the wavefunction of a quantum object such as our two-qubit system.
+The output of the `simulate` function is a `Ket` object. A `Ket` is a complex vector that represents the wavefunction of a quantum object such as our two-qubit system.
 
 ## Histogram
 In the previous section, we used the `simulate` function to calculate the wavefunction of a two-qubit quantum register, after the circuit, `c`, is applied to it. However, in the real world, we do not have direct access to the wavefunction of a quantum register. Rather, we need to run the quantum circuit several times over (several shots) on the quantum processor and measure the qubits states at the end of each shot. The result of each shot is a bitstring that tells us which qubits were measured to be in state `0` and which qubits were measured to be in state `1`. The probability of getting a bitstring then depends on the wavefunction.
