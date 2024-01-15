@@ -13,6 +13,8 @@ DenseOperator
 SwapLikeOperator
 IdentityOperator
 SparseOperator
+Readout
+readout
 Base.adjoint
 is_hermitian
 Base.exp(A::AbstractOperator)

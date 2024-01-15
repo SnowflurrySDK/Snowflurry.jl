@@ -43,6 +43,7 @@ export
     AbstractControlledGateSymbol,
     Controlled,
     Gate,
+    Readout,
     AnyonYukonQPU,
     AnyonYamaskaQPU,
     VirtualQPU,
