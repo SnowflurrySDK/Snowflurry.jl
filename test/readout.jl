@@ -2,27 +2,36 @@ using Snowflurry
 using Test
 
 @testset "Readout: getters and Base functions" begin
-    test_readout = readout(1, 1)
+    test_readout = readout(1, 2)
+
+    @test test_readout == Readout(1, 2)
 
     @test get_instruction_symbol(test_readout) == "readout"
     @test get_symbol_for_instruction("readout") == Snowflurry.Readout
     @test get_display_symbols(test_readout) == ["✲"]
     @test Snowflurry.get_longest_symbol_length(test_readout) == 1
-    @test get_destination_bit(test_readout) == 1
+    @test get_destination_bit(test_readout) == 2
 
     expected =
         "Quantum Circuit Object:\n" *
         "   qubit_count: 1 \n" *
-        "   bit_count: 1 \n" *
+        "   bit_count: 2 \n" *
         "q[1]:──✲──\n" *
         "          \n" *
         "\n"
 
     io = IOBuffer()
-    print(io, QuantumCircuit(qubit_count = 1, instructions = [test_readout]))
+    print(io, QuantumCircuit(qubit_count = 1, bit_count = 2, instructions = [test_readout]))
     @test String(take!(io)) == expected
 
-    @test move_instruction(test_readout, Dict{Int,Int}(1 => 2)) == readout(2, 1)
+    @test move_instruction(test_readout, Dict{Int,Int}(1 => 3)) == readout(3, 2)
+
+    expected =
+        "Explicit Readout object:\n" *
+        "   connected_qubit: 99 \n" *
+        "   destination_bit: 42 \n"
+    print(io, Readout(99, 42))
+    @test String(take!(io)) == expected
 
 end
 
