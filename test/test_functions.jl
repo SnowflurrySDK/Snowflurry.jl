@@ -196,6 +196,10 @@ function test_operator_implementation(
         @test anticommute(op, op) ≈ result
         @test anticommute(op, DenseOperator(op)) ≈ result
         @test anticommute(DenseOperator(op), (op)) ≈ result
+
+        # Base.inv 
+        invOp = inv(op)
+        @test op * invOp ≈ eye(size(op)[1])
     end
 
     test_label = string(label, " apply_operator")

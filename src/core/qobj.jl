@@ -276,6 +276,12 @@ DenseOperator(m::SizedMatrix{N,N,T}) where {N,T<:Real} =
 
 get_matrix(op::DenseOperator{N,T}) where {N,T<:Complex} = convert(Matrix{T}, op.data)
 
+function Base.inv(op::AbstractOperator)::DenseOperator
+    inv_op_matrix = inv(get_matrix(op))
+
+    return DenseOperator(inv_op_matrix)
+end
+
 """
     SwapLikeOperator{N,T<:Complex}<:AbstractOperator
 
