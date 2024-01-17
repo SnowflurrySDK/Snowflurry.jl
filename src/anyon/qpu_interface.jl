@@ -49,6 +49,8 @@ const succeeded_status = "SUCCEEDED"
 const failed_status = "FAILED"
 const cancelled_status = "CANCELLED"
 
+# Until support is dropped for Julia<1.8, calling PkgVersion(Snowflurry) 
+# is not possible. Current Snowflurry version is read from Project.toml instead
 project_toml = TOML.parsefile("Project.toml")
 @assert haskey(project_toml, "version") "missing version info in Project toml" 
 const package_version = project_toml["version"]
