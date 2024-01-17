@@ -2,7 +2,7 @@ using Snowflurry
 using Base64
 using HTTP
 using JSON
-using Pkg
+using TOML
 
 Base.@kwdef struct Status
     type::String
@@ -49,6 +49,10 @@ const succeeded_status = "SUCCEEDED"
 const failed_status = "FAILED"
 const cancelled_status = "CANCELLED"
 
+project_toml = TOML.parsefile("Project.toml")
+@assert haskey(project_toml, "version") "missing version info in Project toml" 
+const package_version = project_toml["version"]
+
 const possible_status_list =
     [failed_status, succeeded_status, running_status, queued_status, cancelled_status]
 
@@ -63,8 +67,6 @@ function post_request(
     access_token::String,
     body::String,
 )::HTTP.Response
-
-    package_version = string(Pkg.project().version)
 
     return requestor.poster(
         url,
@@ -94,8 +96,6 @@ function get_request(
     user::String,
     access_token::String,
 )::HTTP.Response
-
-    package_version = string(Pkg.project().version)
 
     return requestor.getter(
         url,
