@@ -1145,10 +1145,10 @@ If no `target_qubits` are provided, the probabilities are computed for all the q
 
 The measurement probabilities are listed from the smallest to the largest computational
 basis state. For instance, for a 2-qubit [`QuantumCircuit`](@ref), the probabilities are listed
-for ``\\left|00\\right\\rangle``, ``\\left|01\\right\\rangle``, ``\\left|10\\right\\rangle``, and ``\\left|11\\right\\rangle``.
+for `00`, `01`, `10`, and `11`.
 # Examples
-The following example constructs a `QuantumCircuit` where the probability of measuring ``\\left|01\\right\\rangle``
-is 50% and the probability of measuring ``\\left|11\\right\\rangle`` is also 50%.
+The following example constructs a `QuantumCircuit` where the probability of measuring `01`
+is 50% and the probability of measuring `11` is also 50%.
 ```jldoctest get_circuit_measurement_probabilities
 julia> circuit = QuantumCircuit(qubit_count = 2);
 
