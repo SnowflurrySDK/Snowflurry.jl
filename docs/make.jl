@@ -35,7 +35,10 @@ println()
 
 makedocs(
     sitename = "Snowflurry",
-    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "false", sidebar_sitename = false),
+    format = Documenter.HTML(
+        prettyurls = get(ENV, "CI", nothing) == "false",
+        sidebar_sitename = false,
+    ),
     modules = [Snowflurry],
     build = "build",
     pages = [
