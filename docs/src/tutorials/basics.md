@@ -63,7 +63,7 @@ Basic logical operations on qubits are commonly called *quantum logic gates* or 
 
 Let's start by adding a single-qubit gate called the *Hadamard* gate to our circuit, `c`, and specify that it will only operate on qubit '1'. The Hadamard gate is one of the most frequently used gates in quantum computing as it puts its target qubit into a perfect superposition of state $\left|0\right\rangle$ and $\left|1\right\rangle$.
 
-We build this gate by calling [`hadamard()`](@ref) function and we add it to our circuit `c` by calling the `push!` function:
+We build this gate by calling [`hadamard()`](@ref) function with the target `qubit = 1`, and we add it to our circuit `c` by calling the `push!` function:
 ```jldoctest basics
 push!(c, hadamard(1))
 # output
@@ -93,7 +93,8 @@ q[2]:─────
 
 ```
 
-Now let's add a famous two-qubit gate, [`control_x`](@ref), also known as the *CNOT* gate in the quantum information community:
+Now let's add a famous two-qubit gate, [`control_x`](@ref), also known as the *CNOT* gate in the quantum information community. 
+Here the first argument is the `control_qubit = 1`, and the second is the `target_qubit = 2`.
  ```jldoctest basics
 push!(c, control_x(1, 2))
 # output
