@@ -1,6 +1,6 @@
 # Run a circuit on a Virtual QPU
 
-In the previous tutorial, we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates.
+In the [previous tutorial](basics.md), we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates.
 
 We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine.
 
@@ -24,7 +24,7 @@ using Snowflurry
 Next, we are going to create a virtual QPU which will run on our local machine:
 
 ```jldoctest get_qpu_metadata_tutorial; output = true
-qpu_v=VirtualQPU()
+qpu_v = VirtualQPU()
 # output
 Quantum Simulator:
    developers:  Anyon Systems Inc.
@@ -55,8 +55,8 @@ Dict{String, String} with 2 entries:
 Now, let's create a circuit to create a Bell pair as was explained in the previous tutorial:
 
 ```jldoctest get_qpu_metadata_tutorial; output = true
-c=QuantumCircuit(qubit_count=2)
-push!(c,hadamard(1),control_x(1,2))
+c = QuantumCircuit(qubit_count = 2)
+push!(c, hadamard(1), control_x(1, 2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
@@ -68,10 +68,14 @@ q[2]:───────X──
 
 Although we've created a circuit that makes a Bell pair, we need to *measure*
 something in order to collect any results. In Snowflurry, we can use a
-`readout` instruction to perform a measurement.
+[`Readout`](@ref) instruction to perform a measurement, which are built 
+using the [`readout()`](@ref) helper function.
+
+!!! note
+	Measurements are always performed in the ``Z`` basis (also known as the computational basis).
 
 ```jldoctest get_qpu_metadata_tutorial; output = true
-push!(c,readout(1,1),readout(2,2))
+push!(c, readout(1, 1), readout(2, 2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
@@ -97,24 +101,25 @@ With our measurements defined, we can now run this circuit on the virtual qpu
 for let's say 100 shots.
 
 ```julia
-shots_count=100
-result=run_job(qpu_v,c,shots_count)
+shots_count = 100
+result = run_job(qpu_v, c, shots_count)
 ```
-The `result` object is a `Dict{String, Int64}` that summarizes how many times each state was measured in the shots run on the QPU:
+The `result` object is a `Dict{String, Int64}` that summarizes how many times each state was measured in the shots run on the QPU. 
+**It contains only non-zero entries.**
 
 ```julia
 print(result)
 
 Dict("00" => 53, "11" => 47)
 ```
-Here we see that, after measurement, the classical result bits were set to `00`
-in 53 of the 100 shots. In the other 47 shots, the result bits were set to `11`.
+Here we see that, after measurement, the classical result bits were set to $\left|00\right\rangle$
+in 53 of the 100 shots. In the other 47 shots, the result bits were set to $\left|11\right\rangle$.
 
 !!! note
-	The reason the number of measured values for states `00` and `11` are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of `00` and `11` are equal.
+	The reason the number of measured values for states $\left|00\right\rangle$ and $\left|11\right\rangle$ are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of  $\left|00\right\rangle$ and  $\left|11\right\rangle$ are equal.
 
 
+The virtual QPU currently mimics an ideal hardware with no error. Therefore, the states  $\left|01\right\rangle$ and  $\left|10\right\rangle$ have a probability of zero, and they are never measured. 
+In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc.
 
-The virtual QPU currently mimics an ideal hardware with no error. In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc.
-
-In the next tutorial, we will show how to submit a job to real quantum processing hardware.
+In the [next tutorial](@ref "Running a Circuit on Real Hardware"), we will show how to submit a job to real quantum processing hardware.

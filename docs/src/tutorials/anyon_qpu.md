@@ -19,14 +19,15 @@ In this tutorial, we will learn how to submit a job to real hardware. At the mom
 !!! note
 	This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware.
 
-The current release of `Snowflurry` supports Anyon's Yukon quantum processor which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers.
+The current release of `Snowflurry` supports Anyon's Yukon quantum processor (see [`AnyonYukonQPU`](@ref)) which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers.
+The following generation of QPU, called [`AnyonYamaskaQPU`](@ref) is also implemented, in which 12 qubits are arranged in a lattice, along with 14 couplers. 
 
 We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials:
 
 ```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
 
-qpu=AnyonYukonQPU(host="http://yukon.anyonsys.com",user="USER_NAME", access_token="API_KEY")
+qpu = AnyonYukonQPU(host = "http://yukon.anyonsys.com", user = "USER_NAME", access_token = "API_KEY")
 
 # output
 Quantum Processing Unit:
@@ -75,8 +76,8 @@ Dict{String, Union{Int64, String}} with 5 entries:
 We now continue to build a small circuit to create a Bell state as was presented in the previous tutorials:
 
 ```jldoctest anyon_qpu_tutorial; output = true
-c=QuantumCircuit(qubit_count=2)
-push!(c,hadamard(1),control_x(1,2),readout(1,1),readout(2,2))
+c = QuantumCircuit(qubit_count = 2)
+push!(c, hadamard(1), control_x(1, 2), readout(1, 1), readout(2, 2))
 # output
 Quantum Circuit Object:
    qubit_count: 2 
@@ -114,7 +115,7 @@ Snowflurry is designed to allow users to design and use their own transpilers fo
 Let's see how we can transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
 
 ```jldoctest anyon_qpu_tutorial; output = false
-transpiler=get_transpiler(qpu)
+transpiler = get_transpiler(qpu)
 
 # output
 SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoNotConflictTranspiler(), CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}
@@ -124,8 +125,8 @@ SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoN
 
 Next, let's transpile the original circuit:
 
-```anyon_qpu_tutorial; output = true
-c_transpiled=transpile(transpiler,c)
+```julia
+c_transpiled = transpile(transpiler, c)
 
 # output
 
