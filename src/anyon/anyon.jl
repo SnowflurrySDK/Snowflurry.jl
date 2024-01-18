@@ -1,9 +1,10 @@
 using Snowflurry
 
 """
-    AnyonYukonQPU
+    AnyonYukonQPU <: AbstractQPU
 
-A data structure to represent an Anyon System's Yukon generation QPU.  
+A data structure to represent an Anyon System's Yukon generation QPU, 
+consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)). 
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
@@ -11,7 +12,7 @@ A data structure to represent an Anyon System's Yukon generation QPU.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com",user = "test_user", access_token = "not_a_real_access_token")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -51,9 +52,10 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
 )
 
 """
-    AnyonYamaskaQPU
+    AnyonYamaskaQPU <: AbstractQPU
 
-A data structure to represent an Anyon System's Yamaska generation QPU.  
+A data structure to represent an Anyon System's Yamaska generation QPU, 
+consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
@@ -61,7 +63,7 @@ A data structure to represent an Anyon System's Yamaska generation QPU.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host="example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
