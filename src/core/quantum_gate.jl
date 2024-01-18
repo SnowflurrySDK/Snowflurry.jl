@@ -34,14 +34,14 @@ julia> x_45(target::Integer) = Gate(X45(), [target]);
 
 along with an `Operator` constructor, with default precision `ComplexF64`, defined as:
 ```jldoctest gate_struct
-julia> x_45(T::Type{<:Complex}=ComplexF64)=rotation_x(π/4, T);
+julia> x_45(T::Type{<:Complex} = ComplexF64) = rotation_x(π/4, T);
 
 ```
 
 To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
 the function `get_operator` must be extended.
 ```jldoctest gate_struct
-julia> Snowflurry.get_operator(gate::X45, T::Type{<:Complex}=ComplexF64) = rotation_x(π/4, T);
+julia> Snowflurry.get_operator(gate::X45, T::Type{<:Complex} = ComplexF64) = rotation_x(π/4, T);
 
 ```
 
@@ -81,20 +81,20 @@ Underlying data ComplexF64:
 To enable printout of a `QuantumCircuit` containing our new `GateSymbol` type, a display symbol 
 must be defined as follows.
 ```jldoctest gate_struct
-julia> Snowflurry.gates_display_symbols[X45]=["X45"];
+julia> Snowflurry.gates_display_symbols[X45] = ["X45"];
 
 ```
 
 If this `Gate` is to be sent as an instruction to a hardware QPU, 
 an instruction `String` must be defined.
 ```jldoctest gate_struct
-julia> Snowflurry.instruction_symbols[X45]="x45";
+julia> Snowflurry.instruction_symbols[X45] = "x45";
 
 ```
 
 A circuit containing this `Gate` can now be constructed:
 ```jldoctest gate_struct
-julia> circuit=QuantumCircuit(qubit_count=2,instructions=[x_45_gate])
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [x_45_gate])
 Quantum Circuit Object:
    qubit_count: 2
    bit_count: 2
@@ -106,9 +106,9 @@ q[2]:───────
 
 In addition, a `Controlled{X45}` gate can be constructed using:
 ```jldoctest gate_struct
-julia> control=1; target=2;
+julia> control = 1; target = 2;
 
-julia> controlled(x_45(target),[control])
+julia> controlled(x_45(target), [control])
 Gate Object: Controlled{X45}
 Connected_qubits	: [1, 2]
 Operator:
@@ -265,7 +265,7 @@ to casting the operator into the equivalent `DenseOperator` and applying the cre
 We can use the `controlled` function to create a controlled-Hadamard gate
 
 ```jldoctest controlled_hadamard
-julia> controlled_hadamard=controlled(hadamard(2),[1])
+julia> controlled_hadamard = controlled(hadamard(2), [1])
 Gate Object: Controlled{Snowflurry.Hadamard}
 Connected_qubits	: [1, 2]
 Operator:
@@ -282,7 +282,7 @@ It can then be used in a `QuantumCircuit` as any other `Gate`, and its display s
 inherited from the display symbol of the single-target `Hadamard` `Gate`:
 
 ```jldoctest controlled_hadamard
-julia> circuit=QuantumCircuit(qubit_count=2,instructions=[controlled_hadamard])
+julia> circuit=QuantumCircuit(qubit_count=2,instructions = [controlled_hadamard])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -297,7 +297,7 @@ constructed. For instance, the following constructs the equivalent of a `Toffoli
 but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=[3]`:
 
 ```jldoctest 
-julia> toffoli_as_controlled_gate=controlled(sigma_x(3),[1,2])
+julia> toffoli_as_controlled_gate = controlled(sigma_x(3), [1, 2])
 Gate Object: Controlled{Snowflurry.SigmaX}
 Connected_qubits	: [1, 2, 3]
 Operator:
@@ -2196,7 +2196,7 @@ julia> ψ_0 = fock(0, 2)
 0.0 + 0.0im
 
 
-julia> ψ_1 = sigma_x(1)*ψ_0
+julia> ψ_1 = sigma_x(1) * ψ_0
 2-element Ket{ComplexF64}:
 0.0 + 0.0im
 1.0 + 0.0im

@@ -8,6 +8,7 @@ DocMeta.setdocmeta!(
     :DocTestSetup,
     quote
         using Snowflurry
+        using Printf
         ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
         requestor = MockRequestor(request_checker, post_checker)

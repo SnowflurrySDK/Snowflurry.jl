@@ -14,7 +14,7 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
 
 # Example
 ```jldoctest
-julia>  connectivity = LineConnectivity(6)
+julia> connectivity = LineConnectivity(6)
 LineConnectivity{6}
 1──2──3──4──5──6
 
@@ -43,7 +43,7 @@ The corresponding `qubits_per_row` field is `[2,4,4,2]`, the number of qubits in
 in the printed representation.  
 
 ```jldoctest
-julia>  connectivity = LatticeConnectivity(4,3)
+julia> connectivity = LatticeConnectivity(4, 3)
 LatticeConnectivity{4,3}
         1 ──  2 
         |     | 
@@ -58,7 +58,7 @@ LatticeConnectivity{4,3}
 
 Lattices of arbitrary dimensions can be built:
 ```jldoctest
-julia>  connectivity = LatticeConnectivity(6,4)
+julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
               1 ──  2 
               |     | 
@@ -80,7 +80,7 @@ LatticeConnectivity{6,4}
 Non-rectangular shapes can also be achieved by directly specifying the desired `qubits_per_row` as a `Vector{Int}`:
 
 ```jldoctest
-julia>  connectivity = LatticeConnectivity([5,7,8,8,7,5])
+julia> connectivity = LatticeConnectivity([5, 7, 8, 8, 7, 5])
 LatticeConnectivity{8,5}
         1 ──  2 ──  3 ──  4 ──  5 
         |     |     |     |     | 
@@ -158,7 +158,7 @@ This connectivity type is encountered in simulated `QPUs`, such as the [`Virtual
 
 # Example
 ```jldoctest
-julia>  connectivity = AllToAllConnectivity()
+julia> connectivity = AllToAllConnectivity()
 AllToAllConnectivity()
 
 ```
@@ -403,7 +403,7 @@ Manhattan distance, using the Breadth-First Search algorithm, on any
 
 # Example
 ```jldoctest
-julia>  connectivity = LineConnectivity(6)
+julia> connectivity = LineConnectivity(6)
 LineConnectivity{6}
 1──2──3──4──5──6
 
@@ -421,7 +421,7 @@ On LatticeConnectivity, the print_connectivity() method is used to visualize the
 The qubits along the path between origin and target are marker with `( )`
 
 ```jldoctest; output=false
-julia> connectivity = LatticeConnectivity(6,4)
+julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
               1 ──  2 
               |     | 

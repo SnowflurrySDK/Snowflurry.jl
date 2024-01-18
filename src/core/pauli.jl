@@ -32,7 +32,7 @@ specified in the `circuit`.
 
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count=2);
+julia> circuit = QuantumCircuit(qubit_count = 2);
 
 julia> push!(circuit, sigma_x(1), sigma_y(2))
 Quantum Circuit Object:
@@ -58,7 +58,7 @@ multiplied with the first gate in the `circuit` being the rightmost gate in the
 multiplication.
 
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count=1);
+julia> circuit = QuantumCircuit(qubit_count = 1);
 
 julia> push!(circuit, sigma_x(1), sigma_z(1))
 Quantum Circuit Object:
@@ -346,11 +346,11 @@ end
 """
     get_quantum_circuit(pauli::PauliGroupElement)::QuantumCircuit
 
-Returns the Pauli gates of a `PauliGroupElement` as a `QuantumCircuit`.
+Returns the Pauli gates of a `PauliGroupElement` as a [`QuantumCircuit`](@ref).
 
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count=2);
+julia> circuit = QuantumCircuit(qubit_count = 2);
 
 julia> push!(circuit, sigma_x(1), sigma_y(2))
 Quantum Circuit Object:
@@ -363,7 +363,7 @@ q[2]:───────Y──
 
 
 
-julia> pauli = get_pauli(circuit, imaginary_exponent=1, negative_exponent=1)
+julia> pauli = get_pauli(circuit, imaginary_exponent = 1, negative_exponent = 1)
 Pauli Group Element:
 -1.0im*X(1)*Y(2)
 
@@ -398,7 +398,7 @@ julia> gate = sigma_x(2);
 
 julia> num_qubits = 3;
 
-julia> pauli = get_pauli(gate, num_qubits, negative_exponent=1)
+julia> pauli = get_pauli(gate, num_qubits, negative_exponent = 1)
 Pauli Group Element:
 -1.0*X(2)
 
@@ -425,7 +425,7 @@ julia> gate = sigma_x(2);
 
 julia> num_qubits = 3;
 
-julia> pauli = get_pauli(gate, num_qubits, imaginary_exponent=1)
+julia> pauli = get_pauli(gate, num_qubits, imaginary_exponent = 1)
 Pauli Group Element:
 1.0im*X(2)
 
