@@ -11,7 +11,7 @@ using Snowflurry
 ```
 
 We can then create an empty [`QuantumCircuit`](@ref) by specifying the number of qubits (`qubit_count`) and classical bits (`bit_count`) the circuit will involve. 
-The classical bits (or result bits) are ordinary memory registries that store the output of a [`Readout`](@ref) operation on a particular qubit.
+The classical bits (or result bits) are ordinary memory registries that each store the output of a [`Readout`](@ref) operation on a particular qubit.
 
 ```jldoctest basics
 c = QuantumCircuit(qubit_count = 2, bit_count = 2)
