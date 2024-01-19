@@ -651,7 +651,16 @@ end
 
 @testset "run on VirtualQPU" begin
 
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        instructions = [
+            sigma_x(3),
+            control_z(2, 1),
+            readout(1, 1),
+            readout(2, 2),
+            readout(3, 3),
+        ],
+    )
 
     shot_count = 100
 
@@ -672,6 +681,52 @@ end
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
     test_print_connectivity(connectivity, "AllToAllConnectivity()\n")
+end
+
+@testset "run on VirtualQPU: partial readouts" begin
+
+    circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [hadamard(1), control_x(1, 2), control_x(2, 3), readout(3, 1)],
+    )
+
+    shot_count = 100
+
+    qpu = VirtualQPU()
+
+    histogram = transpile_and_run_job(qpu, circuit, shot_count)
+
+    @test haskey(histogram, "0")
+    @test haskey(histogram, "1")
+
+    pop!(histogram, "0")
+    pop!(histogram, "1")
+
+    @test length(histogram) == 0
+
+    circuit = QuantumCircuit(
+        qubit_count = 6,
+        instructions = [
+            hadamard(1),
+            control_x(1, 2),
+            control_x(2, 3),
+            control_x(3, 4),
+            control_x(4, 5),
+            control_x(5, 6),
+            readout(1, 1),
+            readout(6, 2),
+        ],
+    )
+
+    histogram = transpile_and_run_job(qpu, circuit, shot_count)
+
+    @test haskey(histogram, "00")
+    @test haskey(histogram, "11")
+
+    pop!(histogram, "00")
+    pop!(histogram, "11")
+
+    @test length(histogram) == 0
 end
 
 @testset "AbstractQPU" begin

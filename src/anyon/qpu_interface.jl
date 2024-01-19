@@ -396,7 +396,11 @@ is_native_instruction(::VirtualQPU, ::AbstractInstruction)::Bool = true
 
 is_native_circuit(::VirtualQPU, ::QuantumCircuit)::Tuple{Bool,String} = (true, "")
 
-get_transpiler(::VirtualQPU) = TrivialTranspiler()
+get_transpiler(::VirtualQPU) = SequentialTranspiler([
+    CircuitContainsAReadoutTranspiler(),
+    ReadoutsDoNotConflictTranspiler(),
+    ReadoutsAreFinalInstructionsTranspiler(),
+])
 
 get_connectivity(::VirtualQPU) = AllToAllConnectivity()
 get_connectivity_label(::AllToAllConnectivity) = all2all_connectivity_label

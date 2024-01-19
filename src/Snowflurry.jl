@@ -157,6 +157,8 @@ export
     get_quantum_circuit,
     get_negative_exponent,
     get_imaginary_exponent,
+    bit_swap,
+    remap_amplitudes,
 
     # Gates
     identity_gate,
@@ -270,6 +272,15 @@ using PrecompileTools
     catch e
         @assert typeof(e) == HTTP.Exceptions.ConnectError
     end
+
+    circuit = QuantumCircuit(
+        qubit_count = qubit_count,
+        instructions = [hadamard(1), control_x(1, 2), readout(2, 1)],
+    )
+
+    qpu = VirtualQPU()
+
+    transpile_and_run_job(qpu, circuit, 100)
 
 end
 

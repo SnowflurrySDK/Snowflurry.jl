@@ -909,7 +909,7 @@ function get_split_circuit_layout(
 end
 
 """
-    simulate(circuit::QuantumCircuit)
+    simulate(circuit::QuantumCircuit)::Ket
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`, 
 assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
@@ -952,7 +952,7 @@ julia> ket = simulate(c)
 
 ```
 """
-function simulate(circuit::QuantumCircuit)
+function simulate(circuit::QuantumCircuit)::Ket
     hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
@@ -1017,26 +1017,150 @@ julia> simulate_shots(c, 99)
 ```
 """
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
-    ψ = simulate(c)
+
+    # create a circuit w/o readouts, as simulate() cannot process them
+    qubit_count = get_num_qubits(c)
+    c_sim = QuantumCircuit(qubit_count = qubit_count)
+
+    readouts_target_to_dest_map = Dict{Int,Int}()
+    destination_bits = Set{Int}()
+    max_classical_bit = 0
+
+    for instr in get_circuit_instructions(c)
+        targets = get_connected_qubits(instr)
+
+        if instr isa Readout
+            @assert length(targets) == 1 "Readouts should have a single target qubit. Received: $(length(targets))"
+
+            target = targets[1]
+
+            if haskey(readouts_target_to_dest_map, target)
+                throw(ArgumentError("repeated Readout on the same qubit is not allowed"))
+            end
+
+            destination = get_destination_bit(instr)
+            @assert destination > 0 "destination bit must be > 0, received: $destination"
+            if destination in destination_bits
+                throw(
+                    ArgumentError(
+                        "conflicting destination bits in readouts present in circuit",
+                    ),
+                )
+            end
+            push!(destination_bits, destination)
+            max_classical_bit = maximum([max_classical_bit, destination])
+
+            readouts_target_to_dest_map[target] = destination
+        else
+            for target in targets
+                if haskey(readouts_target_to_dest_map, target)
+                    throw(
+                        ArgumentError(
+                            "cannot simulate circuit if a Gate follows a Readout",
+                        ),
+                    )
+                end
+            end
+
+            push!(c_sim, instr)
+        end
+    end
+
+    @assert max_classical_bit > 0
+    @assert length(readouts_target_to_dest_map) > 0 "Missing readouts in input circuit"
+
+    ψ = simulate(c_sim)
     amplitudes = adjoint.(ψ) .* ψ
+
+    remapped_amplitudes = remap_amplitudes(
+        convert(Vector{Real}, amplitudes),
+        readouts_target_to_dest_map,
+        max_classical_bit,
+    )
+
     weights = Float32[]
 
-    for a in amplitudes
+    for a in remapped_amplitudes
         push!(weights, a)
     end
 
     ##preparing the labels
     labels = String[]
-    for i in range(0, length = length(ψ))
+    for i in range(0, length = length(remapped_amplitudes))
         s = bitstring(i)
         n = length(s)
-        s_trimed = s[n-c.qubit_count+1:n]
+        s_trimed = s[n-max_classical_bit+1:n]
         push!(labels, s_trimed)
     end
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
     return data
 end
+
+function bit_swap(num::T, pos0::T, pos1::T)::T where {T<:Integer}
+
+    @assert pos0 > 0 "$(:bit_swap) assumes Julia convention of indexing starting at 1, received index: $pos0"
+    @assert pos1 > 0 "$(:bit_swap) assumes Julia convention of indexing starting at 1, received index: $pos1"
+
+    pos0 -= 1
+    pos1 -= 1
+
+    # Move pos0'th bit to rightmost side
+    bit0 = (num >> pos0) & T(1)
+
+    # Move pos1'th bit to rightmost side
+    bit1 = (num >> pos1) & T(1)
+
+    # XOR the two bits
+    x = (bit0 ⊻ bit1)
+
+    # Put the xor bit back to their original positions
+    x = (x << pos0) | (x << pos1)
+
+    # XOR 'x' with the original number so that the two sets are swapped
+    return num ⊻ x
+end
+
+function remap_amplitudes(
+    amplitudes::Vector{T},
+    readouts_target_to_dest_map::Dict{Int,Int},
+    max_classical_bit::Int,
+) where {T<:Real}
+
+    @assert length(amplitudes) % 2 == 0 "Amplitudes vector does not correspond to an allowed Ket dimension"
+
+    qubit_count = Int(log2(length(amplitudes)))
+
+    @assert max_classical_bit > 0
+
+    remapped_amplitudes = zeros(eltype(amplitudes), 2^(max_classical_bit))
+
+    mask = UInt16(0)
+    for (pos, ___) in readouts_target_to_dest_map
+        mask += UInt16(1) << (pos - 1)
+    end
+
+    for state_num = UInt16(0):UInt16(2^(qubit_count))-1
+        dest_state_num = state_num & mask
+
+        swaps_done = Set{Pair{Int,Int}}()
+        for (p0, p1) in readouts_target_to_dest_map
+            if p0 != p1
+                # swapping 2=>1 would undo swap 1=>2 
+                candidate_swap = Pair{Int,Int}(sort([p0, p1])...)
+                if !(candidate_swap in swaps_done)
+                    dest_state_num = bit_swap(dest_state_num, p0, p1)
+                    push!(swaps_done, candidate_swap)
+                end
+            end
+        end
+
+        remapped_amplitudes[dest_state_num+1] += amplitudes[state_num+1]
+    end
+
+    return remapped_amplitudes
+end
+
 
 """
     get_measurement_probabilities(circuit::QuantumCircuit,
