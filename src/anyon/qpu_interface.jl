@@ -446,7 +446,7 @@ completed circuit calculations, or an error message.
 ```jldoctest 
 julia> qpu=VirtualQPU();
 
-julia> transpile_and_run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
+julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]) ,100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -469,17 +469,17 @@ function transpile_and_run_job(
 end
 
 """
-    run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer)
+    run_job(qpu::VirtualQPU, circuit::QuantumCircuit, shot_count::Integer)
 
 Run a circuit computation on a `QPU` simulator, repeatedly for the specified
 number of repetitions (shot_count). Returns the histogram of the
-completed circuit calculations.
+completed circuit measurements, as prescribed by the `Readouts` present.
 
 # Example
 ```jldoctest 
-julia> qpu=VirtualQPU();
+julia> qpu = VirtualQPU();
 
-julia> run_job(qpu,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]) ,100)
+julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]), 100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 

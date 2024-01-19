@@ -965,31 +965,20 @@ end
 """
     simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results. 
+Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results, as prescribed by the `Readouts` present in the circuit. 
 The distribution of measured states corresponds to the coefficients in the resulting state Ket. 
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, hadamard(1))
+julia> push!(c, hadamard(1), control_x(1,2), readout(1, 1), readout(2, 2))
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
-q[1]:──H──
-          
-q[2]:─────
-          
-
-
-julia> push!(c, control_x(1,2))
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──H────*──
-            |  
-q[2]:───────X──
-               
+q[1]:──H────*────✲───────
+            |            
+q[2]:───────X─────────✲──
 
 
 julia> simulate_shots(c, 99)
@@ -1066,8 +1055,8 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
         end
     end
 
-    @assert max_classical_bit > 0
     @assert length(readouts_target_to_dest_map) > 0 "Missing readouts in input circuit"
+    @assert max_classical_bit > 0
 
     ψ = simulate(c_sim)
     amplitudes = adjoint.(ψ) .* ψ
