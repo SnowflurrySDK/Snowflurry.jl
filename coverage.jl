@@ -17,7 +17,7 @@ function print_missed_lines(fc::FileCoverage; num_char_to_print::Integer = 100)
 
     for (i, counts) in enumerate(coverage)
         if counts == 0
-            print("File: $(fc.filename), \tline number: ")
+            print("File: $(fc.filename):")
             printstyled("$(i)", color = :red)
             printstyled(
                 " : $(
