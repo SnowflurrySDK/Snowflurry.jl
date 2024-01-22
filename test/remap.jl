@@ -22,7 +22,7 @@ test_cases = [
     #
     # single readout, no swaps
     (data_2qubits, Dict(1 => 1), Dict{String,Int}("0" => 301, "1" => 4020))
-    (data_2qubits, Dict(2 => 2), Dict{String,Int}("00"=> 21,"01"=> 4300))
+    (data_2qubits, Dict(2 => 2), Dict{String,Int}("00" => 21, "01" => 4300))
     #
     # single readout, with swap
     (data_2qubits, Dict(1 => 2), Dict{String,Int}("0" => 21, "1" => 4300))
