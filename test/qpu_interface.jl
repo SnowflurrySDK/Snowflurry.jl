@@ -729,6 +729,26 @@ end
     @test length(histogram) == 0
 end
 
+@testset "run on VirtualQPU: ensure state representation convention" begin
+    
+    shot_count = 100
+    
+    for qubit in 1:6
+        circuit = QuantumCircuit(
+            qubit_count = qubit,
+            instructions = [sigma_x(qubit), readout(qubit, 1)],
+        )
+
+        qpu = VirtualQPU()
+    
+        histogram = transpile_and_run_job(qpu, circuit, shot_count)
+    
+        @test haskey(histogram, "1")
+        pop!(histogram, "1")
+        @test length(histogram) == 0
+    end
+end
+
 @testset "AbstractQPU" begin
     struct NonExistentQPU <: Snowflurry.AbstractQPU end
 
