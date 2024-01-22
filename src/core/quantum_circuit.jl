@@ -141,7 +141,7 @@ The `circuits_to_append` cannot contain more qubits than the `base_circuit`.
 
 # Examples
 ```jldoctest
-julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
+julia> base = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -152,7 +152,7 @@ q[2]:─────
 
 
 
-julia> append_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
+julia> append_1 = QuantumCircuit(qubit_count = 1, instructions = [sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
    bit_count: 1 
@@ -161,7 +161,7 @@ q[1]:──Z──
 
 
 
-julia> append_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
+julia> append_2 = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -212,7 +212,7 @@ than the `base_circuit`.
 
 # Examples
 ```jldoctest
-julia> base = QuantumCircuit(qubit_count=2, instructions=[sigma_x(1)])
+julia> base = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -223,7 +223,7 @@ q[2]:─────
 
 
 
-julia> prepend_1 = QuantumCircuit(qubit_count=1, instructions=[sigma_z(1)])
+julia> prepend_1 = QuantumCircuit(qubit_count = 1, instructions = [sigma_z(1)])
 Quantum Circuit Object:
    qubit_count: 1 
    bit_count: 1 
@@ -232,7 +232,7 @@ q[1]:──Z──
 
 
 
-julia> prepend_2 = QuantumCircuit(qubit_count=2, instructions=[control_x(1,2)])
+julia> prepend_2 = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2)])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -276,10 +276,10 @@ end
 """
     compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
 
-Tests for equivalence of two circuits based on their effect on an 
-arbitrary input state (a Ket). Circuits are equivalent if they both 
+Tests for equivalence of two [`QuantumCircuit`](@ref) based on their effect on an 
+arbitrary input state (a Ket). `QuantumCircuit` are equivalent if they both 
 yield the same output for any input, up to a global phase.
-Circuits with different ordering of gates that apply on different 
+`QuantumCircuit` with different ordering of gates that apply on different 
 targets can also be equivalent. 
 !!! note 
     If there are `Readouts` are present on either `QuantumCircuit`, 
@@ -290,7 +290,7 @@ targets can also be equivalent.
 
 # Examples
 ```jldoctest
-julia> c0 = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
+julia> c0 = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1), sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
    bit_count: 1 
@@ -299,7 +299,7 @@ q[1]:──X────Y──
 
 
 
-julia> c1 = QuantumCircuit(qubit_count = 1, instructions=[phase_shift(1,π)])
+julia> c1 = QuantumCircuit(qubit_count = 1, instructions = [phase_shift(1, π)])
 Quantum Circuit Object:
    qubit_count: 1  
    bit_count: 1  
@@ -308,10 +308,10 @@ q[1]:──Rz(3.1416)──
 
 
 
-julia> compare_circuits(c0,c1)
+julia> compare_circuits(c0, c1)
 true            
 
-julia> c0 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),sigma_y(1),control_x(2,3)])
+julia> c0 = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(1), sigma_y(1), control_x(2, 3)])
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -324,7 +324,7 @@ q[3]:────────────X──
 
 
 
-julia> c1 = QuantumCircuit(qubit_count = 3, instructions=[control_x(2,3),sigma_x(1),sigma_y(1)])
+julia> c1 = QuantumCircuit(qubit_count = 3, instructions = [control_x(2, 3), sigma_x(1), sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -337,10 +337,10 @@ q[3]:──X────────────
 
 
 
-julia> compare_circuits(c0,c1)
+julia> compare_circuits(c0, c1)
 true    
 
-julia> c2 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1),readout(1,1)])
+julia> c2 = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(1), readout(1, 1)])
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -350,7 +350,7 @@ q[2]:──────────
                
 q[3]:──────────
                
-julia> c3 = QuantumCircuit(qubit_count = 3, instructions=[sigma_x(1)])
+julia> c3 = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -426,7 +426,7 @@ Determines whether a type of gate is present in a circuit.
 
 # Examples
 ```jldoctest
-julia> circuit = QuantumCircuit(qubit_count = 1, instructions=[sigma_x(1),sigma_y(1)])
+julia> circuit = QuantumCircuit(qubit_count = 1, instructions = [sigma_x(1), sigma_y(1)])
 Quantum Circuit Object:
    qubit_count: 1 
    bit_count: 1 
@@ -1144,13 +1144,13 @@ Returns a vector listing the measurement probabilities for the `target_qubits` i
 If no `target_qubits` are provided, the probabilities are computed for all the qubits.
 
 The measurement probabilities are listed from the smallest to the largest computational
-basis state. For instance, for a 2-qubit `QuantumCircuit`, the probabilities are listed
-for 00, 01, 10, and 11.
+basis state. For instance, for a 2-qubit [`QuantumCircuit`](@ref), the probabilities are listed
+for \$\\left|00\\right\\rangle\$, \$\\left|01\\right\\rangle\$, \$\\left|10\\right\\rangle\$, and \$\\left|11\\right\\rangle\$.
 # Examples
-The following example constructs a `QuantumCircuit` where the probability of measuring 01
-is 50% and the probability of measuring 11 is also 50%.
+The following example constructs a `QuantumCircuit` where the probability of measuring \$\\left|01\\right\\rangle\$
+is 50% and the probability of measuring \$\\left|11\\right\\rangle\$ is also 50%.
 ```jldoctest get_circuit_measurement_probabilities
-julia> circuit = QuantumCircuit(qubit_count=2);
+julia> circuit = QuantumCircuit(qubit_count = 2);
 
 julia> push!(circuit, hadamard(1), sigma_x(2))
 Quantum Circuit Object:
@@ -1205,7 +1205,7 @@ Each gate is replaced by its corresponding inverse, and the order of gates is re
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2);
+julia> c = QuantumCircuit(qubit_count = 2);
 
 julia> push!(c, rotation_y(1, pi/4));
 
@@ -1254,7 +1254,7 @@ The dictionary keys are the instruction_symbol of the gates while the values are
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2);
+julia> c = QuantumCircuit(qubit_count = 2);
 
 julia> push!(c, hadamard(1), hadamard(2));
 
@@ -1300,7 +1300,7 @@ Returns the number of gates in the `circuit`.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=2);
+julia> c = QuantumCircuit(qubit_count = 2);
 
 julia> push!(c, hadamard(1), hadamard(2));
 
@@ -1336,7 +1336,7 @@ For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=3);
+julia> c = QuantumCircuit(qubit_count = 3);
 
 julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
 Quantum Circuit Object:
@@ -1350,7 +1350,7 @@ q[3]:────────────Y──
 
 
 
-julia> permute_qubits!(c, Dict(1=>3, 3=>1))
+julia> permute_qubits!(c, Dict(1 => 3, 3 => 1))
 
 julia> show(c)
 Quantum Circuit Object:
@@ -1421,7 +1421,7 @@ For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count=3);
+julia> c = QuantumCircuit(qubit_count = 3);
 
 julia> push!(c, sigma_x(1), hadamard(2), sigma_y(3))
 Quantum Circuit Object:
@@ -1436,7 +1436,7 @@ q[3]:────────────Y──
 
 
 
-julia> permute_qubits(c, Dict(1=>3, 3=>1))
+julia> permute_qubits(c, Dict(1 => 3, 3 => 1))
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 

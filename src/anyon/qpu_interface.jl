@@ -116,7 +116,7 @@ to a `QPU` service, along with the number of shots requested.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count = 2,instructions=[sigma_x(1)])
+julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -176,12 +176,11 @@ A data structure to represent a *Client* to a QPU service.
 
 # Example
 ```jldoctest
-julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token")
+julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token")
 Client for QPU service:
    host:         http://example.anyonsys.com
    user:         test_user 
  
-  
 ```
 """
 Base.@kwdef struct Client
@@ -204,7 +203,7 @@ Returns host URL of a `Client` to a `QPU` service.
 
 # Example
 ```jldoctest
-julia> c = Client(host="http://example.anyonsys.com",user="test_user",access_token="not_a_real_access_token");
+julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token");
 
 julia> get_host(c)
 "http://example.anyonsys.com"
@@ -224,7 +223,7 @@ repetitions (shot_count). Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
+julia> submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -257,7 +256,7 @@ function submit_circuit(
 end
 
 """
-    get_status(client::Client,circuitID::String)::Dict{String, String}
+    get_status(client::Client, circuitID::String)::Dict{String, String}
 
 Obtain the status of a circuit computation through a `Client` of a `QPU` service.
 Returns status::Dict containing status["type"]: 
@@ -272,7 +271,7 @@ In the case of status["type"]=="failed", the server error is contained in status
 
 
 ```jldoctest
-julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
+julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client,circuitID)
@@ -322,12 +321,12 @@ by circuit identifier circuitID.
 
 
 ```jldoctest 
-julia> circuitID=submit_circuit(client,QuantumCircuit(qubit_count=3,instructions=[sigma_x(3),control_z(2,1)]),100)
+julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3,instructions = [sigma_x(3), control_z(2, 1)]), 100)
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
-julia> get_status(client,circuitID);
+julia> get_status(client, circuitID);
 
-julia> get_result(client,circuitID)
+julia> get_result(client, circuitID)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -379,7 +378,7 @@ A data structure to represent a Quantum Simulator.
 
 # Example
 ```jldoctest
-julia> qpu=VirtualQPU()
+julia> qpu = VirtualQPU()
 Quantum Simulator:
    developers:  Anyon Systems Inc.
    package:     Snowflurry.jl
@@ -434,7 +433,7 @@ function read_response_body(body::Vector{UInt8})::String
 end
 
 """
-    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer; transpiler::Transpiler = get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default transpiler,
 or any other transpiler passed as a key-word argument.

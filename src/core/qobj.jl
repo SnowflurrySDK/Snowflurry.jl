@@ -58,7 +58,7 @@ Checks for equivalence allowing for a global phase difference between two input 
 
 # Examples
 ```jldoctest
-julia> ψ_0 = Ket([1.,2.,3.,4.])
+julia> ψ_0 = Ket([1., 2., 3., 4.])
 4-element Ket{ComplexF64}:
 1.0 + 0.0im
 2.0 + 0.0im
@@ -66,10 +66,10 @@ julia> ψ_0 = Ket([1.,2.,3.,4.])
 4.0 + 0.0im
 
 
-julia> δ=π/3 # phase offset
+julia> δ = π/3 # phase offset
 1.0471975511965976
 
-julia> ψ_1 = exp(im*δ)*ψ_0
+julia> ψ_1 = exp(im * δ) * ψ_0
 4-element Ket{ComplexF64}:
 0.5000000000000001 + 0.8660254037844386im
 1.0000000000000002 + 1.7320508075688772im
@@ -77,10 +77,10 @@ julia> ψ_1 = exp(im*δ)*ψ_0
 2.0000000000000004 + 3.4641016151377544im
 
 
-julia> compare_kets(ψ_0,ψ_1)
+julia> compare_kets(ψ_0, ψ_1)
 true
 
-julia> apply_instruction!(ψ_1,sigma_x(1))
+julia> apply_instruction!(ψ_1, sigma_x(1))
 4-element Ket{ComplexF64}:
 1.5000000000000004 + 2.598076211353316im
 2.0000000000000004 + 3.4641016151377544im
@@ -88,7 +88,7 @@ julia> apply_instruction!(ψ_1,sigma_x(1))
 1.0000000000000002 + 1.7320508075688772im
 
 
-julia> compare_kets(ψ_0,ψ_1) # no longer equivalent after SigmaX gate
+julia> compare_kets(ψ_0, ψ_1) # no longer equivalent after SigmaX gate
 false
 
 ```
@@ -235,7 +235,7 @@ Underlying data ComplexF64:
 ```
 Alternatively:
 ```jldoctest
-julia> z = rotation(π/2,-π/4)  
+julia> z = rotation(π/2, -π/4)  
 (2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.7071067811865476 + 0.0im    0.4999999999999999 - 0.5im
@@ -343,7 +343,7 @@ This operator is always of size 2x2.
 
 # Example
 ```jldoctest
-julia> iden=IdentityOperator()
+julia> IdentityOperator()
 (2, 2)-element Snowflurry.IdentityOperator:
 Underlying data ComplexF64:
 Equivalent DenseOperator:
@@ -454,7 +454,7 @@ The equivalent dense matrix would have size NxN.
 
 # Examples
 ```jldoctest
-julia> AntiDiagonalOperator([1,2])
+julia> AntiDiagonalOperator([1, 2])
 (2,2)-element Snowflurry.AntiDiagonalOperator:
 Underlying data type: ComplexF64:
     .    1.0 + 0.0im
@@ -892,7 +892,7 @@ end
 Uses a local operator (`op`), which is defined for a particular body (e.g. qubit) with index `target_body_index`, to build the corresponding operator for the Hilbert space of the multi-body system given by `system`. 
 # Examples
 ```jldoctest
-julia> system = MultiBodySystem(3,2)
+julia> system = MultiBodySystem(3, 2)
 Snowflurry.Multibody system with 3 bodies
    Hilbert space structure:
    [2, 2, 2]
@@ -903,7 +903,7 @@ Underlying data type: ComplexF64:
     .    1.0 + 0.0im
     1.0 + 0.0im    .
 
-julia> X_1=get_embed_operator(x,1,system)
+julia> X_1 = get_embed_operator(x, 1, system)
 (8, 8)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -1098,8 +1098,8 @@ end
 Returns the number of qubits associated with an `Operator`.
 # Examples
 ```jldoctest
-julia> ρ = DenseOperator([1. 0.
-                     0. 0.])
+julia> ρ = DenseOperator([1. 0. 
+                          0. 0.])
 (2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
@@ -1167,8 +1167,8 @@ Returns the number of bodies associated with an `Operator` given the
 # Examples
 ```jldoctest
 julia> ρ = DenseOperator([1. 0. 0.
-                     0. 0. 0.
-                     0. 0. 0.])
+                          0. 0. 0.
+                          0. 0. 0.])
 (3, 3)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
@@ -1257,7 +1257,7 @@ julia> ψ = fock(1, 3)
 0.0 + 0.0im
 
 
-julia> ψ = fock(1, 3,ComplexF32) # specifying a type other than ComplexF64
+julia> ψ = fock(1, 3, ComplexF32) # specifying a type other than ComplexF64
 3-element Ket{ComplexF32}:
 0.0f0 + 0.0f0im
 1.0f0 + 0.0f0im
@@ -1355,7 +1355,7 @@ Note that |alpha|^2 is equal to the photon number of the coherent state.
 
     # Examples
 ```jldoctest
-julia> ψ = coherent(2.0,20)
+julia> ψ = coherent(2.0, 20)
 20-element Ket{ComplexF64}:
 0.1353352832366127 + 0.0im
 0.2706705664732254 + 0.0im
@@ -1379,7 +1379,7 @@ julia> ψ = coherent(2.0,20)
 0.00020343873336404819 + 0.0im
 
 
-julia> expected_value(number_op(20),ψ)
+julia> expected_value(number_op(20), ψ)
 3.99999979364864 + 0.0im
 ```
 """
@@ -1398,7 +1398,7 @@ end
 Normalizes Ket `x` such that its magnitude becomes unity.
 
 ```jldoctest
-julia> ψ=Ket([1.,2.,4.])
+julia> ψ = Ket([1., 2., 4.])
 3-element Ket{ComplexF64}:
 1.0 + 0.0im
 2.0 + 0.0im
@@ -1438,7 +1438,7 @@ and 11.
 The following example constructs a `Ket`, where the probability of measuring 00 is 50% and
 the probability of measuring 10 is also 50%.
 ```jldoctest get_measurement_probabilities
-julia> ψ = 1/sqrt(2)*Ket([1, 0, 1, 0])
+julia> ψ = 1/sqrt(2) * Ket([1, 0, 1, 0])
 4-element Ket{ComplexF64}:
 0.7071067811865475 + 0.0im
 0.0 + 0.0im
@@ -1608,7 +1608,7 @@ Underlying data type: ComplexF64:
     0.0 + 1.0im    .
 
 
-julia> commute(σ_x,σ_y)
+julia> commute(σ_x, σ_y)
 (2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 0.0 + 2.0im    .
@@ -1631,7 +1631,7 @@ Underlying data type: ComplexF64:
     1.0 + 0.0im    .
 
 
-julia> anticommute(σ_x,σ_x)
+julia> anticommute(σ_x, σ_x)
 (2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 2.0 + 0.0im    .
@@ -1658,7 +1658,7 @@ Returns the density matrix corresponding to the Fock base `i` defined in a Hilbe
 size `hspace_size`.
 
 ```jldoctest
-julia> dm=fock_dm(0,2)
+julia> dm = fock_dm(0, 2)
 (2, 2)-element Snowflurry.DenseOperator:
 Underlying data ComplexF64:
 1.0 + 0.0im    0.0 + 0.0im
@@ -1675,8 +1675,6 @@ fock_dm(i::Int64, hspace_size::Int64) = ket2dm(fock(i, hspace_size))
 Computes the Wigner function of the density matrix `ρ` at the point (`p`,`q`).
 
 ```jldoctest
-julia> using Printf
-
 julia> alpha = 0.25;
 
 julia> hspace_size = 8;
