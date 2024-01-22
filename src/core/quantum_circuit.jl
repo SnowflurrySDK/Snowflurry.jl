@@ -1011,8 +1011,8 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     qubit_count = get_num_qubits(c)
     c_sim = QuantumCircuit(qubit_count = qubit_count)
 
-    readouts_target_to_dest_map = Dict{Int,Int}()
-    destination_bits = Set{Int}()
+    readout_qubits = Set{Int}()
+    readout_bit_to_qubit_map = Dict{Int,Int}()
     max_classical_bit = 0
 
     for instr in get_circuit_instructions(c)
@@ -1023,26 +1023,27 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
             target = targets[1]
 
-            if haskey(readouts_target_to_dest_map, target)
+            if target in readout_qubits
                 throw(ArgumentError("repeated Readout on the same qubit is not allowed"))
             end
 
             destination = get_destination_bit(instr)
             @assert destination > 0 "destination bit must be > 0, received: $destination"
-            if destination in destination_bits
+            if haskey(readout_bit_to_qubit_map, destination)
                 throw(
                     ArgumentError(
                         "conflicting destination bits in readouts present in circuit",
                     ),
                 )
             end
-            push!(destination_bits, destination)
+
+            push!(readout_qubits, target)
             max_classical_bit = maximum([max_classical_bit, destination])
 
-            readouts_target_to_dest_map[target] = destination
+            readout_bit_to_qubit_map[destination] = target
         else
             for target in targets
-                if haskey(readouts_target_to_dest_map, target)
+                if target in readout_qubits
                     throw(
                         ArgumentError(
                             "cannot simulate circuit if a Gate follows a Readout",
@@ -1055,99 +1056,82 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
         end
     end
 
-    @assert length(readouts_target_to_dest_map) > 0 "Missing readouts in input circuit"
+    @assert length(readout_bit_to_qubit_map) > 0 "Missing readouts in input circuit"
     @assert max_classical_bit > 0
 
     ψ = simulate(c_sim)
     amplitudes = adjoint.(ψ) .* ψ
 
-    remapped_amplitudes = remap_amplitudes(
-        convert(Vector{Real}, amplitudes),
-        readouts_target_to_dest_map,
-        max_classical_bit,
-    )
-
     weights = Float32[]
 
-    for a in remapped_amplitudes
+    for a in amplitudes
         push!(weights, a)
     end
 
     ##preparing the labels
     labels = String[]
-    for i in range(0, length = length(remapped_amplitudes))
+    for i in range(0, length = length(amplitudes))
         s = bitstring(i)
         n = length(s)
-        s_trimed = s[n-max_classical_bit+1:n]
+        s_trimed = s[n-qubit_count+1:n]
         push!(labels, s_trimed)
     end
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
-    return data
-end
 
-function bit_swap(num::T, pos0::T, pos1::T)::T where {T<:Integer}
+    histogram = Dict{String,Int}()
 
-    @assert pos0 > 0 "$(:bit_swap) assumes Julia convention of indexing starting at 1, received index: $pos0"
-    @assert pos1 > 0 "$(:bit_swap) assumes Julia convention of indexing starting at 1, received index: $pos1"
-
-    pos0 -= 1
-    pos1 -= 1
-
-    # Move pos0'th bit to rightmost side
-    bit0 = (num >> pos0) & T(1)
-
-    # Move pos1'th bit to rightmost side
-    bit1 = (num >> pos1) & T(1)
-
-    # XOR the two bits
-    x = (bit0 ⊻ bit1)
-
-    # Put the xor bit back to their original positions
-    x = (x << pos0) | (x << pos1)
-
-    # XOR 'x' with the original number so that the two sets are swapped
-    return num ⊻ x
-end
-
-function remap_amplitudes(
-    amplitudes::Vector{T},
-    readouts_target_to_dest_map::Dict{Int,Int},
-    max_classical_bit::Int,
-) where {T<:Real}
-
-    @assert length(amplitudes) % 2 == 0 "Amplitudes vector does not correspond to an allowed Ket dimension"
-
-    qubit_count = Int(log2(length(amplitudes)))
-
-    @assert max_classical_bit > 0
-
-    remapped_amplitudes = zeros(eltype(amplitudes), 2^(max_classical_bit))
-
-    mask = UInt16(0)
-    for (pos, ___) in readouts_target_to_dest_map
-        mask += UInt16(1) << (pos - 1)
-    end
-
-    for state_num = UInt16(0):UInt16(2^(qubit_count))-1
-        dest_state_num = state_num & mask
-
-        swaps_done = Set{Pair{Int,Int}}()
-        for (p0, p1) in readouts_target_to_dest_map
-            if p0 != p1
-                # swapping 2=>1 would undo swap 1=>2 
-                candidate_swap = Pair{Int,Int}(sort([p0, p1])...)
-                if !(candidate_swap in swaps_done)
-                    dest_state_num = bit_swap(dest_state_num, p0, p1)
-                    push!(swaps_done, candidate_swap)
-                end
-            end
+    for state_label in data
+        if haskey(histogram, state_label)
+            histogram[state_label] += 1
+        else
+            histogram[state_label] = 1
         end
-
-        remapped_amplitudes[dest_state_num+1] += amplitudes[state_num+1]
     end
 
-    return remapped_amplitudes
+    remapped_histogram =
+        remap_counts(histogram, readout_bit_to_qubit_map, max_classical_bit)
+
+    output_data = Vector{String}()
+
+    for (stateLabel, count) in remapped_histogram
+        for ___ = 1:count
+            push!(output_data, stateLabel)
+        end
+    end
+    return output_data
+end
+
+function remap_counts(
+    data::Dict{String,Int},
+    readouts_bit_to_qubit_map::Dict{Int,Int},
+    bit_count::Int,
+)::Dict{String,Int}
+
+    histogram = Dict{Tuple,Int}()
+
+    for (state_label, count) in data
+        state = reverse(Tuple(parse(Int, c) for c in state_label))
+
+        bit_tuple = Tuple(
+            haskey(readouts_bit_to_qubit_map, bit) ?
+            state[readouts_bit_to_qubit_map[bit]] : 0 for bit = 1:bit_count
+        )
+
+        if haskey(histogram, bit_tuple)
+            histogram[bit_tuple] += count
+        else
+            histogram[bit_tuple] = count
+        end
+    end
+
+    remapped_data = Dict{String,Int}()
+
+    for (state, count) in histogram
+        remapped_data[string(reverse(state)...)] = count
+    end
+
+    return remapped_data
 end
 
 

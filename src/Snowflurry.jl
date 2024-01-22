@@ -157,8 +157,6 @@ export
     get_quantum_circuit,
     get_negative_exponent,
     get_imaginary_exponent,
-    bit_swap,
-    remap_amplitudes,
 
     # Gates
     identity_gate,
