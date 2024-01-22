@@ -16,3 +16,4 @@ identity_operator
 pauli
 readout
 instruction
+remap

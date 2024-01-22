@@ -909,7 +909,7 @@ function get_split_circuit_layout(
 end
 
 """
-    simulate(circuit::QuantumCircuit)
+    simulate(circuit::QuantumCircuit)::Ket
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`, 
 assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
@@ -952,7 +952,7 @@ julia> ket = simulate(c)
 
 ```
 """
-function simulate(circuit::QuantumCircuit)
+function simulate(circuit::QuantumCircuit)::Ket
     hilbert_space_size = 2^get_num_qubits(circuit)
     # initial state 
     ψ = fock(0, hilbert_space_size)
@@ -965,31 +965,20 @@ end
 """
     simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results. 
+Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results, as prescribed by the `Readouts` present in the circuit. 
 The distribution of measured states corresponds to the coefficients in the resulting state Ket. 
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, hadamard(1))
+julia> push!(c, hadamard(1), control_x(1,2), readout(1, 1), readout(2, 2))
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
-q[1]:──H──
-          
-q[2]:─────
-          
-
-
-julia> push!(c, control_x(1,2))
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──H────*──
-            |  
-q[2]:───────X──
-               
+q[1]:──H────*────✲───────
+            |            
+q[2]:───────X─────────✲──
 
 
 julia> simulate_shots(c, 99)
@@ -1017,8 +1006,62 @@ julia> simulate_shots(c, 99)
 ```
 """
 function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
-    ψ = simulate(c)
+
+    # create a circuit w/o readouts, as simulate() cannot process them
+    qubit_count = get_num_qubits(c)
+    c_sim = QuantumCircuit(qubit_count = qubit_count)
+
+    readout_qubits = Set{Int}()
+    readout_bit_to_qubit_map = Dict{Int,Int}()
+    max_classical_bit = 0
+
+    for instr in get_circuit_instructions(c)
+        targets = get_connected_qubits(instr)
+
+        if instr isa Readout
+            @assert length(targets) == 1 "Readouts should have a single target qubit. Received: $(length(targets))"
+
+            target = targets[1]
+
+            if target in readout_qubits
+                throw(ArgumentError("repeated Readout on the same qubit is not allowed"))
+            end
+
+            destination = get_destination_bit(instr)
+            @assert destination > 0 "destination bit must be > 0, received: $destination"
+            if haskey(readout_bit_to_qubit_map, destination)
+                throw(
+                    ArgumentError(
+                        "conflicting destination bits in readouts present in circuit",
+                    ),
+                )
+            end
+
+            push!(readout_qubits, target)
+            max_classical_bit = maximum([max_classical_bit, destination])
+
+            readout_bit_to_qubit_map[destination] = target
+        else
+            for target in targets
+                if target in readout_qubits
+                    throw(
+                        ArgumentError(
+                            "cannot simulate circuit if a Gate follows a Readout",
+                        ),
+                    )
+                end
+            end
+
+            push!(c_sim, instr)
+        end
+    end
+
+    @assert length(readout_bit_to_qubit_map) > 0 "Missing readouts in input circuit"
+    @assert max_classical_bit > 0
+
+    ψ = simulate(c_sim)
     amplitudes = adjoint.(ψ) .* ψ
+
     weights = Float32[]
 
     for a in amplitudes
@@ -1027,16 +1070,70 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
     ##preparing the labels
     labels = String[]
-    for i in range(0, length = length(ψ))
+    for i in range(0, length = length(amplitudes))
         s = bitstring(i)
         n = length(s)
-        s_trimed = s[n-c.qubit_count+1:n]
+        s_trimed = s[n-qubit_count+1:n]
         push!(labels, s_trimed)
     end
 
     data = StatsBase.sample(labels, StatsBase.Weights(weights), shots_count)
-    return data
+
+    histogram = Dict{String,Int}()
+
+    for state_label in data
+        if haskey(histogram, state_label)
+            histogram[state_label] += 1
+        else
+            histogram[state_label] = 1
+        end
+    end
+
+    remapped_histogram =
+        remap_counts(histogram, readout_bit_to_qubit_map, max_classical_bit)
+
+    output_data = Vector{String}()
+
+    for (stateLabel, count) in remapped_histogram
+        for ___ = 1:count
+            push!(output_data, stateLabel)
+        end
+    end
+    return output_data
 end
+
+function remap_counts(
+    data::Dict{String,Int},
+    readouts_bit_to_qubit_map::Dict{Int,Int},
+    bit_count::Int,
+)::Dict{String,Int}
+
+    histogram = Dict{Tuple,Int}()
+
+    for (state_label, count) in data
+        state = reverse(Tuple(parse(Int, c) for c in state_label))
+
+        bit_tuple = Tuple(
+            haskey(readouts_bit_to_qubit_map, bit) ?
+            state[readouts_bit_to_qubit_map[bit]] : 0 for bit = 1:bit_count
+        )
+
+        if haskey(histogram, bit_tuple)
+            histogram[bit_tuple] += count
+        else
+            histogram[bit_tuple] = count
+        end
+    end
+
+    remapped_data = Dict{String,Int}()
+
+    for (state, count) in histogram
+        remapped_data[string(reverse(state)...)] = count
+    end
+
+    return remapped_data
+end
+
 
 """
     get_measurement_probabilities(circuit::QuantumCircuit,

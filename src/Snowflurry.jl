@@ -271,6 +271,15 @@ using PrecompileTools
         @assert typeof(e) == HTTP.Exceptions.ConnectError
     end
 
+    circuit = QuantumCircuit(
+        qubit_count = qubit_count,
+        instructions = [hadamard(1), control_x(1, 2), readout(2, 1)],
+    )
+
+    qpu = VirtualQPU()
+
+    transpile_and_run_job(qpu, circuit, 100)
+
 end
 
 end
