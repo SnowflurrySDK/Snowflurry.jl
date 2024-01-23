@@ -913,7 +913,10 @@ end
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`, 
 assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
-`ψ=fock(0,2^get_num_qubits(circuit))`. 
+`ψ = fock(0, 2^get_num_qubits(circuit))`.
+
+!!! note
+    The input `circuit` must not include `Readouts`. For simulating `circuits` including `Readouts`, use [`simulate_shots`](@ref).
 
 Employs the approach described in Listing 5 of
 [Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
@@ -957,6 +960,9 @@ function simulate(circuit::QuantumCircuit)::Ket
     # initial state 
     ψ = fock(0, hilbert_space_size)
     for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            throw(ArgumentError("$(:simulate) cannot process a circuit containing readouts. Use simulate_shots() instead."))
+        end
         apply_instruction!(ψ, instr)
     end
     return ψ

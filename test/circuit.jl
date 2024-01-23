@@ -139,6 +139,13 @@ end
     @test ~("01" in readings)
 end
 
+@testset "simulate: errors" begin
+
+    c = QuantumCircuit(qubit_count = 1, instructions = [readout(1, 1)])
+
+    @test_throws ArgumentError simulate(c)
+end
+
 @testset "simulate_shots: errors" begin
 
     # repeated target qubit
