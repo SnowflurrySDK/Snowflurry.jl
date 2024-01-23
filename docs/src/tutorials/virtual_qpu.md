@@ -114,6 +114,7 @@ Dict("00" => 53, "11" => 47)
 ```
 Here we see that, after measurement, the classical result bits were set to $\left|00\right\rangle$
 in 53 of the 100 shots. In the other 47 shots, the result bits were set to $\left|11\right\rangle$.
+(The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it.)
 
 !!! note
 	The reason the number of measured values for states $\left|00\right\rangle$ and $\left|11\right\rangle$ are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of  $\left|00\right\rangle$ and  $\left|11\right\rangle$ are equal.
