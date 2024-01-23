@@ -150,7 +150,7 @@ which should print something like:
 Dict("11" => 97, "00" => 83, "01" => 11, "10" => 9)
 ```
 
-The results show that the samples are mostly sampled between state $\left|00\right\rangle$ and $\left|11\right\rangle$. We do see some finite population in $\left|01\right\rangle$ and $\left|10\right\rangle$ that are due to the error in the computation.
+The results show that the samples are mostly sampled between state $\left|00\right\rangle$ and $\left|11\right\rangle$. We do see some finite population in $\left|01\right\rangle$ and $\left|10\right\rangle$ that are due to the error in the computation. (The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it.)
 
 
 !!! note

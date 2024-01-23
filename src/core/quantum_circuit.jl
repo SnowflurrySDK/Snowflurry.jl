@@ -274,7 +274,7 @@ end
 
 
 """
-    compare_circuits(c0::QuantumCircuit,c1::QuantumCircuit)::Bool
+    compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
 Tests for equivalence of two [`QuantumCircuit`](@ref) based on their effect on an 
 arbitrary input state (a Ket). `QuantumCircuit` are equivalent if they both 
@@ -662,7 +662,7 @@ q[2]:───────X──
 
 
 
-julia> push!(c, control_x(1,2))
+julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -913,7 +913,10 @@ end
 
 Simulates and returns the wavefunction of the quantum device after running `circuit`, 
 assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
-`ψ=fock(0,2^get_num_qubits(circuit))`. 
+`ψ = fock(0, 2^get_num_qubits(circuit))`.
+
+!!! note
+    The input `circuit` must not include `Readouts`. For simulating `circuits` including `Readouts`, use [`simulate_shots`](@ref).
 
 Employs the approach described in Listing 5 of
 [Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
@@ -932,7 +935,7 @@ q[2]:─────
           
 
 
-julia> push!(c, control_x(1,2))
+julia> push!(c, control_x(1, 2))
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -957,6 +960,13 @@ function simulate(circuit::QuantumCircuit)::Ket
     # initial state 
     ψ = fock(0, hilbert_space_size)
     for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            throw(
+                ArgumentError(
+                    "$(:simulate) cannot process a circuit containing readouts. Use simulate_shots() instead.",
+                ),
+            )
+        end
         apply_instruction!(ψ, instr)
     end
     return ψ
@@ -972,7 +982,7 @@ The distribution of measured states corresponds to the coefficients in the resul
 ```jldoctest simulate_shots; filter = r"00|11"
 julia> c = QuantumCircuit(qubit_count = 2);
 
-julia> push!(c, hadamard(1), control_x(1,2), readout(1, 1), readout(2, 2))
+julia> push!(c, hadamard(1), control_x(1, 2), readout(1, 1), readout(2, 2))
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -1145,10 +1155,15 @@ If no `target_qubits` are provided, the probabilities are computed for all the q
 
 The measurement probabilities are listed from the smallest to the largest computational
 basis state. For instance, for a 2-qubit [`QuantumCircuit`](@ref), the probabilities are listed
-for \$\\left|00\\right\\rangle\$, \$\\left|01\\right\\rangle\$, \$\\left|10\\right\\rangle\$, and \$\\left|11\\right\\rangle\$.
+for \$\\left|00\\right\\rangle\$, \$\\left|10\\right\\rangle\$, \$\\left|01\\right\\rangle\$, and \$\\left|11\\right\\rangle\$.
+!!! note
+    By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
+    \$\\left|10\\right\\rangle\$ has qubit 1 in state \$\\left|1\\right\\rangle\$ and qubit 2 in state \$\\left|0\\right\\rangle\$
+
 # Examples
-The following example constructs a `QuantumCircuit` where the probability of measuring \$\\left|01\\right\\rangle\$
+The following example constructs a `QuantumCircuit` where the probability of measuring \$\\left|10\\right\\rangle\$
 is 50% and the probability of measuring \$\\left|11\\right\\rangle\$ is also 50%.
+
 ```jldoctest get_circuit_measurement_probabilities
 julia> circuit = QuantumCircuit(qubit_count = 2);
 
@@ -1332,7 +1347,7 @@ The dictionary `qubit_mapping` contains key-value pairs describing how to update
 qubits. The key indicates which target qubit to change while the associated value specifies
 the new qubit. All the keys in the dictionary must also be present as values and vice versa.
 
-For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)` is valid.
+For instance, `Dict(1 => 2)` is not a valid `qubit_mapping`, but `Dict(1 => 2, 2 => 1)` is valid.
 
 # Examples
 ```jldoctest
@@ -1408,7 +1423,7 @@ end
 
 """
     permute_qubits(circuit::QuantumCircuit,
-        qubit_mapping::AbstractDict{T,T})::QuantumCircuit where T<:Integer
+        qubit_mapping::AbstractDict{T,T})::QuantumCircuit where {T<:Integer}
 
 Returns a `QuantumCircuit` that is a copy of `circuit` but where the gates have been moved
 to other qubits based on a `qubit_mapping`.
