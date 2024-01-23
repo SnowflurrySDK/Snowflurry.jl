@@ -1111,7 +1111,7 @@ function remap_counts(
     histogram = Dict{Tuple,Int}()
 
     for (state_label, count) in data
-        state = reverse(Tuple(parse(Int, c) for c in state_label))
+        state = Tuple(parse(Int, c) for c in state_label)
 
         bit_tuple = Tuple(
             haskey(readouts_bit_to_qubit_map, bit) ?
@@ -1128,7 +1128,7 @@ function remap_counts(
     remapped_data = Dict{String,Int}()
 
     for (state, count) in histogram
-        remapped_data[string(reverse(state)...)] = count
+        remapped_data[string(state...)] = count
     end
 
     return remapped_data
