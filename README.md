@@ -18,18 +18,19 @@ Make sure your system has Julia installed. If not, download the latest version f
 We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-Term Support (LTS) release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing `Snowflurry.jl` package
-Snowflurry is still in pre-release phase. Therefore, and for the time being, we recommend installing it by checking out the `main` branch from Github. This is achieved by typing the following commands in the Julia REPL:
+The latest release of Snowflurry can be pulled from [JuliaHub](https://juliahub.com/ui/Packages/General/Snowflurry) and installed with the following command:
+```julia
+import Pkg
+Pkg.add("Snowflurry")
+```
+
+This adds the Snowflurry package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
+
+Snowflurry is under active development. To use the development version, the `main` branch from Github can be installed instead using the following commands in the Julia REPL:
 
 ```julia
 import Pkg
 Pkg.add(url="https://github.com/SnowflurrySDK/Snowflurry.jl", rev="main")
-```
-This adds the Snowflurry package to the current [Julia Environment](https://pkgdocs.julialang.org/v1/environments/).
-
-**Note:** once `Snowflurry.jl` is released to [JuliaHub](https://https://juliahub.com/), it will be possible to import the latest release using the following command:
-```julia
-import Pkg
-Pkg.add("Snowflurry")
 ```
 
 ### Installing `SnowflurryPlots.jl` package
