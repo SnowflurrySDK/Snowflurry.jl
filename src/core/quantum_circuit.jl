@@ -961,7 +961,11 @@ function simulate(circuit::QuantumCircuit)::Ket
     ψ = fock(0, hilbert_space_size)
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
-            throw(ArgumentError("$(:simulate) cannot process a circuit containing readouts. Use simulate_shots() instead."))
+            throw(
+                ArgumentError(
+                    "$(:simulate) cannot process a circuit containing readouts. Use simulate_shots() instead.",
+                ),
+            )
         end
         apply_instruction!(ψ, instr)
     end
