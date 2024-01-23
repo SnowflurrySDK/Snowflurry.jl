@@ -1,26 +1,40 @@
 """
-A Ket represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
+A `Ket` represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
+A `Ket` representing a system with a qubit count of \$n=2\$ has \$2^n\$ states. 
+By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
+Hence, a 2-qubit `Ket` has 4 complex-valued coefficients \$a_{ij}\$, each corresponding to state \$\\left|ij\\right\\rangle\$, in the following order:
+```math
+\\psi = \\begin{bmatrix}
+    a_{00}  \\\\
+    a_{10}  \\\\
+    a_{01}  \\\\
+    a_{11}  \\\\
+    \\end{bmatrix}.
+```
 
 # Examples
-Although NOT the preferred way, one can directly build a Ket object by passing a column vector as the initializer. 
+A Ket can be initialized by using a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
 ```jldoctest
-julia> using Snowflurry
-
-julia> ψ = Ket([1.0; 0.0; 0.0])
-3-element Ket{ComplexF64}:
-1.0 + 0.0im
+julia> ψ = fock(2, 4)
+4-element Ket{ComplexF64}:
 0.0 + 0.0im
+0.0 + 0.0im
+1.0 + 0.0im
 0.0 + 0.0im
 
 
 ```
-A better way to initialize a Ket is to use a pre-built basis such as the `fock` basis. See [`fock`](@ref) for further information on this function. 
+
+Although NOT the preferred way, one can also directly build a Ket object by passing a column vector as the initializer. 
 ```jldoctest
-julia> ψ = fock(2, 3)
-3-element Ket{ComplexF64}:
-0.0 + 0.0im
-0.0 + 0.0im
+julia> using Snowflurry
+
+julia> ψ = Ket([1.0; 0.0; 0.0; 0.0])
+4-element Ket{ComplexF64}:
 1.0 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im
+0.0 + 0.0im
 
 
 ```
@@ -1432,11 +1446,16 @@ each body. If the space size is uniform, a single `Integer` can be given instead
 only `x` is provided, the probabilities are provided for all the bodies.
 
 The measurement probabilities are listed from the smallest to the largest computational
-basis state. For instance, for a 2-qubit `Ket`, the probabilities are listed for 00, 01, 10,
-and 11.
+basis state. For instance, for a 2-qubit `Ket`, the probabilities are listed for \$\\left|00\\right\\rangle\$, 
+\$\\left|10\\right\\rangle\$, \$\\left|01\\right\\rangle\$, and \$\\left|11\\right\\rangle\$. 
+!!! note
+    By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
+    \$\\left|10\\right\\rangle\$ has qubit 1 in state \$\\left|1\\right\\rangle\$ and qubit 2 in state \$\\left|0\\right\\rangle\$
+
 # Examples
-The following example constructs a `Ket`, where the probability of measuring 00 is 50% and
-the probability of measuring 10 is also 50%.
+The following example constructs a `Ket`, where the probability of measuring 
+\$\\left|00\\right\\rangle\$ is 50% and the probability of measuring \$\\left|01\\right\\rangle\$ is also 50%.
+
 ```jldoctest get_measurement_probabilities
 julia> ψ = 1/sqrt(2) * Ket([1, 0, 1, 0])
 4-element Ket{ComplexF64}:
