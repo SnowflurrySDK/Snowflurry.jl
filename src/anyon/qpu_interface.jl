@@ -2,6 +2,7 @@ using Snowflurry
 using Base64
 using HTTP
 using JSON
+using TOML
 
 Base.@kwdef struct Status
     type::String
@@ -37,6 +38,8 @@ struct MockRequestor <: Requestor
     post_checker::Function
 end
 
+const user_agent_header_key = "User-Agent"
+
 const path_jobs = "jobs"
 const path_results = "result"
 
@@ -45,6 +48,12 @@ const running_status = "RUNNING"
 const succeeded_status = "SUCCEEDED"
 const failed_status = "FAILED"
 const cancelled_status = "CANCELLED"
+
+# Until support is dropped for Julia<1.8, calling PkgVersion(Snowflurry) 
+# is not possible. Current Snowflurry version is read from Project.toml instead
+project_toml = TOML.parsefile(joinpath(pkgdir(@__MODULE__), "Project.toml"))
+@assert haskey(project_toml, "version") "missing version info in Project toml"
+const package_version = project_toml["version"]
 
 const possible_status_list =
     [failed_status, succeeded_status, running_status, queued_status, cancelled_status]
@@ -66,6 +75,7 @@ function post_request(
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
         body = body,
     )
@@ -94,6 +104,7 @@ function get_request(
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
     )
 end
