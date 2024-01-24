@@ -198,6 +198,7 @@ using PrecompileTools
     host = "http://example.anyonsys.com"
     user = "test_user"
     access_token = "not_a_real_access_token"
+    project_id = "project_id"
 
     theta = π / 5
     phi = π / 7
@@ -259,7 +260,12 @@ using PrecompileTools
         simulate(circuit)
     end
 
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    qpu = AnyonYukonQPU(;
+        host = host,
+        user = user,
+        access_token = access_token,
+        project_id = project_id,
+    )
     transpiler = get_transpiler(qpu)
 
     circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1, 1)])

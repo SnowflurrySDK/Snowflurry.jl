@@ -120,7 +120,8 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(circuit, shot_count, "http://example.anyonsys.com")
+    circuit_json =
+        serialize_job(circuit, shot_count, "http://example.anyonsys.com", project_id)
 
     @test circuit_json == expected_json
 
@@ -135,7 +136,7 @@ end
 
     @test get_host(test_client) == host
 
-    jobID = submit_job(test_client, circuit, shot_count)
+    jobID = submit_job(test_client, circuit, shot_count, project_id)
 
     status, histogram = get_status(test_client, jobID)
 
@@ -145,6 +146,20 @@ end
         Snowflurry.failed_status,
         Snowflurry.succeeded_status,
     ]
+end
+
+@testset "serialize_job: empty project_id" begin
+
+    circuit = QuantumCircuit(qubit_count = 1)
+
+    shot_count = 100
+
+    @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
+        circuit,
+        shot_count,
+        "http://example.anyonsys.com",
+        "",
+    )
 end
 
 @testset "job status" begin
@@ -484,6 +499,36 @@ end
 
 end
 
+@testset "AnyonQPUs with empty project_id" begin
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+
+    for qpu in qpus
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(
+            test_client,
+            "",
+        )
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
+            host = host,
+            user = user,
+            access_token = expected_access_token,
+            status_request_throttle = no_throttle,
+            project_id = "",
+        )
+    end
+
+end
+
 @testset "run_job on AnyonYukonQPU" begin
 
     requestor = MockRequestor(request_checker, make_post_checker(expected_json))
@@ -494,7 +539,7 @@ end
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu) == test_client
 
@@ -517,6 +562,7 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     histogram = run_job(qpu, circuit, shot_count)
@@ -536,6 +582,7 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -553,6 +600,7 @@ end
     )
     qpu = AnyonYukonQPU(
         Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -568,39 +616,12 @@ end
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
 
     circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3, 3)])
     histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
-end
-
-
-@testset "run_job on AnyonYukonQPU with project_id" begin
-
-    requestor =
-        MockRequestor(request_checker, make_post_checker(expected_json_with_project_id))
-    test_client = Client(
-        host = host,
-        user = user,
-        access_token = expected_access_token,
-        requestor = requestor,
-    )
-    shot_count = 100
-    project_id = "test_project_id"
-    qpu = AnyonYukonQPU(
-        test_client,
-        status_request_throttle = no_throttle,
-        project_id = project_id,
-    )
-
-    #test basic submission, no transpilation
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3)])
-    histogram = run_job(qpu, circuit, shot_count)
-    @test histogram == Dict("001" => shot_count)
-    @test !haskey(histogram, "error_msg")
-
 end
 
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
@@ -627,7 +648,7 @@ end
         )
         shot_count = 100
 
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(
@@ -657,7 +678,7 @@ end
             requestor = requestor,
         )
 
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -672,7 +693,7 @@ end
             access_token = expected_access_token,
             requestor = requestor,
         )
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(

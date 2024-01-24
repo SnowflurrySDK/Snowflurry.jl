@@ -4,8 +4,9 @@ using HTTP
 host = "http://example.anyonsys.com"
 user = "test_user"
 expected_access_token = "not_a_real_access_token"
+project_id = "project_id"
 
-common_substring = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
+common_substring = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"billingaccountID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
 
 expected_json =
     common_substring *

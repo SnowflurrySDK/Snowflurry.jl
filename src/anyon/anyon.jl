@@ -8,6 +8,7 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
@@ -28,23 +29,33 @@ struct AnyonYukonQPU <: AbstractQPU
     connectivity::LineConnectivity
     project_id::String
 
-    AnyonYukonQPU(
-        client::Client;
+    function AnyonYukonQPU(
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
-    ) = new(client, status_request_throttle, LineConnectivity(6), project_id)
-    AnyonYukonQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LineConnectivity(6), project_id)
+    end
+    function AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LineConnectivity(6),
-        project_id,
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LineConnectivity(6),
+            project_id,
+        )
+    end
 end
 
 
@@ -65,6 +76,7 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
@@ -85,23 +97,34 @@ struct AnyonYamaskaQPU <: AbstractQPU
     connectivity::LatticeConnectivity
     project_id::String
 
-    AnyonYamaskaQPU(
-        client::Client;
+    function AnyonYamaskaQPU(
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
-    ) = new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
-    AnyonYamaskaQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
+    end
+    function AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-        project_id = "",
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LatticeConnectivity(4, 3),
-        project_id,
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LatticeConnectivity(4, 3),
+            project_id,
+        )
+    end
 end
 
 get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
@@ -255,7 +278,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client_anyon);
+julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -294,7 +317,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -353,7 +376,7 @@ Returns the transpiler associated with this QPU.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoNotConflictTranspiler(), CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}

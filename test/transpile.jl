@@ -621,7 +621,12 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of native gates" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
+    qpu = AnyonYukonQPU(;
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        project_id = project_id,
+    )
 
     qubit_count = 1
     target = 1
@@ -691,7 +696,12 @@ end
 end
 
 @testset "AnyonYukonQPU: sequential transpilation" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
+    qpu = AnyonYukonQPU(;
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        project_id = project_id,
+    )
     transpiler = get_transpiler(qpu)
 
     qubit_count = 4
@@ -713,7 +723,12 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token)
+    qpu = AnyonYukonQPU(;
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        project_id = project_id,
+    )
 
     qubit_count = 5
 
@@ -781,8 +796,18 @@ end
 
 @testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin
     qpus = [
-        AnyonYukonQPU(; host = host, user = user, access_token = expected_access_token),
-        AnyonYamaskaQPU(; host = host, user = user, access_token = expected_access_token),
+        AnyonYukonQPU(;
+            host = host,
+            user = user,
+            access_token = expected_access_token,
+            project_id = project_id,
+        ),
+        AnyonYamaskaQPU(;
+            host = host,
+            user = user,
+            access_token = expected_access_token,
+            project_id = project_id,
+        ),
     ]
 
     for qpu in qpus
