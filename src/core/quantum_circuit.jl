@@ -1,6 +1,7 @@
 
 """
     QuantumCircuit(qubit_count::Int, bit_count::Int, instructions::Vector{AbstractInstruction}, name::String = "default")
+    QuantumCircuit(circuit::QuantumCircuit)
 
 A data structure to represent a *quantum circuit*.
 # Fields
@@ -22,8 +23,21 @@ q[2]:
 
 A `QuantumCircuit` can be initialized containing [`Gates`](@ref Gate) and [`Readouts`](@ref Readout):
 
-```jldoctest
+```jldoctest circuit
 julia> c = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), sigma_x(2), control_x(1, 2), readout(1, 1), readout(2, 2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H─────────*────✲───────
+                 |            
+q[2]:───────X────X─────────✲──
+                              
+```
+
+A deep copy of a `QuantumCircuit` be obtained with the following command:
+
+```jldoctest circuit
+julia> c_copy = QuantumCircuit(c)
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -56,6 +70,14 @@ Base.@kwdef struct QuantumCircuit
         foreach(instr -> ensure_instruction_is_in_circuit(circuit, instr), instructions)
         append!(circuit.instructions, instructions)
         return circuit
+    end
+
+    function QuantumCircuit(input_circuit::QuantumCircuit)
+        return new(
+            input_circuit.qubit_count,
+            input_circuit.bit_count,
+            copy(input_circuit.instructions),
+        )
     end
 end
 

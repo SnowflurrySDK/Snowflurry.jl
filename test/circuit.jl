@@ -25,6 +25,14 @@ using Test
         bit_count = 0,
         instructions = [sigma_x(5)],
     )
+
+    #copy constructor
+    c_copy = QuantumCircuit(c)
+
+    @test isequal(c_copy, c)
+    push!(c_copy, hadamard(1)) #ensure deep-copy
+    @test !isequal(c_copy, c)
+
 end
 
 @testset "push_pop_gate" begin
