@@ -34,7 +34,7 @@ q[2]:───────X────X─────────✲──
                               
 ```
 
-A deep copy of a `QuantumCircuit` be obtained with the following command:
+A deep copy of a `QuantumCircuit` can be obtained with the following command:
 
 ```jldoctest circuit
 julia> c_copy = QuantumCircuit(c)
