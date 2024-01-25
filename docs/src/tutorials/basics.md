@@ -136,4 +136,4 @@ plot_histogram(c, 100)
 ```
 ![Measurement results histogram](../assets/index/index_histogram.png)
 
-In the [next tutorial](@ref "Run a circuit on a Virtual QPU"), we will discuss how to run the above circuit on a virtual quantum processor.
+In the [next tutorial](virtual_qpu.md), we will discuss how to run the above circuit on a virtual quantum processor.
