@@ -5,7 +5,7 @@ on:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: self-hosted
+    runs-on: thunderhead
      # don't run on draft PRs
     if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
     strategy:
