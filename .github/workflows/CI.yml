@@ -80,7 +80,7 @@ jobs:
           files: lcov.info
 
   thunderhead-ci:
-    name: Thunderhead CI Test - ${{ github.event_name }}
+    name: Thunderhead CI Test using Tutorials- ${{ github.event_name }}
     runs-on: thunderhead
     environment: thunderhead-dev
     # don't run on draft PRs
