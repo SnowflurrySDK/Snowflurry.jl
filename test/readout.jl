@@ -77,3 +77,11 @@ end
 
     @test_throws ArgumentError transpile(transpiler, c)
 end
+
+
+@testset "Readout: isequal" begin
+
+    @test isequal(readout(1, 1), readout(1, 1))
+    @test !isequal(readout(1, 1), readout(1, 2))
+    @test !isequal(readout(1, 1), readout(2, 1))
+end

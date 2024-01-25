@@ -1,6 +1,7 @@
 
 """
     QuantumCircuit(qubit_count::Int, bit_count::Int, instructions::Vector{AbstractInstruction}, name::String = "default")
+    QuantumCircuit(circuit::QuantumCircuit)
 
 A data structure to represent a *quantum circuit*.
 # Fields
@@ -22,8 +23,21 @@ q[2]:
 
 A `QuantumCircuit` can be initialized containing [`Gates`](@ref Gate) and [`Readouts`](@ref Readout):
 
-```jldoctest
+```jldoctest circuit
 julia> c = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), sigma_x(2), control_x(1, 2), readout(1, 1), readout(2, 2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──H─────────*────✲───────
+                 |            
+q[2]:───────X────X─────────✲──
+                              
+```
+
+A deep copy of a `QuantumCircuit` can be obtained with the following command:
+
+```jldoctest circuit
+julia> c_copy = QuantumCircuit(c)
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -57,12 +71,32 @@ Base.@kwdef struct QuantumCircuit
         append!(circuit.instructions, instructions)
         return circuit
     end
+
+    function QuantumCircuit(input_circuit::QuantumCircuit)
+        return new(
+            input_circuit.qubit_count,
+            input_circuit.bit_count,
+            deepcopy(input_circuit.instructions),
+        )
+    end
 end
 
 function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
-    return c0.qubit_count == c1.qubit_count &&
-           c0.bit_count == c1.bit_count &&
-           c0.instructions == c1.instructions
+    if !(c0.qubit_count == c1.qubit_count && c0.bit_count == c1.bit_count)
+        return false
+    end
+
+    if length(c0.instructions) != length(c1.instructions)
+        return false
+    end
+
+    for (instr0, instr1) in zip(c0.instructions, c1.instructions)
+        if !isequal(instr0, instr1)
+            return false
+        end
+    end
+
+    return true
 end
 
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count

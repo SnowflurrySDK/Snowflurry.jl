@@ -43,6 +43,13 @@ end
 
 get_destination_bit(readout::Readout)::Int = readout.destination_bit
 
+function Base.isequal(i0::Readout, i1::Readout)::Bool
+    return (
+        i0.connected_qubit == i1.connected_qubit &&
+        i0.destination_bit == i1.destination_bit
+    )
+end
+
 """
     move_instruction(
         original_readout::Readout,

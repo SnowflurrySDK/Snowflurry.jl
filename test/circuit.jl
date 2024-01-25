@@ -25,6 +25,24 @@ using Test
         bit_count = 0,
         instructions = [sigma_x(5)],
     )
+
+    #copy constructor
+    c = QuantumCircuit(
+        qubit_count = 6,
+        bit_count = 2,
+        instructions = [sigma_x(5), readout(1, 1)],
+    )
+
+    c_copy = QuantumCircuit(c)
+    @test isequal(c_copy, c)
+
+    #ensure deep-copy
+    get_circuit_instructions(c_copy)[1].connected_qubits[1] = 3
+    @test !isequal(c_copy, c)
+
+    c_copy = QuantumCircuit(c)
+    push!(c_copy, hadamard(1))
+    @test !isequal(c_copy, c)
 end
 
 @testset "push_pop_gate" begin
@@ -321,22 +339,53 @@ end
 
 @testset "isequal" begin
 
-    c0 = QuantumCircuit(qubit_count = 5, bit_count = 1, instructions = [sigma_x(2)])
-    @test isequal(c0, c0) == true
+    c0 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 2,
+        instructions = [sigma_x(2), readout(1, 1)],
+    )
+    c0_ = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 2,
+        instructions = [sigma_x(2), readout(1, 1)],
+    )
+    @test isequal(c0, c0_) == true
 
-    c1 = QuantumCircuit(qubit_count = 4, bit_count = 1, instructions = [sigma_x(2)])
+    c1 = QuantumCircuit(
+        qubit_count = 4,
+        bit_count = 2,
+        instructions = [sigma_x(2), readout(1, 1)],
+    )
     @test isequal(c0, c1) == false
 
-    c2 = QuantumCircuit(qubit_count = 5, bit_count = 2, instructions = [sigma_x(2)])
-    @test isequal(c0, c2) == false
-
-    c3 = QuantumCircuit(qubit_count = 5, bit_count = 1)
-    @test isequal(c0, c3) == false
-
-    c4 = QuantumCircuit(
+    c2 = QuantumCircuit(
         qubit_count = 5,
         bit_count = 1,
         instructions = [sigma_x(2), readout(1, 1)],
     )
+    @test isequal(c0, c2) == false
+
+    c3 = QuantumCircuit(qubit_count = 5, bit_count = 2, instructions = [sigma_x(2)])
+    @test isequal(c0, c3) == false
+
+    c4 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 2,
+        instructions = [sigma_x(2), readout(1, 2)],
+    )
     @test isequal(c0, c4) == false
+
+    c5 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 2,
+        instructions = [sigma_x(2), readout(2, 1)],
+    )
+    @test isequal(c0, c5) == false
+
+    c6 = QuantumCircuit(
+        qubit_count = 5,
+        bit_count = 2,
+        instructions = [sigma_x(2), hadamard(1)],
+    )
+    @test isequal(c0, c6) == false
 end

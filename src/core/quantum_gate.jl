@@ -251,6 +251,24 @@ function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     return Vector(view(connected_qubits, (num_control_qubits+1):length(connected_qubits)))
 end
 
+# Fall-back case if typeof(i0)!=typeof(i1)
+Base.isequal(i0::AbstractInstruction, i1::AbstractInstruction) = false
+
+function Base.isequal(i0::Gate, i1::Gate)::Bool
+    if !(get_connected_qubits(i0) == get_connected_qubits(i1))
+        return false
+    end
+
+    op0 = get_operator(get_gate_symbol(i0))
+    op1 = get_operator(get_gate_symbol(i1))
+
+    if op0 != op1
+        return false
+    end
+
+    return true
+end
+
 """
     Controlled{G<:AbstractGateSymbol}<:AbstractGateSymbol
 
