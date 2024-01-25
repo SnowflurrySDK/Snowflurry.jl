@@ -5,6 +5,7 @@ on:
 jobs:
     build:
       runs-on: thunderhead
+      environment: thunderhead
       steps:
         - uses: actions/checkout@v4
         - uses: julia-actions/setup-julia@latest
@@ -19,7 +20,7 @@ jobs:
           run: julia --project=. -e  'include("tutorials/run_tutorials.jl");'
           env:
                 THUNDERHEAD_USER: ${{  secrets.THUNDERHEAD_USER }}
-                THUNDERHEAD_TOKEN: ${{  secrets.THUNDERHEAD_TOKEN }}
+                THUNDERHEAD_API_TOKEN: ${{  secrets.THUNDERHEAD_API_TOKEN }}
                 THUNDERHEAD_HOST: ${{ secrets.THUNDERHEAD_HOST }}
                 THUNDERHEAD_PROJECT_ID: ${{ secrets.THUNDERHEAD_PROJECT_ID }}
   
