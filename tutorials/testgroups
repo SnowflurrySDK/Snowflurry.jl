@@ -1,3 +1,4 @@
 single_qubit_readout_fidelity
-entanglement_demonstration
 excitation_demonstration
+hadamard_transpilation
+entanglement_demonstration
