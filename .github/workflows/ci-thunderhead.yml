@@ -16,6 +16,5 @@ jobs:
             'using Pkg;
              Pkg.instantiate()'
         - name: Build
-          run: julia --project=. -e 
-            include("tutorials/run_tutorials.jl");'
+          run: julia --project=. -e  'include("tutorials/run_tutorials.jl");'
   
