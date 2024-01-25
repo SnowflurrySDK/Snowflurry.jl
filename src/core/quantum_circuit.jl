@@ -76,15 +76,27 @@ Base.@kwdef struct QuantumCircuit
         return new(
             input_circuit.qubit_count,
             input_circuit.bit_count,
-            copy(input_circuit.instructions),
+            deepcopy(input_circuit.instructions),
         )
     end
 end
 
 function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
-    return c0.qubit_count == c1.qubit_count &&
-           c0.bit_count == c1.bit_count &&
-           c0.instructions == c1.instructions
+    if !(c0.qubit_count == c1.qubit_count && c0.bit_count == c1.bit_count)
+        return false
+    end
+
+    if length(c0.instructions) != length(c1.instructions)
+        return false
+    end
+
+    for (instr0, instr1) in zip(c0.instructions, c1.instructions)
+        if !isequal(instr0, instr1)
+            return false
+        end
+    end
+
+    return true
 end
 
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count

@@ -181,6 +181,8 @@ end
     @test get_display_symbols(get_gate_symbol(X)) == ["X"]
     @test get_operator(get_gate_symbol(X)) ≈ sigma_x()
     @test inv(X) == X
+    @test isequal(X, sigma_x(1))
+    @test !isequal(X, sigma_x(2))
 
     Y = sigma_y(1)
     @test get_instruction_symbol(get_gate_symbol(Y)) == "y"
@@ -188,6 +190,8 @@ end
     @test get_display_symbols(get_gate_symbol(Y)) == ["Y"]
     @test get_operator(get_gate_symbol(Y)) ≈ sigma_y()
     @test inv(Y) == Y
+    @test isequal(Y, sigma_y(1))
+    @test !isequal(Y, sigma_y(2))
 
     Z = sigma_z(1)
     @test get_instruction_symbol(get_gate_symbol(Z)) == "z"
@@ -195,6 +199,8 @@ end
     @test get_display_symbols(get_gate_symbol(Z)) == ["Z"]
     @test get_operator(get_gate_symbol(Z)) ≈ sigma_z()
     @test inv(Z) == Z
+    @test isequal(Z, sigma_z(1))
+    @test !isequal(Z, sigma_z(2))
 
     CX = control_x(1, 2)
 
@@ -203,6 +209,9 @@ end
     @test get_display_symbols(get_gate_symbol(CX)) == ["*", "X"]
     @test get_operator(get_gate_symbol(CX)) ≈ control_x()
     @test inv(CX) == CX
+    @test isequal(CX, control_x(1, 2))
+    @test !isequal(CX, control_x(1, 3))
+    @test !isequal(CX, control_x(3, 2))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CX)) == 1
 
     CZ = control_z(1, 2)
@@ -211,6 +220,9 @@ end
     @test get_display_symbols(get_gate_symbol(CZ)) == ["*", "Z"]
     @test get_operator(get_gate_symbol(CZ)) ≈ control_z()
     @test inv(CZ) == CZ
+    @test isequal(CZ, control_z(1, 2))
+    @test !isequal(CZ, control_z(1, 3))
+    @test !isequal(CZ, control_z(3, 2))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CZ)) == 1
 
     SWAP = swap(1, 2)
@@ -219,6 +231,9 @@ end
     @test get_display_symbols(get_gate_symbol(SWAP)) == ["☒", "☒"]
     @test get_operator(get_gate_symbol(SWAP)) ≈ swap()
     @test inv(SWAP) == SWAP
+    @test isequal(SWAP, SWAP)
+    @test !isequal(SWAP, swap(1, 3))
+    @test !isequal(SWAP, swap(3, 2))
 
     CCX = toffoli(1, 2, 3)
     @test get_instruction_symbol(get_gate_symbol(CCX)) == "ccx"
@@ -229,6 +244,10 @@ end
     @test CCX * fock(4, 8) ≈ fock(4, 8)
     @test toffoli(3, 1, 2) * fock(5, 8) ≈ fock(7, 8)
     @test inv(CCX) == CCX
+    @test isequal(CCX, toffoli(1, 2, 3))
+    @test !isequal(CCX, toffoli(4, 2, 3))
+    @test !isequal(CCX, toffoli(1, 4, 3))
+    @test !isequal(CCX, toffoli(1, 2, 4))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CCX)) == 1
 
     ψ_0 = fock(0, 2)
@@ -240,6 +259,8 @@ end
     @test get_display_symbols(get_gate_symbol(T)) == ["T"]
     @test T * ψ_0 ≈ ψ_0
     @test T * ψ_1 ≈ exp(im * pi / 4.0) * ψ_1
+    @test isequal(T, pi_8(1))
+    @test !isequal(T, pi_8(2))
 
     x90 = x_90(1)
     @test get_instruction_symbol(get_gate_symbol(x90)) == "x_90"
@@ -249,6 +270,8 @@ end
         1 -im
         -im 1
     ]
+    @test isequal(x90, x_90(1))
+    @test !isequal(x90, x_90(2))
 
     xm90 = x_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(xm90)) == "x_minus_90"
@@ -258,6 +281,8 @@ end
         1 im
         im 1
     ]
+    @test isequal(xm90, x_minus_90(1))
+    @test !isequal(xm90, x_minus_90(2))
 
     y90 = y_90(1)
     @test get_instruction_symbol(get_gate_symbol(y90)) == "y_90"
@@ -267,6 +292,8 @@ end
         1 -1
         1 1
     ]
+    @test isequal(y90, y_90(1))
+    @test !isequal(y90, y_90(2))
 
     ym90 = y_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(ym90)) == "y_minus_90"
@@ -276,6 +303,8 @@ end
         1 1
         -1 1
     ]
+    @test isequal(ym90, y_minus_90(1))
+    @test !isequal(ym90, y_minus_90(2))
 
     z90 = z_90(1)
     @test get_instruction_symbol(get_gate_symbol(z90)) == "z_90"
@@ -285,6 +314,8 @@ end
         1 0
         0 im
     ]
+    @test isequal(z90, z_90(1))
+    @test !isequal(z90, z_90(2))
 
     zm90 = z_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(zm90)) == "z_minus_90"
@@ -294,6 +325,8 @@ end
         1 0
         0 -im
     ]
+    @test isequal(zm90, z_minus_90(1))
+    @test !isequal(zm90, z_minus_90(2))
 
     r = rotation(1, pi / 2, pi / 2)
     @test get_instruction_symbol(get_gate_symbol(r)) == "r"
@@ -304,6 +337,11 @@ end
     @test get_gate_parameters(get_gate_symbol(r)) ==
           Dict("theta" => pi / 2, "phi" => pi / 2)
 
+    @test isequal(r, rotation(1, pi / 2, pi / 2))
+    @test !isequal(r, rotation(2, pi / 2, pi / 2))
+    @test !isequal(r, rotation(1, pi / 3, pi / 2))
+    @test !isequal(r, rotation(1, pi / 2, pi / 3))
+
     rx = rotation_x(1, pi / 2)
     @test get_instruction_symbol(get_gate_symbol(rx)) == "rx"
     @test get_symbol_for_instruction("rx") == Snowflurry.RotationX
@@ -311,6 +349,9 @@ end
     @test rx * ψ_0 ≈ 1 / 2^0.5 * (ψ_0 - im * ψ_1)
     @test rx * ψ_1 ≈ 1 / 2^0.5 * (-im * ψ_0 + ψ_1)
     @test get_gate_parameters(get_gate_symbol(rx)) == Dict("theta" => pi / 2)
+    @test isequal(rx, rotation_x(1, pi / 2))
+    @test !isequal(rx, rotation_x(2, pi / 2))
+    @test !isequal(rx, rotation_x(1, pi / 3))
 
     ry = rotation_y(1, -pi / 2)
     @test get_instruction_symbol(get_gate_symbol(ry)) == "ry"
@@ -319,6 +360,9 @@ end
     @test ry * ψ_0 ≈ 1 / 2^0.5 * (ψ_0 - ψ_1)
     @test ry * ψ_1 ≈ 1 / 2^0.5 * (ψ_0 + ψ_1)
     @test get_gate_parameters(get_gate_symbol(ry)) == Dict("theta" => -pi / 2)
+    @test isequal(ry, rotation_y(1, -pi / 2))
+    @test !isequal(ry, rotation_y(2, -pi / 2))
+    @test !isequal(ry, rotation_y(1, -pi / 3))
 
     p = phase_shift(1, pi / 4)
     @test get_instruction_symbol(get_gate_symbol(p)) == "rz"
@@ -326,7 +370,9 @@ end
     @test get_display_symbols(get_gate_symbol(p)) == ["Rz(0.7854)"]
     @test p * Ket([1 / 2^0.5; 1 / 2^0.5]) ≈ Ket([1 / 2^0.5, exp(im * pi / 4) / 2^0.5])
     @test get_gate_parameters(get_gate_symbol(p)) == Dict("lambda" => pi / 4)
-
+    @test isequal(p, phase_shift(1, pi / 4))
+    @test !isequal(p, phase_shift(2, pi / 4))
+    @test !isequal(p, phase_shift(1, pi / 3))
 
     u = universal(1, pi / 2, -pi / 2, pi / 2)
     @test get_instruction_symbol(get_gate_symbol(u)) == "u"
@@ -336,12 +382,19 @@ end
     @test u * ψ_1 ≈ 1 / 2^0.5 * (-im * ψ_0 + ψ_1)
     @test get_gate_parameters(get_gate_symbol(u)) ==
           Dict("theta" => pi / 2, "phi" => -pi / 2, "lambda" => pi / 2)
+    @test isequal(u, universal(1, pi / 2, -pi / 2, pi / 2))
+    @test !isequal(u, universal(2, pi / 2, -pi / 2, pi / 2))
+    @test !isequal(u, universal(1, pi / 3, -pi / 2, pi / 2))
+    @test !isequal(u, universal(1, pi / 2, -pi / 3, pi / 2))
+    @test !isequal(u, universal(1, pi / 2, -pi / 2, pi / 3))
 
     iden = identity_gate(1)
     @test get_instruction_symbol(get_gate_symbol(iden)) == "i"
     @test get_symbol_for_instruction("i") == Snowflurry.Identity
     @test get_display_symbols(get_gate_symbol(iden)) == ["I"]
     @test get_matrix(get_operator(get_gate_symbol(iden))) ≈ get_matrix(eye())
+    @test isequal(iden, identity_gate(1))
+    @test !isequal(iden, identity_gate(2))
 
 
     # ControlX   
@@ -952,4 +1005,51 @@ end
     )
 
     @test compare_circuits(cnot_circuit, inverted_cnot_circuit)
+end
+
+
+@testset "Gate !isequal" begin
+
+    phi = π / 3
+    theta = π / 5
+    lambda = π / 6
+
+    instr_list = [
+        identity_gate(1),
+        hadamard(1),
+        phase_shift(1, -phi / 2),
+        pi_8(1),
+        pi_8_dagger(1),
+        rotation(1, theta, phi),
+        rotation_x(1, theta),
+        rotation_y(1, theta),
+        sigma_x(1),
+        sigma_y(1),
+        sigma_z(1),
+        universal(1, theta, phi, lambda),
+        x_90(1),
+        x_minus_90(1),
+        y_90(1),
+        y_minus_90(1),
+        z_90(1),
+        z_minus_90(1),
+        control_x(1, 2),
+        control_z(4, 6),
+        toffoli(1, 2, 6),
+        swap(2, 5),
+        iswap(4, 1),
+        iswap_dagger(6, 3),
+        readout(1, 2),
+    ]
+
+    for (i0, instr0) in enumerate(instr_list)
+        for (i1, instr1) in enumerate(instr_list)
+            if i0 == i1
+                @test isequal(instr0, instr1)
+            else
+                @test !isequal(instr0, instr1)
+            end
+        end
+    end
+
 end
