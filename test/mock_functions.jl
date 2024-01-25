@@ -12,7 +12,9 @@ expected_json =
     common_substring *
     "[" *
     "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
-    "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}," *
+    "{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}" *
+    "]}}"
 
 expected_json_with_project_id = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"billingaccountID\":\"test_project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}]}}"
 
