@@ -14,8 +14,7 @@ jobs:
           run: >
             julia --project=. -e 
             'using Pkg;
-            Pkg.develop(PackageSpec(path=pwd())); 
-            Pkg.instantiate()'
+             Pkg.instantiate()'
         - name: Build
           run: julia --project=. -e 
             include("tutorials/run_tutorials.jl");'
