@@ -359,6 +359,7 @@ end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
     @test_throws NotImplementedError get_connectivity_label(UnknownConnectivity())
     @test_throws NotImplementedError path_search(1, 1, UnknownConnectivity())
+    @test_throws NotImplementedError get_adjacency_list(UnknownConnectivity())
 
     # Customized Lattice specifying qubits_per_row
     connectivity = LatticeConnectivity([1, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 1])
@@ -817,6 +818,10 @@ end
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
     test_print_connectivity(connectivity, "AllToAllConnectivity()\n")
+
+    @test_throws DomainError("All qubits are adjacent in AllToAllConnectivity, without upper" *
+    " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed.") get_adjacency_list(connectivity)
+
 end
 
 @testset "run on VirtualQPU: partial readouts" begin

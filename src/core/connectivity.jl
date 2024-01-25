@@ -394,7 +394,60 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     return adjacency_list
 end
 
+"""
+    get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
+Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict where key => value pairs
+are each qubit number => an array of the qubit that are adjacent, or neighbors to it on this particular connectivity.
+
+# Example
+```jldoctest
+julia> connectivity = LineConnectivity(6)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+
+julia> get_adjacency_list(connectivity)
+Dict{Int64, Vector{Int64}} with 6 entries:
+  5 => [4, 6]
+  4 => [3, 5]
+  6 => [5]
+  2 => [1, 3]
+  3 => [2, 4]
+  1 => [2]
+
+julia> connectivity = LatticeConnectivity(4, 3)
+  LatticeConnectivity{4,3}
+          1 ──  2 
+          |     | 
+    3 ──  4 ──  5 ──  6 
+          |     |     | 
+          7 ──  8 ──  9 ── 10 
+                |     | 
+               11 ── 12 
+  
+julia> get_adjacency_list(connectivity)
+Dict{Int64, Vector{Int64}} with 12 entries:
+  5  => [2, 8, 4, 6]
+  12 => [9, 11]
+  8  => [5, 11, 7, 9]
+  1  => [4, 2]
+  6  => [9, 5]
+  11 => [8, 12]
+  9  => [6, 12, 8, 10]
+  3  => [4]
+  7  => [4, 8]
+  4  => [1, 7, 3, 5]
+  2  => [5, 1]
+  10 => [9]
+
+```
+
+!!! note
+    `get_adjacency_list` cannot be performed for `AllToAllConnectivity`, as in such a connectivity, all qubits are adjacent, 
+    with no upper bound on the number of qubits. A finite list of adjacent qubits thus cannot be constructed. 
+
+"""
 function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}
     adjacency_list = Dict{Int,Vector{Int}}()
     
@@ -408,6 +461,14 @@ function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int
 
     return adjacency_list
 end
+
+function get_adjacency_list(connectivity::AllToAllConnectivity)
+    throw(DomainError("All qubits are adjacent in AllToAllConnectivity, without upper" *
+        " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed."))
+end
+
+get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} = 
+    throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """
     path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
