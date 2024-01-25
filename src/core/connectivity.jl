@@ -394,6 +394,21 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     return adjacency_list
 end
 
+
+function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}
+    adjacency_list = Dict{Int,Vector{Int}}()
+    
+    adjacency_list[1] = [2]
+
+    for qubit_index in 2:connectivity.dimension-1
+        adjacency_list[qubit_index] = [qubit_index-1, qubit_index+1]
+    end
+
+    adjacency_list[connectivity.dimension] = [connectivity.dimension-1]
+
+    return adjacency_list
+end
+
 """
     path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
 
