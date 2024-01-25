@@ -1139,7 +1139,7 @@ end
 
 # IdentityOperator leaves the state Ket unchanged
 apply_operator!(state::Ket, op::IdentityOperator, connected_qubits::Vector{<:Integer}) =
-    state
+    nothing
 
 # Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1 << qubit_index.
 function insert_zero_to_basis_index(

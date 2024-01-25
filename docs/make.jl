@@ -11,14 +11,15 @@ DocMeta.setdocmeta!(
         using Printf
         ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
-        requestor = MockRequestor(request_checker, post_checker)
+        requestor = MockRequestor(request_checker, make_post_checker(expected_json))
         client = Client(
             host = "http://example.anyonsys.com",
             user = "test_user",
             access_token = "not_a_real_access_token",
             requestor = requestor,
         )
-        requestor_transpilation = MockRequestor(request_checker, post_checker_transpiled)
+        requestor_transpilation =
+            MockRequestor(request_checker, make_post_checker(expected_json_transpiled))
         client_anyon = Client(
             host = "http://example.anyonsys.com",
             user = "test_user",

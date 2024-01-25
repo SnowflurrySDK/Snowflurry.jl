@@ -2,6 +2,7 @@ using Snowflurry
 using Base64
 using HTTP
 using JSON
+using TOML
 
 Base.@kwdef struct Status
     type::String
@@ -37,14 +38,22 @@ struct MockRequestor <: Requestor
     post_checker::Function
 end
 
-const path_circuits = "circuits"
+const user_agent_header_key = "User-Agent"
+
+const path_jobs = "jobs"
 const path_results = "result"
 
-const queued_status = "queued"
-const running_status = "running"
-const succeeded_status = "succeeded"
-const failed_status = "failed"
-const cancelled_status = "cancelled"
+const queued_status = "QUEUED"
+const running_status = "RUNNING"
+const succeeded_status = "SUCCEEDED"
+const failed_status = "FAILED"
+const cancelled_status = "CANCELLED"
+
+# Until support is dropped for Julia<1.8, calling PkgVersion(Snowflurry) 
+# is not possible. Current Snowflurry version is read from Project.toml instead
+project_toml = TOML.parsefile(joinpath(pkgdir(@__MODULE__), "Project.toml"))
+@assert haskey(project_toml, "version") "missing version info in Project toml"
+const package_version = project_toml["version"]
 
 const possible_status_list =
     [failed_status, succeeded_status, running_status, queued_status, cancelled_status]
@@ -66,6 +75,7 @@ function post_request(
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
         body = body,
     )
@@ -94,6 +104,7 @@ function get_request(
         headers = Dict(
             "Authorization" => encode_to_basic_authorization(user, access_token),
             "Content-Type" => "application/json",
+            user_agent_header_key => "Snowflurry/$(package_version)",
         ),
     )
 end
@@ -108,15 +119,17 @@ function get_request(
     return mock_requestor.request_checker(url, user, access_token)
 end
 
+const error_msg_empty_project_id = "project_id cannot be empty"
+
 """
-    serialize_job(circuit::QuantumCircuit,shot_count::Integer)
+    serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 
 Creates a JSON-formatted String containing the circuit configuration to be sent 
-to a `QPU` service, along with the number of shots requested.
+to a `QPU` service located at the URL specified by `host`, along with the number of shots requested.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
+julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)], name = "sigma_x job")
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -124,21 +137,31 @@ q[1]:──X──
           
 q[2]:─────
           
-
-
-
-julia> serialize_job(c,10)
-"{\\\"qubit_count\\\":2,\\\"shot_count\\\":10,\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+julia> serialize_job(c, 10, "http://example.anyonsys.com", "project_id")
+"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineID\\\":\\\"http://example.anyonsys.com\\\",\\\"billingaccountID\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
-function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
+function serialize_job(
+    circuit::QuantumCircuit,
+    shot_count::Integer,
+    host::String,
+    project_id::String,
+)::String
 
-    circuit_description = Dict(
+    if project_id == ""
+        throw(ArgumentError(error_msg_empty_project_id))
+    end
+
+    job_description = Dict(
+        "name" => get_name(circuit),
+        "type" => "circuit",
+        "machineID" => host,
+        "billingaccountID" => project_id,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
-        "shot_count" => shot_count,
-        "qubit_count" => circuit.qubit_count,
+        "shotCount" => shot_count,
     )
+
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout
@@ -157,12 +180,12 @@ function serialize_job(circuit::QuantumCircuit, shot_count::Integer)::String
                 "parameters" => params,
             )
         end
-        push!(circuit_description["circuit"]["operations"], encoding)
+        push!(job_description["circuit"]["operations"], encoding)
     end
 
-    circuit_json = JSON.json(circuit_description)
+    job_json = JSON.json(job_description)
 
-    return circuit_json
+    return job_json
 end
 
 """
@@ -215,7 +238,7 @@ get_requestor(client::Client) = client.requestor
 
 
 """
-    submit_circuit(client::Client,circuit::QuantumCircuit,shot_count::Integer)
+    submit_job(client::Client,circuit::QuantumCircuit,shot_count::Integer)
 
 Submit a circuit to a `Client` of `QPU` service, requesting a number of 
 repetitions (shot_count). Returns circuitID.
@@ -223,73 +246,78 @@ repetitions (shot_count). Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100, "project_id")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
 """
-function submit_circuit(
+function submit_job(
     client::Client,
     circuit::QuantumCircuit,
     shot_count::Integer,
+    project_id::String,
 )::String
 
-    circuit_json = serialize_job(circuit, shot_count)
+    job_json = serialize_job(circuit, shot_count, get_host(client), project_id)
 
-    path_url = get_host(client) * "/" * path_circuits
+    path_url = get_host(client) * "/" * path_jobs
 
     response = post_request(
         get_requestor(client),
         path_url,
         client.user,
         client.access_token,
-        circuit_json,
+        job_json,
     )
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "circuitID") (
-        "Server returned an invalid response, without a circuitID field."
+    @assert haskey(body, "id") (
+        "Server returned an invalid response, without a job ID field."
     )
 
-    return body["circuitID"]
+    return body["id"]
 end
 
 """
-    get_status(client::Client, circuitID::String)::Dict{String, String}
+    get_status(client::Client,circuitID::String)::Tuple{Status,Dict{String,Int}}
 
 Obtain the status of a circuit computation through a `Client` of a `QPU` service.
 Returns status::Dict containing status["type"]: 
-    -"queued"   : Computation in queue.
-    -"running"  : Computation being processed.
-    -"failed"   : QPU service has returned an error message.
-    -"succeeded": Computation is completed, result is available.
+    -"QUEUED"   : Computation in queue
+    -"RUNNING"  : Computation being processed
+    -"FAILED"   : QPU service has returned an error message
+    -"SUCCEEDED": Computation is completed, result is available.
 
-In the case of status["type"]=="failed", the server error is contained in status["message"].
+In the case of status["type"]=="FAILED", the server error is contained in status["message"].
+
+In the case of status["type"]=="SUCCEEDED", the second element in the return Tuple is 
+the histogram of the job results, as computed on the `QPU`.
 
 # Example
 
 
 ```jldoctest
-julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100, "project_id")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
-julia> get_status(client,circuitID)
-Status: succeeded
+julia> get_status(client, jobID)
+(Status: SUCCEEDED
+, Dict("001" => 100))
 
 ```
 """
-function get_status(client::Client, circuitID::String)::Status
+function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String,Int}}
 
-    path_url = get_host(client) * "/" * path_circuits * "/" * "$circuitID"
+    path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID"
 
     response =
         get_request(get_requestor(client), path_url, client.user, client.access_token)
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "status")
-    @assert haskey(body["status"], "type")
+    @assert haskey(body, "status") "missing \"status\" key in body: $body"
+    @assert haskey(body["status"], "type") "missing \"type\" key in body: $body"
 
     if !(body["status"]["type"] in possible_status_list)
         throw(
@@ -299,60 +327,36 @@ function get_status(client::Client, circuitID::String)::Status
         )
     end
 
-    if body["status"]["type"] != failed_status
-        return Status(type = body["status"]["type"])
-    end
+    if body["status"]["type"] == failed_status
+        message = if haskey(body["status"], "message")
+            body["status"]["message"]
+        else
+            "no failure information available. raw response: '$(string(body))'"
+        end
+        return Status(type = failed_status, message = message), Dict{String,Int}()
 
-    message = if haskey(body["status"], "message")
-        body["status"]["message"]
+    elseif body["status"]["type"] == cancelled_status
+        return Status(type = body["status"]["type"]), Dict{String,Int}()
+
+    elseif body["status"]["type"] == queued_status ||
+           body["status"]["type"] == running_status
+        return Status(type = body["status"]["type"]), Dict{String,Int}()
+
     else
-        "no failure information available. raw response: '$(string(body))'"
+        @assert body["status"]["type"] == succeeded_status
+        @assert haskey(body, "result") "missing \"result\" key in body: $body"
+        result = body["result"]
+
+        # convert from Dict{String,String} to Dict{String,Int}
+        histogram = Dict{String,Int}()
+        @assert haskey(result, "histogram") "missing \"histogram\" key in body: $body"
+        for (key, val) in result["histogram"]
+            histogram[key] = round(Int, val)
+        end
+
+        return Status(type = body["status"]["type"]), histogram
     end
-    return Status(type = failed_status, message = message)
 end
-
-"""
-    get_result(client::Client,circuit::String)::Dict{String, Int}
-
-Get the histogram of a completed circuit calculation, through a `Client` of a `QPU` service, 
-by circuit identifier circuitID.
-
-# Example
-
-
-```jldoctest 
-julia> circuitID = submit_circuit(client, QuantumCircuit(qubit_count = 3,instructions = [sigma_x(3), control_z(2, 1)]), 100)
-"8050e1ed-5e4c-4089-ab53-cccda1658cd0"
-
-julia> get_status(client, circuitID);
-
-julia> get_result(client, circuitID)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
-
-```
-"""
-function get_result(client::Client, circuitID::String)::Dict{String,Int}
-
-    path_url =
-        get_host(client) * "/" * path_circuits * "/" * "$circuitID" * "/" * path_results
-
-    response =
-        get_request(get_requestor(client), path_url, client.user, client.access_token)
-
-    body = JSON.parse(read_response_body(response.body))
-
-    histogram = Dict{String,Int}()
-    @assert haskey(body, "histogram")
-
-    # convert from Dict{String,String} to Dict{String,Int}
-    for (key, val) in body["histogram"]
-        histogram[key] = round(Int, val)
-    end
-
-    return histogram
-end
-
 
 abstract type AbstractQPU end
 

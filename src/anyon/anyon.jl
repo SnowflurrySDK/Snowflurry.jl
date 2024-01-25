@@ -8,15 +8,17 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com",user = "test_user", access_token = "not_a_real_access_token")
+julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   6 
    connectivity_type:  linear
 ```
@@ -25,21 +27,35 @@ struct AnyonYukonQPU <: AbstractQPU
     client::Client
     status_request_throttle::Function
     connectivity::LineConnectivity
+    project_id::String
 
-    AnyonYukonQPU(
-        client::Client;
+    function AnyonYukonQPU(
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-    ) = new(client, status_request_throttle, LineConnectivity(6))
-    AnyonYukonQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LineConnectivity(6), project_id)
+    end
+    function AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LineConnectivity(6),
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LineConnectivity(6),
+            project_id,
+        )
+    end
 end
 
 
@@ -47,6 +63,7 @@ get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
     "manufacturer" => "Anyon Systems Inc.",
     "generation" => "Yukon",
     "serial_number" => "ANYK202201",
+    "project_id" => get_project_id(qpu),
     "qubit_count" => get_num_qubits(qpu.connectivity),
     "connectivity_type" => get_connectivity_label(qpu.connectivity),
 )
@@ -59,15 +76,17 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
 
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token")
+julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
    serial_number: ANYK202301
+   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   12 
    connectivity_type:  2D-lattice
 ```
@@ -76,32 +95,50 @@ struct AnyonYamaskaQPU <: AbstractQPU
     client::Client
     status_request_throttle::Function
     connectivity::LatticeConnectivity
+    project_id::String
 
-    AnyonYamaskaQPU(
-        client::Client;
+    function AnyonYamaskaQPU(
+        client::Client,
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
-    ) = new(client, status_request_throttle, LatticeConnectivity(4, 3))
-    AnyonYamaskaQPU(;
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
+    end
+    function AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
+        project_id::String,
         status_request_throttle = default_status_request_throttle,
-    ) = new(
-        Client(host = host, user = user, access_token = access_token),
-        status_request_throttle,
-        LatticeConnectivity(4, 3),
     )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+
+        new(
+            Client(host = host, user = user, access_token = access_token),
+            status_request_throttle,
+            LatticeConnectivity(4, 3),
+            project_id,
+        )
+    end
 end
 
 get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
     "manufacturer" => "Anyon Systems Inc.",
     "generation" => "Yamaska",
     "serial_number" => "ANYK202301",
+    "project_id" => get_project_id(qpu),
     "qubit_count" => get_num_qubits(qpu.connectivity),
     "connectivity_type" => get_connectivity_label(qpu.connectivity),
 )
 
 get_client(qpu_service::AbstractQPU) = qpu_service.client
+
+get_project_id(qpu_service::AbstractQPU) = qpu_service.project_id
 
 UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU}
 
@@ -119,6 +156,7 @@ function Base.show(io::IO, qpu::UnionAnyonQPU)
     println(io, "   manufacturer:  $(metadata["manufacturer"])")
     println(io, "   generation:    $(metadata["generation"])")
     println(io, "   serial_number: $(metadata["serial_number"])")
+    println(io, "   project_id:    $(metadata["project_id"])")
     println(io, "   qubit_count:   $(metadata["qubit_count"])")
     println(io, "   connectivity_type:  $(metadata["connectivity_type"])")
 end
@@ -240,7 +278,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client_anyon);
+julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -279,7 +317,7 @@ message.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
 Dict{String, Int64} with 1 entry:
@@ -295,9 +333,9 @@ function run_job(
 
     client = get_client(qpu)
 
-    circuitID = submit_circuit(client, circuit, shot_count)
+    jobID = submit_job(client, circuit, shot_count, get_project_id(qpu))
 
-    status = poll_for_status(client, circuitID, qpu.status_request_throttle)
+    status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
 
     status_type = get_status_type(status)
 
@@ -309,25 +347,25 @@ function run_job(
         @assert status_type == succeeded_status (
             "Server returned an unrecognized status type: $status_type"
         )
-        return get_result(client, circuitID)
+        return histogram
     end
 end
 
 # 100ms between queries to host by default
 const default_status_request_throttle = (seconds = 0.1) -> sleep(seconds)
 
-function poll_for_status(
+function poll_for_results(
     client::Client,
-    circuitID::String,
+    jobID::String,
     request_throttle::Function,
-)::Status
-    status = get_status(client, circuitID)
+)::Tuple{Status,Dict{String,Int}}
+    (status, histogram) = get_status(client, jobID)
     while get_status_type(status) in [queued_status, running_status]
         request_throttle()
-        status = get_status(client, circuitID)
+        (status, histogram) = get_status(client, jobID)
     end
 
-    return status
+    return status, histogram
 end
 
 """
@@ -338,7 +376,7 @@ Returns the transpiler associated with this QPU.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client);
+julia> qpu = AnyonYukonQPU(client, "project_id");
 
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoNotConflictTranspiler(), CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}

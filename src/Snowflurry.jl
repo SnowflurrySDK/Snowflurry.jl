@@ -99,6 +99,7 @@ export
     ket2dm,
     fock_dm,
     expected_value,
+    get_name,
     get_num_qubits,
     get_num_bits,
     get_num_bodies,
@@ -132,7 +133,7 @@ export
     get_status_message,
     read_response_body,
     serialize_job,
-    submit_circuit,
+    submit_job,
     get_client,
     print_connectivity,
     get_connectivity,
@@ -141,7 +142,6 @@ export
     path_search,
     get_host,
     get_status,
-    get_result,
     is_native_instruction,
     is_native_circuit,
     run_job,
@@ -152,6 +152,7 @@ export
     post_request,
     get_metadata,
     get_transpiler,
+    get_project_id,
     apply_instruction!,
     get_pauli,
     get_quantum_circuit,
@@ -197,6 +198,7 @@ using PrecompileTools
     host = "http://example.anyonsys.com"
     user = "test_user"
     access_token = "not_a_real_access_token"
+    project_id = "project_id"
 
     theta = π / 5
     phi = π / 7
@@ -258,7 +260,12 @@ using PrecompileTools
         simulate(circuit)
     end
 
-    qpu = AnyonYukonQPU(; host = host, user = user, access_token = access_token)
+    qpu = AnyonYukonQPU(;
+        host = host,
+        user = user,
+        access_token = access_token,
+        project_id = project_id,
+    )
     transpiler = get_transpiler(qpu)
 
     circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1, 1)])

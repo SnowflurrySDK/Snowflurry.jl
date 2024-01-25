@@ -4,7 +4,7 @@ using HTTP
 
 include("mock_functions.jl")
 
-requestor = MockRequestor(request_checker, post_checker)
+requestor = MockRequestor(request_checker, make_post_checker(expected_json))
 
 # While testing, this throttle can be used to skip delays between status requests.
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
@@ -13,7 +13,11 @@ function compare_responses(expected::HTTP.Response, received::HTTP.Response)
 
     for f in fieldnames(typeof(received))
         if isdefined(received, f) # response.request is undefined in Julia 1.6.7
-            @test getfield(received, f) == getfield(expected, f)
+            if getfield(received, f) != getfield(expected, f)
+                receivedStr = read_response_body(getfield(received, f))
+                expectedStr = read_response_body(getfield(expected, f))
+                @test receivedStr == expectedStr
+            end
         end
     end
 
@@ -29,76 +33,43 @@ end
         non_impl_requestor,
         host,
         user,
-        access_token,
+        expected_access_token,
     )
     @test_throws NotImplementedError post_request(
         non_impl_requestor,
         host,
         user,
-        access_token,
+        expected_access_token,
         body,
     )
 
-    #### request from :get_status
+    #### GET request returning: status, histogram
 
     @test_throws NotImplementedError get_request(
         requestor,
         "erroneous_url",
         user,
-        access_token,
+        expected_access_token,
     )
 
-    expected_response =
-        HTTP.Response(200, [], body = "{\"status\":{\"type\":\"succeeded\"}}")
+    expected_response = HTTP.Response(200, [], body = expected_get_status_response_body)
 
-    circuitID = "1234-abcd"
+    jobID = "1234-abcd"
 
     response = get_request(
         requestor,
-        host * "/" * Snowflurry.path_circuits * "/" * circuitID,
+        host * "/" * Snowflurry.path_jobs * "/" * jobID,
         user,
-        access_token,
+        expected_access_token,
     )
 
     compare_responses(expected_response, response)
 
     @test_throws NotImplementedError get_request(
         requestor,
-        host * "/" * string(Snowflurry.path_circuits, "wrong_ending"),
+        host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
         user,
-        access_token,
-    )
-
-    #### request from :get_result
-
-    expected_response = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-
-    response = get_request(
-        requestor,
-        host *
-        "/" *
-        Snowflurry.path_circuits *
-        "/" *
-        circuitID *
-        "/" *
-        Snowflurry.path_results,
-        user,
-        access_token,
-    )
-
-    compare_responses(expected_response, response)
-
-    @test_throws NotImplementedError get_request(
-        requestor,
-        host *
-        "/" *
-        Snowflurry.path_circuits *
-        "/" *
-        circuitID *
-        "/" *
-        string(Snowflurry.path_results, "wrong_ending"),
-        user,
-        access_token,
+        expected_access_token,
     )
 
 end
@@ -149,24 +120,46 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(circuit, shot_count)
-
-    expected_json = "{\"qubit_count\":3,\"shot_count\":100,\"circuit\":{\"operations\":[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}]}}"
+    circuit_json =
+        serialize_job(circuit, shot_count, "http://example.anyonsys.com", project_id)
 
     @test circuit_json == expected_json
 
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
 
     println(test_client) #coverage for Base.show(::IO,::Client)
 
     @test get_host(test_client) == host
 
-    circuitID = submit_circuit(test_client, circuit, shot_count)
+    jobID = submit_job(test_client, circuit, shot_count, project_id)
 
-    status = get_status(test_client, circuitID)
+    status, histogram = get_status(test_client, jobID)
 
-    @test get_status_type(status) in ["queued", "running", "failed", "succeeded"]
+    @test get_status_type(status) in [
+        Snowflurry.queued_status,
+        Snowflurry.running_status,
+        Snowflurry.failed_status,
+        Snowflurry.succeeded_status,
+    ]
+end
+
+@testset "serialize_job: empty project_id" begin
+
+    circuit = QuantumCircuit(qubit_count = 1)
+
+    shot_count = 100
+
+    @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
+        circuit,
+        shot_count,
+        "http://example.anyonsys.com",
+        "",
+    )
 end
 
 @testset "job status" begin
@@ -179,10 +172,14 @@ end
         stubFailedStatusResponse(),
     ])
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status = get_status(test_client, "circuitID not used in this test")
-    @test get_status_type(status) == "failed"
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+    status, histogram = get_status(test_client, "jobID not used in this test")
+    @test get_status_type(status) == Snowflurry.failed_status
     @test get_status_message(status) == "mocked"
 
     test_get = stub_response_sequence([
@@ -191,21 +188,29 @@ end
     ])
 
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    @test_throws ArgumentError get_status(test_client, "circuitID not used in this test")
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+    @test_throws ArgumentError get_status(test_client, "jobID not used in this test")
 
     malformedResponse = stubFailedStatusResponse()
     # A failure response _should_ have a 'message' field but, if things go very
     # wrong, the user should still get something useful.
-    body = "{\"status\":{\"type\":\"failed\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
+    body = "{\"status\":{\"type\":\"FAILED\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
     malformedResponse.body = collect(UInt8, body)
     test_get = stub_response_sequence([malformedResponse])
     requestor = HTTPRequestor(test_get, test_post)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
-    status = get_status(test_client, "circuitID not used in this test")
-    @test status.type == "failed"
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+    status, histogram = get_status(test_client, "jobID not used in this test")
+    @test status.type == Snowflurry.failed_status
     @test status.message != ""
 end
 
@@ -416,12 +421,14 @@ end
     host = "host"
     user = "user"
     token = "token"
+    project = "project-id"
 
     qpu = AnyonYukonQPU(
         host = host,
         user = user,
         access_token = token,
         status_request_throttle = no_throttle,
+        project_id = project,
     )
     client = get_client(qpu)
 
@@ -440,6 +447,7 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
+        "project_id" => get_project_id(qpu),
         "qubit_count" => get_num_qubits(connectivity),
         "connectivity_type" => get_connectivity_label(connectivity),
     )
@@ -449,12 +457,14 @@ end
     host = "host"
     user = "user"
     token = "token"
+    project = "project-id"
 
     qpu = AnyonYamaskaQPU(
         host = host,
         user = user,
         access_token = token,
         status_request_throttle = no_throttle,
+        project_id = project,
     )
     client = get_client(qpu)
 
@@ -482,19 +492,54 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
+        "project_id" => get_project_id(qpu),
         "qubit_count" => get_num_qubits(connectivity),
         "connectivity_type" => get_connectivity_label(connectivity),
     )
 
 end
 
+@testset "AnyonQPUs with empty project_id" begin
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+
+    for qpu in qpus
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(
+            test_client,
+            "",
+        )
+
+        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
+            host = host,
+            user = user,
+            access_token = expected_access_token,
+            status_request_throttle = no_throttle,
+            project_id = "",
+        )
+    end
+
+end
+
 @testset "run_job on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, post_checker)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu) == test_client
 
@@ -507,16 +552,17 @@ end
     #verify that run_job blocks until a 'long-running' job completes
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
-            stubStatusResponse("succeeded"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.succeeded_status),
             stubResult(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     histogram = run_job(qpu, circuit, shot_count)
@@ -526,16 +572,17 @@ end
     #verify that run_job throws an error if the QPU returns an error
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
             stubFailedStatusResponse(),
             stubFailureResult(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -543,16 +590,17 @@ end
     #verify that run_job throws an error if the job was cancelled
     requestor = MockRequestor(
         stub_response_sequence([
-            stubStatusResponse("queued"),
-            stubStatusResponse("running"),
-            stubStatusResponse("running"),
-            stubStatusResponse("cancelled"),
+            stubStatusResponse(Snowflurry.queued_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.running_status),
+            stubStatusResponse(Snowflurry.cancelled_status),
             stubCancelledResultResponse(),
         ]),
-        post_checker,
+        make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, access_token, requestor),
+        Client(host, user, expected_access_token, requestor),
+        project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -560,11 +608,15 @@ end
 
 @testset "run_job with Readout on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, post_checker_readout)
-    test_client =
-        Client(host = host, user = user, access_token = access_token, requestor = requestor)
+    requestor = MockRequestor(request_checker, make_post_checker(expected_json_readout))
+    test_client = Client(
+        host = host,
+        user = user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
 
     circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3, 3)])
     histogram = run_job(qpu, circuit, shot_count)
@@ -572,27 +624,31 @@ end
     @test !haskey(histogram, "error_msg")
 end
 
-
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
-    post_checkers_toffoli = [post_checker_toffoli_Yukon, post_checker_toffoli_Yamaska]
-    post_checkers_last_qubit =
-        [post_checker_last_qubit_Yukon, post_checker_last_qubit_Yamaska]
+    post_checkers_toffoli = [
+        make_post_checker(expected_json_Toffoli_Yukon),
+        make_post_checker(expected_json_Toffoli_Yamaska),
+    ]
+    post_checkers_last_qubit = [
+        make_post_checker(expected_json_last_qubit_Yukon),
+        make_post_checker(expected_json_last_qubit_Yamaska),
+    ]
 
     for (QPU, post_checker_toffoli, post_checker_last_qubit) in
         zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(request_checker, post_checker)
+        requestor = MockRequestor(request_checker, make_post_checker(expected_json))
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
         shot_count = 100
 
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(
@@ -618,11 +674,11 @@ end
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
 
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -634,10 +690,10 @@ end
         test_client = Client(
             host = host,
             user = user,
-            access_token = access_token,
+            access_token = expected_access_token,
             requestor = requestor,
         )
-        qpu = QPU(test_client, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(

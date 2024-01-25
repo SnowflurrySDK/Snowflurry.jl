@@ -7,6 +7,7 @@ DocTestSetup = quote
     ENV["ANYON_QUANTUM_USER"] = "test-user"
     ENV["ANYON_QUANTUM_TOKEN"] = "not-a-real-token"
     ENV["ANYON_QUANTUM_HOST"] = "yukon.anyonsys.com"
+    ENV["ANYON_QUANTUM_PROJECT_ID"] = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
 end
 ```
 
@@ -22,18 +23,19 @@ In this tutorial, we will learn how to submit a job to real hardware. At the mom
 The current release of `Snowflurry` supports Anyon's Yukon quantum processor (see [`AnyonYukonQPU`](@ref)) which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers.
 The following generation of QPU, called [`AnyonYamaskaQPU`](@ref) is also implemented, in which 12 qubits are arranged in a lattice, along with 14 couplers. 
 
-We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials:
+We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials. A valid project_id is also required to submit jobs on Anyon infrastructure:
 
 ```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
 
-qpu = AnyonYukonQPU(host = "http://yukon.anyonsys.com", user = "USER_NAME", access_token = "API_KEY")
+qpu = AnyonYukonQPU(host = "http://yukon.anyonsys.com", user = "USER_NAME", access_token = "API_KEY", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
 
 # output
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   6
    connectivity_type:  linear
 
@@ -54,6 +56,7 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
+   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   6
    connectivity_type:  linear
 ```
@@ -65,11 +68,12 @@ get_metadata(qpu)
 
 # output
 
-Dict{String, Union{Int64, String}} with 5 entries:
+Dict{String, Union{Int64, String}} with 6 entries:
   "qubit_count"       => 6
   "generation"        => "Yukon"
   "manufacturer"      => "Anyon Systems Inc."
   "serial_number"     => "ANYK202201"
+  "project_id"        => "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
   "connectivity_type" => "linear"
 ```
 

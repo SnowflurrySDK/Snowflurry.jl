@@ -33,6 +33,8 @@ import Pkg
 Pkg.add(url="https://github.com/SnowflurrySDK/Snowflurry.jl", rev="main")
 ```
 
+**Warning**: The main branch of Snowflurry targets new internal infrastructure. Existing users should use the latest stable release instead.
+
 ### Installing `SnowflurryPlots.jl` package
 
 

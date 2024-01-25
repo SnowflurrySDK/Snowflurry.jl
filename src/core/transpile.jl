@@ -182,7 +182,7 @@ function find_and_compress_blocks(
     instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     # Split circuit into blocks of single-target gates that
     # share a common target, separated by boundaries. 
@@ -459,7 +459,7 @@ q[2]:──Y_m90────Z─────────────Y_90──�
 """
 function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Snowflurry.Gate{Swap}
@@ -516,7 +516,7 @@ q[2]:──H────Z────H──
 """
 function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Snowflurry.Gate{ControlX}
@@ -584,7 +584,7 @@ q[2]:───────────X_m90────Z────────
 """
 function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Snowflurry.Gate{ISwap}
@@ -669,7 +669,7 @@ q[3]:──H────X────T†────X────T────X
 """
 function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Snowflurry.Gate{Toffoli}
@@ -871,7 +871,7 @@ function transpile(
     instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     atol = transpiler_stage.atol
 
@@ -987,7 +987,7 @@ function transpile(
     instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in instructions
 
@@ -1075,7 +1075,7 @@ function transpile(
     instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in instructions
 
@@ -1186,7 +1186,7 @@ function transpile(
 )::QuantumCircuit
 
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     atol = transpiler_stage.atol
 
@@ -1335,7 +1335,7 @@ function transpile(
     instructions = get_circuit_instructions(circuit)
 
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     for instr in instructions
 
@@ -1471,7 +1471,7 @@ function transpile(
 )::QuantumCircuit
 
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     atol = transpiler_stage.atol
 
@@ -1657,7 +1657,7 @@ function transpile(
 )::QuantumCircuit
     instructions = get_circuit_instructions(circuit)
     qubit_count = get_num_qubits(circuit)
-    output_circuit = QuantumCircuit(qubit_count = qubit_count)
+    output_circuit = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
     qubit_mapping = Dict{Int,Int}()
     reverse_transpiled_instructions = Vector{Gate}([])
 
@@ -1816,7 +1816,7 @@ function transpile(
 )::QuantumCircuit
 
     qubit_count = get_num_qubits(circuit)
-    output = QuantumCircuit(qubit_count = qubit_count)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
 
     atol = transpiler_stage.atol
 
