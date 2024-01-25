@@ -116,7 +116,10 @@ end
 
 @testset "basic submission" begin
 
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
+    )
 
     shot_count = 100
 
@@ -544,7 +547,10 @@ end
     @test get_client(qpu) == test_client
 
     #test basic submission, no transpilation
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)])
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
+    )
     histogram = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
@@ -606,7 +612,7 @@ end
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 end
 
-@testset "run_job with Readout on AnyonYukonQPU" begin
+@testset "run_job with invalid circuits on AnyonYukonQPU" begin
 
     requestor = MockRequestor(request_checker, make_post_checker(expected_json_readout))
     test_client = Client(
@@ -618,10 +624,38 @@ end
     shot_count = 100
     qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
 
-    circuit = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), readout(3, 3)])
-    histogram = run_job(qpu, circuit, shot_count)
-    @test histogram == Dict("001" => shot_count)
-    @test !haskey(histogram, "error_msg")
+    invalid_instructions = [
+        (
+            [sigma_x(1)],
+            ArgumentError(
+                "QuantumCircuit is missing a `Readout`. Would not return any result.",
+            ),
+        ),
+        (
+            [readout(1, 1), readout(2, 1)],
+            ArgumentError(
+                "`Readouts` in `QuantumCircuit` have conflicting destination bit: 1",
+            ),
+        ),
+        (
+            [readout(1, 1), readout(1, 2)],
+            AssertionError("Found multiple `Readouts` on qubit: 1"),
+        ),
+        (
+            [readout(1, 1), sigma_x(1)],
+            AssertionError("Cannot perform `Gate` following `Readout` on qubit: 1"),
+        ),
+        (
+            [controlled(hadamard(2), [1]), readout(2, 1)],
+            NotImplementedError{Gate{Controlled{Snowflurry.Hadamard}}},
+        ),
+    ]
+
+    for (instrs, e) in invalid_instructions
+        circuit = QuantumCircuit(qubit_count = 2, instructions = instrs)
+        @test_throws e run_job(qpu, circuit, shot_count)
+    end
+
 end
 
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin

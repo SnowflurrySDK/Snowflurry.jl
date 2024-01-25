@@ -310,16 +310,17 @@ end
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
 number of repetitions (shot_count).
-
 Returns the histogram of the completed circuit calculations, or an error
 message.
+If the circuit received in invalid - for instance, it is missing a `Readout` -
+it is not sent to the host, and an error is throw.
 
 # Example
 
 ```jldoctest  
 julia> qpu = AnyonYukonQPU(client, "project_id");
 
-julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
@@ -332,6 +333,17 @@ function run_job(
 )::Dict{String,Int}
 
     client = get_client(qpu)
+
+    # ensure only valid circuits are sent to the host
+    transpiler = SequentialTranspiler([
+        CircuitContainsAReadoutTranspiler(),
+        ReadoutsDoNotConflictTranspiler(),
+        ReadoutsAreFinalInstructionsTranspiler(),
+        UnsupportedGatesTranspiler(),
+    ])
+
+    # throws error if circuit is invalid
+    transpile(transpiler, circuit)
 
     jobID = submit_job(client, circuit, shot_count, get_project_id(qpu))
 
