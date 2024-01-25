@@ -451,24 +451,28 @@ Dict{Int64, Vector{Int64}} with 12 entries:
 """
 function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}
     adjacency_list = Dict{Int,Vector{Int}}()
-    
+
     adjacency_list[1] = [2]
 
-    for qubit_index in 2:connectivity.dimension-1
-        adjacency_list[qubit_index] = [qubit_index-1, qubit_index+1]
+    for qubit_index = 2:connectivity.dimension-1
+        adjacency_list[qubit_index] = [qubit_index - 1, qubit_index + 1]
     end
 
-    adjacency_list[connectivity.dimension] = [connectivity.dimension-1]
+    adjacency_list[connectivity.dimension] = [connectivity.dimension - 1]
 
     return adjacency_list
 end
 
 function get_adjacency_list(connectivity::AllToAllConnectivity)
-    throw(DomainError("All qubits are adjacent in AllToAllConnectivity, without upper" *
-        " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed."))
+    throw(
+        DomainError(
+            "All qubits are adjacent in AllToAllConnectivity, without upper" *
+            " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed.",
+        ),
+    )
 end
 
-get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} = 
+get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} =
     throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """

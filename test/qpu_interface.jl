@@ -237,22 +237,22 @@ end
 
     test_print_connectivity(connectivity, "1──2──3──4──5──6──7──8──9──10──11──12\n")
 
-    expected_adjacency_list = Dict{Int, Vector{Int}}(
-        1  => [2],
-        2  => [1, 3],
-        3  => [2, 4],
-        4  => [3, 5],
-        5  => [4, 6],
-        6  => [5, 7],
-        8  => [7, 9],
-        7  => [6, 8],
-        9  => [8, 10],
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        1 => [2],
+        2 => [1, 3],
+        3 => [2, 4],
+        4 => [3, 5],
+        5 => [4, 6],
+        6 => [5, 7],
+        8 => [7, 9],
+        7 => [6, 8],
+        9 => [8, 10],
         10 => [9, 11],
         11 => [10, 12],
         12 => [11],
     )
 
-    @test get_adjacency_list(connectivity) == expected_adjacency_list 
+    @test get_adjacency_list(connectivity) == expected_adjacency_list
 
     io = IOBuffer()
     println(io, connectivity)
@@ -286,7 +286,7 @@ end
 
     io = IOBuffer()
     connectivity = LatticeConnectivity(6, 4)
-    expected_adjacency_list = Dict{Int, Vector{Int}}(
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [4, 2],
         2 => [5, 1],
         3 => [8, 4],
@@ -819,8 +819,10 @@ end
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
     test_print_connectivity(connectivity, "AllToAllConnectivity()\n")
 
-    @test_throws DomainError("All qubits are adjacent in AllToAllConnectivity, without upper" *
-    " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed.") get_adjacency_list(connectivity)
+    @test_throws DomainError(
+        "All qubits are adjacent in AllToAllConnectivity, without upper" *
+        " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed.",
+    ) get_adjacency_list(connectivity)
 
 end
 
