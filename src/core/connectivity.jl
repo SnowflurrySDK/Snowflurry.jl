@@ -417,14 +417,15 @@ Dict{Int64, Vector{Int64}} with 6 entries:
   1 => [2]
 
 julia> connectivity = LatticeConnectivity(4, 3)
-  LatticeConnectivity{4,3}
-          1 ──  2 
-          |     | 
-    3 ──  4 ──  5 ──  6 
-          |     |     | 
-          7 ──  8 ──  9 ── 10 
-                |     | 
-               11 ── 12 
+LatticeConnectivity{4,3}
+        1 ──  2 
+        |     | 
+  3 ──  4 ──  5 ──  6 
+        |     |     | 
+        7 ──  8 ──  9 ── 10 
+              |     | 
+             11 ── 12 
+
   
 julia> get_adjacency_list(connectivity)
 Dict{Int64, Vector{Int64}} with 12 entries:
