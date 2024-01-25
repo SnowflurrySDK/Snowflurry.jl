@@ -320,7 +320,7 @@ it is not sent to the host, and an error is throw.
 ```jldoctest  
 julia> qpu = AnyonYukonQPU(client, "project_id");
 
-julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1)]), 100)
+julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
 Dict{String, Int64} with 1 entry:
   "001" => 100
 
