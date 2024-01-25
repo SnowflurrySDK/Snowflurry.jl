@@ -397,8 +397,8 @@ end
 """
     get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
-Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict where key => value pairs
-are each qubit number => an array of the qubit that are adjacent, or neighbors to it on this particular connectivity.
+Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict where `key => value` pairs
+are each qubit number => an Vector of the qubits that are adjacent (neighbors) to it on this particular connectivity.
 
 # Example
 ```jldoctest
