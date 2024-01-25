@@ -3,43 +3,20 @@ on:
   - push
   - pull_request
 jobs:
-  test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: thunderhead
-     # don't run on draft PRs
-    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
-    strategy:
-      fail-fast: true
-      max-parallel: 2
-      matrix:
-        version: ['1.9', '1.10']
-        arch: ["x64"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-
-      - name: Build Snowflurry
-        uses: julia-actions/julia-buildpkg@v1
-
-      - name: Test Snowflurry
-        uses: julia-actions/julia-runtest@v1
-
-      - uses: julia-actions/julia-processcoverage@v1
-        with:
-          directories: src
-      - uses: codecov/codecov-action@v2
-        with:
-          files: lcov.info
+    build:
+      runs-on: thunderhead
+      steps:
+        - uses: actions/checkout@v4
+        - uses: julia-actions/setup-julia@latest
+          with:
+            version: '1.9.0'
+        - name: Install dependencies
+          run: >
+            julia --project=. -e 
+            'using Pkg;
+            Pkg.develop(PackageSpec(path=pwd())); 
+            Pkg.instantiate()'
+        - name: Build
+          run: julia --project=. -e 
+            include("tutorials/run_tutorials.jl");'
+  
