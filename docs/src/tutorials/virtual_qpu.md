@@ -123,4 +123,4 @@ in 53 of the 100 shots. In the other 47 shots, the result bits were set to $\lef
 The virtual QPU currently mimics an ideal hardware with no error. Therefore, the states  $\left|01\right\rangle$ and  $\left|10\right\rangle$ have a probability of zero, and they are never measured. 
 In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc.
 
-In the [next tutorial](@ref "Running a Circuit on Real Hardware"), we will show how to submit a job to real quantum processing hardware.
+In the [next tutorial](anyon_qpu.md), we will show how to submit a job to real quantum processing hardware.
