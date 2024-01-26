@@ -1085,4 +1085,21 @@ end
         @test !isequal(i0, i1)
     end
 
+    delta = 1e-6
+
+    same_type_different_parameters_pairs = [
+        (rotation_x(1, pi), rotation_x(1, pi - delta)),
+        (rotation_y(1, pi), pi - delta),
+        (rotation(1, pi, pi / 2), rotation(1, pi - delta, pi / 2 - delta)),
+        (phase_shift(1, -pi), phase_shift(1, -pi - delta)),
+        (
+            universal(1, pi, pi / 2, pi / 3),
+            universal(1, pi - delta, pi / 2 - delta, pi / 3 - delta),
+        ),
+    ]
+
+    for (i0, i1) in same_type_different_parameters_pairs
+        @test !isequal(i0, i1)
+    end
+
 end
