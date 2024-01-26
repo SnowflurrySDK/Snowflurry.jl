@@ -1050,6 +1050,39 @@ end
                 @test !isequal(instr0, instr1)
             end
         end
+
+        connected_qubit = get_connected_qubits(instr0)
+        if length(connected_qubit) == 1 && !(instr0 isa Readout)
+            @test !isequal(
+                instr0,
+                Snowflurry.as_universal_gate(
+                    connected_qubit[1],
+                    get_operator(get_gate_symbol(instr0)),
+                ),
+            )
+        end
+    end
+
+    equivalent_pairs = [ # non-exhaustive list
+        (rotation_x(1, pi / 2), x_90(1)),
+        (rotation_x(1, -pi / 2), x_minus_90(1)),
+        (rotation_x(1, pi), sigma_x(1)),
+        (rotation_x(1, -pi), sigma_x(1)),
+        (rotation(1, pi, 0), sigma_x(1)),
+        (rotation_y(1, pi / 2), y_90(1)),
+        (rotation_y(1, -pi / 2), y_minus_90(1)),
+        (rotation_y(1, pi), sigma_y(1)),
+        (rotation_y(1, -pi), sigma_y(1)),
+        (rotation(1, pi, pi / 2), sigma_y(1)),
+        (phase_shift(1, pi / 2), z_90(1)),
+        (phase_shift(1, -pi / 2), z_minus_90(1)),
+        (phase_shift(1, pi), sigma_z(1)),
+        (phase_shift(1, -pi), sigma_z(1)),
+        (rotation(1, 0, pi), sigma_z(1)),
+    ]
+
+    for (i0, i1) in equivalent_pairs
+        @test !isequal(i0, i1)
     end
 
 end
