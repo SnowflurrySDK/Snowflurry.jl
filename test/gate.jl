@@ -1089,7 +1089,7 @@ end
 
     same_type_different_parameters_pairs = [
         (rotation_x(1, pi), rotation_x(1, pi - delta)),
-        (rotation_y(1, pi), pi - delta),
+        (rotation_y(1, pi), rotation_y(pi - delta)),
         (rotation(1, pi, pi / 2), rotation(1, pi - delta, pi / 2 - delta)),
         (phase_shift(1, -pi), phase_shift(1, -pi - delta)),
         (
