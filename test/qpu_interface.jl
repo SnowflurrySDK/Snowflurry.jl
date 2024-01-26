@@ -237,6 +237,23 @@ end
 
     test_print_connectivity(connectivity, "1──2──3──4──5──6──7──8──9──10──11──12\n")
 
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        1 => [2],
+        2 => [1, 3],
+        3 => [2, 4],
+        4 => [3, 5],
+        5 => [4, 6],
+        6 => [5, 7],
+        8 => [7, 9],
+        7 => [6, 8],
+        9 => [8, 10],
+        10 => [9, 11],
+        11 => [10, 12],
+        12 => [11],
+    )
+
+    @test get_adjacency_list(connectivity) == expected_adjacency_list
+
     io = IOBuffer()
     println(io, connectivity)
     @test String(take!(io)) ==
@@ -269,6 +286,35 @@ end
 
     io = IOBuffer()
     connectivity = LatticeConnectivity(6, 4)
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        1 => [4, 2],
+        2 => [5, 1],
+        3 => [8, 4],
+        4 => [1, 9, 3, 5],
+        5 => [2, 10, 4, 6],
+        6 => [11, 5],
+        7 => [8],
+        8 => [3, 13, 7, 9],
+        9 => [4, 14, 8, 10],
+        10 => [5, 15, 9, 11],
+        11 => [6, 16, 10, 12],
+        12 => [17, 11],
+        13 => [8, 14],
+        14 => [9, 19, 13, 15],
+        15 => [10, 20, 14, 16],
+        16 => [11, 21, 15, 17],
+        17 => [12, 22, 16, 18],
+        18 => [17],
+        19 => [14, 20],
+        20 => [15, 23, 19, 21],
+        21 => [16, 24, 20, 22],
+        22 => [17, 21],
+        23 => [20, 24],
+        24 => [21, 23],
+    )
+
+    @test expected_adjacency_list == get_adjacency_list(connectivity)
+
     print_connectivity(connectivity, path_search(3, 22, connectivity), io)
 
     @test String(take!(io)) ==
@@ -313,6 +359,7 @@ end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())
     @test_throws NotImplementedError get_connectivity_label(UnknownConnectivity())
     @test_throws NotImplementedError path_search(1, 1, UnknownConnectivity())
+    @test_throws NotImplementedError get_adjacency_list(UnknownConnectivity())
 
     # Customized Lattice specifying qubits_per_row
     connectivity = LatticeConnectivity([1, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 1])
@@ -771,6 +818,12 @@ end
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
     test_print_connectivity(connectivity, "AllToAllConnectivity()\n")
+
+    @test_throws DomainError(
+        "All qubits are adjacent in AllToAllConnectivity, without upper" *
+        " limit on qubit count. A finite list of adjacent qubits thus cannot be constructed.",
+    ) get_adjacency_list(connectivity)
+
 end
 
 @testset "run on VirtualQPU: partial readouts" begin

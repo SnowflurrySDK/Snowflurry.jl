@@ -15,5 +15,6 @@ AllToAllConnectivity
 LineConnectivity
 LatticeConnectivity
 path_search
+get_adjacency_list
 get_qubits_distance
 ```
