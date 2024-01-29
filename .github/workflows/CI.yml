@@ -81,6 +81,9 @@ jobs:
 
   thunderhead-ci:
     name: Thunderhead CI Test using Tutorials- ${{ github.event_name }}
+    # GitHub does not support having environment variables isolated to jobs. To
+    # get that effect we use the thunderhead environment to isolate credentials
+    # to submit CI/CD jobs and not to deploy to the thunderhead environment.
     runs-on: thunderhead
     environment: thunderhead-dev
     # don't run on draft PRs
