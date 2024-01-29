@@ -1791,6 +1791,44 @@ function get_canonical_global_phase(H::AbstractMatrix{Complex{T}})::T where {T<:
     return T(0)
 end
 
+
+"""
+
+    compare_operators(H_0::AbstractOperator,H_1::AbstractOperator)::Bool
+
+Checks for equivalence allowing for a global phase difference between two input operators.
+
+# Examples
+```jldoctest
+julia> H_0 = z_90()
+(2,2)-element Snowflurry.DiagonalOperator:
+Underlying data type: ComplexF64:
+0.7071067811865476 - 0.7071067811865475im    .
+.    0.7071067811865476 + 0.7071067811865475im
+
+
+julia> H_1 = phase_shift(pi/2)
+(2,2)-element Snowflurry.DiagonalOperator:
+Underlying data type: ComplexF64:
+1.0 + 0.0im    .
+.    6.123233995736766e-17 + 1.0im
+
+
+julia> compare_operators(H_0, H_1)
+true
+
+julia> H_1 *= sigma_x()
+(2, 2)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+0.0 + 0.0im    1.0 + 0.0im
+6.123233995736766e-17 + 1.0im    0.0 + 0.0im
+
+
+julia> compare_operators(H_0, H_1) # no longer equivalent after applying sigma x
+false
+
+```
+"""
 function compare_operators(H_0::AbstractOperator, H_1::AbstractOperator)::Bool
     m_0 = get_matrix(H_0)
     m_1 = get_matrix(H_1)
