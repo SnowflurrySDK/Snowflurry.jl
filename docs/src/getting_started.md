@@ -2,9 +2,9 @@
 
 ```@meta
 DocTestSetup = quote
-    ENV["ANYON_QUANTUM_USER"] = "test-user"
-    ENV["ANYON_QUANTUM_TOKEN"] = "not-a-real-token"
-    ENV["ANYON_QUANTUM_HOST"] = "yukon.anyonsys.com"
+    ENV["THUNDERHEAD_USER"] = "test-user"
+    ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
+    ENV["THUNDERHEAD_HOST"] = "yukon.anyonsys.com"
 end
 ```
 
