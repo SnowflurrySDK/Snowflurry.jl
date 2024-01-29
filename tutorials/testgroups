@@ -1,1 +1,4 @@
-simulate_bell_state
+single_qubit_readout_fidelity
+excitation_demonstration
+hadamard_transpilation
+entanglement_demonstration

@@ -19,5 +19,4 @@ jobs:
           Pkg.instantiate()'
       - name: Build
         run: julia --project=docs/ -e 
-          'include("docs/make.jl"); 
-          include("tutorials/run_tutorials.jl");'
+          'include("docs/make.jl");'
