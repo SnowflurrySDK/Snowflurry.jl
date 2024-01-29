@@ -1611,12 +1611,8 @@ R_z(\\lambda) = \\begin{bmatrix}
 \\end{bmatrix}.
 ```
 """
-rotation_z(lambda, T::Type{<:Complex} = ComplexF64) = DiagonalOperator(
-    T[
-        exp(-im * lambda / 2.0),
-        exp(im * lambda / 2.0),
-    ]
-)
+rotation_z(lambda, T::Type{<:Complex} = ComplexF64) =
+    DiagonalOperator(T[exp(-im * lambda / 2.0), exp(im * lambda / 2.0)])
 
 """
     universal(theta, phi, lambda)
