@@ -321,3 +321,11 @@ end
         hspace_size_per_body,
     )
 end
+
+@testset "get_canonical_global_phase" begin
+    ψ_0 = Ket([0.0, 0.0, 0.0, 0.0])
+    @test 0 == Snowflurry.get_canonical_global_phase(ψ_0)
+
+    m_0 = Complex.([0.0 0.0; 0.0 0.0])
+    @test 0 == Snowflurry.get_canonical_global_phase(m_0)
+end
