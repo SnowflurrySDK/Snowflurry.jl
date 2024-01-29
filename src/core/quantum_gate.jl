@@ -1979,6 +1979,26 @@ Base.inv(gate::RotationY) = RotationY(-gate.theta)
 get_gate_parameters(gate::RotationY) = Dict("theta" => gate.theta)
 
 """
+    rotation_z(target, lambda)
+
+Return a `Gate` that applies a symmetric phase shift of `-lambda/2` and `+lambda/2` to the 
+\$\\left|0\\right\\rangle\$ and \$\\left|1\\right\\rangle\$ coefficient of `target` qubit 
+as defined by the [`rotation_z(lambda)`](@ref) `DiagonalOperator`.
+
+"""
+rotation_z(target::Integer, lambda::Real) = Gate(RotationZ(lambda), [target])
+
+struct RotationZ <: AbstractGateSymbol
+    lambda::Real
+end
+
+get_operator(gate::RotationZ, T::Type{<:Complex} = ComplexF64) = rotation_z(gate.lambda, T)
+
+Base.inv(gate::RotationZ) = RotationZ(-gate.lambda)
+
+get_gate_parameters(gate::RotationZ) = Dict("lambda" => gate.lambda)
+
+"""
     phase_shift(target, phi)
 
 Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `DiagonalOperator`.
@@ -2004,7 +2024,7 @@ See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """
 universal(target::Integer, theta::Real, phi::Real, lambda::Real) =
-    Gate(Universal(theta, phi, lambda), [target])
+    Gate(Universal(theta, phi, lambda, 1), [target])
 
 struct Universal <: AbstractGateSymbol
     theta::Real

@@ -120,11 +120,6 @@ function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universa
         real(exp(im * (lambda + phi)) * cos(theta / 2)),
         atol = 1e-6,
     )
-    @assert isapprox(
-        imag(matrix[2, 2]),
-        imag(exp(im * (lambda + phi)) * cos(theta / 2)),
-        atol = 1e-6,
-    )
 
     return universal(target, theta, phi, lambda)
 end

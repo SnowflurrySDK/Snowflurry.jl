@@ -22,6 +22,7 @@ single_qubit_instructions = [
     rotation(target, theta, phi),
     rotation_x(target, theta),
     rotation_y(target, theta),
+    rotation_z(target, theta),
     sigma_x(target),
     sigma_y(target),
     sigma_z(target),
@@ -65,6 +66,7 @@ test_instructions = [
 
 @testset "as_universal_gate" begin
     for instr in single_qubit_instructions
+        println("typeof(instr): $(typeof(instr))")
         universal_equivalent =
             Snowflurry.as_universal_gate(target, get_operator(get_gate_symbol(instr)))
 
