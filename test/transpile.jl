@@ -67,8 +67,11 @@ test_instructions = [
     for instr in single_qubit_instructions
         universal_equivalent =
             Snowflurry.as_universal_gate(target, get_operator(get_gate_symbol(instr)))
-        @test get_operator(get_gate_symbol(instr)) ≈
-              get_operator(get_gate_symbol(universal_equivalent))
+
+        @test Snowflurry.compare_operators(
+            get_operator(get_gate_symbol(instr)),
+            get_operator(get_gate_symbol(universal_equivalent)),
+        )
     end
 end
 

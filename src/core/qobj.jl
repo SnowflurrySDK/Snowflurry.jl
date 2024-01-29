@@ -64,6 +64,23 @@ end
 
 Base.length(x::Ket) = Base.length(x.data)
 
+function get_canonical_global_phase(Ψ::Complex)::Real
+    return atan(imag(Ψ), real(Ψ))
+end
+
+function get_canonical_global_phase(ψ::Ket{Complex{T}})::T where {T<:Real}
+    # Use the first non-zero element to determine the global phase of the matrix
+    for index in eachindex(ψ.data)
+        element = ψ.data[index]
+        if (!isapprox(element, 0; atol = sqrt(eps(T))))
+            return get_canonical_global_phase(element)
+        end
+    end
+
+    # If the matrix is zero, then define the global phase as 0
+    return T(0)
+end
+
 """
 
     compare_kets(ψ_0::Ket,ψ_1::Ket)
@@ -110,18 +127,12 @@ false
 function compare_kets(ψ_0::Ket, ψ_1::Ket)
 
     @assert length(ψ_0) == length(ψ_1) ("Input Kets must be of same dimension")
-
-    # calculate possible global phase offset angle
-    # from first component 
-    θ_0 = atan(imag(ψ_0.data[1]), real(ψ_0.data[1]))
-    θ_1 = atan(imag(ψ_1.data[1]), real(ψ_1.data[1]))
+    θ_0 = get_canonical_global_phase(ψ_0)
+    θ_1 = get_canonical_global_phase(ψ_1)
 
     δ = θ_0 - θ_1
 
-    #apply phase offset
-    ψ_1_prime = exp(im * δ) * ψ_1
-
-    return ψ_0 ≈ ψ_1_prime
+    return ψ_0 ≈ exp(im * δ) * ψ_1
 end
 
 """
@@ -1765,4 +1776,29 @@ function genlaguerre(x, alpha, n)
         L_1 = result
     end
     return result
+end
+
+function get_canonical_global_phase(H::AbstractMatrix{Complex{T}})::T where {T<:Real}
+    # Use the first non-zero element to determine the global phase of the matrix
+    for index in eachindex(H)
+        element = H[index]
+        if (!isapprox(element, 0; atol = sqrt(eps(T))))
+            return get_canonical_global_phase(element)
+        end
+    end
+
+    # If the matrix is zero, then define the global phase as 0
+    return T(0)
+end
+
+function compare_operators(H_0::AbstractOperator, H_1::AbstractOperator)::Bool
+    m_0 = get_matrix(H_0)
+    m_1 = get_matrix(H_1)
+
+    @assert size(m_0) == size(m_1)
+
+    δ = get_canonical_global_phase(m_0) - get_canonical_global_phase(m_1)
+
+    # We need to check atol for values close to zero
+    return isapprox(m_0, exp(im * δ) .* m_1; atol = sqrt(eps(typeof(δ))))
 end
