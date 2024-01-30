@@ -824,11 +824,11 @@ q[2]:─────
 
 julia> transpiled_circuit = transpile(transpiler, circuit)
 Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──Z_90────X_90────Z────X_m90────Z_90──
-                                           
-q[2]:──────────────────────────────────────
+   qubit_count: 2
+   bit_count: 2
+q[1]:──X_90────Z────X_m90──
+
+q[2]:──────────────────────
                                            
 
 
