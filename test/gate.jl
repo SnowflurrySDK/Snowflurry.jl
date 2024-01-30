@@ -368,7 +368,8 @@ end
     @test get_instruction_symbol(get_gate_symbol(rz)) == "rz"
     @test get_symbol_for_instruction("rz") == Snowflurry.RotationZ
     @test get_display_symbols(get_gate_symbol(rz)) == ["Rz(-1.5708)"]
-    @test rz * Ket([1 / 2^0.5; 1 / 2^0.5]) ≈ Ket([exp(im * pi / 4)/ 2^0.5, exp(im * -pi / 4) / 2^0.5])
+    @test rz * Ket([1 / 2^0.5; 1 / 2^0.5]) ≈
+          Ket([exp(im * pi / 4) / 2^0.5, exp(im * -pi / 4) / 2^0.5])
     @test get_gate_parameters(get_gate_symbol(rz)) == Dict("lambda" => -pi / 2)
     @test isequal(rz, rotation_z(1, -pi / 2))
     @test !isequal(rz, rotation_z(2, -pi / 2))

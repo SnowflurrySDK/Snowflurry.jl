@@ -1375,7 +1375,7 @@ end
         [sigma_z(target)],
         [pi_8(target)],
         [pi_8_dagger(target)],
-        [rotation_z(target, pi/5)],
+        [rotation_z(target, pi / 5)],
         [phase_shift(target, pi / 3)],
 
         # multiple Rz-type gates
