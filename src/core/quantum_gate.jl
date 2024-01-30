@@ -387,6 +387,8 @@ end
 
 get_gate_parameters(gate::Controlled) = get_gate_parameters(gate.kernel)
 
+get_kernel(gate::Controlled)::AbstractGateSymbol = gate.kernel
+
 """
     move_instruction(gate::Gate,
         qubit_mapping::AbstractDict{<:Integer,<:Integer})::AbstractGateSymbol

@@ -1040,6 +1040,7 @@ end
         rotation(1, theta, phi),
         rotation_x(1, theta),
         rotation_y(1, theta),
+        rotation_z(1, theta),
         sigma_x(1),
         sigma_y(1),
         sigma_z(1),

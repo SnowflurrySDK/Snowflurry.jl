@@ -651,7 +651,6 @@ end
         y_minus_90(target),
         z_90(target),
         z_minus_90(target),
-        # readout(target),
     ]
 
     input_gates_foreign = [
@@ -1500,7 +1499,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 4,
-        instructions = [controlled(hadamard(2), [1])],
+        instructions = [controlled(hadamard(2), [1, 3])], # multiple-control not implemented
         name = "test-name",
     )
 
