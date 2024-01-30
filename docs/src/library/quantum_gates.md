@@ -22,6 +22,7 @@ z_minus_90
 rotation
 rotation_x
 rotation_y
+rotation_z
 phase_shift
 universal
 control_z
