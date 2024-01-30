@@ -780,6 +780,11 @@ end
     inverse_ry = inv(ry)
     @test get_connected_qubits(ry) == get_connected_qubits(inverse_ry)
 
+    rz = rotation_z(1, pi / 3)
+    @test test_inverse(rz)
+    inverse_rz = inv(rz)
+    @test get_connected_qubits(rz) == get_connected_qubits(inverse_rz)
+
 
     p = phase_shift(1, pi / 3)
     @test test_inverse(p)
