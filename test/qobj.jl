@@ -323,9 +323,19 @@ end
 end
 
 @testset "get_canonical_global_phase" begin
-    ψ_0 = Ket([0.0, 0.0, 0.0, 0.0])
-    @test 0 == Snowflurry.get_canonical_global_phase(ψ_0)
+    function run_ket_test(ψ::Ket, expected_global_phase::Real)
+        @test expected_global_phase ≈ Snowflurry.get_canonical_global_phase(ψ)
+    end
 
-    m_0 = Complex.([0.0 0.0; 0.0 0.0])
-    @test 0 == Snowflurry.get_canonical_global_phase(m_0)
+    run_ket_test(Ket([0.0, 0.0, 0.0, 0.0]), 0)
+    run_ket_test(Ket([exp(im * pi / 2), 0.0, 0.0, 0.0]), pi / 2)
+    run_ket_test(Ket([0.0, exp(im * pi / 3), 0.0, 0.0]), pi / 3)
+
+    function run_matrix_test(m::AbstractMatrix, expected_global_phase::Real)
+        @test expected_global_phase ≈ Snowflurry.get_canonical_global_phase(m)
+    end
+
+    run_matrix_test(Complex.([0.0 0.0; 0.0 0.0]), 0)
+    run_matrix_test(Complex.([exp(im * pi / 4) 0.0; 0.0 0.0]), pi / 4)
+    run_matrix_test(Complex.([0.0 exp(im * pi / 5); 0.0 0.0]), pi / 5)
 end
