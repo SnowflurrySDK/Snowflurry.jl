@@ -1501,7 +1501,8 @@ y_minus_90(T::Type{<:Complex} = ComplexF64) = rotation(-pi / 2, pi / 2, T)
 """
     z_90()
 
-Return the `Operator` which applies a ``π/2`` rotation about the ``Z`` axis.
+Return the `Operator` which applies a ``π/2`` rotation about the ``Z`` axis. The unitary of the `R_z\\left(\\frac{\\pi}{2}\\right)` is symmetric.
+
 
 The `Operator` is defined as:
 ```math
@@ -1515,7 +1516,7 @@ z_90(T::Type{<:Complex} = ComplexF64) = rotation_z(pi / 2, T)
 """
     z_minus_90()
 
-Return the `Operator` which applies a ``-π/2`` rotation about the ``Z`` axis.
+Return the `Operator` which applies a ``-π/2`` rotation about the ``Z`` axis. The unitary of the `R_z\\left(-\\frac{\\pi}{2}\\right)` is symmetric.
 
 The `Operator` is defined as:
 ```math
@@ -1601,7 +1602,8 @@ phase_shift(phi, T::Type{<:Complex} = ComplexF64) = DiagonalOperator(T[1.0, exp(
 """
     rotation_z(lambda)
 
-Return the `DiagonalOperator` that applies a rotation of `z` .
+Return the `DiagonalOperator` that applies a rotation of `z`. The unitary of the `R_z\\left(\\lambda)` is symmetric.
+
 
 The `DiagonalOperator` is defined as:
 ```math
