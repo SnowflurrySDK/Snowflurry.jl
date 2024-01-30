@@ -99,7 +99,7 @@ function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universa
     matrix = get_matrix(op)
 
     #find global phase offset angle
-    alpha = atan(imag(matrix[1, 1]), real(matrix[1, 1]))
+    alpha = get_canonical_global_phase(matrix)
 
     #remove global offset
     matrix *= exp(-im * alpha)
