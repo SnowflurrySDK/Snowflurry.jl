@@ -69,7 +69,7 @@ function get_canonical_global_phase(Ψ::Complex)::Real
 end
 
 function get_canonical_global_phase(ψ::Ket{Complex{T}})::T where {T<:Real}
-    # Use the first non-zero element to determine the global phase of the matrix
+    # Use the first non-zero element to determine the global phase of the ket
     for index in eachindex(ψ.data)
         element = ψ.data[index]
         if (!isapprox(element, 0; atol = sqrt(eps(T))))
