@@ -2024,7 +2024,7 @@ See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """
 universal(target::Integer, theta::Real, phi::Real, lambda::Real) =
-    Gate(Universal(theta, phi, lambda, 1), [target])
+    Gate(Universal(theta, phi, lambda), [target])
 
 struct Universal <: AbstractGateSymbol
     theta::Real

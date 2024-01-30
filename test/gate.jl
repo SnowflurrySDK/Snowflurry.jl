@@ -366,18 +366,17 @@ end
 
     rz = rotation_z(1, -pi / 2)
     @test get_instruction_symbol(get_gate_symbol(rz)) == "rz"
-    @test get_symbol_for_instruction("rz") == Snowflurry.RotationY
-    @test get_display_symbols(get_gate_symbol(rz)) == ["rz(-1.5708)"]
-    @test rz * ψ_0 ≈ 1 / 2^0.5 * (ψ_0 - ψ_1)
-    @test rz * ψ_1 ≈ 1 / 2^0.5 * (ψ_0 + ψ_1)
-    @test get_gate_parameters(get_gate_symbol(rz)) == Dict("theta" => -pi / 2)
-    @test isequal(rz, rotation_y(1, -pi / 2))
-    @test !isequal(rz, rotation_y(2, -pi / 2))
-    @test !isequal(rz, rotation_y(1, -pi / 3))
+    @test get_symbol_for_instruction("rz") == Snowflurry.RotationZ
+    @test get_display_symbols(get_gate_symbol(rz)) == ["Rz(-1.5708)"]
+    @test rz * Ket([1 / 2^0.5; 1 / 2^0.5]) ≈ Ket([exp(im * pi / 4)/ 2^0.5, exp(im * -pi / 4) / 2^0.5])
+    @test get_gate_parameters(get_gate_symbol(rz)) == Dict("lambda" => -pi / 2)
+    @test isequal(rz, rotation_z(1, -pi / 2))
+    @test !isequal(rz, rotation_z(2, -pi / 2))
+    @test !isequal(rz, rotation_z(1, -pi / 3))
 
     p = phase_shift(1, pi / 4)
     @test get_instruction_symbol(get_gate_symbol(p)) == "p"
-    @test get_symbol_for_instruction("rz") == Snowflurry.PhaseShift
+    @test get_symbol_for_instruction("p") == Snowflurry.PhaseShift
     @test get_display_symbols(get_gate_symbol(p)) == ["P(0.7854)"]
     @test p * Ket([1 / 2^0.5; 1 / 2^0.5]) ≈ Ket([1 / 2^0.5, exp(im * pi / 4) / 2^0.5])
     @test get_gate_parameters(get_gate_symbol(p)) == Dict("lambda" => pi / 4)
@@ -630,7 +629,8 @@ end
             ],
             [rotation_x, [pi / 3], ["theta"], make_labels(num_controls, ["Rx(1.0472)"])],
             [rotation_y, [pi / 4], ["theta"], make_labels(num_controls, ["Ry(0.7854)"])],
-            [phase_shift, [pi / 7], ["lambda"], make_labels(num_controls, ["Rz(0.4488)"])],
+            [rotation_z, [pi / 7], ["lambda"], make_labels(num_controls, ["Rz(0.4488)"])],
+            [phase_shift, [pi / 7], ["lambda"], make_labels(num_controls, ["P(0.4488)"])],
             [
                 universal,
                 [pi / 3, pi / 12, pi / 4],

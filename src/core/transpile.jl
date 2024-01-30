@@ -144,7 +144,7 @@ function unsafe_compress_to_universal(gates::Vector{Gate}, target::Int)::Gate{Un
     return as_universal_gate(target, combined_op)
 end
 
-set_of_rz_gates = [Z90, ZM90, SigmaZ, Pi8, Pi8Dagger, PhaseShift]
+set_of_rz_gates = [Z90, ZM90, SigmaZ, Pi8, Pi8Dagger, PhaseShift, RotationZ]
 
 is_multi_target(symbol::AbstractGateSymbol) = get_num_connected_qubits(symbol) > 1
 is_multi_target(gate::Gate) = is_multi_target(get_gate_symbol(gate))

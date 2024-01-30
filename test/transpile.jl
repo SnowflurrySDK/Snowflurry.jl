@@ -66,7 +66,6 @@ test_instructions = [
 
 @testset "as_universal_gate" begin
     for instr in single_qubit_instructions
-        println("typeof(instr): $(typeof(instr))")
         universal_equivalent =
             Snowflurry.as_universal_gate(target, get_operator(get_gate_symbol(instr)))
 
@@ -1376,6 +1375,7 @@ end
         [sigma_z(target)],
         [pi_8(target)],
         [pi_8_dagger(target)],
+        [rotation_z(target, pi/5)],
         [phase_shift(target, pi / 3)],
 
         # multiple Rz-type gates
@@ -1399,6 +1399,7 @@ test_circuits_Rz_type = [
     [
         sigma_z(1),
         pi_8(1),
+        rotation_z(1, pi / 9),
         phase_shift(1, pi / 7),
         control_x(1, 3),
         sigma_x(2),
