@@ -1794,7 +1794,7 @@ end
 
 """
 
-    compare_operators(H_0::AbstractOperator,H_1::AbstractOperator)::Bool
+    compare_operators(H_0::AbstractOperator, H_1::AbstractOperator)::Bool
 
 Checks for equivalence allowing for a global phase difference between two input operators.
 
@@ -1807,7 +1807,7 @@ Underlying data type: ComplexF64:
 .    0.7071067811865476 + 0.7071067811865475im
 
 
-julia> H_1 = phase_shift(pi/2)
+julia> H_1 = phase_shift(pi / 2)
 (2,2)-element Snowflurry.DiagonalOperator:
 Underlying data type: ComplexF64:
 1.0 + 0.0im    .
