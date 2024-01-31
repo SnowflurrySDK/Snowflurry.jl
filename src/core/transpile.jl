@@ -914,7 +914,7 @@ function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
     return gate_array
 end
 
-# Decompose a Universal gate as U=exp(iα)AXBXC.
+# Decompose a Universal gate as U = exp(im*α)AXBXC.
 # See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
 function decompose_universal_to_A_B_C_gates(gate::Universal, target::Int)::Tuple{Real,Gate,Gate,Gate}
     params = get_gate_parameters(gate)
@@ -922,10 +922,6 @@ function decompose_universal_to_A_B_C_gates(gate::Universal, target::Int)::Tuple
     γ = params["theta"]
     β = params["phi"]
     δ = params["lambda"]
-
-    println("γ: $γ")
-    println("β: $β")
-    println("δ: $δ")
 
     A = rotation_z(β) * rotation_y(γ/2.0)
 
@@ -2137,9 +2133,13 @@ function transpile(::DecomposeControlledGatesTranspiler, circuit::QuantumCircuit
 
             op = get_operator(kernel)
 
+            # store existing global phase, which is cancelled by as_universal_gate()
+            a_0 = get_canonical_global_phase(get_matrix(op))
             universal_equivalent = as_universal_gate(target, op)
 
-            (α, A, B, C) = decompose_universal_to_A_B_C_gates(get_gate_symbol(universal_equivalent), target)
+            (a_d, A, B, C) = decompose_universal_to_A_B_C_gates(get_gate_symbol(universal_equivalent), target)
+
+            α = -a_0 + a_d
 
             push!(
                 output,
