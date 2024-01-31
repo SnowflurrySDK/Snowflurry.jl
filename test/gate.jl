@@ -310,9 +310,9 @@ end
     @test get_instruction_symbol(get_gate_symbol(z90)) == "z_90"
     @test get_symbol_for_instruction("z_90") == Snowflurry.Z90
     @test get_display_symbols(get_gate_symbol(z90)) == ["Z_90"]
-    @test get_matrix(get_operator(get_gate_symbol(z90))) ≈ [
-        1 0
-        0 im
+    @test get_matrix(get_operator(get_gate_symbol(z90))) ≈ (1 / sqrt(2.0)) * [
+        1-im 0
+        0 1+im
     ]
     @test isequal(z90, z_90(1))
     @test !isequal(z90, z_90(2))
@@ -321,9 +321,9 @@ end
     @test get_instruction_symbol(get_gate_symbol(zm90)) == "z_minus_90"
     @test get_symbol_for_instruction("z_minus_90") == Snowflurry.ZM90
     @test get_display_symbols(get_gate_symbol(zm90)) == ["Z_m90"]
-    @test get_matrix(get_operator(get_gate_symbol(zm90))) ≈ [
-        1 0
-        0 -im
+    @test get_matrix(get_operator(get_gate_symbol(zm90))) ≈ (1 / sqrt(2.0)) * [
+        1+im 0
+        0 1-im
     ]
     @test isequal(zm90, z_minus_90(1))
     @test !isequal(zm90, z_minus_90(2))

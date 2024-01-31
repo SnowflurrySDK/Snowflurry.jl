@@ -1506,27 +1506,25 @@ Return the `Operator` which applies a ``π/2`` rotation about the ``Z`` axis.
 The `Operator` is defined as:
 ```math
 R_z\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    1 & 0 \\\\
-    0 & i
-    \\end{bmatrix}.
-```
+    e^{-i\\frac{pi}{4} & 0 \\\\[0.5em]
+    0 & e^{i\\frac{pi}{4}}
+\\end{bmatrix}.
 """
-z_90(T::Type{<:Complex} = ComplexF64) = phase_shift(pi / 2, T)
+z_90(T::Type{<:Complex} = ComplexF64) = rotation_z(pi / 2, T)
 
 """
     z_minus_90()
 
 Return the `Operator` which applies a ``-π/2`` rotation about the ``Z`` axis.
-
 The `Operator` is defined as:
 ```math
 R_z\\left(-\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    1 & 0 \\\\
-    0 & -i
-    \\end{bmatrix}.
+    e^{i\\frac{pi}{4} & 0 \\\\[0.5em]
+    0 & e^{-i\\frac{pi}{4}}
+\\end{bmatrix}.
 ```
 """
-z_minus_90(T::Type{<:Complex} = ComplexF64) = phase_shift(-pi / 2, T)
+z_minus_90(T::Type{<:Complex} = ComplexF64) = rotation_z(-pi / 2, T)
 
 """
     rotation(theta, phi)
@@ -1598,6 +1596,22 @@ P(\\phi) = \\begin{bmatrix}
 ```
 """
 phase_shift(phi, T::Type{<:Complex} = ComplexF64) = DiagonalOperator(T[1.0, exp(im * phi)])
+
+"""
+    rotation_z(lambda)
+
+Return the `DiagonalOperator` that applies a rotation of `z`.
+
+The `DiagonalOperator` is defined as:
+```math
+R_z(\\lambda) = \\begin{bmatrix}
+    e^{-i\\frac{\\lambda}{2} & 0 \\\\[0.5em]
+    0 & e^{i\\frac{\\lambda}{2}}
+\\end{bmatrix}.
+```
+"""
+rotation_z(lambda, T::Type{<:Complex} = ComplexF64) =
+    DiagonalOperator(T[exp(-im * lambda / 2.0), exp(im * lambda / 2.0)])
 
 """
     universal(theta, phi, lambda)

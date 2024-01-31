@@ -47,4 +47,5 @@ destroy
 number_op
 coherent
 compare_kets
+compare_operators
 ```

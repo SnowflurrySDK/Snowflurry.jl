@@ -126,6 +126,7 @@ export
     compare_circuits,
     circuit_contains_gate_type,
     compare_kets,
+    compare_operators,
     permute_qubits!,
     permute_qubits,
     transpile,
