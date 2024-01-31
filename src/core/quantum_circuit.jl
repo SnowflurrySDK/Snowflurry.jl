@@ -714,21 +714,20 @@ q[2]:───────X────X──
 
 
 julia> pop!(c)
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──H───────
-               
-q[2]:───────X──
-               
-
-
+Gate Object: Snowflurry.ControlX
+Connected_qubits        : [1, 2]
+Operator:
+(4, 4)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
 
 ```
 """
 function Base.pop!(circuit::QuantumCircuit)
-    pop!(get_circuit_instructions(circuit))
-    return circuit
+    return pop!(get_circuit_instructions(circuit))
 end
 
 function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer = 10)
