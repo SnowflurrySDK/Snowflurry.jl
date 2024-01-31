@@ -930,12 +930,7 @@ function decompose_universal_to_A_B_C_gates(
 
     B = rotation_y(-γ / 2.0) * rotation_z(-(δ + β) / 2.0)
 
-    # numerical stability issues arise for rotation_z with vanishingly small phase angle
-    if abs(δ - β) > sqrt(eps(typeof(δ)))
-        C = rotation_z(target, (δ - β) / 2.0)
-    else
-        C = identity_gate(target)
-    end
+    C = rotation_z(target, (δ - β) / 2.0)
 
     universal_op = get_operator(gate)
 
