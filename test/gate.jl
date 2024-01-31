@@ -1040,6 +1040,7 @@ end
         rotation(1, theta, phi),
         rotation_x(1, theta),
         rotation_y(1, theta),
+        rotation_z(1, theta),
         sigma_x(1),
         sigma_y(1),
         sigma_z(1),
@@ -1069,7 +1070,9 @@ end
         end
 
         connected_qubit = get_connected_qubits(instr0)
-        if length(connected_qubit) == 1 && !(instr0 isa Readout)
+        if length(connected_qubit) == 1 &&
+           !(instr0 isa Readout) &&
+           !(get_gate_symbol(instr0) isa Snowflurry.Universal)
             @test !isequal(
                 instr0,
                 Snowflurry.as_universal_gate(

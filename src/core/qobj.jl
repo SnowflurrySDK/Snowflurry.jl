@@ -132,7 +132,7 @@ function compare_kets(ψ_0::Ket, ψ_1::Ket)
 
     δ = θ_0 - θ_1
 
-    return ψ_0 ≈ exp(im * δ) * ψ_1
+    return isapprox(ψ_0, exp(im * δ) * ψ_1; atol = 1e-5)
 end
 
 """

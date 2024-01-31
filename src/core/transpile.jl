@@ -107,7 +107,7 @@ function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universa
     theta = (2 * acos(real(matrix[1, 1])))
 
     if (isapprox(theta, 0.0, atol = 1e-6)) || (isapprox(theta, 2 * π, atol = 1e-6))
-        lambda = 0
+        lambda = 0.0
         phi = real(exp(-im * π / 2)log(matrix[2, 2] / cos(theta / 2)))
     else
         lambda = real(exp(-im * π / 2) * log(-matrix[1, 2] / sin(theta / 2)))
@@ -912,6 +912,36 @@ function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
     push!(gate_array, phase_shift(target, β))
 
     return gate_array
+end
+
+# Decompose a Universal gate as U = exp(im*α)AXBXC.
+# See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
+function decompose_universal_to_A_B_C_gates(
+    gate::Universal,
+    target::Int,
+)::Tuple{Real,Gate,Gate,Gate}
+    params = get_gate_parameters(gate)
+
+    γ = params["theta"]
+    β = params["phi"]
+    δ = params["lambda"]
+
+    A = rotation_z(β) * rotation_y(γ / 2.0)
+
+    B = rotation_y(-γ / 2.0) * rotation_z(-(δ + β) / 2.0)
+
+    C = rotation_z(target, (δ - β) / 2.0)
+
+    universal_op = get_operator(gate)
+
+    X = sigma_x()
+    decomposition_op = A * X * B * X * get_operator(get_gate_symbol(C))
+
+    @assert compare_operators(universal_op, decomposition_op)
+
+    α = Snowflurry.get_canonical_global_phase(get_matrix(decomposition_op))
+
+    return α, as_universal_gate(target, A), as_universal_gate(target, B), C
 end
 
 struct CastUniversalToRzRxRzTranspiler <: Transpiler end
@@ -1830,7 +1860,9 @@ function transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::Quant
 
     for instr in get_circuit_instructions(circuit)
         if !(instr isa Readout) && get_gate_symbol(instr) isa Controlled
-            throw(NotImplementedError(:Transpiler, instr))
+            if length(get_connected_qubits(instr)) != 2
+                throw(NotImplementedError(:Transpiler, instr))
+            end
         end
     end
 
@@ -2063,4 +2095,70 @@ function transpile(
     end
 
     return circuit
+end
+
+struct DecomposeSingleTargetSingleControlGatesTranspiler <: Transpiler end
+
+function transpile(
+    ::DecomposeSingleTargetSingleControlGatesTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+    qubit_count = get_num_qubits(circuit)
+    output = QuantumCircuit(qubit_count = qubit_count, name = get_name(circuit))
+
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Readout
+            push!(output, instr)
+            continue
+        end
+
+        gate = get_gate_symbol(instr)
+        if gate isa Controlled
+            kernel = get_kernel(gate)
+
+            connected_qubits = get_connected_qubits(instr)
+            if length(connected_qubits) != 2
+                # this transpiler stage only handles single-target single-control ControlledGates
+                push!(output, instr)
+                continue
+            end
+
+            control = connected_qubits[1]
+            target = connected_qubits[2]
+
+            # optimized transpilation stages are implemented for Controlled{SigmaX} and Controlled{SigmaX}
+            if typeof(kernel) == SigmaZ
+                push!(output, control_z(control, target))
+                continue
+            end
+
+            if typeof(kernel) == SigmaX
+                push!(output, control_x(control, target))
+                continue
+            end
+
+            op = get_operator(kernel)
+
+            # store existing global phase, which is cancelled by as_universal_gate()
+            α_0 = get_canonical_global_phase(get_matrix(op))
+            universal_equivalent = as_universal_gate(target, op)
+
+            (α_d, A, B, C) = decompose_universal_to_A_B_C_gates(
+                get_gate_symbol(universal_equivalent),
+                target,
+            )
+
+            α = -α_0 + α_d
+
+            push!(output, C, control_x(control, target), B, control_x(control, target), A)
+
+            if abs(α) > sqrt(eps(typeof(α)))
+                push!(output, phase_shift(control, -α))
+            end
+        else
+            push!(output, instr)
+        end
+    end
+
+    return output
 end

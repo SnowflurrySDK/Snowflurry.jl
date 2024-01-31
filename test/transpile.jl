@@ -44,7 +44,7 @@ test_instructions = [
         control_x(1, 3),
         sigma_x(2),
         sigma_y(2),
-        control_x(1, 4),
+        controlled(sigma_x(4), [1]),
         hadamard(2),
         sigma_z(1),
         sigma_x(4),
@@ -632,13 +632,13 @@ end
         project_id = project_id,
     )
 
-    qubit_count = 1
+    qubit_count = 2
     target = 1
+    control = 2
 
     transpiler = get_transpiler(qpu)
 
     input_gates_native = [
-        # gate_type, gate
         phase_shift(target, -phi / 2),
         pi_8(target),
         pi_8_dagger(target),
@@ -651,11 +651,11 @@ end
         y_minus_90(target),
         z_90(target),
         z_minus_90(target),
-        # readout(target),
+        control_z(control, target),
+        controlled(sigma_z(target), [control]),
     ]
 
     input_gates_foreign = [
-        # gate_type, gate
         identity_gate(target),
         hadamard(target),
         rotation(target, theta, phi),
@@ -709,8 +709,6 @@ end
     transpiler = get_transpiler(qpu)
 
     qubit_count = 4
-
-    println("test_instructions: $test_instructions")
 
     for gates_list in test_instructions
         for end_pos ∈ 1:length(gates_list)
@@ -1500,7 +1498,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 4,
-        instructions = [controlled(hadamard(2), [1])],
+        instructions = [controlled(hadamard(2), [1, 3])], # multiple-control not implemented
         name = "test-name",
     )
 

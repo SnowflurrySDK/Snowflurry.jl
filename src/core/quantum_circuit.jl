@@ -685,7 +685,7 @@ get_symbol_for_instruction(instruction::String)::DataType =
 """
     pop!(circuit::QuantumCircuit)
 
-Removes the last instruction from `circuit.instructions`. 
+Removes the last instruction from `circuit.instructions`, and returns it.
 
 # Examples
 ```jldoctest
@@ -714,6 +714,17 @@ q[2]:───────X────X──
 
 
 julia> pop!(c)
+Gate Object: Snowflurry.ControlX
+Connected_qubits	: [1, 2]
+Operator:
+(4, 4)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+
+julia> c
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -721,14 +732,10 @@ q[1]:──H───────
                
 q[2]:───────X──
                
-
-
-
 ```
 """
 function Base.pop!(circuit::QuantumCircuit)
-    pop!(get_circuit_instructions(circuit))
-    return circuit
+    return pop!(get_circuit_instructions(circuit))
 end
 
 function Base.show(io::IO, circuit::QuantumCircuit, padding_width::Integer = 10)

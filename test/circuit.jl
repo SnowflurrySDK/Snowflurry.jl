@@ -53,7 +53,9 @@ end
 
     push!(c, control_x(1, 2))
     @test length(get_circuit_instructions(c)) == 2
-    pop!(c)
+    instr = pop!(c)
+    @test isequal(instr, control_x(1, 2))
+
     @test length(get_circuit_instructions(c)) == 1
 
     push!(c, control_x(1, 2))

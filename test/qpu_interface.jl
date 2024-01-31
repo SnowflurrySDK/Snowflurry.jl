@@ -693,13 +693,13 @@ end
             AssertionError("Cannot perform `Gate` following `Readout` on qubit: 1"),
         ),
         (
-            [controlled(hadamard(2), [1]), readout(2, 1)],
+            [controlled(hadamard(2), [1, 3]), readout(2, 1)],
             NotImplementedError{Gate{Controlled{Snowflurry.Hadamard}}},
         ),
     ]
 
     for (instrs, e) in invalid_instructions
-        circuit = QuantumCircuit(qubit_count = 2, instructions = instrs)
+        circuit = QuantumCircuit(qubit_count = 3, instructions = instrs)
         @test_throws e run_job(qpu, circuit, shot_count)
     end
 
