@@ -263,6 +263,7 @@ function Base.isequal(i0::T, i1::T)::Bool where {T<:Gate}
     op0 = get_operator(get_gate_symbol(i0))
     op1 = get_operator(get_gate_symbol(i1))
 
+    # this comparison does not ignore global phase
     if !isapprox(op0, op1; atol = 1e-8)
         return false
     end
