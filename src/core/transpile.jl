@@ -2145,15 +2145,15 @@ function transpile(
             op = get_operator(kernel)
 
             # store existing global phase, which is cancelled by as_universal_gate()
-            a_0 = get_canonical_global_phase(get_matrix(op))
+            α_0 = get_canonical_global_phase(get_matrix(op))
             universal_equivalent = as_universal_gate(target, op)
 
-            (a_d, A, B, C) = decompose_universal_to_A_B_C_gates(
+            (α_d, A, B, C) = decompose_universal_to_A_B_C_gates(
                 get_gate_symbol(universal_equivalent),
                 target,
             )
 
-            α = -a_0 + a_d
+            α = -α_0 + α_d
 
             push!(output, C, control_x(control, target), B, control_x(control, target), A)
 
