@@ -1070,7 +1070,9 @@ end
         end
 
         connected_qubit = get_connected_qubits(instr0)
-        if length(connected_qubit) == 1 && !(instr0 isa Readout) && !(get_gate_symbol(instr0) isa Snowflurry.Universal)
+        if length(connected_qubit) == 1 &&
+           !(instr0 isa Readout) &&
+           !(get_gate_symbol(instr0) isa Snowflurry.Universal)
             @test !isequal(
                 instr0,
                 Snowflurry.as_universal_gate(
