@@ -45,14 +45,7 @@ using Test
         @test isequal(circuit, transpiled_circuit)
     end
 
-    target_control_pairs=[
-        (1,2),
-        (1,3),
-        (2,3),
-        (3,2),
-        (3,1),
-        (2,1),
-    ]
+    target_control_pairs = [(1, 2), (1, 3), (2, 3), (3, 2), (3, 1), (2, 1)]
 
     for (target, control) in target_control_pairs
 
@@ -75,13 +68,19 @@ using Test
             z_90(target),
             z_minus_90(target),
         ]
-        
+
         for kernel in test_cases
-            circuit = QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control])])
+            circuit = QuantumCircuit(
+                qubit_count = 4,
+                instructions = [controlled(kernel, [control])],
+            )
             transpiled_circuit = transpile(transpiler, circuit)
             @test compare_circuits(circuit, transpiled_circuit)
 
-            circuit = QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control]), readout(1,1)])
+            circuit = QuantumCircuit(
+                qubit_count = 4,
+                instructions = [controlled(kernel, [control]), readout(1, 1)],
+            )
             transpiled_circuit = transpile(transpiler, circuit)
             @test compare_circuits(circuit, transpiled_circuit)
         end
@@ -93,13 +92,23 @@ using Test
     error_cases = [
         (sigma_x(target), "use control_x() instead of Controlled(SigmaX)")
         (sigma_z(target), "use control_z() instead of Controlled(SigmaZ)")
-        (swap(target, 3), "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates")
-        (iswap(target, 3), "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates")
-        (control_x(target, 3), "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates")
+        (
+            swap(target, 3),
+            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
+        )
+        (
+            iswap(target, 3),
+            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
+        )
+        (
+            control_x(target, 3),
+            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
+        )
     ]
 
-    for (kernel,msg) in error_cases
-        circuit = QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control])])
+    for (kernel, msg) in error_cases
+        circuit =
+            QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control])])
         @test_throws ArgumentError(msg) transpile(transpiler, circuit)
     end
 

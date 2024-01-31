@@ -236,7 +236,7 @@ using PrecompileTools
         swap(2, 5),
         iswap(4, 1),
         iswap_dagger(6, 3),
-        controlled(hadamard(1),[2]),
+        controlled(hadamard(1), [2]),
     ]
 
     transpiler_allowing_no_readout = SequentialTranspiler([
