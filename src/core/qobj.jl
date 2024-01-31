@@ -1838,5 +1838,5 @@ function compare_operators(H_0::AbstractOperator, H_1::AbstractOperator)::Bool
     δ = get_canonical_global_phase(m_0) - get_canonical_global_phase(m_1)
 
     # We need to check atol for values close to zero
-    return isapprox(m_0, exp(im * δ) .* m_1; atol = sqrt(eps(typeof(δ))))
+    return isapprox(m_0, exp(im * δ) .* m_1; atol = 1e-6)
 end

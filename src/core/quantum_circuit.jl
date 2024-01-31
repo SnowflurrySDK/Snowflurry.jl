@@ -341,8 +341,8 @@ julia> c1 = QuantumCircuit(qubit_count = 1, instructions = [phase_shift(1, π)])
 Quantum Circuit Object:
    qubit_count: 1  
    bit_count: 1  
-q[1]:──Rz(3.1416)──
-                   
+q[1]:──P(3.1416)──
+                  
 
 
 
@@ -630,7 +630,8 @@ gates_display_symbols = Dict(
     Rotation => ["R(θ=%s,ϕ=%s)", "theta", "phi"],
     RotationX => ["Rx(%s)", "theta"],
     RotationY => ["Ry(%s)", "theta"],
-    PhaseShift => ["Rz(%s)", "lambda"],
+    RotationZ => ["Rz(%s)", "lambda"],
+    PhaseShift => ["P(%s)", "lambda"],
     Universal => ["U(θ=%s,ϕ=%s,λ=%s)", "theta", "phi", "lambda"],
     ControlZ => [control_display_symbol, "Z"],
     ControlX => [control_display_symbol, "X"],
@@ -663,7 +664,8 @@ instruction_symbols = Dict(
     Rotation => "r",
     RotationX => "rx",
     RotationY => "ry",
-    PhaseShift => "rz",
+    RotationZ => "rz",
+    PhaseShift => "p",
     Universal => "u",
     ControlZ => "cz",
     ControlX => "cx",

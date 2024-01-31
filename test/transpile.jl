@@ -22,6 +22,7 @@ single_qubit_instructions = [
     rotation(target, theta, phi),
     rotation_x(target, theta),
     rotation_y(target, theta),
+    rotation_z(target, theta),
     sigma_x(target),
     sigma_y(target),
     sigma_z(target),
@@ -1374,6 +1375,7 @@ end
         [sigma_z(target)],
         [pi_8(target)],
         [pi_8_dagger(target)],
+        [rotation_z(target, pi / 5)],
         [phase_shift(target, pi / 3)],
 
         # multiple Rz-type gates
@@ -1397,6 +1399,7 @@ test_circuits_Rz_type = [
     [
         sigma_z(1),
         pi_8(1),
+        rotation_z(1, pi / 9),
         phase_shift(1, pi / 7),
         control_x(1, 3),
         sigma_x(2),

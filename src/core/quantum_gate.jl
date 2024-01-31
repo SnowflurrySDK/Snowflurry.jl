@@ -1979,6 +1979,26 @@ Base.inv(gate::RotationY) = RotationY(-gate.theta)
 get_gate_parameters(gate::RotationY) = Dict("theta" => gate.theta)
 
 """
+    rotation_z(target, lambda)
+
+Return a `Gate` that applies a rotation `lambda` about the ``Z`` axis of the `target` qubit.
+
+The corresponding `Operator` is [`rotation_z(lambda)`](@ref).
+
+"""
+rotation_z(target::Integer, lambda::Real) = Gate(RotationZ(lambda), [target])
+
+struct RotationZ <: AbstractGateSymbol
+    lambda::Real
+end
+
+get_operator(gate::RotationZ, T::Type{<:Complex} = ComplexF64) = rotation_z(gate.lambda, T)
+
+Base.inv(gate::RotationZ) = RotationZ(-gate.lambda)
+
+get_gate_parameters(gate::RotationZ) = Dict("lambda" => gate.lambda)
+
+"""
     phase_shift(target, phi)
 
 Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `DiagonalOperator`.
