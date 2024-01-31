@@ -1,9 +1,9 @@
 using Snowflurry
 using Test
 
-@testset "DecomposeControlledGatesTranspiler: single-control" begin
+@testset "DecomposeSingleTargetSingleControlGatesTranspiler: single-control" begin
 
-    transpiler = DecomposeControlledGatesTranspiler()
+    transpiler = DecomposeSingleTargetSingleControlGatesTranspiler()
 
     phi = π / 3
     theta = π / 5
@@ -88,24 +88,43 @@ using Test
         end
     end
 
-    target = 1
-    control = 2
-
-    error_cases = [swap(target, 3), iswap(target, 3), control_x(target, 3)]
-
-    for kernel in error_cases
-        circuit =
-            QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control])])
-        @test_throws ArgumentError(
-            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
-        ) transpile(transpiler, circuit)
-    end
-
 end
 
-@testset "DecomposeControlledGatesTranspiler: global phase" begin
 
-    transpiler = DecomposeControlledGatesTranspiler()
+@testset "DecomposeSingleTargetSingleControlGatesTranspiler: ignored cases" begin
+
+    transpiler = DecomposeSingleTargetSingleControlGatesTranspiler()
+
+    target = 1
+    target_2 = 4
+    control = 2
+    control_2 = 3
+    control_3 = 5
+
+    # multiple-control single-target gates are ignored
+    ignored_cases = [
+        swap(target, target_2),
+        iswap(target, target_2),
+        control_x(control, target),
+        toffoli(control, control_2, target),
+    ]
+
+    for kernel in ignored_cases
+        circuit = QuantumCircuit(
+            qubit_count = 5,
+            instructions = [controlled(kernel, [control_3])],
+        )
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        instr_sequence = get_circuit_instructions(transpiled_circuit)
+        @test length(instr_sequence) == 1
+        @test isequal(instr_sequence[1], controlled(kernel, [control_3]))
+    end
+end
+
+@testset "DecomposeSingleTargetSingleControlGatesTranspiler: global phase" begin
+
+    transpiler = DecomposeSingleTargetSingleControlGatesTranspiler()
 
     target = 2
     control = 1
@@ -140,9 +159,9 @@ end
     end
 end
 
-@testset "DecomposeControlledGatesTranspiler: substitutions" begin
+@testset "DecomposeSingleTargetSingleControlGatesTranspiler: substitutions" begin
 
-    transpiler = DecomposeControlledGatesTranspiler()
+    transpiler = DecomposeSingleTargetSingleControlGatesTranspiler()
 
     target = 2
     control = 1

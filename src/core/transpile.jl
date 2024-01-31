@@ -2102,10 +2102,10 @@ function transpile(
     return circuit
 end
 
-struct DecomposeControlledGatesTranspiler <: Transpiler end
+struct DecomposeSingleTargetSingleControlGatesTranspiler <: Transpiler end
 
 function transpile(
-    ::DecomposeControlledGatesTranspiler,
+    ::DecomposeSingleTargetSingleControlGatesTranspiler,
     circuit::QuantumCircuit,
 )::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
@@ -2123,11 +2123,9 @@ function transpile(
 
             connected_qubits = get_connected_qubits(instr)
             if length(connected_qubits) != 2
-                throw(
-                    ArgumentError(
-                        "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
-                    ),
-                )
+                # this transpiler stage only handles single-target single-control ControlledGates
+                push!(output, instr)
+                continue
             end
 
             control = connected_qubits[1]

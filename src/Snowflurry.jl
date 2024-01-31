@@ -75,7 +75,7 @@ export
     ReadoutsDoNotConflictTranspiler,
     CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
-    DecomposeControlledGatesTranspiler,
+    DecomposeSingleTargetSingleControlGatesTranspiler,
 
     # Functions
     controlled,
@@ -242,7 +242,7 @@ using PrecompileTools
     transpiler_allowing_no_readout = SequentialTranspiler([
         ReadoutsDoNotConflictTranspiler(),
         UnsupportedGatesTranspiler(),
-        DecomposeControlledGatesTranspiler(),
+        DecomposeSingleTargetSingleControlGatesTranspiler(),
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
