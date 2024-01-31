@@ -113,3 +113,40 @@ using Test
     end
 
 end
+
+@testset "DecomposeControlledGatesTranspiler: global phase" begin
+
+    transpiler = DecomposeControlledGatesTranspiler()
+
+    target = 2
+    control = 1
+
+    test_cases = [
+        (phase_shift(target, pi / 2), z_90(target), pi / 4),
+        (phase_shift(target, -pi / 2), z_minus_90(target), -pi / 4),
+    ]
+
+    for (phase_instr, z_90_instr, global_phase) in test_cases
+        phase_circuit = QuantumCircuit(
+            qubit_count = 4,
+            instructions = [controlled(phase_instr, [control])],
+        )
+        transpiled_phase_circuit = transpile(transpiler, phase_circuit)
+
+        z_90_circuit = QuantumCircuit(
+            qubit_count = 4,
+            instructions = [controlled(z_90_instr, [control])],
+        )
+        transpiled_z90_circuit = transpile(transpiler, z_90_circuit)
+
+        phase_gate_sequence = get_circuit_instructions(transpiled_phase_circuit)
+        z_90_gate_sequence = get_circuit_instructions(transpiled_z90_circuit)
+
+        @test length(phase_gate_sequence) == length(z_90_gate_sequence) + 1
+
+        instr = pop!(transpiled_phase_circuit)
+        @test isequal(instr, phase_shift(control, global_phase))
+
+        @test isequal(transpiled_phase_circuit, transpiled_z90_circuit)
+    end
+end
