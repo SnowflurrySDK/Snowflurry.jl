@@ -2130,16 +2130,19 @@ function transpile(
                 )
             end
 
+            control = connected_qubits[1]
+            target = connected_qubits[2]
+
+            # optimized transpilation stages are implemented for Controlled{SigmaX} and Controlled{SigmaX}
             if typeof(kernel) == SigmaZ
-                throw(ArgumentError("use control_z() instead of Controlled(SigmaZ)"))
+                push!(output, control_z(control, target))
+                continue
             end
 
             if typeof(kernel) == SigmaX
-                throw(ArgumentError("use control_x() instead of Controlled(SigmaX)"))
+                push!(output, control_x(control, target))
+                continue
             end
-
-            control = connected_qubits[1]
-            target = connected_qubits[2]
 
             op = get_operator(kernel)
 

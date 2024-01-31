@@ -59,7 +59,9 @@ using Test
             rotation_x(target, theta),
             rotation_y(target, theta),
             rotation_z(target, theta),
+            sigma_x(target),
             sigma_y(target),
+            sigma_z(target),
             universal(target, theta, phi, lambda),
             x_90(target),
             x_minus_90(target),
@@ -89,27 +91,14 @@ using Test
     target = 1
     control = 2
 
-    error_cases = [
-        (sigma_x(target), "use control_x() instead of Controlled(SigmaX)")
-        (sigma_z(target), "use control_z() instead of Controlled(SigmaZ)")
-        (
-            swap(target, 3),
-            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
-        )
-        (
-            iswap(target, 3),
-            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
-        )
-        (
-            control_x(target, 3),
-            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
-        )
-    ]
+    error_cases = [swap(target, 3), iswap(target, 3), control_x(target, 3)]
 
-    for (kernel, msg) in error_cases
+    for kernel in error_cases
         circuit =
             QuantumCircuit(qubit_count = 4, instructions = [controlled(kernel, [control])])
-        @test_throws ArgumentError(msg) transpile(transpiler, circuit)
+        @test_throws ArgumentError(
+            "DecomposeControlledGatesTranspiler is only implemented for single-target single-control Controlled Gates",
+        ) transpile(transpiler, circuit)
     end
 
 end
@@ -148,5 +137,29 @@ end
         @test isequal(instr, phase_shift(control, global_phase))
 
         @test isequal(transpiled_phase_circuit, transpiled_z90_circuit)
+    end
+end
+
+@testset "DecomposeControlledGatesTranspiler: substitutions" begin
+
+    transpiler = DecomposeControlledGatesTranspiler()
+
+    target = 2
+    control = 1
+
+    test_cases = [
+        (controlled(sigma_x(target), [control]), control_x(control, target)),
+        (controlled(sigma_z(target), [control]), control_z(control, target)),
+    ]
+
+    for (instr, expected_substitute) in test_cases
+        circuit = QuantumCircuit(qubit_count = 3, instructions = [instr])
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        gate_sequence = get_circuit_instructions(transpiled_circuit)
+        @test length(gate_sequence) == 1
+        gate = pop!(transpiled_circuit)
+
+        @test isequal(gate, expected_substitute)
     end
 end
