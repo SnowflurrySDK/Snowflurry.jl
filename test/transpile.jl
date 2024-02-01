@@ -1605,3 +1605,43 @@ end
     end
 
 end
+
+@testset "Transpilers: circuit properties are preserved" begin
+
+    circuit = QuantumCircuit(
+        qubit_count = 42,
+        bit_count = 99,
+        instructions = [readout(42, 99)],
+        name = "test-name",
+    )
+
+    transpilers = [
+        CircuitContainsAReadoutTranspiler(),
+        ReadoutsDoNotConflictTranspiler(),
+        UnsupportedGatesTranspiler(),
+        DecomposeSingleTargetSingleControlGatesTranspiler(),
+        CastToffoliToCXGateTranspiler(),
+        CastCXToCZGateTranspiler(),
+        CastISwapToCZGateTranspiler(),
+        SwapQubitsForAdjacencyTranspiler(LineConnectivity(6)),
+        SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(4, 3)),
+        CastSwapToCZGateTranspiler(),
+        CompressSingleQubitGatesTranspiler(),
+        SimplifyTrivialGatesTranspiler(),
+        CastUniversalToRzRxRzTranspiler(),
+        SimplifyRxGatesTranspiler(),
+        CastRxToRzAndHalfRotationXTranspiler(),
+        CompressRzGatesTranspiler(),
+        SimplifyRzGatesTranspiler(),
+        ReadoutsAreFinalInstructionsTranspiler(),
+    ]
+
+    for transpiler in transpilers
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test get_num_qubits(transpiled_circuit) == 42
+        @test get_num_bits(transpiled_circuit) == 99
+        @test get_name(transpiled_circuit) == "test-name"
+        @test get_circuit_instructions(transpiled_circuit) == [readout(42, 99)]
+    end
+end
