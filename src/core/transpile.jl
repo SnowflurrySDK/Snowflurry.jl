@@ -915,7 +915,7 @@ function cast_to_rz_rx_rz(gate::Universal, target::Int)::Vector{Gate}
 end
 
 # Decompose a Universal gate as U = exp(im*α)AXBXC.
-# See: Nielsen and Chuang, Quantum Computation and Quantum Information, p175.
+# See: Nielsen and Chuang, "Quantum Computation and Quantum Information", p175.
 function decompose_universal_to_A_B_C_gates(
     gate::Universal,
     target::Int,
@@ -951,8 +951,8 @@ struct CastUniversalToRzRxRzTranspiler <: Transpiler end
 
 Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
 which finds `Universal` gates in an input circuit and casts 
-them into a sequence of `PhaseShift` (Rz), `RotationX` (Rx) and 
-`PhaseShift` (Rz) gates in a new circuit.
+them into a sequence of `PhaseShift` (P), `RotationX` (Rx) and 
+`PhaseShift` (P) gates in a new circuit.
 The result of the input and output circuit on any arbitrary state `Ket` 
 is unchanged (up to a global phase).
 
@@ -2099,6 +2099,82 @@ end
 
 struct DecomposeSingleTargetSingleControlGatesTranspiler <: Transpiler end
 
+
+"""
+    transpile(::DecomposeSingleTargetSingleControlGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `DecomposeSingleTargetSingleControlGatesTranspiler` transpiler stage 
+which finds single-control, single-target `Controlled` gates in an input circuit and casts 
+them into a sequence of `RotationZ` (Rz), `ControlX`, `Universal` (U) and `PhaseShift` (P) 
+gates in a new, equivalent circuit.
+For reference, see Nielsen and Chuang, "Quantum Computation and Quantum Information", p180.
+The result of the input and output circuit on any arbitrary state `Ket` 
+is unchanged (up to a global phase).
+!!! note
+    If a global phase is applied by the kernel of the `Controlled` gate on the target 
+    qubit, this decomposition preserves it.
+
+For instance, a rotation_z(pi) kernel and a phase_shift(pi) will yield results with a phase offset.
+# Examples
+```jldoctest
+julia> transpiler = DecomposeSingleTargetSingleControlGatesTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), controlled(rotation_z(2, pi), [1])])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X────────*───────
+                |       
+q[2]:───────Rz(3.1416)──
+                        
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X───────────────────*──────────────────────────────────────*───────────────────────────────────
+                           |                                      |                                   
+q[2]:───────Rz(-1.5708)────X────U(θ=0.0000,ϕ=-1.5708,λ=0.0000)────X────U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
+                                                                                                      
+julia> compare_circuits(circuit, transpiled_circuit)
+true
+
+julia> simulate(transpiled_circuit)
+4-element Ket{ComplexF64}:
+0.0 + 0.0im
+-0.0 + 0.0im
+0.7071067811865477 - 0.7071067811865474im
+0.0 + 0.0im
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), controlled(phase_shift(2, pi), [1])])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X────────*──────
+                |      
+q[2]:───────P(3.1416)──
+                       
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X───────────────────*──────────────────────────────────────*─────────────────────────────────────P(1.5708)──
+                           |                                      |                                                
+q[2]:───────Rz(-1.5708)────X────U(θ=0.0000,ϕ=-1.5708,λ=0.0000)────X────U(θ=0.0000,ϕ=3.1416,λ=0.0000)───────────────
+                                                                                                                   
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> simulate(circuit)
+4-element Ket{ComplexF64}:
+0.0 + 0.0im
+0.0 + 0.0im
+1.0 + 0.0im
+0.0 + 0.0im
+
+```
+"""
 function transpile(
     ::DecomposeSingleTargetSingleControlGatesTranspiler,
     circuit::QuantumCircuit,
