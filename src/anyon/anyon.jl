@@ -9,7 +9,7 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 - `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-
+- `realm                   ::String` -- Optional: used to identify which realm the jobs sent to this QPU belong to.
 
 # Example
 ```jldoctest
@@ -28,22 +28,25 @@ struct AnyonYukonQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LineConnectivity
     project_id::String
+    realm::String
 
     function AnyonYukonQPU(
         client::Client,
-        project_id::String;
+        project_id::String,
+        realm::String = "";
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LineConnectivity(6), project_id)
+        new(client, status_request_throttle, LineConnectivity(6), project_id, realm)
     end
     function AnyonYukonQPU(;
         host::String,
         user::String,
         access_token::String,
         project_id::String,
+        realm::String = "",
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
@@ -54,19 +57,10 @@ struct AnyonYukonQPU <: AbstractQPU
             status_request_throttle,
             LineConnectivity(6),
             project_id,
+            realm,
         )
     end
 end
-
-
-get_metadata(qpu::AnyonYukonQPU) = Dict{String,Union{String,Int}}(
-    "manufacturer" => "Anyon Systems Inc.",
-    "generation" => "Yukon",
-    "serial_number" => "ANYK202201",
-    "project_id" => get_project_id(qpu),
-    "qubit_count" => get_num_qubits(qpu.connectivity),
-    "connectivity_type" => get_connectivity_label(qpu.connectivity),
-)
 
 """
     AnyonYamaskaQPU <: AbstractQPU
@@ -77,7 +71,7 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 - `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-
+- `realm                   ::String` -- Optional: used to identify which realm the jobs sent to this QPU belong to.
 
 # Example
 ```jldoctest
@@ -96,22 +90,25 @@ struct AnyonYamaskaQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LatticeConnectivity
     project_id::String
+    realm::String
 
     function AnyonYamaskaQPU(
         client::Client,
-        project_id::String;
+        project_id::String,
+        realm::String = "";
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
+        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id, realm)
     end
     function AnyonYamaskaQPU(;
         host::String,
         user::String,
         access_token::String,
         project_id::String,
+        realm::String = "",
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
@@ -123,24 +120,18 @@ struct AnyonYamaskaQPU <: AbstractQPU
             status_request_throttle,
             LatticeConnectivity(4, 3),
             project_id,
+            realm,
         )
     end
 end
 
-get_metadata(qpu::AnyonYamaskaQPU) = Dict{String,Union{String,Int}}(
-    "manufacturer" => "Anyon Systems Inc.",
-    "generation" => "Yamaska",
-    "serial_number" => "ANYK202301",
-    "project_id" => get_project_id(qpu),
-    "qubit_count" => get_num_qubits(qpu.connectivity),
-    "connectivity_type" => get_connectivity_label(qpu.connectivity),
-)
-
-get_client(qpu_service::AbstractQPU) = qpu_service.client
-
-get_project_id(qpu_service::AbstractQPU) = qpu_service.project_id
-
 UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU}
+
+get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
+
+get_project_id(qpu_service::UnionAnyonQPU) = qpu_service.project_id
+
+get_realm(qpu_service::UnionAnyonQPU) = qpu_service.realm 
 
 get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 
@@ -148,6 +139,33 @@ get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
 
 print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
     print_connectivity(get_connectivity(qpu), Int[], io)
+
+function get_metadata(qpu::UnionAnyonQPU)::Dict{String,Union{String,Int}}
+
+    generation = "Yukon"
+    serial_number = "ANYK202201"
+
+    if qpu isa AnyonYamaskaQPU
+        generation = "Yamaska"
+        serial_number = "ANYK202301"
+    end
+
+    output = Dict{String,Union{String,Int}}(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => generation,
+        "serial_number" => serial_number,
+        "project_id" => get_project_id(qpu),
+        "qubit_count" => get_num_qubits(qpu.connectivity),
+        "connectivity_type" => get_connectivity_label(qpu.connectivity),
+    )
+
+    realm = get_realm(qpu)
+    if realm != ""
+        output["realm"] = realm
+    end
+
+    return output
+end
 
 function Base.show(io::IO, qpu::UnionAnyonQPU)
     metadata = get_metadata(qpu)
@@ -159,6 +177,10 @@ function Base.show(io::IO, qpu::UnionAnyonQPU)
     println(io, "   project_id:    $(metadata["project_id"])")
     println(io, "   qubit_count:   $(metadata["qubit_count"])")
     println(io, "   connectivity_type:  $(metadata["connectivity_type"])")
+
+    if haskey(metadata, "realm") 
+        println(io, "   realm:         $(metadata["realm"])")
+    end
 end
 
 

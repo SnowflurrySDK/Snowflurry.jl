@@ -497,10 +497,32 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
-        "project_id" => get_project_id(qpu),
-        "qubit_count" => get_num_qubits(connectivity),
-        "connectivity_type" => get_connectivity_label(connectivity),
+        "project_id" => project,
+        "qubit_count" => 6,
+        "connectivity_type" => "linear",
     )
+
+    qpu = AnyonYukonQPU(
+        host = host,
+        user = user,
+        access_token = token,
+        status_request_throttle = no_throttle,
+        project_id = project,
+        realm = "test-realm",
+    )
+ 
+    @test Snowflurry.get_realm(qpu) == "test-realm"
+
+    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => "Yukon",
+        "serial_number" => "ANYK202201",
+        "project_id" => project,
+        "qubit_count" => 6,
+        "connectivity_type" => "linear",
+        "realm" => "test-realm",
+    )
+
 end
 
 @testset "Construct AnyonYamaskaQPU" begin
@@ -508,6 +530,7 @@ end
     user = "user"
     token = "token"
     project = "project-id"
+    realm = "test-realm"
 
     qpu = AnyonYamaskaQPU(
         host = host,
@@ -542,9 +565,30 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
-        "project_id" => get_project_id(qpu),
-        "qubit_count" => get_num_qubits(connectivity),
-        "connectivity_type" => get_connectivity_label(connectivity),
+        "project_id" => project,
+        "qubit_count" => 12,
+        "connectivity_type" => "2D-lattice",
+    )
+
+    qpu = AnyonYamaskaQPU(
+        host = host,
+        user = user,
+        access_token = token,
+        status_request_throttle = no_throttle,
+        project_id = project,
+        realm = realm,
+    )
+ 
+    @test Snowflurry.get_realm(qpu) == "test-realm"
+
+    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => "Yamaska",
+        "serial_number" => "ANYK202301",
+        "project_id" => project,
+        "qubit_count" => 12,
+        "connectivity_type" => "2D-lattice",
+        "realm" => realm
     )
 
 end
