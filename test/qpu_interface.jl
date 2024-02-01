@@ -4,7 +4,10 @@ using HTTP
 
 include("mock_functions.jl")
 
-requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+requestor = MockRequestor(
+    make_request_checker(expected_realm),
+    make_post_checker(expected_json, expected_realm),
+)
 
 # While testing, this throttle can be used to skip delays between status requests.
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
@@ -23,7 +26,7 @@ function compare_responses(expected::HTTP.Response, received::HTTP.Response)
 
 end
 
-@testset "requestor" begin
+@testset "requestor: NotImplementedErrors" begin
     struct NonImplementedRequestor <: Snowflurry.Requestor end
 
     non_impl_requestor = NonImplementedRequestor()
@@ -31,25 +34,31 @@ end
 
     @test_throws NotImplementedError get_request(
         non_impl_requestor,
-        host,
-        user,
+        expected_host,
+        expected_user,
         expected_access_token,
+        expected_realm,
     )
     @test_throws NotImplementedError post_request(
         non_impl_requestor,
-        host,
-        user,
+        expected_host,
+        expected_user,
         expected_access_token,
         body,
+        expected_realm,
     )
 
-    #### GET request returning: status, histogram
+end
+
+@testset "requestor: MockRequestor" begin
+    #ensure MockRequestor behaves as expected
 
     @test_throws NotImplementedError get_request(
         requestor,
         "erroneous_url",
-        user,
+        expected_user,
         expected_access_token,
+        expected_realm,
     )
 
     expected_response = HTTP.Response(200, [], body = expected_get_status_response_body)
@@ -58,18 +67,46 @@ end
 
     response = get_request(
         requestor,
-        host * "/" * Snowflurry.path_jobs * "/" * jobID,
-        user,
+        expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
+        expected_user,
         expected_access_token,
+        expected_realm,
     )
 
     compare_responses(expected_response, response)
 
     @test_throws NotImplementedError get_request(
         requestor,
-        host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
-        user,
+        expected_host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
+        expected_user,
         expected_access_token,
+        expected_realm,
+    )
+
+    @test_throws AssertionError("received: \nwrong-user, expected: \n$expected_user") get_request(
+        requestor,
+        expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
+        "wrong-user",
+        expected_access_token,
+        expected_realm,
+    )
+
+    @test_throws AssertionError(
+        "received: \nwrong-access-token, expected: \n$expected_access_token",
+    ) get_request(
+        requestor,
+        expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
+        expected_user,
+        "wrong-access-token",
+        expected_realm,
+    )
+
+    @test_throws AssertionError("received: \nwrong-realm, expected: \n$expected_realm") get_request(
+        requestor,
+        expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
+        expected_user,
+        expected_access_token,
+        "wrong-realm",
     )
 
 end
@@ -123,23 +160,28 @@ end
 
     shot_count = 100
 
-    circuit_json =
-        serialize_job(circuit, shot_count, "http://example.anyonsys.com", project_id)
+    circuit_json = serialize_job(
+        circuit,
+        shot_count,
+        "http://example.anyonsys.com",
+        expected_project_id,
+    )
 
     @test circuit_json == expected_json
 
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
+        realm = expected_realm,
     )
 
     println(test_client) #coverage for Base.show(::IO,::Client)
 
-    @test get_host(test_client) == host
+    @test get_host(test_client) == expected_host
 
-    jobID = submit_job(test_client, circuit, shot_count, project_id)
+    jobID = submit_job(test_client, circuit, shot_count, expected_project_id)
 
     status, histogram = get_status(test_client, jobID)
 
@@ -176,8 +218,8 @@ end
     ])
     requestor = HTTPRequestor(test_get, test_post)
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
@@ -192,8 +234,8 @@ end
 
     requestor = HTTPRequestor(test_get, test_post)
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
@@ -207,8 +249,8 @@ end
     test_get = stub_response_sequence([malformedResponse])
     requestor = HTTPRequestor(test_get, test_post)
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
@@ -468,25 +510,41 @@ end
 end
 
 @testset "Construct AnyonYukonQPU" begin
-    host = "host"
-    user = "user"
-    token = "token"
-    project = "project-id"
 
     qpu = AnyonYukonQPU(
-        host = host,
-        user = user,
-        access_token = token,
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
         status_request_throttle = no_throttle,
-        project_id = project,
+        project_id = expected_project_id,
     )
     client = get_client(qpu)
 
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yukon\n" *
+          "   serial_number: ANYK202201\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   6\n" *
+          "   connectivity_type:  linear\n" *
+          "\n"
+
+    io = IOBuffer()
+    println(io, client)
+    @test String(take!(io)) ==
+          "Client for QPU service:\n" *
+          "   host:         http://example.anyonsys.com\n" *
+          "   user:         test_user \n" *
+          "\n"
+
     connectivity = get_connectivity(qpu)
 
-    @test client.host == host
-    @test client.user == user
-    @test client.access_token == token
+    @test client.host == expected_host
+    @test client.user == expected_user
+    @test client.access_token == expected_access_token
 
     test_print_connectivity(qpu, "1──2──3──4──5──6\n")
 
@@ -497,55 +555,62 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
-        "project_id" => project,
+        "project_id" => expected_project_id,
         "qubit_count" => 6,
-        "connectivity_type" => "linear",
+        "connectivity_type" => Snowflurry.line_connectivity_label,
     )
 
     qpu = AnyonYukonQPU(
-        host = host,
-        user = user,
-        access_token = token,
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
         status_request_throttle = no_throttle,
-        project_id = project,
-        realm = "test-realm",
+        project_id = expected_project_id,
+        realm = expected_realm,
     )
- 
-    @test Snowflurry.get_realm(qpu) == "test-realm"
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
-        "project_id" => project,
+        "project_id" => expected_project_id,
         "qubit_count" => 6,
-        "connectivity_type" => "linear",
-        "realm" => "test-realm",
+        "connectivity_type" => Snowflurry.line_connectivity_label,
+        "realm" => expected_realm,
     )
 
 end
 
 @testset "Construct AnyonYamaskaQPU" begin
-    host = "host"
-    user = "user"
-    token = "token"
-    project = "project-id"
-    realm = "test-realm"
 
     qpu = AnyonYamaskaQPU(
-        host = host,
-        user = user,
-        access_token = token,
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
         status_request_throttle = no_throttle,
-        project_id = project,
+        project_id = expected_project_id,
     )
     client = get_client(qpu)
 
     connectivity = get_connectivity(qpu)
 
-    @test client.host == host
-    @test client.user == user
-    @test client.access_token == token
+    @test client.host == expected_host
+    @test client.user == expected_user
+    @test client.access_token == expected_access_token
+
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yamaska\n" *
+          "   serial_number: ANYK202301\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   12\n" *
+          "   connectivity_type:  2D-lattice\n" *
+          "\n"
 
     test_print_connectivity(
         qpu,
@@ -565,30 +630,30 @@ end
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
-        "project_id" => project,
+        "project_id" => expected_project_id,
         "qubit_count" => 12,
-        "connectivity_type" => "2D-lattice",
+        "connectivity_type" => Snowflurry.lattice_connectivity_label,
     )
 
     qpu = AnyonYamaskaQPU(
-        host = host,
-        user = user,
-        access_token = token,
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
         status_request_throttle = no_throttle,
-        project_id = project,
-        realm = realm,
+        project_id = expected_project_id,
+        realm = expected_realm,
     )
- 
-    @test Snowflurry.get_realm(qpu) == "test-realm"
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
 
     @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
-        "project_id" => project,
+        "project_id" => expected_project_id,
         "qubit_count" => 12,
-        "connectivity_type" => "2D-lattice",
-        "realm" => realm
+        "connectivity_type" => Snowflurry.lattice_connectivity_label,
+        "realm" => expected_realm,
     )
 
 end
@@ -596,11 +661,11 @@ end
 @testset "AnyonQPUs with empty project_id" begin
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
 
-    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+    requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
 
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
@@ -613,8 +678,8 @@ end
         )
 
         @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
             status_request_throttle = no_throttle,
             project_id = "",
@@ -625,17 +690,33 @@ end
 
 @testset "run_job on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+    # without optional realm
+    requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(
+        test_client,
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
     println(qpu) #coverage for Base.show(::IO,::AnyonYukonQPU)
     @test get_client(qpu) == test_client
+
+    @test Snowflurry.get_realm(qpu) == ""
+    @test Snowflurry.get_realm(test_client) == ""
+
+    io = IOBuffer()
+    println(io, test_client)
+    @test String(take!(io)) ==
+          "Client for QPU service:\n" *
+          "   host:         http://example.anyonsys.com\n" *
+          "   user:         test_user \n" *
+          "\n"
 
     #test basic submission, no transpilation
     circuit = QuantumCircuit(
@@ -658,8 +739,13 @@ end
         make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, expected_access_token, requestor),
-        project_id,
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
         status_request_throttle = no_throttle,
     )
     histogram = run_job(qpu, circuit, shot_count)
@@ -678,8 +764,13 @@ end
         make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, expected_access_token, requestor),
-        project_id,
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
@@ -696,24 +787,118 @@ end
         make_post_checker(expected_json),
     )
     qpu = AnyonYukonQPU(
-        Client(host, user, expected_access_token, requestor),
-        project_id,
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
         status_request_throttle = no_throttle,
     )
     @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
 end
 
+@testset "run_job on AnyonQPUs: with realm" begin
+
+    requestor = MockRequestor(
+        make_request_checker(expected_realm),
+        make_post_checker(expected_json, expected_realm),
+    )
+    test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = requestor,
+        realm = expected_realm,
+    )
+
+    io = IOBuffer()
+    println(io, test_client)
+    @test String(take!(io)) ==
+          "Client for QPU service:\n" *
+          "   host:         http://example.anyonsys.com\n" *
+          "   user:         test_user \n" *
+          "   realm:        test-realm \n" *
+          "\n"
+
+    @test Snowflurry.get_realm(test_client) == expected_realm
+
+    #test basic submission, no transpilation
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
+    )
+    shot_count = 100
+
+    qpu = AnyonYukonQPU(
+        test_client,
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
+
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yukon\n" *
+          "   serial_number: ANYK202201\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   6\n" *
+          "   connectivity_type:  linear\n" *
+          "   realm:         test-realm\n" *
+          "\n"
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
+
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
+
+    qpu = AnyonYamaskaQPU(
+        test_client,
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
+
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yamaska\n" *
+          "   serial_number: ANYK202301\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   12\n" *
+          "   connectivity_type:  2D-lattice\n" *
+          "   realm:         test-realm\n" *
+          "\n"
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
+
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
+
+end
+
 @testset "run_job with invalid circuits on AnyonYukonQPU" begin
 
-    requestor = MockRequestor(request_checker, make_post_checker(expected_json_readout))
+    requestor =
+        MockRequestor(make_request_checker(), make_post_checker(expected_json_readout))
     test_client = Client(
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
         requestor = requestor,
     )
     shot_count = 100
-    qpu = AnyonYukonQPU(test_client, project_id, status_request_throttle = no_throttle)
+    qpu = AnyonYukonQPU(
+        test_client,
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
 
     invalid_instructions = [
         (
@@ -764,16 +949,16 @@ end
     for (QPU, post_checker_toffoli, post_checker_last_qubit) in
         zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+        requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
         test_client = Client(
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
             requestor = requestor,
         )
         shot_count = 100
 
-        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
         # submit circuit with qubit_count_circuit>qubit_count_qpu
         circuit = QuantumCircuit(
@@ -795,15 +980,15 @@ end
         )
 
         # using default transpiler
-        requestor = MockRequestor(request_checker, post_checker_toffoli)
+        requestor = MockRequestor(make_request_checker(), post_checker_toffoli)
         test_client = Client(
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
             requestor = requestor,
         )
 
-        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
         histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -811,14 +996,14 @@ end
         @test !haskey(histogram, "error_msg")
 
         # submit circuit with qubit_count_circuit==qubit_count_qpu
-        requestor = MockRequestor(request_checker, post_checker_last_qubit)
+        requestor = MockRequestor(make_request_checker(), post_checker_last_qubit)
         test_client = Client(
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
             requestor = requestor,
         )
-        qpu = QPU(test_client, project_id, status_request_throttle = no_throttle)
+        qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
         qubit_count = get_num_qubits(qpu)
         circuit = QuantumCircuit(

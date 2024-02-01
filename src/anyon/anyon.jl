@@ -28,19 +28,18 @@ struct AnyonYukonQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LineConnectivity
     project_id::String
-    realm::String
 
     function AnyonYukonQPU(
         client::Client,
-        project_id::String,
-        realm::String = "";
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LineConnectivity(6), project_id, realm)
+        new(client, status_request_throttle, LineConnectivity(6), project_id)
     end
+
     function AnyonYukonQPU(;
         host::String,
         user::String,
@@ -53,11 +52,10 @@ struct AnyonYukonQPU <: AbstractQPU
             throw(ArgumentError(error_msg_empty_project_id))
         end
         new(
-            Client(host = host, user = user, access_token = access_token),
+            Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
             LineConnectivity(6),
             project_id,
-            realm,
         )
     end
 end
@@ -90,18 +88,16 @@ struct AnyonYamaskaQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LatticeConnectivity
     project_id::String
-    realm::String
 
     function AnyonYamaskaQPU(
         client::Client,
-        project_id::String,
-        realm::String = "";
+        project_id::String;
         status_request_throttle = default_status_request_throttle,
     )
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id, realm)
+        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
     end
     function AnyonYamaskaQPU(;
         host::String,
@@ -116,11 +112,10 @@ struct AnyonYamaskaQPU <: AbstractQPU
         end
 
         new(
-            Client(host = host, user = user, access_token = access_token),
+            Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
             LatticeConnectivity(4, 3),
             project_id,
-            realm,
         )
     end
 end
@@ -131,7 +126,7 @@ get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
 get_project_id(qpu_service::UnionAnyonQPU) = qpu_service.project_id
 
-get_realm(qpu_service::UnionAnyonQPU) = qpu_service.realm 
+get_realm(qpu_service::UnionAnyonQPU) = get_realm(qpu_service.client)
 
 get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 
@@ -178,7 +173,7 @@ function Base.show(io::IO, qpu::UnionAnyonQPU)
     println(io, "   qubit_count:   $(metadata["qubit_count"])")
     println(io, "   connectivity_type:  $(metadata["connectivity_type"])")
 
-    if haskey(metadata, "realm") 
+    if haskey(metadata, "realm")
         println(io, "   realm:         $(metadata["realm"])")
     end
 end

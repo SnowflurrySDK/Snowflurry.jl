@@ -23,9 +23,9 @@ end
 
 abstract type Requestor end
 
-get_request(requestor::Requestor, ::String, ::String, ::String) =
+get_request(requestor::Requestor, ::String, ::String, ::String, ::String) =
     throw(NotImplementedError(:get_request, requestor))
-post_request(requestor::Requestor, ::String, ::String, ::String, ::String) =
+post_request(requestor::Requestor, ::String, ::String, ::String, ::String, ::String) =
     throw(NotImplementedError(:post_request, requestor))
 
 struct HTTPRequestor <: Requestor
@@ -62,62 +62,60 @@ function encode_to_basic_authorization(user::String, password::String)::String
     return "Basic " * base64encode(user * ":" * password)
 end
 
-function post_request(
+function make_headers(
+    user::String,
+    access_token::String,
+    realm::String,
+)::Dict{String,String}
+    headers = Dict{String,String}(
+        "Authorization" => encode_to_basic_authorization(user, access_token),
+        "Content-Type" => "application/json",
+        user_agent_header_key => "Snowflurry/$(package_version)",
+    )
+
+    # Optional headers
+    if realm != ""
+        headers["X-Realm"] = realm
+    end
+
+    return headers
+end
+
+post_request(
     requestor::HTTPRequestor,
     url::String,
     user::String,
     access_token::String,
     body::String,
-)::HTTP.Response
+    realm::String,
+)::HTTP.Response =
+    requestor.poster(url, headers = make_headers(user, access_token, realm), body = body)
 
-    return requestor.poster(
-        url,
-        headers = Dict(
-            "Authorization" => encode_to_basic_authorization(user, access_token),
-            "Content-Type" => "application/json",
-            user_agent_header_key => "Snowflurry/$(package_version)",
-        ),
-        body = body,
-    )
-end
-
-function post_request(
+post_request(
     mock_requester::MockRequestor,
     url::String,
     user::String,
     access_token::String,
     body::String,
-)::HTTP.Response
+    realm::String,
+)::HTTP.Response = mock_requester.post_checker(url, user, access_token, body, realm)
 
-    return mock_requester.post_checker(url, user, access_token, body)
-end
 
-function get_request(
+get_request(
     requestor::HTTPRequestor,
     url::String,
     user::String,
     access_token::String,
-)::HTTP.Response
+    realm::String,
+)::HTTP.Response = requestor.getter(url, headers = make_headers(user, access_token, realm))
 
-    return requestor.getter(
-        url,
-        headers = Dict(
-            "Authorization" => encode_to_basic_authorization(user, access_token),
-            "Content-Type" => "application/json",
-            user_agent_header_key => "Snowflurry/$(package_version)",
-        ),
-    )
-end
-
-function get_request(
+get_request(
     mock_requestor::MockRequestor,
     url::String,
     user::String,
     access_token::String,
-)::HTTP.Response
-
-    return mock_requestor.request_checker(url, user, access_token)
-end
+    realm::String,
+)::HTTP.Response = mock_requestor.request_checker(url, user, access_token, realm)
 
 const error_msg_empty_project_id = "project_id cannot be empty"
 
@@ -196,6 +194,7 @@ A data structure to represent a *Client* to a QPU service.
 - `host::String` -- URL of the QPU server.
 - `user::String` -- Username.
 - `access_token::String` -- User access token.
+- `realm::String` -- Optional: realm to which the submitted jobs belong to.
 
 # Example
 ```jldoctest
@@ -211,12 +210,17 @@ Base.@kwdef struct Client
     user::String
     access_token::String
     requestor::Requestor = HTTPRequestor(HTTP.get, HTTP.post)
+    realm::String = ""
 end
 
 function Base.show(io::IO, client::Client)
     println(io, "Client for QPU service:")
     println(io, "   host:         $(client.host)")
     println(io, "   user:         $(client.user) ")
+
+    if client.realm != ""
+        println(io, "   realm:        $(client.realm) ")
+    end
 end
 
 """
@@ -234,6 +238,7 @@ julia> get_host(c)
 ```
 """
 get_host(client::Client) = client.host
+get_realm(client::Client) = client.realm
 get_requestor(client::Client) = client.requestor
 
 
@@ -268,6 +273,7 @@ function submit_job(
         client.user,
         client.access_token,
         job_json,
+        get_realm(client),
     )
 
     body = JSON.parse(read_response_body(response.body))
@@ -311,8 +317,13 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
 
     path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID"
 
-    response =
-        get_request(get_requestor(client), path_url, client.user, client.access_token)
+    response = get_request(
+        get_requestor(client),
+        path_url,
+        client.user,
+        client.access_token,
+        get_realm(client),
+    )
 
     body = JSON.parse(read_response_body(response.body))
 

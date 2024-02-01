@@ -202,6 +202,7 @@ using PrecompileTools
     user = "test_user"
     access_token = "not_a_real_access_token"
     project_id = "project_id"
+    realm = "test-realm"
 
     theta = π / 5
     phi = π / 7
@@ -271,6 +272,7 @@ using PrecompileTools
         user = user,
         access_token = access_token,
         project_id = project_id,
+        realm = realm,
     )
     transpiler = get_transpiler(qpu)
 
