@@ -1,10 +1,11 @@
 using Snowflurry
 using HTTP
 
-host = "http://example.anyonsys.com"
-user = "test_user"
+expected_host = "http://example.anyonsys.com"
+expected_user = "test_user"
 expected_access_token = "not_a_real_access_token"
-project_id = "project_id"
+expected_project_id = "project_id"
+expected_realm = "test-realm"
 
 common_substring = "{\"shotCount\":100,\"name\":\"default\",\"machineID\":\"http://example.anyonsys.com\",\"billingaccountID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
 
@@ -42,15 +43,16 @@ expected_json_readout =
     common_substring *
     "[{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"bits\":[2],\"type\":\"readout\",\"qubits\":[2]}]}}"
 
-function make_post_checker(expected_json::String)::Function
+function make_post_checker(expected_json::String, expected_realm::String = "")::Function
     function post_checker(
         url::String,
         user::String,
         input_access_token::String,
         body::String,
+        realm::String,
     )
 
-        expected_url = host * "/" * Snowflurry.path_jobs
+        expected_url = expected_host * "/" * Snowflurry.path_jobs
 
         @assert url == expected_url ("received: \n$url, \nexpected: \n$expected_url")
         @assert input_access_token == expected_access_token (
@@ -58,21 +60,37 @@ function make_post_checker(expected_json::String)::Function
         )
         @assert body == expected_json ("received: \n$body, expected: \n$expected_json")
 
+        @assert realm == expected_realm ("received: \n$realm, expected: \n$expected_realm")
+        @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
+
         return stubCircuitSubmittedResponse()
     end
 end
 
 expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
 
-function request_checker(url::String, user::String, access_token::String)
-    myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
-    match_obj = match(myregex, url)
+function make_request_checker(input_realm::String = "")::Function
+    function request_checker(
+        url::String,
+        user::String,
+        input_access_token::String,
+        realm::String,
+    )
+        myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
+        match_obj = match(myregex, url)
 
-    if !isnothing(match_obj)
-        # caller is :get_status
-        return HTTP.Response(200, [], body = expected_get_status_response_body)
+        @assert input_access_token == expected_access_token (
+            "received: \n$input_access_token, expected: \n$expected_access_token"
+        )
+        @assert realm == input_realm ("received: \n$realm, expected: \n$input_realm")
+        @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
+
+        if !isnothing(match_obj)
+            # caller is :get_status
+            return HTTP.Response(200, [], body = expected_get_status_response_body)
+        end
+        throw(NotImplementedError(:get_request, url))
     end
-    throw(NotImplementedError(:get_request, url))
 end
 
 function stubStatusResponse(status::String)::HTTP.Response

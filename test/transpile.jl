@@ -2,7 +2,7 @@ using Snowflurry
 using Test
 
 include("mock_functions.jl")
-requestor = MockRequestor(request_checker, make_post_checker(expected_json))
+requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
 
 target = 1
 destination_bit = 1
@@ -626,10 +626,10 @@ end
 
 @testset "AnyonYukonQPU: transpilation of native gates" begin
     qpu = AnyonYukonQPU(;
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
-        project_id = project_id,
+        project_id = expected_project_id,
     )
 
     qubit_count = 2
@@ -701,10 +701,10 @@ end
 
 @testset "AnyonYukonQPU: sequential transpilation" begin
     qpu = AnyonYukonQPU(;
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
-        project_id = project_id,
+        project_id = expected_project_id,
     )
     transpiler = get_transpiler(qpu)
 
@@ -726,10 +726,10 @@ end
 
 @testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
     qpu = AnyonYukonQPU(;
-        host = host,
-        user = user,
+        host = expected_host,
+        user = expected_user,
         access_token = expected_access_token,
-        project_id = project_id,
+        project_id = expected_project_id,
     )
 
     qubit_count = 5
@@ -799,16 +799,16 @@ end
 @testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin
     qpus = [
         AnyonYukonQPU(;
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
-            project_id = project_id,
+            project_id = expected_project_id,
         ),
         AnyonYamaskaQPU(;
-            host = host,
-            user = user,
+            host = expected_host,
+            user = expected_user,
             access_token = expected_access_token,
-            project_id = project_id,
+            project_id = expected_project_id,
         ),
     ]
 
