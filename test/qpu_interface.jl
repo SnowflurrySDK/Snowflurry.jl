@@ -301,14 +301,22 @@ end
     @test String(take!(io)) ==
           "LineConnectivity{12}\n1──2──3──4──5──6──7──8──9──10──11──12\n\n"
 
-    @test path_search(1, 12, connectivity) == reverse(collect(1:12))
-    @test path_search(7, 4, connectivity) == collect(4:7)
+    @test path_search(1, 12, connectivity) == Vector{Int}(reverse(collect(1:12)))
+    @test path_search(7, 4, connectivity) == Vector{Int}(collect(4:7))
     @test path_search(1, 1, connectivity) == [1]
+
+    exclusion_cases = [[2], [2, 6], [1], [12]]
+    for excluded in exclusion_cases
+        @test path_search(1, 12, connectivity, excluded) == []
+    end
+
+    @test path_search(12, 11, connectivity, [2]) == Vector{Int}(collect(11:12))
 
     @test_throws AssertionError path_search(1, 44, connectivity)
     @test_throws AssertionError path_search(44, 1, connectivity)
     @test_throws AssertionError path_search(-1, 4, connectivity)
     @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 12, connectivity, [-1])
 
     test_print_connectivity(
         LatticeConnectivity(4, 5),
@@ -396,10 +404,14 @@ end
     @test path_search(1, 24, connectivity, excluded) == [24, 19, 23, 18, 14, 9, 6, 1]
     @test path_search(1, 1, connectivity) == [1]
 
+    @test path_search(1, 9, connectivity, [5, 6]) == []
+    @test path_search(21, 1, connectivity, [17]) == []
+
     @test_throws AssertionError path_search(1, 44, connectivity)
     @test_throws AssertionError path_search(44, 1, connectivity)
     @test_throws AssertionError path_search(-1, 4, connectivity)
     @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 3, connectivity, [-1])
 
     struct UnknownConnectivity <: AbstractConnectivity end
     @test_throws NotImplementedError print_connectivity(UnknownConnectivity())

@@ -295,10 +295,9 @@ function format_qubit_line(
     @assert symbol_width >= 0 ("symbol_width must be non-negative")
     @assert left_offset >= 0 ("left_offset must be non-negative")
 
-    left_padding =
-        [" "^(2 * Snowflurry.len_connect_sym + symbol_width) for _ = 1:left_offset]
+    left_padding = [" "^(2 * len_connect_sym + symbol_width) for _ = 1:left_offset]
 
-    str_template = Snowflurry.create_str_template(ncols, left_padding)
+    str_template = create_str_template(ncols, left_padding)
 
     # create float specifier of correct precision: 
     # e.g.: "%2.f ──%2.f ──%2.f " for 3 columns, precision=2
@@ -511,11 +510,12 @@ get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} =
     throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """
-    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
+    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity, excluded::Vector{Int} = Vector{Int}([]))
 
 Find the shortest path between origin and target qubits in terms of 
 Manhattan distance, using the Breadth-First Search algorithm, on any 
-`connectivity::AbstractConnectivity`.
+`connectivity::AbstractConnectivity`, avoiding positions defined in the 
+`excluded` optional argument. If no path exists, returns an empty Vector{Int}.
 
 # Example
 ```jldoctest
@@ -568,7 +568,7 @@ function path_search(
     target::Int,
     connectivity::LatticeConnectivity,
     excluded::Vector{Int} = Vector{Int}([]),
-)
+)::Vector{Int}
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
@@ -585,6 +585,14 @@ function path_search(
     search_queue = Vector{Tuple{Int,Int}}()
     push!(search_queue, (origin, null_int))
     searched = Dict{Int,Int}()
+
+    for e in excluded
+        @assert e > 0 "excluded positions must be non-negative"
+        if origin == e || target == e
+            # no path exists due to excluded positions
+            return []
+        end
+    end
 
     while !isempty(search_queue)
         (qubit_no, prev) = popfirst!(search_queue)
@@ -609,6 +617,9 @@ function path_search(
             end
         end
     end
+
+    # no path exists due to excluded positions
+    return []
 end
 
 function path_search(
@@ -616,7 +627,7 @@ function path_search(
     target::Int,
     connectivity::LineConnectivity,
     excluded::Vector{Int} = Vector{Int}([]),
-)
+)::Vector{Int}
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
@@ -627,17 +638,19 @@ function path_search(
     @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
     @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
 
-    if origin < target
-        path = reverse(collect(origin:target))
-    else
-        path = collect(target:origin)
-    end
-
     for e in excluded
-        @assert !(e in path) "failed to find path given excluded positions"
+        @assert e > 0 "excluded positions must be non-negative"
+        if origin ≤ e ≤ target || target ≤ e ≤ origin
+            # no path exists due to excluded positions
+            return []
+        end
     end
 
-    return path
+    if origin < target
+        return reverse(collect(origin:target))
+    else
+        return collect(target:origin)
+    end
 end
 
 path_search(::Int, ::Int, connectivity::AbstractConnectivity) =
