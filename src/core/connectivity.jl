@@ -463,18 +463,18 @@ LatticeConnectivity{3,4}
   
 julia> get_adjacency_list(connectivity)
 Dict{Int64, Vector{Int64}} with 12 entries:
-  5  => [7, 4]
-  12 => [10]
-  8  => [10, 7]
-  1  => [3, 2]
-  6  => [4, 7]
-  11 => [10]
-  9  => [7, 10]
-  3  => [1, 4]
-  7  => [5, 9, 6, 8]
-  4  => [2, 6, 3, 5]
-  2  => [4, 1]
-  10 => [8, 12, 9, 11]
+  5  => [9, 1]
+  12 => [8]
+  8  => [3, 12, 11, 4]
+  1  => [6, 5]
+  6  => [1, 10, 9, 2]
+  11 => [7, 8]
+  9  => [5, 6]
+  3  => [8, 7]
+  7  => [2, 11, 10, 3]
+  4  => [8]
+  2  => [7, 6]
+  10 => [6, 7]
 
 ```
 
@@ -552,13 +552,11 @@ LatticeConnectivity{6,4}
 
 
 julia> path = path_search(3, 24, connectivity)
-8-element Vector{Int64}:
+6-element Vector{Int64}:
  24
- 23
  20
- 19
- 14
- 13
+ 16
+ 12
   8
   3
 

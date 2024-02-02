@@ -231,7 +231,7 @@ LatticeConnectivity{6,4}
 
 
 julia> get_qubits_distance(3, 24, connectivity)
-7
+5
 
 ```
 
