@@ -39,20 +39,20 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 The following lattice has 4 rows, made of qubits 
 `[2, 6, 10]`, `[1, 5, 9]`, `[4, 8, 12]` and `[3, 7, 11]`, with each of those rows having 3 columns.
 
-The corresponding `qubits_per_row` field is `[2,4,4,2]`, the number of qubits in each line
+The corresponding `qubits_per_row` field is `[2, 4, 4, 2]`, the number of qubits in each line
 in the printed representation.  
 
 ```jldoctest
 julia> connectivity = LatticeConnectivity(3, 4)
 LatticeConnectivity{3,4}
-  1 ──  2 
-  |     | 
-  3 ──  4 ──  5 
-        |     | 
-        6 ──  7 ──  8 
-              |     | 
-              9 ── 10 ── 11 
-                    | 
+  5 ──  1
+  |     |
+  9 ──  6 ──  2
+        |     |
+       10 ──  7 ──  3
+              |     |
+             11 ──  8 ──  4
+                    |
                    12 
 
 ```
@@ -61,39 +61,18 @@ Lattices of arbitrary dimensions can be built:
 ```jldoctest
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              1 ──  2 
-              |     | 
-        3 ──  4 ──  5 ──  6 
-        |     |     |     | 
-  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-        |     |     |     |     | 
-       13 ── 14 ── 15 ── 16 ── 17 ── 18 
-              |     |     |     | 
-             19 ── 20 ── 21 ── 22 
-                    |     | 
-                   23 ── 24 
+              5 ──  1
+              |     |
+       13 ──  9 ──  6 ──  2
+        |     |     |     |
+ 21 ── 17 ── 14 ── 10 ──  7 ──  3
+        |     |     |     |     |
+       22 ── 18 ── 15 ── 11 ──  8 ──  4
+              |     |     |     |
+             23 ── 19 ── 16 ── 12
+                    |     |
+                   24 ── 20 
 
-
-
-
-```
-
-Non-rectangular shapes can also be achieved by directly specifying the desired `qubits_per_row` as a `Vector{Int}`:
-
-```jldoctest
-julia> connectivity = LatticeConnectivity([5, 7, 8, 8, 7, 5])
-LatticeConnectivity{8,5}
-        1 ──  2 ──  3 ──  4 ──  5 
-        |     |     |     |     | 
-  6 ──  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-  |     |     |     |     |     |     | 
- 13 ── 14 ── 15 ── 16 ── 17 ── 18 ── 19 ── 20 
-        |     |     |     |     |     |     | 
-       21 ── 22 ── 23 ── 24 ── 25 ── 26 ── 27 ── 28 
-              |     |     |     |     |     |     | 
-             29 ── 30 ── 31 ── 32 ── 33 ── 34 ── 35 
-                    |     |     |     |     | 
-                   36 ── 37 ── 38 ── 39 ── 40 
 ```
 """
 struct LatticeConnectivity <: AbstractConnectivity
@@ -475,14 +454,14 @@ Dict{Int64, Vector{Int64}} with 6 entries:
 
 julia> connectivity = LatticeConnectivity(3, 4)
 LatticeConnectivity{3,4}
-  1 ──  2 
-  |     | 
-  3 ──  4 ──  5 
-        |     | 
-        6 ──  7 ──  8 
-              |     | 
-              9 ── 10 ── 11 
-                    | 
+  5 ──  1
+  |     |
+  9 ──  6 ──  2
+        |     |
+       10 ──  7 ──  3
+              |     |
+             11 ──  8 ──  4
+                    |
                    12 
   
 julia> get_adjacency_list(connectivity)
@@ -562,17 +541,17 @@ The qubits along the path between origin and target are marker with `( )`
 ```jldoctest; output=false
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              1 ──  2 
-              |     | 
-        3 ──  4 ──  5 ──  6 
-        |     |     |     | 
-  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-        |     |     |     |     | 
-       13 ── 14 ── 15 ── 16 ── 17 ── 18 
-              |     |     |     | 
-             19 ── 20 ── 21 ── 22 
-                    |     | 
-                   23 ── 24 
+              5 ──  1
+              |     |
+       13 ──  9 ──  6 ──  2
+        |     |     |     |
+ 21 ── 17 ── 14 ── 10 ──  7 ──  3
+        |     |     |     |     |
+       22 ── 18 ── 15 ── 11 ──  8 ──  4
+              |     |     |     |
+             23 ── 19 ── 16 ── 12
+                    |     |
+                   24 ── 20 
 
 
 julia> path = path_search(3, 24, connectivity)
