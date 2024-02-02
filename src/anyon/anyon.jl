@@ -1,5 +1,8 @@
 using Snowflurry
 
+const AnyonYukonConnectivity = LineConnectivity(6)
+const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
+
 """
     AnyonYukonQPU <: AbstractQPU
 
@@ -37,7 +40,7 @@ struct AnyonYukonQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LineConnectivity(6), project_id)
+        new(client, status_request_throttle, AnyonYukonConnectivity, project_id)
     end
 
     function AnyonYukonQPU(;
@@ -97,7 +100,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, LatticeConnectivity(4, 3), project_id)
+        new(client, status_request_throttle, AnyonYamaskaConnectivity, project_id)
     end
     function AnyonYamaskaQPU(;
         host::String,
@@ -114,7 +117,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
         new(
             Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
-            LatticeConnectivity(4, 3),
+            AnyonYamaskaConnectivity,
             project_id,
         )
     end
