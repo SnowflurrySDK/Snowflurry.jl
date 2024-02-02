@@ -231,7 +231,8 @@ function print_connectivity(
 
     max_symbol_length = length(string(get_num_qubits(connectivity)))
 
-    qubit_number_per_row = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
+    qubit_number_per_row =
+        assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
 
     for (irow, qubit_count) in enumerate(qubits_per_row)
         line_printout = format_qubit_line(
@@ -391,7 +392,7 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     adjacency_list = Dict{Int,Vector{Int}}()
 
     qubit_numbering = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
-    
+
     for (irow, qubit_count) in enumerate(qubits_per_row)
         offset = offsets[irow]
         qubit_placement[irow, 1+offset:qubit_count+offset] = qubit_numbering[irow]
@@ -562,7 +563,12 @@ julia> path = path_search(3, 24, connectivity)
 
 ```
 """
-function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity, excluded::Vector{Int}=Vector{Int}([]))
+function path_search(
+    origin::Int,
+    target::Int,
+    connectivity::LatticeConnectivity,
+    excluded::Vector{Int} = Vector{Int}([]),
+)
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
@@ -595,15 +601,22 @@ function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity
                 end
                 return result
             else
-                neighbors_vec =
-                    [(neighbor, qubit_no) for neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)]
+                neighbors_vec = [
+                    (neighbor, qubit_no) for
+                    neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)
+                ]
                 push!(search_queue, neighbors_vec...)
             end
         end
     end
 end
 
-function path_search(origin::Int, target::Int, connectivity::LineConnectivity, excluded::Vector{Int}=Vector{Int}([]))
+function path_search(
+    origin::Int,
+    target::Int,
+    connectivity::LineConnectivity,
+    excluded::Vector{Int} = Vector{Int}([]),
+)
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"

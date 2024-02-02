@@ -329,30 +329,30 @@ end
     io = IOBuffer()
     connectivity = LatticeConnectivity(6, 4)
     expected_adjacency_list = Dict{Int,Vector{Int}}(
-        5  => [9, 1],
+        5 => [9, 1],
         16 => [11, 20, 19, 12],
         20 => [16, 24],
         12 => [8, 16],
         24 => [19, 20],
-        8  => [3, 12, 11, 4],
+        8 => [3, 12, 11, 4],
         17 => [13, 22, 21, 14],
         23 => [18, 19],
-        1  => [6, 5],
+        1 => [6, 5],
         22 => [17, 18],
         19 => [15, 24, 23, 16],
-        6  => [1, 10, 9, 2],
+        6 => [1, 10, 9, 2],
         11 => [7, 16, 15, 8],
-        9  => [5, 14, 13, 6],
+        9 => [5, 14, 13, 6],
         14 => [9, 18, 17, 10],
-        3  => [8, 7],
-        7  => [2, 11, 10, 3],
+        3 => [8, 7],
+        7 => [2, 11, 10, 3],
         13 => [17, 9],
         15 => [10, 19, 18, 11],
         21 => [17],
-        2  => [7, 6],
+        2 => [7, 6],
         10 => [6, 15, 14, 7],
         18 => [14, 23, 22, 15],
-        4  => [8],
+        4 => [8],
     )
 
     @test expected_adjacency_list == get_adjacency_list(connectivity)
@@ -360,35 +360,35 @@ end
     print_connectivity(connectivity, path_search(3, 22, connectivity), io)
 
     @test String(take!(io)) ==
-    "              5 ──  1 \n" *
-    "              |     | \n" *
-    "       13 ──  9 ──  6 ──  2 \n" *
-    "        |     |     |     | \n" *
-    " 21 ── 17 ── 14 ── 10 ──  7 ── (3)\n" *
-    "        |     |     |     |     | \n" *
-    "      (22)──(18)──(15)──(11)── (8)──  4 \n" *
-    "              |     |     |     | \n" *
-    "             23 ── 19 ── 16 ── 12 \n" *
-    "                    |     | \n" *
-    "                   24 ── 20 \n" *
-    "\n"
+          "              5 ──  1 \n" *
+          "              |     | \n" *
+          "       13 ──  9 ──  6 ──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ── 10 ──  7 ── (3)\n" *
+          "        |     |     |     |     | \n" *
+          "      (22)──(18)──(15)──(11)── (8)──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n"
 
     io = IOBuffer()
     println(io, connectivity)
     @test String(take!(io)) ==
-    "LatticeConnectivity{6,4}\n" *
-    "              5 ──  1 \n" *
-    "              |     | \n" *
-    "       13 ──  9 ──  6 ──  2 \n" *
-    "        |     |     |     | \n" *
-    " 21 ── 17 ── 14 ── 10 ──  7 ──  3 \n" *
-    "        |     |     |     |     | \n" *
-    "       22 ── 18 ── 15 ── 11 ──  8 ──  4 \n" *
-    "              |     |     |     | \n" *
-    "             23 ── 19 ── 16 ── 12 \n" *
-    "                    |     | \n" *
-    "                   24 ── 20 \n" *
-    "\n\n"
+          "LatticeConnectivity{6,4}\n" *
+          "              5 ──  1 \n" *
+          "              |     | \n" *
+          "       13 ──  9 ──  6 ──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ── 10 ──  7 ──  3 \n" *
+          "        |     |     |     |     | \n" *
+          "       22 ── 18 ── 15 ── 11 ──  8 ──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n\n"
 
 
     @test path_search(1, 24, connectivity) == [24, 19, 15, 10, 6, 1]
@@ -445,7 +445,8 @@ end
         qubit_placement = zeros(Int, nrows, ncols)
         qubit_count = get_num_qubits(connectivity)
 
-        qubit_numbering = Snowflurry.assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
+        qubit_numbering =
+            Snowflurry.assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
 
         for (irow, qubit_count) in enumerate(qubits_per_row)
             offset = offsets[irow]
