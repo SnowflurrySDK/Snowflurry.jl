@@ -406,6 +406,8 @@ end
 
     @test path_search(1, 9, connectivity, [5, 6]) == []
     @test path_search(21, 1, connectivity, [17]) == []
+    @test path_search(1, 3, connectivity, [1]) == []
+    @test path_search(1, 3, connectivity, [3]) == []
 
     @test_throws AssertionError path_search(1, 44, connectivity)
     @test_throws AssertionError path_search(44, 1, connectivity)

@@ -177,6 +177,11 @@ end
     c = QuantumCircuit(qubit_count = 2, instructions = [readout(1, 1), readout(2, 1)])
 
     @test_throws ArgumentError simulate_shots(c, 101)
+
+    # gate follows readout
+    c = QuantumCircuit(qubit_count = 2, instructions = [readout(1, 1), sigma_x(1)])
+
+    @test_throws ArgumentError simulate_shots(c, 101)
 end
 
 
