@@ -231,18 +231,18 @@ function print_connectivity(
 
     max_symbol_length = length(string(get_num_qubits(connectivity)))
 
-    qubit_numbering = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
+    qubit_number_per_row = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
 
     for (irow, qubit_count) in enumerate(qubits_per_row)
         line_printout = format_qubit_line(
             qubit_count,
-            qubit_numbering[irow],
+            qubit_number_per_row[irow],
             max_symbol_length,
             offsets[irow],
         )
 
         if !isempty(path)
-            qubits_in_row = qubit_numbering[irow]
+            qubits_in_row = qubit_number_per_row[irow]
 
             for qubit in qubits_in_row
                 qubit_s = string(qubit)
@@ -390,14 +390,11 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
 
     adjacency_list = Dict{Int,Vector{Int}}()
 
-    placed_qubits = 0
-
+    qubit_numbering = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
+    
     for (irow, qubit_count) in enumerate(qubits_per_row)
         offset = offsets[irow]
-        qubit_placement[irow, 1+offset:qubit_count+offset] =
-            [v + placed_qubits for v in (1:qubit_count)]
-
-        placed_qubits += qubit_count
+        qubit_placement[irow, 1+offset:qubit_count+offset] = qubit_numbering[irow]
     end
 
     for (target, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
@@ -567,7 +564,7 @@ julia> path = path_search(3, 24, connectivity)
 
 ```
 """
-function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
+function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity, excluded::Vector{Int}=Vector{Int}([]))
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
@@ -601,16 +598,17 @@ function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity
                 return result
             else
                 neighbors_vec =
-                    [(neighbor, qubit_no) for neighbor in adjacency_list[qubit_no]]
+                    [(neighbor, qubit_no) for neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)]
                 push!(search_queue, neighbors_vec...)
             end
         end
     end
 end
 
-function path_search(origin::Int, target::Int, connectivity::LineConnectivity)
+function path_search(origin::Int, target::Int, connectivity::LineConnectivity, excluded::Vector{Int}=Vector{Int}([]))
 
     @assert origin > 0 "origin must be non-negative"
+    @assert target > 0 "target must be non-negative"
     @assert target > 0 "target must be non-negative"
 
     qubit_count = connectivity.dimension
@@ -619,10 +617,16 @@ function path_search(origin::Int, target::Int, connectivity::LineConnectivity)
     @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
 
     if origin < target
-        return reverse(collect(origin:target))
+        path = reverse(collect(origin:target))
     else
-        return collect(target:origin)
+        path = collect(target:origin)
     end
+
+    for e in excluded
+        @assert !(e in path) "failed to find path given excluded positions"
+    end
+
+    return path
 end
 
 path_search(::Int, ::Int, connectivity::AbstractConnectivity) =

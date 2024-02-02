@@ -1296,12 +1296,19 @@ function remap_qubits_to_adjacent(
     # meaning: sortperm(connected_qubits)==sortperm(mapped_indices)
     mapped_indices = sortperm(sorting_order)
 
+    excluded = Vector{Int}([])
+
     # create paths so that connected_qubits become adjacent on this connectivity
     paths = [[connected_qubits[sorting_order[1]]]]
     for pos in connected_qubits[sorting_order[2:end]]
-        path = path_search(min_qubit, pos, connectivity)
+        path = path_search(min_qubit, pos, connectivity, excluded)
         push!(paths, path[1:end-1])
-        min_qubit = path[end-1]
+
+        # avoid collisions between assigned destinations and future path searches
+        if min_qubit != path[end-1]
+            push!(excluded, min_qubit)
+            min_qubit = path[end-1]
+        end
     end
 
     adjacent_mapping = [path[end] for path in paths]
