@@ -37,10 +37,10 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 
 # Example
 The following lattice has 4 rows, made of qubits 
-`[2, 6, 10]`, `[1, 5, 9]`, `[4, 8, 12]` and `[3, 7, 11]`, with each of those rows having 3 columns.
+`[1, 5, 9]`, `[2, 6, 10]`, `[3, 7, 11]` and `[8, 4, 12]`, with each of those rows having 3 elements.
 
-The corresponding `qubits_per_row` field is `[2, 4, 4, 2]`, the number of qubits in each line
-in the printed representation.  
+The corresponding `qubits_per_row` field is `[2, 3, 3, 3, 1]`, the number of qubits in each line
+in the printed representation.
 
 ```jldoctest
 julia> connectivity = LatticeConnectivity(3, 4)
@@ -74,6 +74,10 @@ LatticeConnectivity{6,4}
                    24 ── 20 
 
 ```
+
+!!! note
+    To match the qubit numbering used in the hardware implementation of AnyonYamaskaQPU, the LatticeConnectivity must be built using: `LatticeConnectivity([1, 3, 3, 3, 2])`, which is provided as the package const `Snowflurry.AnyonYamaskaConnectivity`.
+
 """
 struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_row::Vector{Int}
