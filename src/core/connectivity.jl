@@ -39,20 +39,21 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 The following lattice has 4 rows, made of qubits 
 `[2, 6, 10]`, `[1, 5, 9]`, `[4, 8, 12]` and `[3, 7, 11]`, with each of those rows having 3 columns.
 
-The corresponding `qubits_per_row` field is `[2,4,4,2]`, the number of qubits in each line
+The corresponding `qubits_per_row` field is `[2, 4, 4, 2]`, the number of qubits in each line
 in the printed representation.  
 
 ```jldoctest
-julia> connectivity = LatticeConnectivity(4, 3)
-LatticeConnectivity{4,3}
-        1 ──  2 
-        |     | 
-  3 ──  4 ──  5 ──  6 
-        |     |     | 
-        7 ──  8 ──  9 ── 10 
-              |     | 
-             11 ── 12 
-
+julia> connectivity = LatticeConnectivity(3, 4)
+LatticeConnectivity{3,4}
+  5 ──  1
+  |     |
+  9 ──  6 ──  2
+        |     |
+       10 ──  7 ──  3
+              |     |
+             11 ──  8 ──  4
+                    |
+                   12 
 
 ```
 
@@ -60,39 +61,18 @@ Lattices of arbitrary dimensions can be built:
 ```jldoctest
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              1 ──  2 
-              |     | 
-        3 ──  4 ──  5 ──  6 
-        |     |     |     | 
-  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-        |     |     |     |     | 
-       13 ── 14 ── 15 ── 16 ── 17 ── 18 
-              |     |     |     | 
-             19 ── 20 ── 21 ── 22 
-                    |     | 
-                   23 ── 24 
+              5 ──  1
+              |     |
+       13 ──  9 ──  6 ──  2
+        |     |     |     |
+ 21 ── 17 ── 14 ── 10 ──  7 ──  3
+        |     |     |     |     |
+       22 ── 18 ── 15 ── 11 ──  8 ──  4
+              |     |     |     |
+             23 ── 19 ── 16 ── 12
+                    |     |
+                   24 ── 20 
 
-
-
-
-```
-
-Non-rectangular shapes can also be achieved by directly specifying the desired `qubits_per_row` as a `Vector{Int}`:
-
-```jldoctest
-julia> connectivity = LatticeConnectivity([5, 7, 8, 8, 7, 5])
-LatticeConnectivity{8,5}
-        1 ──  2 ──  3 ──  4 ──  5 
-        |     |     |     |     | 
-  6 ──  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-  |     |     |     |     |     |     | 
- 13 ── 14 ── 15 ── 16 ── 17 ── 18 ── 19 ── 20 
-        |     |     |     |     |     |     | 
-       21 ── 22 ── 23 ── 24 ── 25 ── 26 ── 27 ── 28 
-              |     |     |     |     |     |     | 
-             29 ── 30 ── 31 ── 32 ── 33 ── 34 ── 35 
-                    |     |     |     |     | 
-                   36 ── 37 ── 38 ── 39 ── 40 
 ```
 """
 struct LatticeConnectivity <: AbstractConnectivity
@@ -192,9 +172,56 @@ function print_connectivity(connectivity::LineConnectivity, ::Vector{Int}, io::I
     println(io, output_str)
 end
 
+function assign_qubit_numbering(
+    qubits_per_row::Vector{Int},
+    qubit_count_per_readout_line::Int,
+)::Vector{Vector{Int}}
+    qubit_count = sum(qubits_per_row)
+
+    #input should not be altered
+    placing_queue = copy(qubits_per_row)
+
+    row_count = length(qubits_per_row)
+
+    qubit_numbering = Vector{Vector{Int}}([[] for _ = 1:length(qubits_per_row)])
+
+    row_cursor = 0
+    current_qubit_num = 0
+    completed_rows = 0
+    while !all(map(x -> x == 0, placing_queue))
+
+        if row_cursor == row_count
+            row_cursor = completed_rows
+        end
+
+        row_cursor += 1
+
+        # placement on the following readout line can only start after the current one is completed
+        if row_cursor - ((current_qubit_num) % qubit_count_per_readout_line) >
+           qubit_count_per_readout_line &&
+           length(qubit_numbering[row_cursor]) <
+           (current_qubit_num + 1) % qubit_count_per_readout_line
+
+            row_cursor = completed_rows + 1
+        end
+
+        current_qubit_num += 1
+        push!(qubit_numbering[row_cursor], current_qubit_num)
+        placing_queue[row_cursor] -= 1
+
+        if placing_queue[row_cursor] == 0
+            completed_rows += 1
+        end
+
+        @assert current_qubit_num ≤ qubit_count "failed to map qubit numbering"
+    end
+
+    return [reverse(row) for row in qubit_numbering]
+end
+
 function print_connectivity(
     connectivity::LatticeConnectivity,
-    path::Vector{Int} = Vector{Int}(),
+    path::Vector{Int} = Vector{Int}(), # path of qubits to highlight in printout
     io::IO = stdout,
 )
     qubits_per_row = connectivity.qubits_per_row
@@ -203,14 +230,20 @@ function print_connectivity(
         get_lattice_offsets(connectivity)
 
     max_symbol_length = length(string(get_num_qubits(connectivity)))
-    qubit_index = 1
+
+    qubit_number_per_row =
+        assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
 
     for (irow, qubit_count) in enumerate(qubits_per_row)
-        line_printout =
-            format_qubit_line(qubit_count, qubit_index, max_symbol_length, offsets[irow])
+        line_printout = format_qubit_line(
+            qubit_count,
+            qubit_number_per_row[irow],
+            max_symbol_length,
+            offsets[irow],
+        )
 
         if !isempty(path)
-            qubits_in_row = collect(qubit_index:qubit_index+qubit_count)
+            qubits_in_row = qubit_number_per_row[irow]
 
             for qubit in qubits_in_row
                 qubit_s = string(qubit)
@@ -231,7 +264,6 @@ function print_connectivity(
 
         println(io, vertical_lines)
 
-        qubit_index += qubit_count
     end
 end
 
@@ -248,13 +280,18 @@ end
 
 function format_qubit_line(
     ncols::Int,
-    starting_no::Int,
+    qubit_numbers_in_row::Vector{Int},
     symbol_width::Int,
     left_offset::Int = 0,
 )::String
 
     @assert ncols >= 0 ("ncols must be non-negative")
-    @assert starting_no >= 0 ("starting_no must be non-negative")
+    @assert all(map(x -> x >= 0, qubit_numbers_in_row)) (
+        "qubit_numbers_in_row must be non-negative"
+    )
+    @assert length(qubit_numbers_in_row) == ncols (
+        "column count must match length(qubit_numbers_in_row)"
+    )
     @assert symbol_width >= 0 ("symbol_width must be non-negative")
     @assert left_offset >= 0 ("left_offset must be non-negative")
 
@@ -268,7 +305,6 @@ function format_qubit_line(
     precisionArray = [precisionStr for _ = 1:ncols]
     str_template_float = Snowflurry.formatter(str_template, precisionArray...)
 
-    qubit_numbers_in_row = [v + starting_no - 1 for v = 1:ncols]
     return Snowflurry.formatter(str_template_float, qubit_numbers_in_row...)
 end
 
@@ -354,14 +390,11 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
 
     adjacency_list = Dict{Int,Vector{Int}}()
 
-    placed_qubits = 0
+    qubit_numbering = assign_qubit_numbering(qubits_per_row, connectivity.dimensions[2])
 
     for (irow, qubit_count) in enumerate(qubits_per_row)
         offset = offsets[irow]
-        qubit_placement[irow, 1+offset:qubit_count+offset] =
-            [v + placed_qubits for v in (1:qubit_count)]
-
-        placed_qubits += qubit_count
+        qubit_placement[irow, 1+offset:qubit_count+offset] = qubit_numbering[irow]
     end
 
     for (target, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
@@ -416,31 +449,32 @@ Dict{Int64, Vector{Int64}} with 6 entries:
   3 => [2, 4]
   1 => [2]
 
-julia> connectivity = LatticeConnectivity(4, 3)
-LatticeConnectivity{4,3}
-        1 ──  2 
-        |     | 
-  3 ──  4 ──  5 ──  6 
-        |     |     | 
-        7 ──  8 ──  9 ── 10 
-              |     | 
-             11 ── 12 
-
+julia> connectivity = LatticeConnectivity(3, 4)
+LatticeConnectivity{3,4}
+  5 ──  1
+  |     |
+  9 ──  6 ──  2
+        |     |
+       10 ──  7 ──  3
+              |     |
+             11 ──  8 ──  4
+                    |
+                   12 
   
 julia> get_adjacency_list(connectivity)
 Dict{Int64, Vector{Int64}} with 12 entries:
-  5  => [2, 8, 4, 6]
-  12 => [9, 11]
-  8  => [5, 11, 7, 9]
-  1  => [4, 2]
-  6  => [9, 5]
-  11 => [8, 12]
-  9  => [6, 12, 8, 10]
-  3  => [4]
-  7  => [4, 8]
-  4  => [1, 7, 3, 5]
-  2  => [5, 1]
-  10 => [9]
+  5  => [9, 1]
+  12 => [8]
+  8  => [3, 12, 11, 4]
+  1  => [6, 5]
+  6  => [1, 10, 9, 2]
+  11 => [7, 8]
+  9  => [5, 6]
+  3  => [8, 7]
+  7  => [2, 11, 10, 3]
+  4  => [8]
+  2  => [7, 6]
+  10 => [6, 7]
 
 ```
 
@@ -476,11 +510,12 @@ get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} =
     throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """
-    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity)
+    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity, excluded::Vector{Int} = Vector{Int}([]))
 
 Find the shortest path between origin and target qubits in terms of 
 Manhattan distance, using the Breadth-First Search algorithm, on any 
-`connectivity::AbstractConnectivity`.
+`connectivity::AbstractConnectivity`, avoiding positions defined in the 
+`excluded` optional argument. If no path exists, returns an empty Vector{Int}.
 
 # Example
 ```jldoctest
@@ -504,33 +539,36 @@ The qubits along the path between origin and target are marker with `( )`
 ```jldoctest; output=false
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              1 ──  2 
-              |     | 
-        3 ──  4 ──  5 ──  6 
-        |     |     |     | 
-  7 ──  8 ──  9 ── 10 ── 11 ── 12 
-        |     |     |     |     | 
-       13 ── 14 ── 15 ── 16 ── 17 ── 18 
-              |     |     |     | 
-             19 ── 20 ── 21 ── 22 
-                    |     | 
-                   23 ── 24 
+              5 ──  1
+              |     |
+       13 ──  9 ──  6 ──  2
+        |     |     |     |
+ 21 ── 17 ── 14 ── 10 ──  7 ──  3
+        |     |     |     |     |
+       22 ── 18 ── 15 ── 11 ──  8 ──  4
+              |     |     |     |
+             23 ── 19 ── 16 ── 12
+                    |     |
+                   24 ── 20 
 
 
 julia> path = path_search(3, 24, connectivity)
-8-element Vector{Int64}:
+6-element Vector{Int64}:
  24
- 23
  20
- 19
- 14
- 13
+ 16
+ 12
   8
   3
 
 ```
 """
-function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity)
+function path_search(
+    origin::Int,
+    target::Int,
+    connectivity::LatticeConnectivity,
+    excluded::Vector{Int} = Vector{Int}([]),
+)::Vector{Int}
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
@@ -548,6 +586,14 @@ function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity
     push!(search_queue, (origin, null_int))
     searched = Dict{Int,Int}()
 
+    for e in excluded
+        @assert e > 0 "excluded positions must be non-negative"
+        if origin == e || target == e
+            # no path exists due to excluded positions
+            return []
+        end
+    end
+
     while !isempty(search_queue)
         (qubit_no, prev) = popfirst!(search_queue)
 
@@ -563,23 +609,42 @@ function path_search(origin::Int, target::Int, connectivity::LatticeConnectivity
                 end
                 return result
             else
-                neighbors_vec =
-                    [(neighbor, qubit_no) for neighbor in adjacency_list[qubit_no]]
+                neighbors_vec = [
+                    (neighbor, qubit_no) for
+                    neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)
+                ]
                 push!(search_queue, neighbors_vec...)
             end
         end
     end
+
+    # no path exists due to excluded positions
+    return []
 end
 
-function path_search(origin::Int, target::Int, connectivity::LineConnectivity)
+function path_search(
+    origin::Int,
+    target::Int,
+    connectivity::LineConnectivity,
+    excluded::Vector{Int} = Vector{Int}([]),
+)::Vector{Int}
 
     @assert origin > 0 "origin must be non-negative"
+    @assert target > 0 "target must be non-negative"
     @assert target > 0 "target must be non-negative"
 
     qubit_count = connectivity.dimension
 
     @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
     @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
+
+    for e in excluded
+        @assert e > 0 "excluded positions must be non-negative"
+        if origin ≤ e ≤ target || target ≤ e ≤ origin
+            # no path exists due to excluded positions
+            return []
+        end
+    end
 
     if origin < target
         return reverse(collect(origin:target))

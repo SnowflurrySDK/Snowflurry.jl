@@ -492,38 +492,37 @@ end
     transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols))
 
     # LatticeConnectivity{4,3}
-    #        1 ──  2 
-    #        |     | 
-    #  3 ──  4 ──  5 ──  6 
-    #        |     |     | 
-    #        7 ──  8 ──  9 ── 10 
-    #              |     | 
-    #             11 ── 12 
+    #         4 ──  1 
+    #         |     | 
+    #  10 ──  7 ──  5 ──  2 
+    #         |     |     | 
+    #        11 ──  8 ──  6 ──  3 
+    #               |     | 
+    #              12 ──  9 
 
     test_specs = [
         # (gates list       gates_in_output)
-        ([swap(1, 2)], 1),          # no effect
-        ([swap(2, 8)], 3),
-        ([swap(8, 2)], 3),
-        ([iswap(1, 2)], 1),         # no effect
-        ([iswap(2, 8)], 3),
-        ([iswap(8, 2)], 3),
-        ([control_z(5, 6)], 1),     # no effect
-        ([control_z(5, 10)], 5),    # target at bottom
-        ([control_z(10, 1)], 9),    # target on top
-        ([toffoli(4, 5, 6)], 1),    # no effect
-        ([toffoli(4, 6, 5)], 1),    # no effect
-        ([toffoli(6, 5, 4)], 1),    # no effect
-        ([toffoli(4, 6, 2)], 3),    # 1 swap required
-        ([toffoli(2, 6, 4)], 3),    # 1 swap required
-        ([toffoli(2, 6, 4)], 3),    # 1 swap required
-        ([toffoli(4, 6, 9)], 5),    # 1 swap required on 2 targets
-        ([toffoli(4, 9, 6)], 5),    # 1 swap required on 2 targets
-        ([toffoli(4, 8, 11)], 5),   # 1 swap required on 2 targets
-        ([toffoli(4, 11, 8)], 5),   # 1 swap required on 2 targets
-        ([toffoli(1, 3, 6)], 5),    # 1 swap required on 2 targets
-        ([toffoli(1, 11, 12)], 13), # 3 swap required on 2 targets
-        ([control_z(10, 1), toffoli(2, 4, 8)], 12), # sequence of gates
+        ([swap(4, 1)], 1),          # no effect
+        ([swap(1, 8)], 3),
+        ([swap(8, 1)], 3),
+        ([iswap(4, 1)], 1),         # no effect
+        ([iswap(1, 8)], 3),
+        ([iswap(8, 1)], 3),
+        ([control_z(5, 2)], 1),     # no effect
+        ([control_z(5, 3)], 5),     # target at bottom
+        ([control_z(4, 3)], 9),    # target on top
+        ([toffoli(7, 5, 2)], 1),    # no effect
+        ([toffoli(7, 2, 5)], 1),    # no effect
+        ([toffoli(2, 5, 7)], 1),    # no effect
+        ([toffoli(7, 2, 1)], 3),    # 1 swap required
+        ([toffoli(1, 2, 7)], 3),    # 1 swap required
+        ([toffoli(7, 2, 6)], 5),    # 1 swap required on 2 targets
+        ([toffoli(7, 6, 2)], 5),    # 1 swap required on 2 targets
+        ([toffoli(7, 8, 12)], 5),   # 1 swap required on 2 targets
+        ([toffoli(7, 12, 8)], 5),   # 1 swap required on 2 targets
+        ([toffoli(4, 10, 2)], 7),   # 1 swap required on 2 targets
+        ([toffoli(4, 12, 9)], 13), # 3 swap required on 2 targets
+        ([control_z(3, 4), toffoli(1, 7, 8)], 12), # sequence of gates
     ]
 
     for (input_gates, gates_in_output) in test_specs

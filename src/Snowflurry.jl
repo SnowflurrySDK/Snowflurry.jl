@@ -247,7 +247,7 @@ using PrecompileTools
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForAdjacencyTranspiler(LineConnectivity(6)),
+        SwapQubitsForAdjacencyTranspiler(AnyonYukonConnectivity),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
         SimplifyTrivialGatesTranspiler(),
