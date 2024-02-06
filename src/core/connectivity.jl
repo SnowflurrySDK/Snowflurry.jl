@@ -178,7 +178,7 @@ end
 
 function assign_qubit_numbering(
     qubits_per_row::Vector{Int},
-    qubit_count_per_readout_line::Int,
+    qubit_count_per_diagonal_line::Int,
 )::Vector{Vector{Int}}
     qubit_count = sum(qubits_per_row)
 
@@ -200,11 +200,11 @@ function assign_qubit_numbering(
 
         row_cursor += 1
 
-        # placement on the following readout line can only start after the current one is completed
-        if row_cursor - ((current_qubit_num) % qubit_count_per_readout_line) >
-           qubit_count_per_readout_line &&
+        # placement on the following diagonal line can only start after the current one is completed
+        if row_cursor - ((current_qubit_num) % qubit_count_per_diagonal_line) >
+           qubit_count_per_diagonal_line &&
            length(qubit_numbering[row_cursor]) <
-           (current_qubit_num + 1) % qubit_count_per_readout_line
+           (current_qubit_num + 1) % qubit_count_per_diagonal_line
 
             row_cursor = completed_rows + 1
         end
