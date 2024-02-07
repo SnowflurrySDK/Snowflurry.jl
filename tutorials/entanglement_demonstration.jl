@@ -14,7 +14,13 @@ project_id = ENV["THUNDERHEAD_PROJECT_ID"]
 realm = ENV["THUNDERHEAD_REALM"]
 
 
-qpu = AnyonYukonQPU(host = host, user = user, access_token = token, project_id = project_id, realm = realm)
+qpu = AnyonYukonQPU(
+    host = host,
+    user = user,
+    access_token = token,
+    project_id = project_id,
+    realm = realm,
+)
 
 transpiler = get_transpiler(qpu)
 transpiled_circuit = transpile(transpiler, circuit)
