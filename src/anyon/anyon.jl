@@ -12,11 +12,11 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 - `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-- `realm                   ::String` -- Optional: used to identify which realm the jobs sent to this QPU belong to.
+- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
+julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269", realm = "test_realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -24,6 +24,7 @@ Quantum Processing Unit:
    project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   6 
    connectivity_type:  linear
+   realm:         test_realm
 ```
 """
 struct AnyonYukonQPU <: AbstractQPU
@@ -72,11 +73,11 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
 - `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-- `realm                   ::String` -- Optional: used to identify which realm the jobs sent to this QPU belong to.
+- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
+julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269", realm = "test_realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
@@ -84,6 +85,7 @@ Quantum Processing Unit:
    project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
    qubit_count:   12 
    connectivity_type:  2D-lattice
+   realm:         test_realm
 ```
 """
 struct AnyonYamaskaQPU <: AbstractQPU

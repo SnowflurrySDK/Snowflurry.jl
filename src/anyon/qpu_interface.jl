@@ -194,14 +194,15 @@ A data structure to represent a *Client* to a QPU service.
 - `host::String` -- URL of the QPU server.
 - `user::String` -- Username.
 - `access_token::String` -- User access token.
-- `realm::String` -- Optional: realm to which the submitted jobs belong to.
+- `realm::String` -- Optional: realm on the host to which the submitted jobs are sent to.
 
 # Example
 ```jldoctest
-julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token")
+julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", realm = "test_realm")
 Client for QPU service:
    host:         http://example.anyonsys.com
    user:         test_user 
+   realm:        test_realm 
  
 ```
 """
