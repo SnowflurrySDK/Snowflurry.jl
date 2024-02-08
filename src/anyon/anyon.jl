@@ -16,15 +16,15 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269", realm = "test_realm")
+julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
-   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
+   project_id:    test-project
    qubit_count:   6 
    connectivity_type:  linear
-   realm:         test_realm
+   realm:         test-realm
 ```
 """
 struct AnyonYukonQPU <: AbstractQPU
@@ -77,12 +77,12 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269", realm = "test_realm")
+julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test_realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
    serial_number: ANYK202301
-   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
+   project_id:    test-project
    qubit_count:   12 
    connectivity_type:  2D-lattice
    realm:         test_realm

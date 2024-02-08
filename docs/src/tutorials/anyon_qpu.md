@@ -1,16 +1,5 @@
 # Running a Circuit on Real Hardware
 
-```@meta
-using Snowflurry
-
-DocTestSetup = quote
-    ENV["THUNDERHEAD_USER"] = "test-user"
-    ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
-    ENV["THUNDERHEAD_HOST"] = "yukon.anyonsys.com"
-    ENV["THUNDERHEAD_PROJECT_ID"] = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
-end
-```
-
 In the [previous tutorial](virtual_qpu.md), we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU` API.
 
 In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines.
@@ -28,16 +17,23 @@ We can start by defining a `qpu` variable to point to the host computer that wil
 ```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
 
-qpu = AnyonYukonQPU(host = "http://yukon.anyonsys.com", user = "USER_NAME", access_token = "API_KEY", project_id = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269")
+user = ENV["THUNDERHEAD_USER"]
+token = ENV["THUNDERHEAD_API_TOKEN"]
+host = ENV["THUNDERHEAD_HOST"]
+project = ENV["THUNDERHEAD_PROJECT_ID"]
+realm = ENV["THUNDERHEAD_REALM"]
+
+qpu = AnyonYukonQPU(host = host, user = user, access_token = token, project_id = project, realm = realm)
 
 # output
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
-   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
+   project_id:    test-project
    qubit_count:   6
    connectivity_type:  linear
+   realm:         test-realm
 
 ```
 
@@ -56,9 +52,10 @@ Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
-   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
+   project_id:    test-project
    qubit_count:   6
    connectivity_type:  linear
+   realm:         test-realm
 ```
 
 Alternatively, one can use the `get_metadata` function to obtain a `Dict` object corresponding to the QPU information:
@@ -68,12 +65,13 @@ get_metadata(qpu)
 
 # output
 
-Dict{String, Union{Int64, String}} with 6 entries:
+Dict{String, Union{Int64, String}} with 7 entries:
   "qubit_count"       => 6
   "generation"        => "Yukon"
   "manufacturer"      => "Anyon Systems Inc."
+  "realm"             => "test-realm"
   "serial_number"     => "ANYK202201"
-  "project_id"        => "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
+  "project_id"        => "test-project"
   "connectivity_type" => "linear"
 ```
 
