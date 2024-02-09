@@ -5,7 +5,8 @@ DocTestSetup = quote
     ENV["THUNDERHEAD_USER"] = "test-user"
     ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
     ENV["THUNDERHEAD_HOST"] = "yukon.anyonsys.com"
-    ENV["THUNDERHEAD_PROJECT_ID"] = "9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269"
+    ENV["THUNDERHEAD_PROJECT_ID"] = "test-project"
+    ENV["THUNDERHEAD_REALM"] = "test-realm"
 end
 ```
 
@@ -41,17 +42,19 @@ user = ENV["THUNDERHEAD_USER"]
 token = ENV["THUNDERHEAD_API_TOKEN"]
 host = ENV["THUNDERHEAD_HOST"]
 project = ENV["THUNDERHEAD_PROJECT_ID"]
+realm = ENV["THUNDERHEAD_REALM"]
 
-qpu = AnyonYukonQPU(host=host, user=user, access_token=token, project_id=project)
+qpu = AnyonYukonQPU(host = host, user = user, access_token = token, project_id = project, realm = realm)
 
 # output
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
    serial_number: ANYK202201
-   project_id:    9d6949c8-bb5d-4aeb-9aa3-e7b284f0f269
+   project_id:    test-project
    qubit_count:   6
    connectivity_type:  linear
+   realm:         test-realm
 ```
 
 Next, we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.

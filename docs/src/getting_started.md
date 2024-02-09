@@ -1,13 +1,5 @@
 # Getting Started
 
-```@meta
-DocTestSetup = quote
-    ENV["THUNDERHEAD_USER"] = "test-user"
-    ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
-    ENV["THUNDERHEAD_HOST"] = "yukon.anyonsys.com"
-end
-```
-
 ## Installation
 
 The following installation steps are for people interested in using Snowflurry in their own applications. If you are interested in helping to develop Snowflurry, head right over to our [Developing Snowflurry](./development.md) page.
