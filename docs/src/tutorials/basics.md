@@ -130,8 +130,12 @@ In the previous section, we used the `simulate` function to calculate the wavefu
 We can indeed mimick this behaviour in our simulations as well. This can be achieved by using the `plot_histogram` function from the [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl) library. For example, we can generate a histogram which shows the measurement output distribution after taking running the circuit `c` for a given number of shots, let's say 100 times, on a quantum
 computer simulator:
 
+!!! note
+	We are also adding readout operations to specify which qubits we want to measure. We will be covering readouts in more depth in the [next tutorial](virtual_qpu.md).
+
 ```julia
 using SnowflurryPlots
+push!(c, readout(1, 1), readout(2, 2))
 plot_histogram(c, 100)
 ```
 ![Measurement results histogram](../assets/index/index_histogram.png)
