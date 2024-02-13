@@ -22,6 +22,10 @@ LineConnectivity{6}
 """
 struct LineConnectivity <: AbstractConnectivity
     dimension::Int
+    excluded_positions::Vector{Int}
+
+    LineConnectivity(dimension::Int, excluded_positions = Vector{Int}()) =
+        new(dimension, excluded_positions)
 end
 
 """
@@ -82,8 +86,9 @@ LatticeConnectivity{6,4}
 struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_row::Vector{Int}
     dimensions::Tuple{Int,Int}
+    excluded_positions::Vector{Int}
 
-    function LatticeConnectivity(nrows::Int, ncols::Int)
+    function LatticeConnectivity(nrows::Int, ncols::Int, excluded_positions = Vector{Int}())
 
         @assert nrows >= 2 "nrows must be at least 2"
         @assert ncols >= 2 "ncols must be at least 2"
@@ -107,14 +112,17 @@ struct LatticeConnectivity <: AbstractConnectivity
 
         @assert +(qubits_per_row...) == qubit_count "Failed to build lattice"
 
-        new(qubits_per_row, (nrows, ncols))
+        new(qubits_per_row, (nrows, ncols), excluded_positions)
     end
 
-    function LatticeConnectivity(qubits_per_row::Vector{Int})
+    function LatticeConnectivity(
+        qubits_per_row::Vector{Int},
+        excluded_positions = Vector{Int}(),
+    )
         nrows = maximum(qubits_per_row)
         ncols = ceil(+(qubits_per_row...) / nrows)
 
-        new(qubits_per_row, (nrows, ncols))
+        new(qubits_per_row, (nrows, ncols), excluded_positions)
     end
 end
 
@@ -124,15 +132,40 @@ function Base.show(io::IO, connectivity::LatticeConnectivity)
         "$(typeof(connectivity)){$(connectivity.dimensions[1]),$(connectivity.dimensions[2])}",
     )
     print_connectivity(connectivity, Vector{Int}(), io)
+    if !isempty(connectivity.excluded_positions)
+        println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
 end
 
 function Base.show(io::IO, connectivity::LineConnectivity)
     println(io, "$(typeof(connectivity)){$(connectivity.dimension)}")
     print_connectivity(connectivity, Vector{Int}(), io)
+    if !isempty(connectivity.excluded_positions)
+        println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
 end
 
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label, connectivity))
+
+with_excluded_positions(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:with_excluded_positions, connectivity))
+
+with_excluded_positions(
+    c::LineConnectivity,
+    excluded_positions::Vector{Int},
+)::LineConnectivity = LineConnectivity(c.dimension, excluded_positions)
+
+with_excluded_positions(
+    c::LatticeConnectivity,
+    excluded_positions::Vector{Int},
+)::LatticeConnectivity = LatticeConnectivity(c.qubits_per_row, excluded_positions)
+
+get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
+    c.excluded_positions
+
+get_excluded_positions(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
     AllToAllConnectivity <:AbstractConnectivity
@@ -590,7 +623,9 @@ function path_search(
     push!(search_queue, (origin, null_int))
     searched = Dict{Int,Int}()
 
-    for e in excluded
+    all_excluded_positions = push!(copy(connectivity.excluded_positions), excluded...)
+
+    for e in all_excluded_positions
         @assert e > 0 "excluded positions must be non-negative"
         if origin == e || target == e
             # no path exists due to excluded positions
@@ -614,8 +649,8 @@ function path_search(
                 return result
             else
                 neighbors_vec = [
-                    (neighbor, qubit_no) for
-                    neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)
+                    (neighbor, qubit_no) for neighbor in adjacency_list[qubit_no] if
+                    !(neighbor in all_excluded_positions)
                 ]
                 push!(search_queue, neighbors_vec...)
             end
@@ -642,7 +677,9 @@ function path_search(
     @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
     @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
 
-    for e in excluded
+    all_excluded_positions = push!(copy(connectivity.excluded_positions), excluded...)
+
+    for e in all_excluded_positions
         @assert e > 0 "excluded positions must be non-negative"
         if origin ≤ e ≤ target || target ≤ e ≤ origin
             # no path exists due to excluded positions

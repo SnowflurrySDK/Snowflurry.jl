@@ -795,25 +795,30 @@ end
     end
 end
 
-@testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin
-    qpus = [
-        AnyonYukonQPU(;
-            host = expected_host,
-            user = expected_user,
-            access_token = expected_access_token,
-            project_id = expected_project_id,
-        ),
-        AnyonYamaskaQPU(;
-            host = expected_host,
-            user = expected_user,
-            access_token = expected_access_token,
-            project_id = expected_project_id,
-        ),
+@testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler: full connectivity" begin
+    qpus_and_connectivities = [
+        (
+            AnyonYukonQPU(;
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                project_id = expected_project_id,
+            ),
+            Snowflurry.AnyonYukonConnectivity,
+        )
+        (
+            AnyonYamaskaQPU(;
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                project_id = expected_project_id,
+            ),
+            Snowflurry.AnyonYamaskaConnectivity,
+        )
     ]
 
-    for qpu in qpus
-        transpiler = get_transpiler(qpu)
-        connectivity = get_connectivity(qpu)
+    for (qpu, connectivity) in qpus_and_connectivities
+        transpiler = get_transpiler(qpu; connectivity = connectivity)
         qubit_count = get_num_qubits(qpu)
 
         for t_0 ∈ 1:qubit_count

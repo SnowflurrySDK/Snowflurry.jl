@@ -160,6 +160,7 @@ end
 print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
     print_connectivity(get_connectivity(qpu), Int[], io)
 
+get_excluded_positions(qpu::UnionAnyonQPU) = get_excluded_positions(get_connectivity(qpu))
 
 function get_metadata(qpu::UnionAnyonQPU)::Metadata
     if length(qpu.metadata) == 0
@@ -275,8 +276,20 @@ julia> get_qubits_distance(3, 24, connectivity)
 ```
 
 """
-get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int =
+function get_qubits_distance(target_1::Int, target_2::Int, c::LineConnectivity)::Int
+    for e in c.excluded_positions
+        if target_1 ≤ e ≤ target_2
+            throw(
+                DomainError(
+                    "cannot evaluate distance from qubits $target_1 to $target_2 " *
+                    "given excluded_positions: $(c.excluded_positions)",
+                ),
+            )
+        end
+    end
+
     abs(target_1 - target_2)
+end
 
 function get_qubits_distance(
     target_1::Int,
@@ -455,7 +468,11 @@ SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoN
 ), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler()])
 ```
 """
-function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
+function get_transpiler(
+    qpu::UnionAnyonQPU;
+    atol = 1e-6,
+    connectivity = get_connectivity(qpu),
+)::Transpiler
     return SequentialTranspiler([
         CircuitContainsAReadoutTranspiler(),
         ReadoutsDoNotConflictTranspiler(),
@@ -464,7 +481,7 @@ function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForAdjacencyTranspiler(get_connectivity(qpu)),
+        SwapQubitsForAdjacencyTranspiler(connectivity),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
         SimplifyTrivialGatesTranspiler(atol),

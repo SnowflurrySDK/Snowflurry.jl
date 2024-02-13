@@ -618,6 +618,7 @@ end
         "project_id" => expected_project_id,
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
+        "excluded_positions" => collect(7:12),
     )
 
     qpu = AnyonYamaskaQPU(
@@ -639,6 +640,7 @@ end
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
         "realm" => expected_realm,
+        "excluded_positions" => collect(7:12),
     )
 
 end

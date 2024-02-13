@@ -141,6 +141,7 @@ export
     print_connectivity,
     get_connectivity,
     get_connectivity_label,
+    get_excluded_positions,
     get_adjacency_list,
     path_search,
     get_host,
