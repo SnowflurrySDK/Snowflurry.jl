@@ -538,14 +538,62 @@ end
 
         @test length(gates) == gates_in_output
 
-        if !(compare_circuits(circuit, transpiled_circuit))
-            println("gates in input: $(get_circuit_instructions(circuit))")
-        end
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end
+
+@testset "SwapQubitsForAdjacencyTranspiler{LatticeConnectivity}: excluded_positions" begin
+
+    nrows = 4
+    ncols = 3
+    qubit_count = nrows * ncols
+    transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols, [4, 5]))
+
+    # LatticeConnectivity{4,3}
+    #         4 ──  1 
+    #         |     | 
+    #  10 ──  7 ──  5 ──  2 
+    #         |     |     | 
+    #        11 ──  8 ──  6 ──  3 
+    #               |     | 
+    #              12 ──  9 
+
+    success_cases = [
+        # (gates list       gates_in_output)
+        ([swap(10, 7)], 1),          # no effect
+        ([swap(10, 11)], 3),
+        ([swap(11, 12)], 3),
+    ]
+
+    failure_cases = [[swap(1, 7)], [swap(1, 8)], [swap(1, 2)]]
+
+    for (input_gates, gates_in_output) in success_cases
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count,
+            instructions = input_gates,
+            name = "test-name",
+        )
+
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        gates = get_circuit_instructions(transpiled_circuit)
+
+        @test length(gates) == gates_in_output
 
         @test compare_circuits(circuit, transpiled_circuit)
-
     end
 
+    for input_gates in failure_cases
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count,
+            instructions = input_gates,
+            name = "test-name",
+        )
+
+        @test_throws AssertionError(
+            "cannot find path on connectivity given excluded positions",
+        ) transpile(transpiler, circuit)
+    end
 end
 
 
@@ -1638,6 +1686,7 @@ end
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(LineConnectivity(42), 42),
     ]
 
     for transpiler in transpilers
@@ -1647,5 +1696,38 @@ end
         @test get_num_bits(transpiled_circuit) == 99
         @test get_name(transpiled_circuit) == "test-name"
         @test get_circuit_instructions(transpiled_circuit) == [readout(42, 99)]
+    end
+end
+
+@testset "RejectNonNativeInstructionsTranspiler" begin
+
+    connectivities_and_targets = [
+        (LineConnectivity(12), (1, 2))
+        (LineConnectivity(12, collect(9:12)), (1, 2))
+        (LatticeConnectivity(3, 4), (1, 5))
+        (LatticeConnectivity(3, 4, collect(9:12)), (1, 5))
+    ]
+
+    for (connectivity, targets) in connectivities_and_targets
+        transpiler = RejectNonNativeInstructionsTranspiler(connectivity, 12)
+
+        for instr in single_qubit_instructions
+            circuit =
+                QuantumCircuit(qubit_count = 6, instructions = [instr], name = "test-name")
+
+            if is_native_instruction(instr, connectivity)
+                @test isequal(transpile(transpiler, circuit), circuit)
+            else
+                @test_throws DomainError transpile(transpiler, circuit)
+            end
+        end
+
+        circuit = QuantumCircuit(
+            qubit_count = 6,
+            instructions = [control_z(targets...)],
+            name = "test-name",
+        )
+
+        @test isequal(transpile(transpiler, circuit), circuit)
     end
 end

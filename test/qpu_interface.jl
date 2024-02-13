@@ -423,6 +423,204 @@ end
 
 end
 
+
+@testset "AbstractConnectivity: excluded_positions" begin
+
+    excluded_positions = [1, 2, 3, 9, 10]
+
+    connectivity = LineConnectivity(12, excluded_positions)
+
+    @test get_excluded_positions(connectivity) == excluded_positions
+
+    connectivity_alternate =
+        Snowflurry.with_excluded_positions(LineConnectivity(12), excluded_positions)
+
+    @test connectivity.dimension == connectivity_alternate.dimension
+    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+
+
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        4 => [5],
+        5 => [4, 6],
+        6 => [5, 7],
+        7 => [6, 8],
+        8 => [7],
+        11 => [12],
+        12 => [11],
+    )
+
+    @test get_adjacency_list(connectivity) == expected_adjacency_list
+
+    io = IOBuffer()
+    println(io, connectivity)
+    @test String(take!(io)) ==
+          "LineConnectivity{12}\n" *
+          "1──2──3──4──5──6──7──8──9──10──11──12\n" *
+          "excluded positions: [1, 2, 3, 9, 10]\n" *
+          "\n"
+
+    @test path_search(1, 12, connectivity) == []
+    @test path_search(7, 4, connectivity) == Vector{Int}(collect(4:7))
+    @test path_search(1, 1, connectivity) == []
+
+    exclusion_cases = [[5], [5, 7], [8]]
+    for excluded in exclusion_cases
+        @test path_search(4, 8, connectivity, excluded) == []
+    end
+
+    @test path_search(8, 7, connectivity, [5]) == Vector{Int}(collect(7:8))
+
+    @test_throws AssertionError path_search(1, 44, connectivity)
+    @test_throws AssertionError path_search(44, 1, connectivity)
+    @test_throws AssertionError path_search(-1, 4, connectivity)
+    @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 12, connectivity, [-1])
+
+    @test_throws AssertionError("elements in excluded_positions must be > 0") LineConnectivity(
+        12,
+        [0],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be ≤ 12") LineConnectivity(
+        12,
+        [13],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be unique") LineConnectivity(
+        12,
+        [2, 2],
+    )
+
+    @test ismissing(get_qubits_distance(1, 12, connectivity))
+
+    io = IOBuffer()
+
+    excluded_positions = collect(13:24)
+
+    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+
+    @test get_excluded_positions(connectivity) == excluded_positions
+
+    connectivity_alternate =
+        Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
+    @test connectivity.qubits_per_row == connectivity_alternate.qubits_per_row
+    @test connectivity.dimensions == connectivity_alternate.dimensions
+    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        1 => [6, 5],
+        2 => [7, 6],
+        3 => [8, 7],
+        4 => [8],
+        5 => [9, 1],
+        6 => [1, 10, 9, 2],
+        7 => [2, 11, 10, 3],
+        8 => [3, 12, 11, 4],
+        9 => [5, 6],
+        10 => [6, 7],
+        11 => [7, 8],
+        12 => [8],
+    )
+
+    @test expected_adjacency_list == get_adjacency_list(connectivity)
+
+    print_connectivity(connectivity, path_search(1, 8, connectivity), io)
+
+    @test String(take!(io)) ==
+          "              5 ── (1)\n" *
+          "              |     | \n" *
+          "       13 ──  9 ── (6)──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ──(10)── (7)──  3 \n" *
+          "        |     |     |     |     | \n" *
+          "       22 ── 18 ── 15 ──(11)── (8)──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n"
+
+    io = IOBuffer()
+    println(io, connectivity)
+    @test String(take!(io)) ==
+          "LatticeConnectivity{6,4}\n" *
+          "              5 ──  1 \n" *
+          "              |     | \n" *
+          "       13 ──  9 ──  6 ──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ── 10 ──  7 ──  3 \n" *
+          "        |     |     |     |     | \n" *
+          "       22 ── 18 ── 15 ── 11 ──  8 ──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n" *
+          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n\n"
+
+
+    @test path_search(1, 8, connectivity) == [8, 11, 7, 10, 6, 1]
+    excluded = [11, 10]
+    @test path_search(1, 8, connectivity, excluded) == [8, 3, 7, 2, 6, 1]
+    @test path_search(1, 1, connectivity) == [1]
+
+    @test path_search(1, 9, connectivity, [5, 6]) == []
+    @test path_search(21, 1, connectivity, [17]) == []
+    @test path_search(1, 3, connectivity, [1]) == []
+    @test path_search(1, 3, connectivity, [3]) == []
+
+    @test_throws AssertionError path_search(1, 44, connectivity)
+    @test_throws AssertionError path_search(44, 1, connectivity)
+    @test_throws AssertionError path_search(-1, 4, connectivity)
+    @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 3, connectivity, [-1])
+
+    @test_throws AssertionError("elements in excluded_positions must be > 0") LatticeConnectivity(
+        6,
+        4,
+        [0],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be ≤ 24") LatticeConnectivity(
+        6,
+        4,
+        [25],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be unique") LatticeConnectivity(
+        6,
+        4,
+        [2, 2],
+    )
+
+    excluded_positions = [5, 6, 2]
+
+    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+
+    @test ismissing(get_qubits_distance(1, 9, connectivity))
+end
+
+@testset "is_native_instruction: NotImplemented" begin
+
+    struct NonExistentConnectivity <: AbstractConnectivity end
+    struct NonExistentInstruction <: AbstractInstruction end
+
+    @test_throws NotImplementedError is_native_instruction(
+        sigma_x(1),
+        NonExistentConnectivity(),
+    )
+    @test_throws NotImplementedError is_native_instruction(
+        NonExistentInstruction(),
+        LineConnectivity(2),
+    )
+    @test_throws NotImplementedError is_native_instruction(
+        NonExistentInstruction(),
+        NonExistentConnectivity(),
+    )
+
+    @test_throws NotImplementedError Snowflurry.with_excluded_positions(
+        NonExistentConnectivity(),
+        Int[],
+    )
+    @test_throws NotImplementedError get_excluded_positions(NonExistentConnectivity())
+end
+
 @testset "get_qubits_distance" begin
     # LineConnectivity
     qubit_count_list = [6, 12]
@@ -503,6 +701,8 @@ end
     )
     client = get_client(qpu)
 
+    @test get_excluded_positions(qpu) == []
+
     io = IOBuffer()
     println(io, qpu)
     @test String(take!(io)) ==
@@ -578,6 +778,10 @@ end
     client = get_client(qpu)
 
     connectivity = get_connectivity(qpu)
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(connectivity) ==
+          collect(7:12)
 
     @test client.host == expected_host
     @test client.user == expected_user

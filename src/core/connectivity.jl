@@ -24,8 +24,16 @@ struct LineConnectivity <: AbstractConnectivity
     dimension::Int
     excluded_positions::Vector{Int}
 
-    LineConnectivity(dimension::Int, excluded_positions = Vector{Int}()) =
+    function LineConnectivity(dimension::Int, excluded_positions = Vector{Int}())
+        @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
+
+        for e in excluded_positions
+            @assert e > 0 "elements in excluded_positions must be > 0"
+            @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
+        end
+
         new(dimension, excluded_positions)
+    end
 end
 
 """
@@ -97,6 +105,13 @@ struct LatticeConnectivity <: AbstractConnectivity
         placing_queue = [nrows for _ = 1:ncols]
         qubits_per_row = Vector{Int}()
 
+        @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
+
+        for e in excluded_positions
+            @assert e > 0 "elements in excluded_positions must be > 0"
+            @assert e ≤ qubit_count "elements in excluded_positions must be ≤ $qubit_count"
+        end
+
         cursor = 0
         while !all(map(x -> x == 0, placing_queue))
             cursor += 1
@@ -148,7 +163,7 @@ end
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label, connectivity))
 
-with_excluded_positions(connectivity::AbstractConnectivity) =
+with_excluded_positions(connectivity::AbstractConnectivity, ::Vector{Int}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
 
 with_excluded_positions(
@@ -435,26 +450,34 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     end
 
     for (target, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
-        if target != 0
+        if target != 0 && !(target in connectivity.excluded_positions)
             neighbors = Vector{Int}()
 
             trow = ind[1]
             tcol = ind[2]
 
             if trow - 1 > 0 && qubit_placement[trow-1, tcol] != 0
-                push!(neighbors, qubit_placement[trow-1, tcol])
+                if !(qubit_placement[trow-1, tcol] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow-1, tcol])
+                end
             end
 
             if trow + 1 <= nrows && qubit_placement[trow+1, tcol] != 0
-                push!(neighbors, qubit_placement[trow+1, tcol])
+                if !(qubit_placement[trow+1, tcol] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow+1, tcol])
+                end
             end
 
             if tcol - 1 > 0 && qubit_placement[trow, tcol-1] != 0
-                push!(neighbors, qubit_placement[trow, tcol-1])
+                if !(qubit_placement[trow, tcol-1] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow, tcol-1])
+                end
             end
 
             if tcol + 1 <= ncols && qubit_placement[trow, tcol+1] != 0
-                push!(neighbors, qubit_placement[trow, tcol+1])
+                if !(qubit_placement[trow, tcol+1] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow, tcol+1])
+                end
             end
 
             adjacency_list[target] = neighbors
@@ -523,13 +546,22 @@ Dict{Int64, Vector{Int64}} with 12 entries:
 function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}
     adjacency_list = Dict{Int,Vector{Int}}()
 
-    adjacency_list[1] = [2]
+    for target = 1:connectivity.dimension
+        if !(target in connectivity.excluded_positions)
+            neighbors = Vector{Int}()
 
-    for qubit_index = 2:connectivity.dimension-1
-        adjacency_list[qubit_index] = [qubit_index - 1, qubit_index + 1]
+            if target - 1 > 0 && !(target - 1 in connectivity.excluded_positions)
+                push!(neighbors, target - 1)
+            end
+
+            if target + 1 ≤ connectivity.dimension &&
+               !(target + 1 in connectivity.excluded_positions)
+                push!(neighbors, target + 1)
+            end
+
+            adjacency_list[target] = neighbors
+        end
     end
-
-    adjacency_list[connectivity.dimension] = [connectivity.dimension - 1]
 
     return adjacency_list
 end
@@ -681,6 +713,9 @@ function path_search(
 
     for e in all_excluded_positions
         @assert e > 0 "excluded positions must be non-negative"
+    end
+
+    for e in all_excluded_positions
         if origin ≤ e ≤ target || target ≤ e ≤ origin
             # no path exists due to excluded positions
             return []

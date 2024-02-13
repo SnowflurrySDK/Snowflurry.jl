@@ -187,6 +187,7 @@ end
 
 
 set_of_native_gates = [
+    Identity,
     PhaseShift,
     Pi8,
     Pi8Dagger,
@@ -276,15 +277,14 @@ julia> get_qubits_distance(3, 24, connectivity)
 ```
 
 """
-function get_qubits_distance(target_1::Int, target_2::Int, c::LineConnectivity)::Int
+function get_qubits_distance(
+    target_1::Int,
+    target_2::Int,
+    c::LineConnectivity,
+)::Union{Int,Missing}
     for e in c.excluded_positions
         if target_1 ≤ e ≤ target_2
-            throw(
-                DomainError(
-                    "cannot evaluate distance from qubits $target_1 to $target_2 " *
-                    "given excluded_positions: $(c.excluded_positions)",
-                ),
-            )
+            return missing
         end
     end
 
@@ -295,12 +295,21 @@ function get_qubits_distance(
     target_1::Int,
     target_2::Int,
     connectivity::LatticeConnectivity,
-)::Int
+)::Union{Int,Missing}
+
+    path = path_search(target_1, target_2, connectivity)
+
+    if isempty(path)
+        return missing
+    end
+
     # Manhattan distance
-    return maximum([0, length(path_search(target_1, target_2, connectivity)) - 1])
+    return maximum([0, length(path) - 1])
 end
 
-function is_native_instruction(gate::Gate, connectivity::AbstractConnectivity)::Bool
+const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
+
+function is_native_instruction(gate::Gate, connectivity::GeometricConnectivity)::Bool
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
@@ -312,9 +321,13 @@ function is_native_instruction(gate::Gate, connectivity::AbstractConnectivity)::
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-is_native_instruction(readout::Readout, connectivity::AbstractConnectivity)::Bool = true
+is_native_instruction(readout::Readout, connectivity::GeometricConnectivity)::Bool = true
 
-function is_native_circuit(qubit_count_qpu::Int, circuit::QuantumCircuit, connectivity::Union{LineConnectivity,LatticeConnectivity})::Tuple{Bool,String}
+function is_native_circuit(
+    qubit_count_qpu::Int,
+    circuit::QuantumCircuit,
+    connectivity::GeometricConnectivity,
+)::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
     if qubit_count_circuit > qubit_count_qpu
         return (
