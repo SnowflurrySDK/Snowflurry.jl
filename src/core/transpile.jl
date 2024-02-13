@@ -1692,10 +1692,6 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
     )
 end
 
-struct TrivialTranspiler <: Transpiler end
-
-transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit = circuit
-
 struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
 
 """

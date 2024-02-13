@@ -70,7 +70,6 @@ export
     SimplifyRzGatesTranspiler,
     SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
-    TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
     ReadoutsAreFinalInstructionsTranspiler,
     ReadoutsDoNotConflictTranspiler,

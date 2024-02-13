@@ -404,8 +404,6 @@ struct VirtualQPU <: AbstractQPU end
 get_metadata(qpu::VirtualQPU) =
     Metadata("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
-is_native_instruction(::AbstractInstruction, ::AllToAllConnectivity)::Bool = true
-
 get_transpiler(::VirtualQPU) = SequentialTranspiler([
     CircuitContainsAReadoutTranspiler(),
     ReadoutsDoNotConflictTranspiler(),
