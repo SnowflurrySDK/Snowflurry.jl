@@ -300,35 +300,35 @@ function get_qubits_distance(
     return maximum([0, length(path_search(target_1, target_2, connectivity)) - 1])
 end
 
-function is_native_instruction(qpu::UnionAnyonQPU, gate::Gate)::Bool
+function is_native_instruction(gate::Gate, connectivity::AbstractConnectivity)::Bool
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
         targets = get_connected_qubits(gate)
 
-        return (get_qubits_distance(targets[1], targets[2], get_connectivity(qpu)) == 1)
+        return (get_qubits_distance(targets[1], targets[2], connectivity) == 1)
     end
 
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool = true
+is_native_instruction(readout::Readout, connectivity::AbstractConnectivity)::Bool = true
 
-function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_circuit(qubit_count_qpu::Int, circuit::QuantumCircuit, connectivity::Union{LineConnectivity,LatticeConnectivity})::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
-    qubit_count_qpu = get_num_qubits(qpu)
     if qubit_count_circuit > qubit_count_qpu
         return (
             false,
-            "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu",
+            "Circuit qubit count $qubit_count_circuit exceeds $(typeof(connectivity)) qubit count: $qubit_count_qpu",
         )
     end
 
     for instr in get_circuit_instructions(circuit)
-        if !is_native_instruction(qpu, instr)
+        if !is_native_instruction(instr, connectivity)
             return (
                 false,
-                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr)) is not native on $(typeof(qpu))",
+                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr))" *
+                " is not native on connectivity with excluded_positions: $(get_excluded_positions(connectivity))",
             )
         end
     end
@@ -337,7 +337,7 @@ function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{B
 end
 
 """
-    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit,shot_count::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer; transpiler::Transpiler = get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a key-word argument.
@@ -365,14 +365,7 @@ function transpile_and_run_job(
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
-
     transpiled_circuit = transpile(transpiler, circuit)
-
-    (passed, message) = is_native_circuit(qpu, transpiled_circuit)
-
-    if !passed
-        throw(DomainError(qpu, message))
-    end
 
     return run_job(qpu, transpiled_circuit, shot_count)
 end
@@ -491,5 +484,6 @@ function get_transpiler(
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(atol),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(connectivity, get_num_qubits(qpu)),
     ])
 end

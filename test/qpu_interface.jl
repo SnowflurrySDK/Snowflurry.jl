@@ -923,7 +923,10 @@ end
 
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
-    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+    qpus_and_connectivities = [
+        (AnyonYukonQPU, Snowflurry.AnyonYukonConnectivity),
+        (AnyonYamaskaQPU, Snowflurry.AnyonYamaskaConnectivity),
+    ]
     post_checkers_toffoli = [
         make_post_checker(expected_json_Toffoli_Yukon),
         make_post_checker(expected_json_Toffoli_Yamaska),
@@ -933,8 +936,8 @@ end
         make_post_checker(expected_json_last_qubit_Yamaska),
     ]
 
-    for (QPU, post_checker_toffoli, post_checker_last_qubit) in
-        zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
+    for ((QPU, connectivity), post_checker_toffoli, post_checker_last_qubit) in
+        zip(qpus_and_connectivities, post_checkers_toffoli, post_checkers_last_qubit)
 
         requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
         test_client = Client(
@@ -954,19 +957,13 @@ end
         )
         @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
-        # submit circuit with a non-native gate on this qpu (no transpilation)
+        # submit circuit with a non-native gate on this qpu
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) - 1,
             instructions = [toffoli(1, 2, 3), readout(1, 1)],
         )
-        @test_throws DomainError transpile_and_run_job(
-            qpu,
-            circuit,
-            shot_count;
-            transpiler = TrivialTranspiler(),
-        )
-
-        # using default transpiler
+        
+        # using default transpiler with full connectivity
         requestor = MockRequestor(make_request_checker(), post_checker_toffoli)
         test_client = Client(
             host = expected_host,
@@ -977,7 +974,12 @@ end
 
         qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
-        histogram = transpile_and_run_job(qpu, circuit, shot_count)
+        histogram = transpile_and_run_job(
+            qpu,
+            circuit,
+            shot_count;
+            transpiler = get_transpiler(qpu; connectivity = connectivity),
+        )
 
         @test histogram == Dict("001" => shot_count)
         @test !haskey(histogram, "error_msg")
@@ -998,7 +1000,12 @@ end
             instructions = [sigma_x(qubit_count), readout(1, 1)],
         )
 
-        transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
+        transpile_and_run_job(
+            qpu,
+            circuit,
+            shot_count;
+            transpiler = get_transpiler(qpu; connectivity = connectivity),
+        ) # no error thrown
     end
 end
 
@@ -1020,10 +1027,6 @@ end
     qpu = VirtualQPU()
 
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
-
-    for instr in get_circuit_instructions(circuit)
-        @test is_native_instruction(qpu, instr)
-    end
 
     histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -1113,11 +1116,6 @@ end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError get_connectivity(NonExistentQPU())
-    @test_throws NotImplementedError is_native_instruction(NonExistentQPU(), sigma_x(1))
-    @test_throws NotImplementedError is_native_circuit(
-        NonExistentQPU(),
-        QuantumCircuit(qubit_count = 1),
-    )
     @test_throws NotImplementedError get_transpiler(NonExistentQPU())
     @test_throws NotImplementedError run_job(
         NonExistentQPU(),

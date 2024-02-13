@@ -374,11 +374,8 @@ abstract type AbstractQPU end
 
 get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
 
-is_native_instruction(qpu::AbstractQPU, ::AbstractInstruction) =
-    throw(NotImplementedError(:is_native_instruction, qpu))
-
-is_native_circuit(qpu::AbstractQPU, ::QuantumCircuit) =
-    throw(NotImplementedError(:is_native_circuit, qpu))
+is_native_instruction(::AbstractInstruction, c::AbstractConnectivity) =
+    throw(NotImplementedError(:is_native_instruction, c))
 
 get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qpu))
 
@@ -405,11 +402,9 @@ Quantum Simulator:
 struct VirtualQPU <: AbstractQPU end
 
 get_metadata(qpu::VirtualQPU) =
-    Dict{String,String}("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
+    Metadata("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
-is_native_instruction(::VirtualQPU, ::AbstractInstruction)::Bool = true
-
-is_native_circuit(::VirtualQPU, ::QuantumCircuit)::Tuple{Bool,String} = (true, "")
+is_native_instruction(::AbstractInstruction, ::AllToAllConnectivity)::Bool = true
 
 get_transpiler(::VirtualQPU) = SequentialTranspiler([
     CircuitContainsAReadoutTranspiler(),
@@ -475,10 +470,6 @@ function transpile_and_run_job(
 )::Dict{String,Int}
 
     transpiled_circuit = transpile(transpiler, circuit)
-
-    (passed, message) = is_native_circuit(qpu, transpiled_circuit)
-
-    @assert passed "All circuits should be native on VirtualQPU"
 
     return run_job(qpu, transpiled_circuit, shot_count)
 end

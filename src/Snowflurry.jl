@@ -77,6 +77,7 @@ export
     CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
     DecomposeSingleTargetSingleControlGatesTranspiler,
+    RejectNonNativeInstructionsTranspiler,
 
     # Functions
     controlled,
@@ -238,7 +239,7 @@ using PrecompileTools
         toffoli(1, 2, 6),
         swap(2, 5),
         iswap(4, 1),
-        iswap_dagger(6, 3),
+        # iswap_dagger(6, 3),
         controlled(hadamard(1), [2]),
     ]
 
@@ -259,6 +260,7 @@ using PrecompileTools
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(AnyonYukonConnectivity, 6),
     ])
 
     for gate in gates_list
