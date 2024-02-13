@@ -45,7 +45,7 @@ or alternatively, retrieve the QPU metadata in a `Dict{String,String}` format th
 ```jldoctest get_qpu_metadata_tutorial; output = true
 get_metadata(qpu_v)
 # output
-Dict{String, String} with 2 entries:
+Dict{String, Union{Int64, String, Vector{Int64}}} with 2 entries:
   "developers" => "Anyon Systems Inc."
   "package"    => "Snowflurry.jl"
 
