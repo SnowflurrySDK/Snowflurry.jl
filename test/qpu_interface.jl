@@ -534,7 +534,7 @@ end
     @test get_connectivity_label(get_connectivity(qpu)) ==
           Snowflurry.line_connectivity_label
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
@@ -554,7 +554,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
@@ -611,7 +611,7 @@ end
 
     @test get_connectivity_label(connectivity) == Snowflurry.lattice_connectivity_label
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
@@ -631,7 +631,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",

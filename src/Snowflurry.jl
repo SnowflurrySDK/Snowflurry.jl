@@ -47,6 +47,7 @@ export
     AnyonYukonQPU,
     AnyonYamaskaQPU,
     VirtualQPU,
+    Metadata,
     Client,
     Status,
     NotImplementedError,

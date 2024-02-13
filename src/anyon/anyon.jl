@@ -3,6 +3,8 @@ using Snowflurry
 const AnyonYukonConnectivity = LineConnectivity(6)
 const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
 
+const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
+
 """
     AnyonYukonQPU <: AbstractQPU
 
@@ -32,6 +34,7 @@ struct AnyonYukonQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LineConnectivity
     project_id::String
+    metadata::Vector{Metadata}
 
     function AnyonYukonQPU(
         client::Client,
@@ -41,7 +44,7 @@ struct AnyonYukonQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, AnyonYukonConnectivity, project_id)
+        new(client, status_request_throttle, AnyonYukonConnectivity, project_id, Metadata[])
     end
 
     function AnyonYukonQPU(;
@@ -58,8 +61,9 @@ struct AnyonYukonQPU <: AbstractQPU
         new(
             Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
-            LineConnectivity(6),
+            AnyonYukonConnectivity,
             project_id,
+            Metadata[],
         )
     end
 end
@@ -93,6 +97,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LatticeConnectivity
     project_id::String
+    metadata::Vector{Metadata}
 
     function AnyonYamaskaQPU(
         client::Client,
@@ -102,7 +107,13 @@ struct AnyonYamaskaQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, AnyonYamaskaConnectivity, project_id)
+        new(
+            client,
+            status_request_throttle,
+            AnyonYamaskaConnectivity,
+            project_id,
+            Metadata[],
+        )
     end
     function AnyonYamaskaQPU(;
         host::String,
@@ -121,6 +132,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
             status_request_throttle,
             AnyonYamaskaConnectivity,
             project_id,
+            Metadata[],
         )
     end
 end
@@ -135,36 +147,25 @@ get_realm(qpu_service::UnionAnyonQPU) = get_realm(qpu_service.client)
 
 get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 
-get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
+function get_connectivity(qpu::UnionAnyonQPU)
+    md = get_metadata(qpu)
+
+    if haskey(md, "excluded_positions")
+        return with_excluded_positions(qpu.connectivity, md["excluded_positions"])
+    end
+
+    return qpu.connectivity
+end
 
 print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
     print_connectivity(get_connectivity(qpu), Int[], io)
 
-function get_metadata(qpu::UnionAnyonQPU)::Dict{String,Union{String,Int}}
 
-    generation = "Yukon"
-    serial_number = "ANYK202201"
-
-    if qpu isa AnyonYamaskaQPU
-        generation = "Yamaska"
-        serial_number = "ANYK202301"
+function get_metadata(qpu::UnionAnyonQPU)::Metadata
+    if length(qpu.metadata) == 0
+        push!(qpu.metadata, get_metadata(qpu.client, qpu))
     end
-
-    output = Dict{String,Union{String,Int}}(
-        "manufacturer" => "Anyon Systems Inc.",
-        "generation" => generation,
-        "serial_number" => serial_number,
-        "project_id" => get_project_id(qpu),
-        "qubit_count" => get_num_qubits(qpu.connectivity),
-        "connectivity_type" => get_connectivity_label(qpu.connectivity),
-    )
-
-    realm = get_realm(qpu)
-    if realm != ""
-        output["realm"] = realm
-    end
-
-    return output
+    return qpu.metadata[1]
 end
 
 function Base.show(io::IO, qpu::UnionAnyonQPU)
@@ -199,6 +200,42 @@ set_of_native_gates = [
     ZM90,
     ControlZ,
 ]
+
+function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
+
+    # TODO: the metadata will eventually be fetched from the host server.
+    # It is hardcoded for the time being
+
+    generation = "Yukon"
+    serial_number = "ANYK202201"
+    excluded_positions = Vector{Int}()
+
+    if qpu isa AnyonYamaskaQPU
+        generation = "Yamaska"
+        serial_number = "ANYK202301"
+        excluded_positions = collect(7:12)
+    end
+
+    output = Metadata(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => generation,
+        "serial_number" => serial_number,
+        "project_id" => get_project_id(qpu),
+        "qubit_count" => get_num_qubits(qpu.connectivity),
+        "connectivity_type" => get_connectivity_label(qpu.connectivity),
+    )
+
+    realm = get_realm(qpu)
+    if realm != ""
+        output["realm"] = realm
+    end
+
+    if !isempty(excluded_positions)
+        output["excluded_positions"] = excluded_positions
+    end
+
+    return output
+end
 
 """
     get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
