@@ -281,10 +281,10 @@ function get_qubits_distance(
     target_1::Int,
     target_2::Int,
     c::LineConnectivity,
-)::Union{Int,Missing}
+)::Real
     for e in c.excluded_positions
         if target_1 ≤ e ≤ target_2
-            return missing
+            return NaN
         end
     end
 
@@ -295,21 +295,25 @@ function get_qubits_distance(
     target_1::Int,
     target_2::Int,
     connectivity::LatticeConnectivity,
-)::Union{Int,Missing}
+)::Real
 
     path = path_search(target_1, target_2, connectivity)
 
     if isempty(path)
-        return missing
+        return NaN
     end
 
     # Manhattan distance
-    return maximum([0, length(path) - 1])
+    return length(path) - 1
 end
 
 const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
 
 function is_native_instruction(gate::Gate, connectivity::GeometricConnectivity)::Bool
+    if any(x -> x in connectivity.excluded_positions, get_connected_qubits(gate))
+        return false
+    end
+
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
@@ -321,7 +325,8 @@ function is_native_instruction(gate::Gate, connectivity::GeometricConnectivity):
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-is_native_instruction(readout::Readout, connectivity::GeometricConnectivity)::Bool = true
+is_native_instruction(readout::Readout, connectivity::GeometricConnectivity)::Bool =
+    !any(x -> x in connectivity.excluded_positions, get_connected_qubits(readout))
 
 function is_native_circuit(
     qubit_count_qpu::Int,

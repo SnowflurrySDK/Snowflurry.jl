@@ -686,6 +686,7 @@ end
     transpiler = get_transpiler(qpu)
 
     input_gates_native = [
+        identity_gate(target),
         phase_shift(target, -phi / 2),
         pi_8(target),
         pi_8_dagger(target),
@@ -703,7 +704,6 @@ end
     ]
 
     input_gates_foreign = [
-        identity_gate(target),
         hadamard(target),
         rotation(target, theta, phi),
         rotation_x(target, theta),
@@ -1711,7 +1711,7 @@ end
     for (connectivity, targets) in connectivities_and_targets
         transpiler = RejectNonNativeInstructionsTranspiler(connectivity, 12)
 
-        for instr in single_qubit_instructions
+        for instr in vcat(single_qubit_instructions, readout(1, 1))
             circuit =
                 QuantumCircuit(qubit_count = 6, instructions = [instr], name = "test-name")
 
@@ -1729,5 +1729,60 @@ end
         )
 
         @test isequal(transpile(transpiler, circuit), circuit)
+    end
+end
+
+@testset "is_native_instruction: excluded_positions" begin
+
+    excluded_positions = collect(9:12)
+
+    connectivities = [
+        LineConnectivity(20, excluded_positions),
+        LatticeConnectivity(5, 4, excluded_positions),
+    ]
+
+    for connectivity in connectivities
+        for target in 1:12
+            input_gates_on_excluded_targets = [
+                phase_shift(target, pi / 3),
+                pi_8(target),
+                pi_8_dagger(target),
+                sigma_x(target),
+                sigma_y(target),
+                sigma_z(target),
+                x_90(target),
+                x_minus_90(target),
+                y_90(target),
+                y_minus_90(target),
+                z_90(target),
+                z_minus_90(target),
+                readout(target, 1),
+            ]
+
+            for instr in input_gates_on_excluded_targets
+                # instr is native iif it targets non-excluded positions
+                @test !is_native_instruction(instr, connectivity) == (target in excluded_positions)
+            end
+        end
+
+        for control in 1:20
+            for target in 1:20
+                if target == control 
+                    continue
+                end
+
+                instr = control_z(control, target)
+
+                # instr is native if it is connected to adjacent qubits on 
+                # non-excluded positions, and it doesnt reach across the blocked region
+                @test is_native_instruction(instr, connectivity) ==  
+                    (
+                        (get_qubits_distance(target, control, connectivity) == 1) &&
+                        !(target in excluded_positions) && 
+                        !(control in excluded_positions) &&
+                        ((control < 9 && target < 9) || (control > 12 && target > 12))
+                    )
+            end
+        end
     end
 end

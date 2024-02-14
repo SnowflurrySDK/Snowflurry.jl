@@ -489,7 +489,7 @@ end
         [2, 2],
     )
 
-    @test ismissing(get_qubits_distance(1, 12, connectivity))
+    @test isnan(get_qubits_distance(1, 12, connectivity))
 
     io = IOBuffer()
 
@@ -593,7 +593,7 @@ end
 
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
 
-    @test ismissing(get_qubits_distance(1, 9, connectivity))
+    @test isnan(get_qubits_distance(1, 9, connectivity))
 end
 
 @testset "is_native_instruction: NotImplemented" begin
@@ -1166,7 +1166,7 @@ end
             qubit_count = get_num_qubits(qpu) - 1,
             instructions = [toffoli(1, 2, 3), readout(1, 1)],
         )
-        
+
         # using default transpiler with full connectivity
         requestor = MockRequestor(make_request_checker(), post_checker_toffoli)
         test_client = Client(
