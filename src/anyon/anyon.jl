@@ -474,7 +474,7 @@ SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoN
 1──2──3──4──5──6
 ), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler(), RejectNonNativeInstructionsTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
-, 6)])
+)])
 ```
 """
 function get_transpiler(
@@ -500,6 +500,6 @@ function get_transpiler(
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(atol),
         ReadoutsAreFinalInstructionsTranspiler(),
-        RejectNonNativeInstructionsTranspiler(connectivity, get_num_qubits(qpu)),
+        RejectNonNativeInstructionsTranspiler(connectivity),
     ])
 end

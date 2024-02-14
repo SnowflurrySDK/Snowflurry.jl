@@ -2315,7 +2315,6 @@ end
 
 struct RejectNonNativeInstructionsTranspiler <: Transpiler
     connectivity::AbstractConnectivity
-    num_qubits::Int
 end
 
 function transpile(
@@ -2324,7 +2323,7 @@ function transpile(
 )::QuantumCircuit
 
     (passed, message) =
-        is_native_circuit(transpiler.num_qubits, circuit, transpiler.connectivity)
+        is_native_circuit(get_num_qubits(transpiler.connectivity), circuit, transpiler.connectivity)
 
     if !passed
         throw(DomainError(transpiler.connectivity, message))

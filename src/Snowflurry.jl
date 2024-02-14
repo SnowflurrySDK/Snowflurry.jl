@@ -259,7 +259,7 @@ using PrecompileTools
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
-        RejectNonNativeInstructionsTranspiler(AnyonYukonConnectivity, 6),
+        RejectNonNativeInstructionsTranspiler(AnyonYukonConnectivity),
     ])
 
     for gate in gates_list

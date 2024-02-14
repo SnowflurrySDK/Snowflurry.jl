@@ -1686,7 +1686,7 @@ end
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
-        RejectNonNativeInstructionsTranspiler(LineConnectivity(42), 42),
+        RejectNonNativeInstructionsTranspiler(LineConnectivity(42)),
     ]
 
     for transpiler in transpilers
@@ -1709,7 +1709,7 @@ end
     ]
 
     for (connectivity, targets) in connectivities_and_targets
-        transpiler = RejectNonNativeInstructionsTranspiler(connectivity, 12)
+        transpiler = RejectNonNativeInstructionsTranspiler(connectivity)
 
         for instr in vcat(single_qubit_instructions, readout(1, 1))
             circuit =
