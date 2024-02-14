@@ -1742,7 +1742,7 @@ end
     ]
 
     for connectivity in connectivities
-        for target in 1:12
+        for target = 1:12
             input_gates_on_excluded_targets = [
                 phase_shift(target, pi / 3),
                 pi_8(target),
@@ -1761,13 +1761,14 @@ end
 
             for instr in input_gates_on_excluded_targets
                 # instr is native iif it targets non-excluded positions
-                @test !is_native_instruction(instr, connectivity) == (target in excluded_positions)
+                @test !is_native_instruction(instr, connectivity) ==
+                      (target in excluded_positions)
             end
         end
 
-        for control in 1:20
-            for target in 1:20
-                if target == control 
+        for control = 1:20
+            for target = 1:20
+                if target == control
                     continue
                 end
 
@@ -1775,13 +1776,12 @@ end
 
                 # instr is native if it is connected to adjacent qubits on 
                 # non-excluded positions, and it doesnt reach across the blocked region
-                @test is_native_instruction(instr, connectivity) ==  
-                    (
-                        (get_qubits_distance(target, control, connectivity) == 1) &&
-                        !(target in excluded_positions) && 
-                        !(control in excluded_positions) &&
-                        ((control < 9 && target < 9) || (control > 12 && target > 12))
-                    )
+                @test is_native_instruction(instr, connectivity) == (
+                    (get_qubits_distance(target, control, connectivity) == 1) &&
+                    !(target in excluded_positions) &&
+                    !(control in excluded_positions) &&
+                    ((control < 9 && target < 9) || (control > 12 && target > 12))
+                )
             end
         end
     end
