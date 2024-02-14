@@ -2322,8 +2322,11 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    (passed, message) =
-        is_native_circuit(get_num_qubits(transpiler.connectivity), circuit, transpiler.connectivity)
+    (passed, message) = is_native_circuit(
+        get_num_qubits(transpiler.connectivity),
+        circuit,
+        transpiler.connectivity,
+    )
 
     if !passed
         throw(DomainError(transpiler.connectivity, message))
