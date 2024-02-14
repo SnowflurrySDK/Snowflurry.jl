@@ -60,7 +60,7 @@ test_instructions = [
         toffoli(1, 4, 3),
         swap(2, 4),
         iswap(4, 1),
-        # iswap_dagger(1, 3),
+        # iswap_dagger(1, 3), # TODO left out until missing transpiler is added: https://github.com/SnowflurrySDK/Snowflurry.jl/issues/377
     ],
 ]
 
