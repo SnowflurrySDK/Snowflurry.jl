@@ -215,7 +215,6 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     if qpu isa AnyonYamaskaQPU
         generation = "Yamaska"
         serial_number = "ANYK202301"
-        excluded_positions = collect(7:12)
     end
 
     output = Metadata(

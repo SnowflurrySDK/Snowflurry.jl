@@ -779,9 +779,11 @@ end
 
     connectivity = get_connectivity(qpu)
 
+    expected_excluded_positions = []
+
     @test get_excluded_positions(qpu) ==
           get_excluded_positions(connectivity) ==
-          collect(7:12)
+          expected_excluded_positions
 
     @test client.host == expected_host
     @test client.user == expected_user
@@ -822,7 +824,6 @@ end
         "project_id" => expected_project_id,
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
-        "excluded_positions" => collect(7:12),
     )
 
     qpu = AnyonYamaskaQPU(
@@ -844,7 +845,6 @@ end
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
         "realm" => expected_realm,
-        "excluded_positions" => collect(7:12),
     )
 
 end

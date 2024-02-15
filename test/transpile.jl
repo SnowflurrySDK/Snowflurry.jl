@@ -861,13 +861,14 @@ end
                 access_token = expected_access_token,
                 project_id = expected_project_id,
             ),
-            Snowflurry.AnyonYamaskaConnectivity,
+            # testing with LatticeConnectivity(6,4) induces massive demand on simulate(), with 24-qubit Kets
+            Snowflurry.LatticeConnectivity(3, 4),
         )
     ]
 
     for (qpu, connectivity) in qpus_and_connectivities
         transpiler = get_transpiler(qpu; connectivity = connectivity)
-        qubit_count = get_num_qubits(qpu)
+        qubit_count = get_num_qubits(connectivity)
 
         for t_0 ∈ 1:qubit_count
             for t_1 ∈ 1:qubit_count
