@@ -281,7 +281,7 @@ julia> get_qubits_distance(3, 24, connectivity)
 function get_qubits_distance(target_1::Int, target_2::Int, c::LineConnectivity)::Real
     for e in c.excluded_positions
         if target_1 ≤ e ≤ target_2
-            return NaN
+            return Inf
         end
     end
 
@@ -297,7 +297,7 @@ function get_qubits_distance(
     path = path_search(target_1, target_2, connectivity)
 
     if isempty(path)
-        return NaN
+        return Inf
     end
 
     # Manhattan distance

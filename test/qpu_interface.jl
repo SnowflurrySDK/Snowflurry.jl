@@ -489,7 +489,7 @@ end
         [2, 2],
     )
 
-    @test isnan(get_qubits_distance(1, 12, connectivity))
+    @test isinf(get_qubits_distance(1, 12, connectivity))
 
     io = IOBuffer()
 
@@ -593,7 +593,7 @@ end
 
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
 
-    @test isnan(get_qubits_distance(1, 9, connectivity))
+    @test isinf(get_qubits_distance(1, 9, connectivity))
 end
 
 @testset "is_native_instruction: NotImplemented" begin
