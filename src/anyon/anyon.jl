@@ -3,6 +3,8 @@ using Snowflurry
 const AnyonYukonConnectivity = LineConnectivity(6)
 const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
 
+const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
+
 """
     AnyonYukonQPU <: AbstractQPU
 
@@ -32,6 +34,7 @@ struct AnyonYukonQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LineConnectivity
     project_id::String
+    metadata::Metadata
 
     function AnyonYukonQPU(
         client::Client,
@@ -41,7 +44,7 @@ struct AnyonYukonQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, AnyonYukonConnectivity, project_id)
+        new(client, status_request_throttle, AnyonYukonConnectivity, project_id, Metadata())
     end
 
     function AnyonYukonQPU(;
@@ -58,8 +61,9 @@ struct AnyonYukonQPU <: AbstractQPU
         new(
             Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
-            LineConnectivity(6),
+            AnyonYukonConnectivity,
             project_id,
+            Metadata(),
         )
     end
 end
@@ -93,6 +97,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LatticeConnectivity
     project_id::String
+    metadata::Metadata
 
     function AnyonYamaskaQPU(
         client::Client,
@@ -102,7 +107,13 @@ struct AnyonYamaskaQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, AnyonYamaskaConnectivity, project_id)
+        new(
+            client,
+            status_request_throttle,
+            AnyonYamaskaConnectivity,
+            project_id,
+            Metadata(),
+        )
     end
     function AnyonYamaskaQPU(;
         host::String,
@@ -121,6 +132,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
             status_request_throttle,
             AnyonYamaskaConnectivity,
             project_id,
+            Metadata(),
         )
     end
 end
@@ -135,36 +147,28 @@ get_realm(qpu_service::UnionAnyonQPU) = get_realm(qpu_service.client)
 
 get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 
-get_connectivity(qpu::UnionAnyonQPU) = qpu.connectivity
+function get_connectivity(qpu::UnionAnyonQPU)
+    md = get_metadata(qpu)
+
+    if haskey(md, "excluded_positions")
+        return with_excluded_positions(qpu.connectivity, md["excluded_positions"])
+    end
+
+    return qpu.connectivity
+end
 
 print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
     print_connectivity(get_connectivity(qpu), Int[], io)
 
-function get_metadata(qpu::UnionAnyonQPU)::Dict{String,Union{String,Int}}
+get_excluded_positions(qpu::UnionAnyonQPU) = get_excluded_positions(get_connectivity(qpu))
 
-    generation = "Yukon"
-    serial_number = "ANYK202201"
-
-    if qpu isa AnyonYamaskaQPU
-        generation = "Yamaska"
-        serial_number = "ANYK202301"
+function get_metadata(qpu::UnionAnyonQPU)::Metadata
+    if isempty(qpu.metadata)
+        for (k, v) in get_metadata(qpu.client, qpu)
+            qpu.metadata[k] = v
+        end
     end
-
-    output = Dict{String,Union{String,Int}}(
-        "manufacturer" => "Anyon Systems Inc.",
-        "generation" => generation,
-        "serial_number" => serial_number,
-        "project_id" => get_project_id(qpu),
-        "qubit_count" => get_num_qubits(qpu.connectivity),
-        "connectivity_type" => get_connectivity_label(qpu.connectivity),
-    )
-
-    realm = get_realm(qpu)
-    if realm != ""
-        output["realm"] = realm
-    end
-
-    return output
+    return qpu.metadata
 end
 
 function Base.show(io::IO, qpu::UnionAnyonQPU)
@@ -185,6 +189,7 @@ end
 
 
 set_of_native_gates = [
+    Identity,
     PhaseShift,
     Pi8,
     Pi8Dagger,
@@ -199,6 +204,37 @@ set_of_native_gates = [
     ZM90,
     ControlZ,
 ]
+
+function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
+
+    # TODO: the metadata will eventually be fetched from the host server.
+    # It is hardcoded for the time being
+
+    generation = "Yukon"
+    serial_number = "ANYK202201"
+    excluded_positions = Vector{Int}()
+
+    if qpu isa AnyonYamaskaQPU
+        generation = "Yamaska"
+        serial_number = "ANYK202301"
+    end
+
+    output = Metadata(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => generation,
+        "serial_number" => serial_number,
+        "project_id" => get_project_id(qpu),
+        "qubit_count" => get_num_qubits(qpu.connectivity),
+        "connectivity_type" => get_connectivity_label(qpu.connectivity),
+    )
+
+    realm = get_realm(qpu)
+    if realm != ""
+        output["realm"] = realm
+    end
+
+    return output
+end
 
 """
     get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
@@ -238,47 +274,72 @@ julia> get_qubits_distance(3, 24, connectivity)
 ```
 
 """
-get_qubits_distance(target_1::Int, target_2::Int, ::LineConnectivity)::Int =
+function get_qubits_distance(target_1::Int, target_2::Int, c::LineConnectivity)::Real
+    for e in c.excluded_positions
+        if target_1 ≤ e ≤ target_2
+            return Inf
+        end
+    end
+
     abs(target_1 - target_2)
+end
 
 function get_qubits_distance(
     target_1::Int,
     target_2::Int,
     connectivity::LatticeConnectivity,
-)::Int
+)::Real
+
+    path = path_search(target_1, target_2, connectivity)
+
+    if isempty(path)
+        return Inf
+    end
+
     # Manhattan distance
-    return maximum([0, length(path_search(target_1, target_2, connectivity)) - 1])
+    return length(path) - 1
 end
 
-function is_native_instruction(qpu::UnionAnyonQPU, gate::Gate)::Bool
+const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
+
+function is_native_instruction(gate::Gate, connectivity::GeometricConnectivity)::Bool
+    if any(x -> x in connectivity.excluded_positions, get_connected_qubits(gate))
+        return false
+    end
+
     if gate isa Gate{ControlZ}
         # on ControlZ gates are native only if targets are adjacent
 
         targets = get_connected_qubits(gate)
 
-        return (get_qubits_distance(targets[1], targets[2], get_connectivity(qpu)) == 1)
+        return (get_qubits_distance(targets[1], targets[2], connectivity) == 1)
     end
 
     return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
 end
 
-is_native_instruction(qpu::UnionAnyonQPU, readout::Readout)::Bool = true
+is_native_instruction(readout::Readout, connectivity::GeometricConnectivity)::Bool =
+    !any(x -> x in connectivity.excluded_positions, get_connected_qubits(readout))
 
-function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{Bool,String}
+function is_native_circuit(
+    qubit_count_qpu::Int,
+    circuit::QuantumCircuit,
+    connectivity::GeometricConnectivity,
+)::Tuple{Bool,String}
     qubit_count_circuit = get_num_qubits(circuit)
-    qubit_count_qpu = get_num_qubits(qpu)
     if qubit_count_circuit > qubit_count_qpu
         return (
             false,
-            "Circuit qubit count $qubit_count_circuit exceeds $(typeof(qpu)) qubit count: $qubit_count_qpu",
+            "Circuit qubit count $qubit_count_circuit exceeds $(typeof(connectivity)) qubit count: $qubit_count_qpu",
         )
     end
 
     for instr in get_circuit_instructions(circuit)
-        if !is_native_instruction(qpu, instr)
+        if !is_native_instruction(instr, connectivity)
             return (
                 false,
-                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr)) is not native on $(typeof(qpu))",
+                "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr))" *
+                " is not native on connectivity with excluded_positions: $(get_excluded_positions(connectivity))",
             )
         end
     end
@@ -287,7 +348,7 @@ function is_native_circuit(qpu::UnionAnyonQPU, circuit::QuantumCircuit)::Tuple{B
 end
 
 """
-    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit,shot_count::Integer;transpiler::Transpiler=get_transpiler(qpu))
+    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer; transpiler::Transpiler = get_transpiler(qpu))
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a key-word argument.
@@ -315,14 +376,7 @@ function transpile_and_run_job(
     transpiler::Transpiler = get_transpiler(qpu),
 )::Dict{String,Int}
 
-
     transpiled_circuit = transpile(transpiler, circuit)
-
-    (passed, message) = is_native_circuit(qpu, transpiled_circuit)
-
-    if !passed
-        throw(DomainError(qpu, message))
-    end
 
     return run_job(qpu, transpiled_circuit, shot_count)
 end
@@ -415,10 +469,18 @@ julia> qpu = AnyonYukonQPU(client, "project_id");
 julia> get_transpiler(qpu)
 SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoNotConflictTranspiler(), UnsupportedGatesTranspiler(), DecomposeSingleTargetSingleControlGatesTranspiler(), CastToffoliToCXGateTranspiler(), CastCXToCZGateTranspiler(), CastISwapToCZGateTranspiler(), SwapQubitsForAdjacencyTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
-), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler()])
+), CastSwapToCZGateTranspiler(), CompressSingleQubitGatesTranspiler(), SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler(), RejectNonNativeInstructionsTranspiler(LineConnectivity{6}
+1──2──3──4──5──6
+)])
 ```
 """
-function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
+get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler =
+    get_anyon_transpiler(atol = atol, connectivity = get_connectivity(qpu))
+
+function get_anyon_transpiler(;
+    atol = 1e-6,
+    connectivity = get_connectivity(qpu),
+)::Transpiler
     return SequentialTranspiler([
         CircuitContainsAReadoutTranspiler(),
         ReadoutsDoNotConflictTranspiler(),
@@ -427,7 +489,7 @@ function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        SwapQubitsForAdjacencyTranspiler(get_connectivity(qpu)),
+        SwapQubitsForAdjacencyTranspiler(connectivity),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),
         SimplifyTrivialGatesTranspiler(atol),
@@ -437,5 +499,6 @@ function get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(atol),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(connectivity),
     ])
 end

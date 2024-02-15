@@ -47,6 +47,7 @@ export
     AnyonYukonQPU,
     AnyonYamaskaQPU,
     VirtualQPU,
+    Metadata,
     Client,
     Status,
     NotImplementedError,
@@ -69,13 +70,13 @@ export
     SimplifyRzGatesTranspiler,
     SimplifyTrivialGatesTranspiler,
     CompressRzGatesTranspiler,
-    TrivialTranspiler,
     RemoveSwapBySwappingGatesTranspiler,
     ReadoutsAreFinalInstructionsTranspiler,
     ReadoutsDoNotConflictTranspiler,
     CircuitContainsAReadoutTranspiler,
     UnsupportedGatesTranspiler,
     DecomposeSingleTargetSingleControlGatesTranspiler,
+    RejectNonNativeInstructionsTranspiler,
 
     # Functions
     controlled,
@@ -140,6 +141,7 @@ export
     print_connectivity,
     get_connectivity,
     get_connectivity_label,
+    get_excluded_positions,
     get_adjacency_list,
     path_search,
     get_host,
@@ -236,7 +238,7 @@ using PrecompileTools
         toffoli(1, 2, 6),
         swap(2, 5),
         iswap(4, 1),
-        iswap_dagger(6, 3),
+        # iswap_dagger(6, 3), # TODO left out until missing transpiler is added: https://github.com/SnowflurrySDK/Snowflurry.jl/issues/377
         controlled(hadamard(1), [2]),
     ]
 
@@ -257,6 +259,7 @@ using PrecompileTools
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(AnyonYukonConnectivity),
     ])
 
     for gate in gates_list

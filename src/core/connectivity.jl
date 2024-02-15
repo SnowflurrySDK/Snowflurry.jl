@@ -22,6 +22,18 @@ LineConnectivity{6}
 """
 struct LineConnectivity <: AbstractConnectivity
     dimension::Int
+    excluded_positions::Vector{Int}
+
+    function LineConnectivity(dimension::Int, excluded_positions = Vector{Int}())
+        @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
+
+        for e in excluded_positions
+            @assert e > 0 "elements in excluded_positions must be > 0"
+            @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
+        end
+
+        new(dimension, excluded_positions)
+    end
 end
 
 """
@@ -82,8 +94,9 @@ LatticeConnectivity{6,4}
 struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_row::Vector{Int}
     dimensions::Tuple{Int,Int}
+    excluded_positions::Vector{Int}
 
-    function LatticeConnectivity(nrows::Int, ncols::Int)
+    function LatticeConnectivity(nrows::Int, ncols::Int, excluded_positions = Vector{Int}())
 
         @assert nrows >= 2 "nrows must be at least 2"
         @assert ncols >= 2 "ncols must be at least 2"
@@ -91,6 +104,13 @@ struct LatticeConnectivity <: AbstractConnectivity
         qubit_count = nrows * ncols
         placing_queue = [nrows for _ = 1:ncols]
         qubits_per_row = Vector{Int}()
+
+        @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
+
+        for e in excluded_positions
+            @assert e > 0 "elements in excluded_positions must be > 0"
+            @assert e ≤ qubit_count "elements in excluded_positions must be ≤ $qubit_count"
+        end
 
         cursor = 0
         while !all(map(x -> x == 0, placing_queue))
@@ -107,14 +127,17 @@ struct LatticeConnectivity <: AbstractConnectivity
 
         @assert +(qubits_per_row...) == qubit_count "Failed to build lattice"
 
-        new(qubits_per_row, (nrows, ncols))
+        new(qubits_per_row, (nrows, ncols), excluded_positions)
     end
 
-    function LatticeConnectivity(qubits_per_row::Vector{Int})
+    function LatticeConnectivity(
+        qubits_per_row::Vector{Int},
+        excluded_positions = Vector{Int}(),
+    )
         nrows = maximum(qubits_per_row)
         ncols = ceil(+(qubits_per_row...) / nrows)
 
-        new(qubits_per_row, (nrows, ncols))
+        new(qubits_per_row, (nrows, ncols), excluded_positions)
     end
 end
 
@@ -124,15 +147,40 @@ function Base.show(io::IO, connectivity::LatticeConnectivity)
         "$(typeof(connectivity)){$(connectivity.dimensions[1]),$(connectivity.dimensions[2])}",
     )
     print_connectivity(connectivity, Vector{Int}(), io)
+    if !isempty(connectivity.excluded_positions)
+        println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
 end
 
 function Base.show(io::IO, connectivity::LineConnectivity)
     println(io, "$(typeof(connectivity)){$(connectivity.dimension)}")
     print_connectivity(connectivity, Vector{Int}(), io)
+    if !isempty(connectivity.excluded_positions)
+        println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
 end
 
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label, connectivity))
+
+with_excluded_positions(connectivity::AbstractConnectivity, ::Vector{Int}) =
+    throw(NotImplementedError(:with_excluded_positions, connectivity))
+
+with_excluded_positions(
+    c::LineConnectivity,
+    excluded_positions::Vector{Int},
+)::LineConnectivity = LineConnectivity(c.dimension, excluded_positions)
+
+with_excluded_positions(
+    c::LatticeConnectivity,
+    excluded_positions::Vector{Int},
+)::LatticeConnectivity = LatticeConnectivity(c.qubits_per_row, excluded_positions)
+
+get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
+    c.excluded_positions
+
+get_excluded_positions(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
     AllToAllConnectivity <:AbstractConnectivity
@@ -402,26 +450,34 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
     end
 
     for (target, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
-        if target != 0
+        if target != 0 && !(target in connectivity.excluded_positions)
             neighbors = Vector{Int}()
 
             trow = ind[1]
             tcol = ind[2]
 
             if trow - 1 > 0 && qubit_placement[trow-1, tcol] != 0
-                push!(neighbors, qubit_placement[trow-1, tcol])
+                if !(qubit_placement[trow-1, tcol] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow-1, tcol])
+                end
             end
 
             if trow + 1 <= nrows && qubit_placement[trow+1, tcol] != 0
-                push!(neighbors, qubit_placement[trow+1, tcol])
+                if !(qubit_placement[trow+1, tcol] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow+1, tcol])
+                end
             end
 
             if tcol - 1 > 0 && qubit_placement[trow, tcol-1] != 0
-                push!(neighbors, qubit_placement[trow, tcol-1])
+                if !(qubit_placement[trow, tcol-1] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow, tcol-1])
+                end
             end
 
             if tcol + 1 <= ncols && qubit_placement[trow, tcol+1] != 0
-                push!(neighbors, qubit_placement[trow, tcol+1])
+                if !(qubit_placement[trow, tcol+1] in connectivity.excluded_positions)
+                    push!(neighbors, qubit_placement[trow, tcol+1])
+                end
             end
 
             adjacency_list[target] = neighbors
@@ -490,13 +546,22 @@ Dict{Int64, Vector{Int64}} with 12 entries:
 function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}
     adjacency_list = Dict{Int,Vector{Int}}()
 
-    adjacency_list[1] = [2]
+    for target = 1:connectivity.dimension
+        if !(target in connectivity.excluded_positions)
+            neighbors = Vector{Int}()
 
-    for qubit_index = 2:connectivity.dimension-1
-        adjacency_list[qubit_index] = [qubit_index - 1, qubit_index + 1]
+            if target - 1 > 0 && !(target - 1 in connectivity.excluded_positions)
+                push!(neighbors, target - 1)
+            end
+
+            if target + 1 ≤ connectivity.dimension &&
+               !(target + 1 in connectivity.excluded_positions)
+                push!(neighbors, target + 1)
+            end
+
+            adjacency_list[target] = neighbors
+        end
     end
-
-    adjacency_list[connectivity.dimension] = [connectivity.dimension - 1]
 
     return adjacency_list
 end
@@ -590,7 +655,9 @@ function path_search(
     push!(search_queue, (origin, null_int))
     searched = Dict{Int,Int}()
 
-    for e in excluded
+    all_excluded_positions = push!(copy(connectivity.excluded_positions), excluded...)
+
+    for e in all_excluded_positions
         @assert e > 0 "excluded positions must be non-negative"
         if origin == e || target == e
             # no path exists due to excluded positions
@@ -614,8 +681,8 @@ function path_search(
                 return result
             else
                 neighbors_vec = [
-                    (neighbor, qubit_no) for
-                    neighbor in adjacency_list[qubit_no] if !(neighbor in excluded)
+                    (neighbor, qubit_no) for neighbor in adjacency_list[qubit_no] if
+                    !(neighbor in all_excluded_positions)
                 ]
                 push!(search_queue, neighbors_vec...)
             end
@@ -642,8 +709,13 @@ function path_search(
     @assert origin <= qubit_count "origin $origin exceeds qubit_count $qubit_count"
     @assert target <= qubit_count "target $target exceeds qubit_count $qubit_count"
 
-    for e in excluded
+    all_excluded_positions = push!(copy(connectivity.excluded_positions), excluded...)
+
+    for e in all_excluded_positions
         @assert e > 0 "excluded positions must be non-negative"
+    end
+
+    for e in all_excluded_positions
         if origin ≤ e ≤ target || target ≤ e ≤ origin
             # no path exists due to excluded positions
             return []

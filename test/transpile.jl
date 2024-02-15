@@ -60,7 +60,7 @@ test_instructions = [
         toffoli(1, 4, 3),
         swap(2, 4),
         iswap(4, 1),
-        iswap_dagger(1, 3),
+        # iswap_dagger(1, 3), # TODO left out until missing transpiler is added: https://github.com/SnowflurrySDK/Snowflurry.jl/issues/377
     ],
 ]
 
@@ -538,14 +538,62 @@ end
 
         @test length(gates) == gates_in_output
 
-        if !(compare_circuits(circuit, transpiled_circuit))
-            println("gates in input: $(get_circuit_instructions(circuit))")
-        end
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end
+
+@testset "SwapQubitsForAdjacencyTranspiler{LatticeConnectivity}: excluded_positions" begin
+
+    nrows = 4
+    ncols = 3
+    qubit_count = nrows * ncols
+    transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols, [4, 5]))
+
+    # LatticeConnectivity{4,3}
+    #         4 ──  1 
+    #         |     | 
+    #  10 ──  7 ──  5 ──  2 
+    #         |     |     | 
+    #        11 ──  8 ──  6 ──  3 
+    #               |     | 
+    #              12 ──  9 
+
+    success_cases = [
+        # (gates list       gates_in_output)
+        ([swap(10, 7)], 1),          # no effect
+        ([swap(10, 11)], 3),
+        ([swap(11, 12)], 3),
+    ]
+
+    failure_cases = [[swap(1, 7)], [swap(1, 8)], [swap(1, 2)]]
+
+    for (input_gates, gates_in_output) in success_cases
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count,
+            instructions = input_gates,
+            name = "test-name",
+        )
+
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        gates = get_circuit_instructions(transpiled_circuit)
+
+        @test length(gates) == gates_in_output
 
         @test compare_circuits(circuit, transpiled_circuit)
-
     end
 
+    for input_gates in failure_cases
+        circuit = QuantumCircuit(
+            qubit_count = qubit_count,
+            instructions = input_gates,
+            name = "test-name",
+        )
+
+        @test_throws AssertionError(
+            "cannot find path on connectivity given excluded positions",
+        ) transpile(transpiler, circuit)
+    end
 end
 
 
@@ -638,6 +686,7 @@ end
     transpiler = get_transpiler(qpu)
 
     input_gates_native = [
+        identity_gate(target),
         phase_shift(target, -phi / 2),
         pi_8(target),
         pi_8_dagger(target),
@@ -655,7 +704,6 @@ end
     ]
 
     input_gates_foreign = [
-        identity_gate(target),
         hadamard(target),
         rotation(target, theta, phi),
         rotation_x(target, theta),
@@ -692,7 +740,7 @@ end
             end
 
             for gate in instructions_in_output
-                @test is_native_instruction(qpu, gate)
+                @test is_native_instruction(gate, Snowflurry.AnyonYukonConnectivity)
             end
         end
     end
@@ -795,26 +843,32 @@ end
     end
 end
 
-@testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler" begin
-    qpus = [
-        AnyonYukonQPU(;
-            host = expected_host,
-            user = expected_user,
-            access_token = expected_access_token,
-            project_id = expected_project_id,
-        ),
-        AnyonYamaskaQPU(;
-            host = expected_host,
-            user = expected_user,
-            access_token = expected_access_token,
-            project_id = expected_project_id,
-        ),
+@testset "AnyonQPUs: SwapQubitsForAdjacencyTranspiler: full connectivity" begin
+    qpus_and_connectivities = [
+        (
+            AnyonYukonQPU(;
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                project_id = expected_project_id,
+            ),
+            Snowflurry.AnyonYukonConnectivity,
+        )
+        (
+            AnyonYamaskaQPU(;
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                project_id = expected_project_id,
+            ),
+            # testing with LatticeConnectivity(6,4) induces massive demand on simulate(), with 24-qubit Kets
+            Snowflurry.LatticeConnectivity(3, 4),
+        )
     ]
 
-    for qpu in qpus
-        transpiler = get_transpiler(qpu)
-        connectivity = get_connectivity(qpu)
-        qubit_count = get_num_qubits(qpu)
+    for (qpu, connectivity) in qpus_and_connectivities
+        transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity)
+        qubit_count = get_num_qubits(connectivity)
 
         for t_0 ∈ 1:qubit_count
             for t_1 ∈ 1:qubit_count
@@ -1633,6 +1687,7 @@ end
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
+        RejectNonNativeInstructionsTranspiler(LineConnectivity(42)),
     ]
 
     for transpiler in transpilers
@@ -1642,5 +1697,93 @@ end
         @test get_num_bits(transpiled_circuit) == 99
         @test get_name(transpiled_circuit) == "test-name"
         @test get_circuit_instructions(transpiled_circuit) == [readout(42, 99)]
+    end
+end
+
+@testset "RejectNonNativeInstructionsTranspiler" begin
+
+    connectivities_and_targets = [
+        (LineConnectivity(12), (1, 2))
+        (LineConnectivity(12, collect(9:12)), (1, 2))
+        (LatticeConnectivity(3, 4), (1, 5))
+        (LatticeConnectivity(3, 4, collect(9:12)), (1, 5))
+    ]
+
+    for (connectivity, targets) in connectivities_and_targets
+        transpiler = RejectNonNativeInstructionsTranspiler(connectivity)
+
+        for instr in vcat(single_qubit_instructions, readout(1, 1))
+            circuit =
+                QuantumCircuit(qubit_count = 6, instructions = [instr], name = "test-name")
+
+            if is_native_instruction(instr, connectivity)
+                @test isequal(transpile(transpiler, circuit), circuit)
+            else
+                @test_throws DomainError transpile(transpiler, circuit)
+            end
+        end
+
+        circuit = QuantumCircuit(
+            qubit_count = 6,
+            instructions = [control_z(targets...)],
+            name = "test-name",
+        )
+
+        @test isequal(transpile(transpiler, circuit), circuit)
+    end
+end
+
+@testset "is_native_instruction: excluded_positions" begin
+
+    excluded_positions = collect(9:12)
+
+    connectivities = [
+        LineConnectivity(20, excluded_positions),
+        LatticeConnectivity(5, 4, excluded_positions),
+    ]
+
+    for connectivity in connectivities
+        for target = 1:12
+            input_gates_on_excluded_targets = [
+                phase_shift(target, pi / 3),
+                pi_8(target),
+                pi_8_dagger(target),
+                sigma_x(target),
+                sigma_y(target),
+                sigma_z(target),
+                x_90(target),
+                x_minus_90(target),
+                y_90(target),
+                y_minus_90(target),
+                z_90(target),
+                z_minus_90(target),
+                readout(target, 1),
+            ]
+
+            for instr in input_gates_on_excluded_targets
+                # instr is native iif it targets non-excluded positions
+                @test !is_native_instruction(instr, connectivity) ==
+                      (target in excluded_positions)
+            end
+        end
+
+        for control = 1:20
+            for target = 1:20
+                if target == control
+                    continue
+                end
+
+                instr = control_z(control, target)
+
+                # instr is native if it is connected to adjacent qubits on 
+                # non-excluded positions, and it doesnt reach across the blocked region
+                @test is_native_instruction(instr, connectivity) == (
+                    (get_qubits_distance(target, control, connectivity) == 1) &&
+                    !(target in excluded_positions) &&
+                    !(control in excluded_positions) &&
+                    ((control < 9 && target < 9) || (control > 12 && target > 12))
+                )
+            end
+        end
     end
 end

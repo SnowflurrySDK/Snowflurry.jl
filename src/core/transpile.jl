@@ -1692,10 +1692,6 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
     )
 end
 
-struct TrivialTranspiler <: Transpiler end
-
-transpile(::TrivialTranspiler, circuit::QuantumCircuit)::QuantumCircuit = circuit
-
 struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
 
 """
@@ -2315,4 +2311,26 @@ function transpile(
     end
 
     return output
+end
+
+struct RejectNonNativeInstructionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+end
+
+function transpile(
+    transpiler::RejectNonNativeInstructionsTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    (passed, message) = is_native_circuit(
+        get_num_qubits(transpiler.connectivity),
+        circuit,
+        transpiler.connectivity,
+    )
+
+    if !passed
+        throw(DomainError(transpiler.connectivity, message))
+    end
+
+    return circuit
 end

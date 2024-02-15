@@ -423,6 +423,204 @@ end
 
 end
 
+
+@testset "AbstractConnectivity: excluded_positions" begin
+
+    excluded_positions = [1, 2, 3, 9, 10]
+
+    connectivity = LineConnectivity(12, excluded_positions)
+
+    @test get_excluded_positions(connectivity) == excluded_positions
+
+    connectivity_alternate =
+        Snowflurry.with_excluded_positions(LineConnectivity(12), excluded_positions)
+
+    @test connectivity.dimension == connectivity_alternate.dimension
+    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+
+
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        4 => [5],
+        5 => [4, 6],
+        6 => [5, 7],
+        7 => [6, 8],
+        8 => [7],
+        11 => [12],
+        12 => [11],
+    )
+
+    @test get_adjacency_list(connectivity) == expected_adjacency_list
+
+    io = IOBuffer()
+    println(io, connectivity)
+    @test String(take!(io)) ==
+          "LineConnectivity{12}\n" *
+          "1──2──3──4──5──6──7──8──9──10──11──12\n" *
+          "excluded positions: [1, 2, 3, 9, 10]\n" *
+          "\n"
+
+    @test path_search(1, 12, connectivity) == []
+    @test path_search(7, 4, connectivity) == Vector{Int}(collect(4:7))
+    @test path_search(1, 1, connectivity) == []
+
+    exclusion_cases = [[5], [5, 7], [8]]
+    for excluded in exclusion_cases
+        @test path_search(4, 8, connectivity, excluded) == []
+    end
+
+    @test path_search(8, 7, connectivity, [5]) == Vector{Int}(collect(7:8))
+
+    @test_throws AssertionError path_search(1, 44, connectivity)
+    @test_throws AssertionError path_search(44, 1, connectivity)
+    @test_throws AssertionError path_search(-1, 4, connectivity)
+    @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 12, connectivity, [-1])
+
+    @test_throws AssertionError("elements in excluded_positions must be > 0") LineConnectivity(
+        12,
+        [0],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be ≤ 12") LineConnectivity(
+        12,
+        [13],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be unique") LineConnectivity(
+        12,
+        [2, 2],
+    )
+
+    @test isinf(get_qubits_distance(1, 12, connectivity))
+
+    io = IOBuffer()
+
+    excluded_positions = collect(13:24)
+
+    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+
+    @test get_excluded_positions(connectivity) == excluded_positions
+
+    connectivity_alternate =
+        Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
+    @test connectivity.qubits_per_row == connectivity_alternate.qubits_per_row
+    @test connectivity.dimensions == connectivity_alternate.dimensions
+    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+
+    expected_adjacency_list = Dict{Int,Vector{Int}}(
+        1 => [6, 5],
+        2 => [7, 6],
+        3 => [8, 7],
+        4 => [8],
+        5 => [9, 1],
+        6 => [1, 10, 9, 2],
+        7 => [2, 11, 10, 3],
+        8 => [3, 12, 11, 4],
+        9 => [5, 6],
+        10 => [6, 7],
+        11 => [7, 8],
+        12 => [8],
+    )
+
+    @test expected_adjacency_list == get_adjacency_list(connectivity)
+
+    print_connectivity(connectivity, path_search(1, 8, connectivity), io)
+
+    @test String(take!(io)) ==
+          "              5 ── (1)\n" *
+          "              |     | \n" *
+          "       13 ──  9 ── (6)──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ──(10)── (7)──  3 \n" *
+          "        |     |     |     |     | \n" *
+          "       22 ── 18 ── 15 ──(11)── (8)──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n"
+
+    io = IOBuffer()
+    println(io, connectivity)
+    @test String(take!(io)) ==
+          "LatticeConnectivity{6,4}\n" *
+          "              5 ──  1 \n" *
+          "              |     | \n" *
+          "       13 ──  9 ──  6 ──  2 \n" *
+          "        |     |     |     | \n" *
+          " 21 ── 17 ── 14 ── 10 ──  7 ──  3 \n" *
+          "        |     |     |     |     | \n" *
+          "       22 ── 18 ── 15 ── 11 ──  8 ──  4 \n" *
+          "              |     |     |     | \n" *
+          "             23 ── 19 ── 16 ── 12 \n" *
+          "                    |     | \n" *
+          "                   24 ── 20 \n" *
+          "\n" *
+          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n\n"
+
+
+    @test path_search(1, 8, connectivity) == [8, 11, 7, 10, 6, 1]
+    excluded = [11, 10]
+    @test path_search(1, 8, connectivity, excluded) == [8, 3, 7, 2, 6, 1]
+    @test path_search(1, 1, connectivity) == [1]
+
+    @test path_search(1, 9, connectivity, [5, 6]) == []
+    @test path_search(21, 1, connectivity, [17]) == []
+    @test path_search(1, 3, connectivity, [1]) == []
+    @test path_search(1, 3, connectivity, [3]) == []
+
+    @test_throws AssertionError path_search(1, 44, connectivity)
+    @test_throws AssertionError path_search(44, 1, connectivity)
+    @test_throws AssertionError path_search(-1, 4, connectivity)
+    @test_throws AssertionError path_search(4, -1, connectivity)
+    @test_throws AssertionError path_search(1, 3, connectivity, [-1])
+
+    @test_throws AssertionError("elements in excluded_positions must be > 0") LatticeConnectivity(
+        6,
+        4,
+        [0],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be ≤ 24") LatticeConnectivity(
+        6,
+        4,
+        [25],
+    )
+    @test_throws AssertionError("elements in excluded_positions must be unique") LatticeConnectivity(
+        6,
+        4,
+        [2, 2],
+    )
+
+    excluded_positions = [5, 6, 2]
+
+    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+
+    @test isinf(get_qubits_distance(1, 9, connectivity))
+end
+
+@testset "is_native_instruction: NotImplemented" begin
+
+    struct NonExistentConnectivity <: AbstractConnectivity end
+    struct NonExistentInstruction <: AbstractInstruction end
+
+    @test_throws NotImplementedError is_native_instruction(
+        sigma_x(1),
+        NonExistentConnectivity(),
+    )
+    @test_throws NotImplementedError is_native_instruction(
+        NonExistentInstruction(),
+        LineConnectivity(2),
+    )
+    @test_throws NotImplementedError is_native_instruction(
+        NonExistentInstruction(),
+        NonExistentConnectivity(),
+    )
+
+    @test_throws NotImplementedError Snowflurry.with_excluded_positions(
+        NonExistentConnectivity(),
+        Int[],
+    )
+    @test_throws NotImplementedError get_excluded_positions(NonExistentConnectivity())
+end
+
 @testset "get_qubits_distance" begin
     # LineConnectivity
     qubit_count_list = [6, 12]
@@ -525,6 +723,22 @@ end
 
     connectivity = get_connectivity(qpu)
 
+    expected_excluded_positions = []
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(connectivity) ==
+          expected_excluded_positions
+
+    expected_excluded_positions = collect(3:6)
+
+    # simulate a change in metadata from a host server response
+    qpu.metadata["excluded_positions"] = expected_excluded_positions
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(get_connectivity(qpu)) ==
+          expected_excluded_positions
+
+
     @test client.host == expected_host
     @test client.user == expected_user
     @test client.access_token == expected_access_token
@@ -534,13 +748,14 @@ end
     @test get_connectivity_label(get_connectivity(qpu)) ==
           Snowflurry.line_connectivity_label
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
         "project_id" => expected_project_id,
         "qubit_count" => 6,
         "connectivity_type" => Snowflurry.line_connectivity_label,
+        "excluded_positions" => expected_excluded_positions,
     )
 
     qpu = AnyonYukonQPU(
@@ -554,7 +769,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yukon",
         "serial_number" => "ANYK202201",
@@ -578,6 +793,21 @@ end
     client = get_client(qpu)
 
     connectivity = get_connectivity(qpu)
+
+    expected_excluded_positions = []
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(connectivity) ==
+          expected_excluded_positions
+
+    expected_excluded_positions = collect(7:12)
+
+    # simulate a change in metadata from a host server response
+    qpu.metadata["excluded_positions"] = expected_excluded_positions
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(get_connectivity(qpu)) ==
+          expected_excluded_positions
 
     @test client.host == expected_host
     @test client.user == expected_user
@@ -611,13 +841,14 @@ end
 
     @test get_connectivity_label(connectivity) == Snowflurry.lattice_connectivity_label
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
         "project_id" => expected_project_id,
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
+        "excluded_positions" => collect(7:12),
     )
 
     qpu = AnyonYamaskaQPU(
@@ -631,7 +862,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    @test get_metadata(qpu) == Dict{String,Union{String,Int}}(
+    @test get_metadata(qpu) == Metadata(
         "manufacturer" => "Anyon Systems Inc.",
         "generation" => "Yamaska",
         "serial_number" => "ANYK202301",
@@ -921,7 +1152,10 @@ end
 
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
-    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+    qpus_and_connectivities = [
+        (AnyonYukonQPU, Snowflurry.AnyonYukonConnectivity),
+        (AnyonYamaskaQPU, Snowflurry.AnyonYamaskaConnectivity),
+    ]
     post_checkers_toffoli = [
         make_post_checker(expected_json_Toffoli_Yukon),
         make_post_checker(expected_json_Toffoli_Yamaska),
@@ -931,8 +1165,8 @@ end
         make_post_checker(expected_json_last_qubit_Yamaska),
     ]
 
-    for (QPU, post_checker_toffoli, post_checker_last_qubit) in
-        zip(qpus, post_checkers_toffoli, post_checkers_last_qubit)
+    for ((QPU, connectivity), post_checker_toffoli, post_checker_last_qubit) in
+        zip(qpus_and_connectivities, post_checkers_toffoli, post_checkers_last_qubit)
 
         requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
         test_client = Client(
@@ -952,19 +1186,13 @@ end
         )
         @test_throws DomainError transpile_and_run_job(qpu, circuit, shot_count)
 
-        # submit circuit with a non-native gate on this qpu (no transpilation)
+        # submit circuit with a non-native gate on this qpu
         circuit = QuantumCircuit(
             qubit_count = get_num_qubits(qpu) - 1,
             instructions = [toffoli(1, 2, 3), readout(1, 1)],
         )
-        @test_throws DomainError transpile_and_run_job(
-            qpu,
-            circuit,
-            shot_count;
-            transpiler = TrivialTranspiler(),
-        )
 
-        # using default transpiler
+        # using default transpiler with full connectivity
         requestor = MockRequestor(make_request_checker(), post_checker_toffoli)
         test_client = Client(
             host = expected_host,
@@ -975,7 +1203,12 @@ end
 
         qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
-        histogram = transpile_and_run_job(qpu, circuit, shot_count)
+        histogram = transpile_and_run_job(
+            qpu,
+            circuit,
+            shot_count;
+            transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
+        )
 
         @test histogram == Dict("001" => shot_count)
         @test !haskey(histogram, "error_msg")
@@ -996,7 +1229,12 @@ end
             instructions = [sigma_x(qubit_count), readout(1, 1)],
         )
 
-        transpile_and_run_job(qpu, circuit, shot_count) # no error thrown
+        transpile_and_run_job(
+            qpu,
+            circuit,
+            shot_count;
+            transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
+        ) # no error thrown
     end
 end
 
@@ -1018,10 +1256,6 @@ end
     qpu = VirtualQPU()
 
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
-
-    for instr in get_circuit_instructions(circuit)
-        @test is_native_instruction(qpu, instr)
-    end
 
     histogram = transpile_and_run_job(qpu, circuit, shot_count)
 
@@ -1111,11 +1345,6 @@ end
 
     @test_throws NotImplementedError get_metadata(NonExistentQPU())
     @test_throws NotImplementedError get_connectivity(NonExistentQPU())
-    @test_throws NotImplementedError is_native_instruction(NonExistentQPU(), sigma_x(1))
-    @test_throws NotImplementedError is_native_circuit(
-        NonExistentQPU(),
-        QuantumCircuit(qubit_count = 1),
-    )
     @test_throws NotImplementedError get_transpiler(NonExistentQPU())
     @test_throws NotImplementedError run_job(
         NonExistentQPU(),
