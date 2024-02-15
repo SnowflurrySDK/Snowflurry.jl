@@ -233,10 +233,6 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         output["realm"] = realm
     end
 
-    if !isempty(excluded_positions)
-        output["excluded_positions"] = excluded_positions
-    end
-
     return output
 end
 
