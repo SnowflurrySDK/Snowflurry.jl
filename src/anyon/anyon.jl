@@ -34,7 +34,7 @@ struct AnyonYukonQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LineConnectivity
     project_id::String
-    metadata::Vector{Metadata}
+    metadata::Metadata
 
     function AnyonYukonQPU(
         client::Client,
@@ -44,7 +44,7 @@ struct AnyonYukonQPU <: AbstractQPU
         if project_id == ""
             throw(ArgumentError(error_msg_empty_project_id))
         end
-        new(client, status_request_throttle, AnyonYukonConnectivity, project_id, Metadata[])
+        new(client, status_request_throttle, AnyonYukonConnectivity, project_id, Metadata())
     end
 
     function AnyonYukonQPU(;
@@ -63,7 +63,7 @@ struct AnyonYukonQPU <: AbstractQPU
             status_request_throttle,
             AnyonYukonConnectivity,
             project_id,
-            Metadata[],
+            Metadata(),
         )
     end
 end
@@ -97,7 +97,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
     status_request_throttle::Function
     connectivity::LatticeConnectivity
     project_id::String
-    metadata::Vector{Metadata}
+    metadata::Metadata
 
     function AnyonYamaskaQPU(
         client::Client,
@@ -112,7 +112,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
             status_request_throttle,
             AnyonYamaskaConnectivity,
             project_id,
-            Metadata[],
+            Metadata(),
         )
     end
     function AnyonYamaskaQPU(;
@@ -132,7 +132,7 @@ struct AnyonYamaskaQPU <: AbstractQPU
             status_request_throttle,
             AnyonYamaskaConnectivity,
             project_id,
-            Metadata[],
+            Metadata(),
         )
     end
 end
@@ -163,10 +163,12 @@ print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
 get_excluded_positions(qpu::UnionAnyonQPU) = get_excluded_positions(get_connectivity(qpu))
 
 function get_metadata(qpu::UnionAnyonQPU)::Metadata
-    if length(qpu.metadata) == 0
-        push!(qpu.metadata, get_metadata(qpu.client, qpu))
+    if isempty(qpu.metadata)
+        for (k,v) in get_metadata(qpu.client, qpu)
+            qpu.metadata[k] = v
+        end
     end
-    return qpu.metadata[1]
+    return qpu.metadata
 end
 
 function Base.show(io::IO, qpu::UnionAnyonQPU)
