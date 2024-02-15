@@ -1207,7 +1207,7 @@ end
             qpu,
             circuit,
             shot_count;
-            transpiler = get_transpiler(qpu; connectivity = connectivity),
+            transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
         )
 
         @test histogram == Dict("001" => shot_count)
@@ -1233,7 +1233,7 @@ end
             qpu,
             circuit,
             shot_count;
-            transpiler = get_transpiler(qpu; connectivity = connectivity),
+            transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
         ) # no error thrown
     end
 end

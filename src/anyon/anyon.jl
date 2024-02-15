@@ -474,8 +474,10 @@ SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoN
 )])
 ```
 """
-function get_transpiler(
-    qpu::UnionAnyonQPU;
+get_transpiler(qpu::UnionAnyonQPU; atol = 1e-6)::Transpiler =
+    get_anyon_transpiler(atol = atol, connectivity = get_connectivity(qpu))
+
+function get_anyon_transpiler(;
     atol = 1e-6,
     connectivity = get_connectivity(qpu),
 )::Transpiler

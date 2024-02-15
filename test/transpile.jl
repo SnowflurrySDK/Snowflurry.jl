@@ -867,7 +867,7 @@ end
     ]
 
     for (qpu, connectivity) in qpus_and_connectivities
-        transpiler = get_transpiler(qpu; connectivity = connectivity)
+        transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity)
         qubit_count = get_num_qubits(connectivity)
 
         for t_0 ∈ 1:qubit_count
