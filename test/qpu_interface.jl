@@ -701,8 +701,6 @@ end
     )
     client = get_client(qpu)
 
-    @test get_excluded_positions(qpu) == []
-
     io = IOBuffer()
     println(io, qpu)
     @test String(take!(io)) ==
@@ -725,6 +723,22 @@ end
 
     connectivity = get_connectivity(qpu)
 
+    expected_excluded_positions = []
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(connectivity) ==
+          expected_excluded_positions
+
+    expected_excluded_positions = collect(3:6)
+
+    # simulate a change in metadata from a host server response
+    qpu.metadata["excluded_positions"] = expected_excluded_positions
+
+    @test get_excluded_positions(qpu) ==
+    get_excluded_positions(get_connectivity(qpu)) ==
+    expected_excluded_positions
+
+
     @test client.host == expected_host
     @test client.user == expected_user
     @test client.access_token == expected_access_token
@@ -741,6 +755,7 @@ end
         "project_id" => expected_project_id,
         "qubit_count" => 6,
         "connectivity_type" => Snowflurry.line_connectivity_label,
+        "excluded_positions" => expected_excluded_positions,
     )
 
     qpu = AnyonYukonQPU(
@@ -785,6 +800,15 @@ end
           get_excluded_positions(connectivity) ==
           expected_excluded_positions
 
+    expected_excluded_positions = collect(7:12)
+
+    # simulate a change in metadata from a host server response
+    qpu.metadata["excluded_positions"] = expected_excluded_positions
+
+    @test get_excluded_positions(qpu) ==
+    get_excluded_positions(get_connectivity(qpu)) ==
+    expected_excluded_positions
+
     @test client.host == expected_host
     @test client.user == expected_user
     @test client.access_token == expected_access_token
@@ -824,6 +848,7 @@ end
         "project_id" => expected_project_id,
         "qubit_count" => 12,
         "connectivity_type" => Snowflurry.lattice_connectivity_label,
+        "excluded_positions" => collect(7:12),
     )
 
     qpu = AnyonYamaskaQPU(
