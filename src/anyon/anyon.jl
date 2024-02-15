@@ -164,7 +164,7 @@ get_excluded_positions(qpu::UnionAnyonQPU) = get_excluded_positions(get_connecti
 
 function get_metadata(qpu::UnionAnyonQPU)::Metadata
     if isempty(qpu.metadata)
-        for (k,v) in get_metadata(qpu.client, qpu)
+        for (k, v) in get_metadata(qpu.client, qpu)
             qpu.metadata[k] = v
         end
     end
