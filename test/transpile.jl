@@ -2,7 +2,6 @@ using Snowflurry
 using Test
 
 include("mock_functions.jl")
-requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
 
 target = 1
 destination_bit = 1
