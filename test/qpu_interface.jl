@@ -1402,7 +1402,7 @@ end
 
     connectivity = get_connectivity(qpu)
 
-    @test get_machine_hostname(qpu) == Snowflurry.AnyonVirtualQPUHostname
+    @test Snowflurry.get_machine_hostname(qpu) == Snowflurry.AnyonVirtualQPUHostname
 
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
