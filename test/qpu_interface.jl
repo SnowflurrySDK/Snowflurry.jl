@@ -5,28 +5,27 @@ using HTTP
 include("mock_functions.jl")
 
 generic_requestor = MockRequestor(
-        make_request_checker(expected_realm),
-        make_post_checker(expected_json_generic, expected_realm),
-    )
+    make_request_checker(expected_realm),
+    make_post_checker(expected_json_generic, expected_realm),
+)
 
-no_realm_requestor_generic = MockRequestor(
-        make_request_checker(),
-        make_post_checker(expected_json_generic),
-    )
+no_realm_requestor_generic =
+    MockRequestor(make_request_checker(), make_post_checker(expected_json_generic))
 
-no_realm_requestor_yukon = MockRequestor(
-        make_request_checker(),
-        make_post_checker(expected_json_yukon),
-    )
+no_realm_requestor_yukon =
+    MockRequestor(make_request_checker(), make_post_checker(expected_json_yukon))
 
 yukon_requestor = MockRequestor(
-        make_request_checker(expected_realm),
-        make_post_checker(expected_json_yukon, expected_realm),
-    )
+    make_request_checker(expected_realm),
+    make_post_checker(expected_json_yukon, expected_realm),
+)
 
 yamaska_requestor = MockRequestor(
     make_request_checker(expected_realm),
-    make_post_checker(make_expected_json(Snowflurry.AnyonYamaskaQPUHostname), expected_realm),
+    make_post_checker(
+        make_expected_json(Snowflurry.AnyonYamaskaQPUHostname),
+        expected_realm,
+    ),
 )
 
 # While testing, this throttle can be used to skip delays between status requests.
@@ -180,12 +179,8 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(
-        circuit,
-        shot_count,
-        expected_machine_hostname,
-        expected_project_id,
-    )
+    circuit_json =
+        serialize_job(circuit, shot_count, expected_machine_hostname, expected_project_id)
 
     @test circuit_json == expected_json_generic
 
@@ -201,7 +196,13 @@ end
 
     @test get_host(test_client) == expected_host
 
-    jobID = submit_job(test_client, circuit, shot_count, expected_project_id, expected_machine_hostname)
+    jobID = submit_job(
+        test_client,
+        circuit,
+        shot_count,
+        expected_project_id,
+        expected_machine_hostname,
+    )
 
     status, histogram = get_status(test_client, jobID)
 
@@ -1125,7 +1126,7 @@ end
 
 @testset "run_job on AnyonQPUs: with realm" begin
 
-    
+
     yukon_test_client = Client(
         host = expected_host,
         user = expected_user,
@@ -1305,7 +1306,8 @@ end
     for ((QPU, connectivity), post_checker_toffoli, post_checker_last_qubit) in
         zip(qpus_and_connectivities, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json_yukon))
+        requestor =
+            MockRequestor(make_request_checker(), make_post_checker(expected_json_yukon))
         test_client = Client(
             host = expected_host,
             user = expected_user,

@@ -505,7 +505,13 @@ function run_job(
     # throws error if circuit is invalid
     transpile(transpiler, circuit)
 
-    jobID = submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_hostname(qpu))
+    jobID = submit_job(
+        client,
+        circuit,
+        shot_count,
+        get_project_id(qpu),
+        get_machine_hostname(qpu),
+    )
 
     status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
 
