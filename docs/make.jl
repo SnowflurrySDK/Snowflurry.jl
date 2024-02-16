@@ -11,7 +11,7 @@ DocMeta.setdocmeta!(
         using Printf
         ENV["COLUMNS"] = 200
         include("../test/mock_functions.jl")
-        requestor = MockRequestor(make_request_checker(), make_post_checker(make_expected_json("machine.anyonsys.com")))
+        requestor = MockRequestor(make_request_checker(), make_post_checker_doctests())
         client = Client(
             host = "http://example.anyonsys.com",
             user = "test_user",
