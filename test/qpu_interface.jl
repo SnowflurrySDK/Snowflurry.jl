@@ -966,7 +966,7 @@ end
 end
 
 @testset "AnyonQPUs with empty project_id" begin
-    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU, AnyonYamaska6QPU]
 
     requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
 
