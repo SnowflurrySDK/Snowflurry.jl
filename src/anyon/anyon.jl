@@ -142,7 +142,7 @@ end
     AnyonYamaska6QPU <: AbstractQPU
 
 A data structure to represent an Anyon System's Yamaska generation QPU,
-consisting of 12 qubits in a 2D lattice arrangement but configured to act like
+consisting of 24 qubits in a 2D lattice arrangement but configured to act like
 a 6 qubit device with linear connectivity.
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
