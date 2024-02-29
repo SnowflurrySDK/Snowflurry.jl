@@ -864,6 +864,15 @@ end
             # testing with LatticeConnectivity(6,4) induces massive demand on simulate(), with 24-qubit Kets
             Snowflurry.LatticeConnectivity(3, 4),
         )
+        (
+            AnyonYamaska6QPU(;
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                project_id = expected_project_id,
+            ),
+            Snowflurry.AnyonYamaska6Connectivity,
+        )
     ]
 
     for (qpu, connectivity) in qpus_and_connectivities

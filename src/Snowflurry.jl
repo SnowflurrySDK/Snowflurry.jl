@@ -46,6 +46,7 @@ export
     Readout,
     AnyonYukonQPU,
     AnyonYamaskaQPU,
+    AnyonYamaska6QPU,
     VirtualQPU,
     Metadata,
     Client,
