@@ -1188,6 +1188,30 @@ end
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 
+    qpu = AnyonYamaska6QPU(
+        test_client,
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
+
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yamaska\n" *
+          "   serial_number: ANYK202301-6\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   6\n" *
+          "   connectivity_type:  linear\n" *
+          "   realm:         test-realm\n" *
+          "\n"
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
+
+    histogram = run_job(qpu, circuit, shot_count)
+    @test histogram == Dict("001" => shot_count)
+    @test !haskey(histogram, "error_msg")
 end
 
 @testset "run_job with invalid circuits on AnyonYukonQPU" begin
