@@ -874,6 +874,97 @@ end
 
 end
 
+@testset "Construct AnyonYamaska6QPU" begin
+
+    qpu = AnyonYamaska6QPU(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        status_request_throttle = no_throttle,
+        project_id = expected_project_id,
+    )
+    client = get_client(qpu)
+
+    io = IOBuffer()
+    println(io, qpu)
+    @test String(take!(io)) ==
+          "Quantum Processing Unit:\n" *
+          "   manufacturer:  Anyon Systems Inc.\n" *
+          "   generation:    Yamaska\n" *
+          "   serial_number: ANYK202301-6\n" *
+          "   project_id:    project_id\n" *
+          "   qubit_count:   6\n" *
+          "   connectivity_type:  linear\n" *
+          "\n"
+
+    io = IOBuffer()
+    println(io, client)
+    @test String(take!(io)) ==
+          "Client for QPU service:\n" *
+          "   host:         http://example.anyonsys.com\n" *
+          "   user:         test_user \n" *
+          "\n"
+
+    connectivity = get_connectivity(qpu)
+
+    expected_excluded_positions = []
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(connectivity) ==
+          expected_excluded_positions
+
+    expected_excluded_positions = collect(3:6)
+
+    # simulate a change in metadata from a host server response
+    qpu.metadata["excluded_positions"] = expected_excluded_positions
+
+    @test get_excluded_positions(qpu) ==
+          get_excluded_positions(get_connectivity(qpu)) ==
+          expected_excluded_positions
+
+
+    @test client.host == expected_host
+    @test client.user == expected_user
+    @test client.access_token == expected_access_token
+
+    test_print_connectivity(qpu, "1──2──3──4──5──6\n")
+
+    @test get_connectivity_label(get_connectivity(qpu)) ==
+          Snowflurry.line_connectivity_label
+
+    @test get_metadata(qpu) == Metadata(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => "Yamaska",
+        "serial_number" => "ANYK202301-6",
+        "project_id" => expected_project_id,
+        "qubit_count" => 6,
+        "connectivity_type" => Snowflurry.line_connectivity_label,
+        "excluded_positions" => expected_excluded_positions,
+    )
+
+    qpu = AnyonYamaska6QPU(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        status_request_throttle = no_throttle,
+        project_id = expected_project_id,
+        realm = expected_realm,
+    )
+
+    @test Snowflurry.get_realm(qpu) == expected_realm
+
+    @test get_metadata(qpu) == Metadata(
+        "manufacturer" => "Anyon Systems Inc.",
+        "generation" => "Yamaska",
+        "serial_number" => "ANYK202301-6",
+        "project_id" => expected_project_id,
+        "qubit_count" => 6,
+        "connectivity_type" => Snowflurry.line_connectivity_label,
+        "realm" => expected_realm,
+    )
+
+end
+
 @testset "AnyonQPUs with empty project_id" begin
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
 

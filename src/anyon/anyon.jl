@@ -2,6 +2,7 @@ using Snowflurry
 
 const AnyonYukonConnectivity = LineConnectivity(6)
 const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
+const AnyonYamaska6Connectivity = LineConnectivity(6)
 
 const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
 
@@ -137,7 +138,77 @@ struct AnyonYamaskaQPU <: AbstractQPU
     end
 end
 
-UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU}
+"""
+    AnyonYamaska6QPU <: AbstractQPU
+
+A data structure to represent an Anyon System's Yamaska generation QPU,
+consisting of 12 qubits in a 2D lattice arrangement but configured to act like
+a 6 qubit device with linear connectivity.
+# Fields
+- `client                  ::Client` -- Client to the QPU server.
+- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
+- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
+- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
+
+# Example
+```jldoctest
+julia>  qpu = AnyonYamaska6QPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test_realm")
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yamaska
+   serial_number: ANYK202301-6
+   project_id:    test-project
+   qubit_count:   6
+   connectivity_type:  linear
+   realm:         test_realm
+```
+"""
+struct AnyonYamaska6QPU <: AbstractQPU
+    client::Client
+    status_request_throttle::Function
+    connectivity::LineConnectivity
+    project_id::String
+    metadata::Metadata
+
+    function AnyonYamaska6QPU(
+        client::Client,
+        project_id::String;
+        status_request_throttle = default_status_request_throttle,
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+        new(
+            client,
+            status_request_throttle,
+            AnyonYamaska6Connectivity,
+            project_id,
+            Metadata(),
+        )
+    end
+    function AnyonYamaska6QPU(;
+        host::String,
+        user::String,
+        access_token::String,
+        project_id::String,
+        realm::String = "",
+        status_request_throttle = default_status_request_throttle,
+    )
+        if project_id == ""
+            throw(ArgumentError(error_msg_empty_project_id))
+        end
+
+        new(
+            Client(host = host, user = user, access_token = access_token, realm = realm),
+            status_request_throttle,
+            AnyonYamaska6Connectivity,
+            project_id,
+            Metadata(),
+        )
+    end
+end
+
+UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU,AnyonYamaska6QPU}
 
 get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
@@ -217,6 +288,9 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     if qpu isa AnyonYamaskaQPU
         generation = "Yamaska"
         serial_number = "ANYK202301"
+    elseif qpu isa AnyonYamaska6QPU
+        generation = "Yamaska"
+        serial_number = "ANYK202301-6"
     end
 
     output = Metadata(
