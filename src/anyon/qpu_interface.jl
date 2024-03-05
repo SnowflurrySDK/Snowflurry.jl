@@ -135,9 +135,8 @@ q[1]:──X──
           
 q[2]:─────
           
-julia> serialize_job(c, 10, "machine", "project_id")
-"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineName\\\":\\\"machine\\\",\\\"billingaccountID\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
-
+julia> serialize_job(c, 10, "http://example.anyonsys.com", "project_id")
+"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineName\\\":\\\"machine\\\",\\\"billingaccountID\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}],\\\"qubit_count\\\":2,\\\"bit_count\\\":2}}"
 ```
 """
 function serialize_job(
@@ -156,7 +155,11 @@ function serialize_job(
         "type" => "circuit",
         "machineName" => machine_name,
         "billingaccountID" => project_id,
-        "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
+        "circuit" => Dict{String,Any}(
+            "operations" => Vector{Dict{String,Any}}(),
+            "bitCount" => get_num_bits(circuit),
+            "qubitCount" => get_num_qubits(circuit),
+        ),
         "shotCount" => shot_count,
     )
 
