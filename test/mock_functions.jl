@@ -5,25 +5,25 @@ expected_host = "http://example.anyonsys.com"
 expected_user = "test_user"
 expected_access_token = "not_a_real_access_token"
 expected_project_id = "project_id"
-expected_machine_hostname = "machine.anyonsys.com"
+expected_machine_name = "machine"
 expected_realm = "test-realm"
 
-make_common_substring(machine_hostname) =
-    "{\"shotCount\":100,\"name\":\"default\",\"billingaccountID\":\"project_id\",\"type\":\"circuit\",\"machineHost\":\"$machine_hostname\",\"circuit\":{\"operations\":"
+make_common_substring(machine_name) =
+    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"billingaccountID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
 
-common_substring_yukon = make_common_substring(Snowflurry.AnyonYukonQPUHostname)
-common_substring_yamaska = make_common_substring(Snowflurry.AnyonYamaskaQPUHostname)
+common_substring_yukon = make_common_substring(Snowflurry.AnyonYukonMachineName)
+common_substring_yamaska = make_common_substring(Snowflurry.AnyonYamaskaMachineName)
 
-make_expected_json(machine_hostname) =
-    make_common_substring(machine_hostname) *
+make_expected_json(machine_name) =
+    make_common_substring(machine_name) *
     "[" *
     "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
     "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}," *
     "{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}" *
     "]}}"
 
-expected_json_generic = make_expected_json("machine.anyonsys.com")
-expected_json_yukon = make_expected_json(Snowflurry.AnyonYukonQPUHostname)
+expected_json_generic = make_expected_json("machine")
+expected_json_yukon = make_expected_json(Snowflurry.AnyonYukonMachineName)
 
 expected_json_last_qubit_Yukon =
     common_substring_yukon *
@@ -74,7 +74,7 @@ function make_post_checker(input_json::String, input_realm::String = "")::Functi
 end
 
 """
-    This post checker ignores encoded body, as doctests use different machine_hostnames and it has to work in all casess
+    This post checker ignores encoded body, as doctests use different machine_names and it has to work in all casess
 """
 function make_post_checker_doctests(input_realm::String = "")::Function
     function post_checker(

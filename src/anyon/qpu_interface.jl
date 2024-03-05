@@ -135,15 +135,15 @@ q[1]:──X──
           
 q[2]:─────
           
-julia> serialize_job(c, 10, "machine.anyonsys.com", "project_id")
-"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"billingaccountID\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"machineHost\\\":\\\"machine.anyonsys.com\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
+julia> serialize_job(c, 10, "machine", "project_id")
+"{\\\"shotCount\\\":10,\\\"name\\\":\\\"sigma_x job\\\",\\\"machineName\\\":\\\"machine\\\",\\\"billingaccountID\\\":\\\"project_id\\\",\\\"type\\\":\\\"circuit\\\",\\\"circuit\\\":{\\\"operations\\\":[{\\\"parameters\\\":{},\\\"type\\\":\\\"x\\\",\\\"qubits\\\":[0]}]}}"
 
 ```
 """
 function serialize_job(
     circuit::QuantumCircuit,
     shot_count::Integer,
-    machine_hostname::String,
+    machine_name::String,
     project_id::String,
 )::String
 
@@ -154,7 +154,7 @@ function serialize_job(
     job_description = Dict(
         "name" => get_name(circuit),
         "type" => "circuit",
-        "machineHost" => machine_hostname,
+        "machineName" => machine_name,
         "billingaccountID" => project_id,
         "circuit" => Dict{String,Any}("operations" => Vector{Dict{String,Any}}()),
         "shotCount" => shot_count,
@@ -244,16 +244,16 @@ get_requestor(client::Client) = client.requestor
 
 
 """
-    submit_job(client::Client, circuit::QuantumCircuit, shot_count::Integer, project_id::String, machine_hostname::String)
+    submit_job(client::Client, circuit::QuantumCircuit, shot_count::Integer, project_id::String, machine_name::String)
 
 Submit a circuit to a `Client` of `QPU` service, requesting a 
-particular machine (`machine_hostname`), a number of repetitions (`shot_count`). 
+particular machine (`machine_name`), a number of repetitions (`shot_count`). 
 Returns circuitID.
 
 # Example
 
 ```jldoctest mylabel
-julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine.anyonsys.com")
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -263,10 +263,10 @@ function submit_job(
     circuit::QuantumCircuit,
     shot_count::Integer,
     project_id::String,
-    machine_hostname::String,
+    machine_name::String,
 )::String
 
-    job_json = serialize_job(circuit, shot_count, machine_hostname, project_id)
+    job_json = serialize_job(circuit, shot_count, machine_name, project_id)
 
     path_url = get_host(client) * "/" * path_jobs
 
@@ -307,7 +307,7 @@ the histogram of the job results, as computed on the `QPU`.
 
 
 ```jldoctest
-julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine.anyonsys.com")
+julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(client, jobID)

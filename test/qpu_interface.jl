@@ -23,7 +23,15 @@ yukon_requestor = MockRequestor(
 yamaska_requestor = MockRequestor(
     make_request_checker(expected_realm),
     make_post_checker(
-        make_expected_json(Snowflurry.AnyonYamaskaQPUHostname),
+        make_expected_json(Snowflurry.AnyonYamaskaMachineName),
+        expected_realm,
+    ),
+)
+
+yamaska6_requestor = MockRequestor(
+    make_request_checker(expected_realm),
+    make_post_checker(
+        make_expected_json(Snowflurry.AnyonYamaska6MachineName),
         expected_realm,
     ),
 )
@@ -180,7 +188,7 @@ end
     shot_count = 100
 
     circuit_json =
-        serialize_job(circuit, shot_count, expected_machine_hostname, expected_project_id)
+        serialize_job(circuit, shot_count, expected_machine_name, expected_project_id)
 
     @test circuit_json == expected_json_generic
 
@@ -201,7 +209,7 @@ end
         circuit,
         shot_count,
         expected_project_id,
-        expected_machine_hostname,
+        expected_machine_name,
     )
 
     status, histogram = get_status(test_client, jobID)
@@ -1143,6 +1151,14 @@ end
         realm = expected_realm,
     )
 
+    yamaska6_test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = yamaska6_requestor,
+        realm = expected_realm,
+    )
+
     io = IOBuffer()
     println(io, yukon_test_client)
     @test String(take!(io)) ==
@@ -1212,7 +1228,7 @@ end
     @test !haskey(histogram, "error_msg")
 
     qpu = AnyonYamaska6QPU(
-        test_client,
+        yamaska6_test_client,
         expected_project_id,
         status_request_throttle = no_throttle,
     )
@@ -1402,7 +1418,7 @@ end
 
     connectivity = get_connectivity(qpu)
 
-    @test Snowflurry.get_machine_hostname(qpu) == Snowflurry.AnyonVirtualQPUHostname
+    @test Snowflurry.get_machine_name(qpu) == Snowflurry.AnyonVirtualMachineName
 
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label
