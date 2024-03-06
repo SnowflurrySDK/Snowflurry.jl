@@ -231,9 +231,29 @@ end
     @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
         circuit,
         shot_count,
-        "http://example.anyonsys.com",
+        Snowflurry.AnyonYukonMachineName,
         "",
     )
+end
+
+@testset "serialize_job: non-default bit_count" begin
+
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        bit_count = 7,
+        instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
+    )
+
+    shot_count = 100
+
+    circuit_json = serialize_job(
+        circuit,
+        shot_count,
+        Snowflurry.AnyonYukonMachineName,
+        expected_project_id,
+    )
+
+    @test circuit_json == expected_json_non_default_bit_count
 end
 
 @testset "job status" begin
