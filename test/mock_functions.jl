@@ -25,6 +25,14 @@ make_expected_json(machine_name) =
 expected_json_generic = make_expected_json("machine")
 expected_json_yukon = make_expected_json(Snowflurry.AnyonYukonMachineName)
 
+expected_json_non_default_bit_count =
+    common_substring_yukon *
+    "[" *
+    "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
+    "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}," *
+    "{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}" *
+    "],\"bitCount\":7,\"qubitCount\":3}}"
+
 expected_json_last_qubit_Yukon =
     common_substring_yukon *
     "[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[5]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[5]},{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}]" *
