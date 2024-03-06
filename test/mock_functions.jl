@@ -37,7 +37,8 @@ expected_json_last_qubit_Yamaska =
 
 expected_json_transpiled =
     common_substring_yukon *
-    "[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]},{\"bits\":[2],\"type\":\"readout\",\"qubits\":[2]}]}}"
+    "[{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"z_90\",\"qubits\":[2]},{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]},{\"bits\":[2],\"type\":\"readout\",\"qubits\":[2]}]" *
+    ",\"bitCount\":3,\"qubitCount\":3}}"
 
 expected_json_Toffoli_Yukon =
     common_substring_yukon *
