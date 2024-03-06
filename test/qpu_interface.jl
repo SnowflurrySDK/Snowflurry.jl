@@ -4,9 +4,36 @@ using HTTP
 
 include("mock_functions.jl")
 
-requestor = MockRequestor(
+generic_requestor = MockRequestor(
     make_request_checker(expected_realm),
-    make_post_checker(expected_json, expected_realm),
+    make_post_checker(expected_json_generic, expected_realm),
+)
+
+no_realm_requestor_generic =
+    MockRequestor(make_request_checker(), make_post_checker(expected_json_generic))
+
+no_realm_requestor_yukon =
+    MockRequestor(make_request_checker(), make_post_checker(expected_json_yukon))
+
+yukon_requestor = MockRequestor(
+    make_request_checker(expected_realm),
+    make_post_checker(expected_json_yukon, expected_realm),
+)
+
+yamaska_requestor = MockRequestor(
+    make_request_checker(expected_realm),
+    make_post_checker(
+        make_expected_json(Snowflurry.AnyonYamaskaMachineName),
+        expected_realm,
+    ),
+)
+
+yamaska6_requestor = MockRequestor(
+    make_request_checker(expected_realm),
+    make_post_checker(
+        make_expected_json(Snowflurry.AnyonYamaska6MachineName),
+        expected_realm,
+    ),
 )
 
 # While testing, this throttle can be used to skip delays between status requests.
@@ -54,7 +81,7 @@ end
     #ensure MockRequestor behaves as expected
 
     @test_throws NotImplementedError get_request(
-        requestor,
+        yukon_requestor,
         "erroneous_url",
         expected_user,
         expected_access_token,
@@ -66,7 +93,7 @@ end
     jobID = "1234-abcd"
 
     response = get_request(
-        requestor,
+        yukon_requestor,
         expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
         expected_user,
         expected_access_token,
@@ -76,7 +103,7 @@ end
     compare_responses(expected_response, response)
 
     @test_throws NotImplementedError get_request(
-        requestor,
+        yukon_requestor,
         expected_host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
         expected_user,
         expected_access_token,
@@ -84,7 +111,7 @@ end
     )
 
     @test_throws AssertionError("received: \nwrong-user, expected: \n$expected_user") get_request(
-        requestor,
+        yukon_requestor,
         expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
         "wrong-user",
         expected_access_token,
@@ -94,7 +121,7 @@ end
     @test_throws AssertionError(
         "received: \nwrong-access-token, expected: \n$expected_access_token",
     ) get_request(
-        requestor,
+        yukon_requestor,
         expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
         expected_user,
         "wrong-access-token",
@@ -102,7 +129,7 @@ end
     )
 
     @test_throws AssertionError("received: \nwrong-realm, expected: \n$expected_realm") get_request(
-        requestor,
+        yukon_requestor,
         expected_host * "/" * Snowflurry.path_jobs * "/" * jobID,
         expected_user,
         expected_access_token,
@@ -160,20 +187,16 @@ end
 
     shot_count = 100
 
-    circuit_json = serialize_job(
-        circuit,
-        shot_count,
-        "http://example.anyonsys.com",
-        expected_project_id,
-    )
+    circuit_json =
+        serialize_job(circuit, shot_count, expected_machine_name, expected_project_id)
 
-    @test circuit_json == expected_json
+    @test circuit_json == expected_json_generic
 
     test_client = Client(
         host = expected_host,
         user = expected_user,
         access_token = expected_access_token,
-        requestor = requestor,
+        requestor = generic_requestor,
         realm = expected_realm,
     )
 
@@ -181,7 +204,13 @@ end
 
     @test get_host(test_client) == expected_host
 
-    jobID = submit_job(test_client, circuit, shot_count, expected_project_id)
+    jobID = submit_job(
+        test_client,
+        circuit,
+        shot_count,
+        expected_project_id,
+        expected_machine_name,
+    )
 
     status, histogram = get_status(test_client, jobID)
 
@@ -202,9 +231,29 @@ end
     @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
         circuit,
         shot_count,
-        "http://example.anyonsys.com",
+        Snowflurry.AnyonYukonMachineName,
         "",
     )
+end
+
+@testset "serialize_job: non-default bit_count" begin
+
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        bit_count = 7,
+        instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
+    )
+
+    shot_count = 100
+
+    circuit_json = serialize_job(
+        circuit,
+        shot_count,
+        Snowflurry.AnyonYukonMachineName,
+        expected_project_id,
+    )
+
+    @test circuit_json == expected_json_non_default_bit_count
 end
 
 @testset "job status" begin
@@ -968,13 +1017,11 @@ end
 @testset "AnyonQPUs with empty project_id" begin
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU, AnyonYamaska6QPU]
 
-    requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
-
     test_client = Client(
         host = expected_host,
         user = expected_user,
         access_token = expected_access_token,
-        requestor = requestor,
+        requestor = yukon_requestor,
     )
 
     for qpu in qpus
@@ -998,12 +1045,11 @@ end
 @testset "run_job on AnyonYukonQPU" begin
 
     # without optional realm
-    requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
     test_client = Client(
         host = expected_host,
         user = expected_user,
         access_token = expected_access_token,
-        requestor = requestor,
+        requestor = no_realm_requestor_yukon,
     )
     shot_count = 100
     qpu = AnyonYukonQPU(
@@ -1043,7 +1089,7 @@ end
             stubStatusResponse(Snowflurry.succeeded_status),
             stubResult(),
         ]),
-        make_post_checker(expected_json),
+        make_post_checker(expected_json_yukon),
     )
     qpu = AnyonYukonQPU(
         Client(
@@ -1068,7 +1114,7 @@ end
             stubFailedStatusResponse(),
             stubFailureResult(),
         ]),
-        make_post_checker(expected_json),
+        make_post_checker(expected_json_yukon),
     )
     qpu = AnyonYukonQPU(
         Client(
@@ -1091,7 +1137,7 @@ end
             stubStatusResponse(Snowflurry.cancelled_status),
             stubCancelledResultResponse(),
         ]),
-        make_post_checker(expected_json),
+        make_post_checker(expected_json_yukon),
     )
     qpu = AnyonYukonQPU(
         Client(
@@ -1108,20 +1154,33 @@ end
 
 @testset "run_job on AnyonQPUs: with realm" begin
 
-    requestor = MockRequestor(
-        make_request_checker(expected_realm),
-        make_post_checker(expected_json, expected_realm),
-    )
-    test_client = Client(
+
+    yukon_test_client = Client(
         host = expected_host,
         user = expected_user,
         access_token = expected_access_token,
-        requestor = requestor,
+        requestor = yukon_requestor,
+        realm = expected_realm,
+    )
+
+    yamaska_test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = yamaska_requestor,
+        realm = expected_realm,
+    )
+
+    yamaska6_test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = yamaska6_requestor,
         realm = expected_realm,
     )
 
     io = IOBuffer()
-    println(io, test_client)
+    println(io, yukon_test_client)
     @test String(take!(io)) ==
           "Client for QPU service:\n" *
           "   host:         http://example.anyonsys.com\n" *
@@ -1129,7 +1188,7 @@ end
           "   realm:        test-realm \n" *
           "\n"
 
-    @test Snowflurry.get_realm(test_client) == expected_realm
+    @test Snowflurry.get_realm(yukon_test_client) == expected_realm
 
     #test basic submission, no transpilation
     circuit = QuantumCircuit(
@@ -1139,7 +1198,7 @@ end
     shot_count = 100
 
     qpu = AnyonYukonQPU(
-        test_client,
+        yukon_test_client,
         expected_project_id,
         status_request_throttle = no_throttle,
     )
@@ -1164,7 +1223,7 @@ end
     @test !haskey(histogram, "error_msg")
 
     qpu = AnyonYamaskaQPU(
-        test_client,
+        yamaska_test_client,
         expected_project_id,
         status_request_throttle = no_throttle,
     )
@@ -1189,7 +1248,7 @@ end
     @test !haskey(histogram, "error_msg")
 
     qpu = AnyonYamaska6QPU(
-        test_client,
+        yamaska6_test_client,
         expected_project_id,
         status_request_throttle = no_throttle,
     )
@@ -1283,7 +1342,8 @@ end
     for ((QPU, connectivity), post_checker_toffoli, post_checker_last_qubit) in
         zip(qpus_and_connectivities, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(make_request_checker(), make_post_checker(expected_json))
+        requestor =
+            MockRequestor(make_request_checker(), make_post_checker(expected_json_yukon))
         test_client = Client(
             host = expected_host,
             user = expected_user,
@@ -1377,6 +1437,8 @@ end
     @test histogram == Dict("001" => shot_count)
 
     connectivity = get_connectivity(qpu)
+
+    @test Snowflurry.get_machine_name(qpu) == Snowflurry.AnyonVirtualMachineName
 
     @test connectivity isa AllToAllConnectivity
     @test get_connectivity_label(connectivity) == Snowflurry.all2all_connectivity_label

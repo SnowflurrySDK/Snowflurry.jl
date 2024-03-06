@@ -210,6 +210,16 @@ end
 
 UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU,AnyonYamaska6QPU}
 
+const AnyonYukonMachineName = "yukon"
+const AnyonYamaskaMachineName = "yamaska"
+const AnyonYamaska6MachineName = "yamaska6"
+const AnyonVirtualMachineName = "virtual"
+
+get_machine_name(::AnyonYukonQPU) = AnyonYukonMachineName
+get_machine_name(::AnyonYamaskaQPU) = AnyonYamaskaMachineName
+get_machine_name(::AnyonYamaska6QPU) = AnyonYamaska6MachineName
+get_machine_name(::VirtualQPU) = AnyonVirtualMachineName
+
 get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
 get_project_id(qpu_service::UnionAnyonQPU) = qpu_service.project_id
@@ -495,7 +505,8 @@ function run_job(
     # throws error if circuit is invalid
     transpile(transpiler, circuit)
 
-    jobID = submit_job(client, circuit, shot_count, get_project_id(qpu))
+    jobID =
+        submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
     status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
 

@@ -4,7 +4,7 @@
 DocTestSetup = quote
     ENV["THUNDERHEAD_USER"] = "test-user"
     ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
-    ENV["THUNDERHEAD_HOST"] = "yukon.anyonsys.com"
+    ENV["THUNDERHEAD_HOST"] = "thunderhead.anyonsys.com"
     ENV["THUNDERHEAD_PROJECT_ID"] = "test-project"
     ENV["THUNDERHEAD_REALM"] = "test-realm"
 end
