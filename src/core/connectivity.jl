@@ -9,7 +9,8 @@ A data structure to represent linear qubit connectivity in an Anyon System's QPU
 This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@ref)
 
 # Fields
-- `dimension                  ::Int` -- Qubit count in this connectivity.
+- `dimension         ::Int` -- Qubit count in this connectivity.
+- `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
 
 
 # Example
@@ -17,6 +18,11 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
 julia> connectivity = LineConnectivity(6)
 LineConnectivity{6}
 1──2──3──4──5──6
+
+julia> connectivity = LineConnectivity(6, [1,2,3])
+LineConnectivity{6}
+1──2──3──4──5──6
+excluded positions: [1, 2, 3]
 
 ```
 """
@@ -45,6 +51,7 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 # Fields
 - `qubits_per_row    ::Vector{Int}` -- number of qubits in each line, when constructing the printout.
 - `dimensions        ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
+- `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
 
 
 # Example
@@ -84,7 +91,23 @@ LatticeConnectivity{6,4}
              23 ── 19 ── 16 ── 12
                     |     |
                    24 ── 20 
+```
 
+Optionally, lattices with excluded positions can be defined:
+```jldoctest
+julia> connectivity = LatticeConnectivity(3, 4, [1, 5, 9])
+LatticeConnectivity{3,4}
+  5 ──  1 
+  |     | 
+  9 ──  6 ──  2 
+        |     | 
+       10 ──  7 ──  3 
+              |     | 
+             11 ──  8 ──  4 
+                    | 
+                   12 
+
+excluded positions: [1, 5, 9]
 ```
 
 !!! note
