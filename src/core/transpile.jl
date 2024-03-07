@@ -559,14 +559,31 @@ function cast_to_cz(::ISwap, connected_qubits::Vector{Int})::AbstractVector{Gate
     ])
 end
 
+function cast_to_cz(::ISwapDagger, connected_qubits::Vector{Int})::AbstractVector{Gate}
+    @assert length(connected_qubits) == 2
+    q1 = connected_qubits[1]
+    q2 = connected_qubits[2]
+
+    return Vector{Gate}([
+        y_minus_90(q1),
+        x_minus_90(q2),
+        control_z(q1, q2),
+        y_minus_90(q1),
+        x_90(q2),
+        control_z(q1, q2),
+        y_90(q1),
+        x_90(q2),
+    ])
+end
+
 struct CastISwapToCZGateTranspiler <: Transpiler end
 
 """
     transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastISwapToCZGateTranspiler` transpiler stage which
-expands all `ISwap` gates into `CZ` gates and single-qubit gates. The result of the
-input and output circuit on any arbitrary state `Ket` is unchanged (up to a
+expands all `ISwap` and `ISwapDagger` gates into `CZ` gates and single-qubit gates.
+The result of the input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
 # Examples
@@ -590,6 +607,22 @@ q[1]:──Y_m90─────────────*────Y_90──�
 q[2]:───────────X_m90────Z────────────X_m90────Z────────────X_90──
                                                                   
 
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [iswap_dagger(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──x†──
+       |   
+q[2]:──x†──
+
+julia> transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──Y_m90─────────────*────Y_m90────────────*────Y_90──────────
+                         |                     |                  
+q[2]:───────────X_m90────Z─────────────X_90────Z────────────X_90──
+
 ```
 """
 function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
@@ -602,7 +635,7 @@ function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::Quan
     )
 
     for instr in get_circuit_instructions(circuit)
-        if instr isa Snowflurry.Gate{ISwap}
+        if instr isa Union{Snowflurry.Gate{ISwap},Snowflurry.Gate{ISwapDagger}}
             push!(
                 output,
                 cast_to_cz(get_gate_symbol(instr), get_connected_qubits(instr))...,
