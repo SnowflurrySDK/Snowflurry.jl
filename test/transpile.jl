@@ -59,7 +59,7 @@ test_instructions = [
         toffoli(1, 4, 3),
         swap(2, 4),
         iswap(4, 1),
-        # iswap_dagger(1, 3), # TODO left out until missing transpiler is added: https://github.com/SnowflurrySDK/Snowflurry.jl/issues/377
+        iswap_dagger(1, 3),
     ],
 ]
 
@@ -1046,21 +1046,19 @@ end
 @testset "CastISwapToCZGateTranspiler: iswap" begin
     transpiler = CastISwapToCZGateTranspiler()
 
-    circuits = [
-        QuantumCircuit(qubit_count = 2, instructions = [iswap(1, 2)], name = "test-name-1"),
-        QuantumCircuit(
-            qubit_count = 2,
-            instructions = [iswap(1, 2), x_90(1), iswap(1, 2)],
-            name = "test-name-2",
-        ),
-        QuantumCircuit(
-            qubit_count = 2,
-            instructions = [control_x(1, 2), iswap(1, 2)],
-            name = "test-name-3",
-        ),
+    instructions = [
+        [iswap(1, 2)],
+        [iswap_dagger(1, 2)],
+        [iswap(1, 2), x_90(1), iswap(1, 2)],
+        [iswap(1, 2), x_90(1), iswap_dagger(1, 2)],
+        [iswap_dagger(1, 2), x_90(1), iswap(1, 2)],
+        [control_x(1, 2), iswap(1, 2)],
+        [control_x(1, 2), iswap_dagger(1, 2)],
     ]
 
-    for circuit in circuits
+    for instrs in instructions
+        circuit = QuantumCircuit(qubit_count = 2, instructions = instrs)
+
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.ISwap)
