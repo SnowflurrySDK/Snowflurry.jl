@@ -9,7 +9,7 @@ expected_machine_name = "machine"
 expected_realm = "test-realm"
 
 make_common_substring(machine_name) =
-    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"billingaccountID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
+    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
 
 common_substring_yukon = make_common_substring(Snowflurry.AnyonYukonMachineName)
 common_substring_yamaska = make_common_substring(Snowflurry.AnyonYamaskaMachineName)
