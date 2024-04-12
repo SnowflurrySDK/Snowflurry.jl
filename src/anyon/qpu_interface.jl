@@ -3,6 +3,7 @@ using Base64
 using HTTP
 using JSON
 using TOML
+using Git
 
 Base.@kwdef struct Status
     type::String
@@ -39,6 +40,8 @@ struct MockRequestor <: Requestor
 end
 
 const user_agent_header_key = "User-Agent"
+const realm_header_key = "X-Realm"
+const commit_hash_header_key = "X-Commit-Hash"
 
 const path_jobs = "jobs"
 const path_results = "result"
@@ -75,7 +78,14 @@ function make_headers(
 
     # Optional headers
     if realm != ""
-        headers["X-Realm"] = realm
+        headers[realm_header_key] = realm
+    end
+
+    # if the source code is used outside of a git commit tree, ignore error and do not add header
+    try
+        commit_hash = readchomp(`$git rev-parse HEAD -q`)
+        headers[commit_hash_header_key] = String(commit_hash)
+    catch
     end
 
     return headers
