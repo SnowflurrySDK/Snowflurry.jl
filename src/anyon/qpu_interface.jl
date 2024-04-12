@@ -81,10 +81,15 @@ function make_headers(
         headers[realm_header_key] = realm
     end
 
-    # if the source code is used outside of a git commit tree, ignore error and do not add header
     try
-        commit_hash = readchomp(`$git rev-parse HEAD -q`)
-        headers[commit_hash_header_key] = String(commit_hash)
+        io = IOBuffer()
+
+        ## suppress pipeline_error printout in case directory has no git tree
+        redirect_stderr(devnull) do
+            commit_hash = readchomp(`$git rev-parse HEAD`)
+            print(io, "$commit_hash")
+        end
+        headers[commit_hash_header_key] = String(take!(io))
     catch
     end
 
