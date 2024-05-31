@@ -1265,6 +1265,9 @@ end
 
 Returns the `i`th Fock basis of a Hilbert space with size `hspace_size` as a Ket.
 
+!!! note
+    Fock basis states numbering starts at 0.
+
 The Ket contains values of type `T`, which by default is ComplexF64.
 # Examples
 ```jldoctest
@@ -1290,6 +1293,9 @@ julia> ψ = fock(1, 3, ComplexF32) # specifying a type other than ComplexF64
 ```
 """
 function fock(i, hspace_size, T::Type{<:Complex} = ComplexF64)
+    @assert i >= 0 "Fock basis numbering starts at 0, received: $i"
+    @assert i < hspace_size "Fock basis number can at most be one less than the hspace_size, received: $i, with hspace_size: $hspace_size"
+
     d = fill(T(0.0), hspace_size)
     d[i+1] = 1.0
     return Ket(d)
@@ -1714,7 +1720,7 @@ julia> Ψ = coherent(alpha, hspace_size);
 julia> prob = wigner(ket2dm(Ψ), 0, 0);
 
 julia> @printf "prob: %.6f" prob
-prob: -0.561815
+prob: 0.561815
 ```
 """
 function wigner(ρ::AbstractOperator, p::Real, q::Real)
@@ -1724,9 +1730,9 @@ function wigner(ρ::AbstractOperator, p::Real, q::Real)
     for m = 1:hilbert_size
         for n = 1:m
             if (n == m)
-                w = w + real(ρ[m, n] * moyal(eta, m, n))
+                w = w + real(ρ[m, n] * moyal(eta, m - 1, n - 1))
             else
-                w = w + 2.0 * real(ρ[m, n] * moyal(eta, m, n))
+                w = w + 2.0 * real(ρ[m, n] * moyal(eta, m - 1, n - 1))
             end
         end
     end
@@ -1738,9 +1744,14 @@ end
 
 Returns the Moyal function `w_mn(eta)` for Fock states `m` and `n`.
 
+!!! note
+    Fock basis states numbering starts at 0.
 
 """
 function moyal(eta, m, n)
+    @assert m >= 0 "Fock basis number cannot be negative, received: $m"
+    @assert n >= 0 "Fock basis number cannot be negative, received: $n"
+
     L = genlaguerre(4.0 * abs2(eta), m - n, n)
     w_mn =
         2.0 * (-1)^n / pi *

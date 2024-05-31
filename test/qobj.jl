@@ -236,7 +236,7 @@ end
     ψ_1 = normalize!(coherent(alpha, hspace_size) - coherent(-alpha, hspace_size))
 
     @test Bra(ψ_0) * ψ_1 ≈ 0.0
-    @test wigner(ket2dm(ψ_0), 0.0, 0.0) ≈ -0.636619772367581382432888403855 atol = 1.0e-4
+    @test wigner(ket2dm(ψ_0), 0.0, 0.0) ≈ 0.636619772367581382432888403855 atol = 1.0e-4
 end
 
 @testset "genlaguerre" begin
