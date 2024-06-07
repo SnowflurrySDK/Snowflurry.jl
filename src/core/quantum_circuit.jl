@@ -1448,10 +1448,10 @@ function assert_qubit_mapping_is_valid(
     if sorted_keys != sorted_values
         throw(ErrorException("the qubit mapping is invalid"))
     end
-    if last(sorted_keys) < 1 || first(sorted_keys) > qubit_count
+    if maximum(sorted_keys) > qubit_count
         throw(
             ErrorException(
-                "the qubit mapping has a value that does not fit in the " * "circuit",
+                "the qubit mapping has a key or value that exceeds the circuit qubitCount",
             ),
         )
     end
