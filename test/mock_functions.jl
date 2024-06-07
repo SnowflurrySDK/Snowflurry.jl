@@ -228,3 +228,23 @@ function stub_request_checker_sequence(request_checkers::Vector{Function})
         return request_checkers[idx](args...; kwargs...)
     end
 end
+
+yukon_requestor_with_realm = MockRequestor(
+    stub_request_checker_sequence([
+        function (args...; kwargs...)
+            return stubMetadataResponse(yukonMetadata)
+        end,
+        make_request_checker(expected_realm, expected_empty_queries),
+    ]),
+    make_post_checker(expected_json_yukon, expected_realm),
+)
+
+yamaska_requestor_with_realm = MockRequestor(
+    stub_request_checker_sequence([
+        function (args...; kwargs...)
+            return stubMetadataResponse(yamaskaMetadata)
+        end,
+        make_request_checker(expected_realm, expected_empty_queries),
+    ]),
+    make_post_checker(expected_json_yamaska, expected_realm),
+)

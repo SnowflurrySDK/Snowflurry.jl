@@ -268,7 +268,7 @@ Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -322,10 +322,10 @@ the histogram of the job results, as computed on the `QPU`.
 
 
 ```jldoctest
-julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
+julia> jobID = submit_job(submit_job_client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
-julia> get_status(client, jobID)
+julia> get_status(submit_job_client, jobID)
 (Status: SUCCEEDED
 , Dict("001" => 100))
 

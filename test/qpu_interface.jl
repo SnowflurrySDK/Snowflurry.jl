@@ -29,32 +29,12 @@ yukon_requestor = MockRequestor(
     make_post_checker(expected_json_yukon, expected_realm),
 )
 
-yukon_requestor_with_realm = MockRequestor(
-    stub_request_checker_sequence([
-        function (args...; kwargs...)
-            return stubMetadataResponse(yukonMetadata)
-        end,
-        make_request_checker(expected_realm, expected_empty_queries),
-    ]),
-    make_post_checker(expected_json_yukon, expected_realm),
-)
-
 yamaska_requestor = MockRequestor(
     make_request_checker(expected_realm, expected_empty_queries),
     make_post_checker(
         make_expected_json(Snowflurry.AnyonYamaskaMachineName),
         expected_realm,
     ),
-)
-
-yamaska_requestor_with_realm = MockRequestor(
-    stub_request_checker_sequence([
-        function (args...; kwargs...)
-            return stubMetadataResponse(yamaskaMetadata)
-        end,
-        make_request_checker(expected_realm, expected_empty_queries),
-    ]),
-    make_post_checker(expected_json_yamaska, expected_realm),
 )
 
 yamaska_requestor_with_empty_realm = MockRequestor(

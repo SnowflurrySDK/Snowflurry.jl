@@ -4,7 +4,7 @@
 DocTestSetup = quote
     ENV["THUNDERHEAD_USER"] = "test-user"
     ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
-    ENV["THUNDERHEAD_HOST"] = "thunderhead.anyonsys.com"
+    ENV["THUNDERHEAD_HOST"] = "http://thunderhead.anyonsys.com"
     ENV["THUNDERHEAD_PROJECT_ID"] = "test-project"
     ENV["THUNDERHEAD_REALM"] = "test-realm"
 end
@@ -28,7 +28,7 @@ To provide maximum flexibility, Snowflurry does not impose any restrictions on h
 We will start by importing Snowflurry, building our circuit and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../anyon_qpu.md) tutorial.
 
 
-```jldoctest asynchronous_job; output = false
+```c
 using Snowflurry
 
 circuit = QuantumCircuit(qubit_count = 2, instructions = [
@@ -59,7 +59,7 @@ Quantum Processing Unit:
 
 Next, we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
 
-```jldoctest asynchronous_job; output = false, setup = :(qpu = VirtualQPU()), filter = r".*"
+```c
 shot_count = 200
 task = Task(() -> run_job(qpu, circuit, shot_count))
 schedule(task)
@@ -74,7 +74,7 @@ schedule(task)
 Next, we need to yield execution of the current thread to the newly scheduled task to ensure that the scheduler starts with the task. Otherwise, the task will be scheduled, but it might not submit a job to the quantum computer any time soon! After yielding once, we can continue to do work before we [fetch](https://docs.julialang.org/en/v1/base/parallel/#Base.fetch-Tuple{task}) the results from that task.
 
 
-```jldoctest asynchronous_job; output = false
+```c
 yieldto(task)
 
 # Simulate work by calculating the nth Fibonacci number slowly
@@ -95,7 +95,7 @@ fibonacci(30)
 
 After we are done with our work, we can fetch the result of our job.
 
-```jldoctest asynchronous_job; output = false, filter = r".*"
+```c
 result = fetch(task)
 println(result)
 

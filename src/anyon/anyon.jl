@@ -18,7 +18,7 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
+julia>  qpu = AnyonYukonQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -81,7 +81,7 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test_realm")
+julia>  qpu = AnyonYamaskaQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
@@ -89,7 +89,7 @@ Quantum Processing Unit:
    project_id:    test-project
    qubit_count:   12 
    connectivity_type:  2D-lattice
-   realm:         test_realm
+   realm:         test-realm
 ```
 """
 struct AnyonYamaskaQPU <: AbstractQPU
@@ -425,7 +425,15 @@ it is not sent to the host, and an error is throw.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client, "project_id");
+julia> qpu = AnyonYukonQPU(client, "project_id")
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    project_id
+   qubit_count:   6 
+   connectivity_type:  linear
+   realm:         test-realm
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
 Dict{String, Int64} with 1 entry:
