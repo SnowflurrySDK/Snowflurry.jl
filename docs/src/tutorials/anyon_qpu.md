@@ -14,7 +14,7 @@ The following generation of QPU, called [`AnyonYamaskaQPU`](@ref) is also implem
 
 We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials. A valid project_id is also required to submit jobs on Anyon infrastructure:
 
-```julia
+```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
 
 user = ENV["THUNDERHEAD_USER"]
@@ -43,7 +43,7 @@ Quantum Processing Unit:
 
 We can now print the `qpu` object to print further information about the hardware:
 
-```julia
+```jldoctest anyon_qpu_tutorial
 println(qpu)
 
 # output
@@ -60,24 +60,25 @@ Quantum Processing Unit:
 
 Alternatively, one can use the `get_metadata` function to obtain a `Dict` object corresponding to the QPU information:
 
-```julia
+```jldoctest anyon_qpu_tutorial
 get_metadata(qpu)
 
 # output
 
-Dict{String, Union{Int64, String, Vector{Int64}}} with 7 entries:
-  "qubit_count"       => 6
-  "generation"        => "Yukon"
-  "manufacturer"      => "Anyon Systems Inc."
-  "realm"             => "test-realm"
-  "serial_number"     => "ANYK202201"
-  "project_id"        => "test-project"
-  "connectivity_type" => "linear"
+Dict{String, Union{Int64, String, Vector{Int64}}} with 8 entries:
+  "qubit_count"        => 6
+  "generation"         => "Yukon"
+  "manufacturer"       => "Anyon Systems Inc."
+  "realm"              => "test-realm"
+  "serial_number"      => "ANYK202201"
+  "project_id"         => "test-project"
+  "connectivity_type"  => "linear"
+  "excluded_positions" => Int64[]
 ```
 
 We now continue to build a small circuit to create a Bell state as was presented in the previous tutorials:
 
-```julia
+```jldoctest anyon_qpu_tutorial; output = true
 c = QuantumCircuit(qubit_count = 2)
 push!(c, hadamard(1), control_x(1, 2), readout(1, 1), readout(2, 2))
 # output
@@ -116,7 +117,7 @@ Snowflurry is designed to allow users to design and use their own transpilers fo
 
 Let's see how we can transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
 
-```julia
+```jldoctest anyon_qpu_tutorial; output = false
 transpiler = get_transpiler(qpu)
 
 # output
