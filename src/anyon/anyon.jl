@@ -221,7 +221,7 @@ function assert_expected_entry(
     expected_value::Any,
 )
     @assert haskey(metadata, expected_key) "key \"$expected_key\" missing from returned metadata"
-    @assert metadata[expected_key] == expected_value "expected: $expected_value, received $(metadata[expected_key]) in returned metadata key $(expected_key)"
+    @assert metadata[expected_key] == expected_value "expected: \"$expected_value\", received \"$(metadata[expected_key])\" in returned metadata key \"$(expected_key)\""
 end
 
 function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
@@ -251,9 +251,6 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         assert_expected_entry(machineMetadata, "bitCount", 6)
         assert_expected_entry(machineMetadata, "connectivity", "linear")
 
-        @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
-        @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : $(machineMetadata["status"])"
-
         generation = "Yukon"
         serial_number = ""
     else
@@ -264,11 +261,11 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         assert_expected_entry(machineMetadata, "bitCount", 12)
         assert_expected_entry(machineMetadata, "connectivity", "lattice")
 
-        @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
-        @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : $(machineMetadata["status"])"
-
         generation = "Yamaska"
     end
+
+    @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
+    @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : \"$(machineMetadata["status"])\""
 
     if haskey(machineMetadata, "metadata")
         if haskey(machineMetadata["metadata"], "Serial Number")
