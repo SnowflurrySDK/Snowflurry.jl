@@ -243,6 +243,7 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     @assert length(body) == 1 "invalid server response, should only return metadata for a single machine"
 
     machineMetadata = body[1]
+    serial_number = ""
 
     if qpu isa AnyonYukonQPU
         assert_expected_entry(machineMetadata, "name", "yukon")
@@ -252,7 +253,6 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         assert_expected_entry(machineMetadata, "connectivity", "linear")
 
         generation = "Yukon"
-        serial_number = ""
     else
         # qpu isa AnyonYamaskaQPU
         assert_expected_entry(machineMetadata, "name", "yamaska")

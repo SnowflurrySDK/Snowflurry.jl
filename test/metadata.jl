@@ -121,6 +121,32 @@ end
             @test_throws AssertionError(
                 "cannot submit jobs to: $(Snowflurry.get_machine_name(q)); current status is : \"offline\"",
             ) get_metadata(q)
+
+            # missing serial number does not throw error
+            metadata = JSON.parse(metadataStr)
+            delete!(metadata[1]["metadata"], "Serial Number")
+            metadata_with_no_serial_number = JSON.json(metadata)
+
+            requestor = MockRequestor(
+                stub_response_sequence([
+                    stubMetadataResponse(metadata_with_no_serial_number),
+                ]),
+                make_post_checker(""),
+            )
+            q = qpu(
+                Client(
+                    host = expected_host,
+                    user = expected_user,
+                    access_token = expected_access_token,
+                    requestor = requestor,
+                    realm = expected_realm,
+                ),
+                expected_project_id,
+                status_request_throttle = no_throttle,
+            )
+
+            @test haskey(get_metadata(q), "serial_number")
+            @test get_metadata(q)["serial_number"] == ""
         end
     end
 end
