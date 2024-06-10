@@ -215,6 +215,15 @@ set_of_native_gates = [
 
 const PATH_MACHINES = "machines"
 
+function assert_expected_entry(
+    metadata::Dict{String,Any},
+    expected_key::String,
+    expected_value::Any,
+)
+    @assert haskey(metadata, expected_key) "key \"$expected_key\" missing from returned metadata"
+    @assert metadata[expected_key] == expected_value "expected: $expected_value, received $(metadata[expected_key]) in returned metadata key $(expected_key)"
+end
+
 function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
 
     path_url = get_host(client) * "/" * PATH_MACHINES
@@ -235,12 +244,36 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
 
     machineMetadata = body[1]
 
-    generation = "Yukon"
-    serial_number = "ANYK202201"
+    if qpu isa AnyonYukonQPU
+        assert_expected_entry(machineMetadata, "name", "yukon")
+        assert_expected_entry(machineMetadata, "type", "quantum-computer")
+        assert_expected_entry(machineMetadata, "qubitCount", 6)
+        assert_expected_entry(machineMetadata, "bitCount", 6)
+        assert_expected_entry(machineMetadata, "connectivity", "linear")
 
-    if qpu isa AnyonYamaskaQPU
+        @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
+        @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : $(machineMetadata["status"])"
+
+        generation = "Yukon"
+        serial_number = ""
+    else
+        # qpu isa AnyonYamaskaQPU
+        assert_expected_entry(machineMetadata, "name", "yamaska")
+        assert_expected_entry(machineMetadata, "type", "quantum-computer")
+        assert_expected_entry(machineMetadata, "qubitCount", 12)
+        assert_expected_entry(machineMetadata, "bitCount", 12)
+        assert_expected_entry(machineMetadata, "connectivity", "lattice")
+
+        @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
+        @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : $(machineMetadata["status"])"
+
         generation = "Yamaska"
-        serial_number = "ANYK202301"
+    end
+
+    if haskey(machineMetadata, "metadata")
+        if haskey(machineMetadata["metadata"], "Serial Number")
+            serial_number = machineMetadata["metadata"]["Serial Number"]
+        end
     end
 
     output = Metadata(
