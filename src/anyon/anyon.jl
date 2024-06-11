@@ -2,7 +2,6 @@ using Snowflurry
 
 const AnyonYukonConnectivity = LineConnectivity(6)
 const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
-const AnyonYamaska6Connectivity = LineConnectivity(6)
 
 const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
 
@@ -19,7 +18,7 @@ consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)).
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
+julia>  qpu = AnyonYukonQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -82,7 +81,7 @@ consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`]
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test_realm")
+julia>  qpu = AnyonYamaskaQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
@@ -90,7 +89,7 @@ Quantum Processing Unit:
    project_id:    test-project
    qubit_count:   12 
    connectivity_type:  2D-lattice
-   realm:         test_realm
+   realm:         test-realm
 ```
 """
 struct AnyonYamaskaQPU <: AbstractQPU
@@ -138,87 +137,15 @@ struct AnyonYamaskaQPU <: AbstractQPU
     end
 end
 
-"""
-    AnyonYamaska6QPU <: AbstractQPU
-
-A data structure to represent an Anyon System's Yamaska generation QPU,
-consisting of 24 qubits in a 2D lattice arrangement but configured to act like
-a 6 qubit device with linear connectivity.
-# Fields
-- `client                  ::Client` -- Client to the QPU server.
-- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
-- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
-
-# Example
-```jldoctest
-julia>  qpu = AnyonYamaska6QPU(host = "example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test_realm")
-Quantum Processing Unit:
-   manufacturer:  Anyon Systems Inc.
-   generation:    Yamaska
-   serial_number: ANYK202301-6
-   project_id:    test-project
-   qubit_count:   6
-   connectivity_type:  linear
-   realm:         test_realm
-```
-"""
-struct AnyonYamaska6QPU <: AbstractQPU
-    client::Client
-    status_request_throttle::Function
-    connectivity::LineConnectivity
-    project_id::String
-    metadata::Metadata
-
-    function AnyonYamaska6QPU(
-        client::Client,
-        project_id::String;
-        status_request_throttle = default_status_request_throttle,
-    )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
-        new(
-            client,
-            status_request_throttle,
-            AnyonYamaska6Connectivity,
-            project_id,
-            Metadata(),
-        )
-    end
-    function AnyonYamaska6QPU(;
-        host::String,
-        user::String,
-        access_token::String,
-        project_id::String,
-        realm::String = "",
-        status_request_throttle = default_status_request_throttle,
-    )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
-
-        new(
-            Client(host = host, user = user, access_token = access_token, realm = realm),
-            status_request_throttle,
-            AnyonYamaska6Connectivity,
-            project_id,
-            Metadata(),
-        )
-    end
-end
-
-UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU,AnyonYamaska6QPU}
+UnionAnyonQPU = Union{AnyonYukonQPU,AnyonYamaskaQPU}
 
 const AnyonYukonMachineName = "yukon"
 const AnyonYamaskaMachineName = "yamaska"
-const AnyonYamaska6MachineName = "yamaska6"
 const AnyonVirtualMachineName = "virtual"
 
-get_machine_name(::AnyonYukonQPU) = AnyonYukonMachineName
-get_machine_name(::AnyonYamaskaQPU) = AnyonYamaskaMachineName
-get_machine_name(::AnyonYamaska6QPU) = AnyonYamaska6MachineName
-get_machine_name(::VirtualQPU) = AnyonVirtualMachineName
+get_machine_name(::AnyonYukonQPU)::String = AnyonYukonMachineName
+get_machine_name(::AnyonYamaskaQPU)::String = AnyonYamaskaMachineName
+get_machine_name(::VirtualQPU)::String = AnyonVirtualMachineName
 
 get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
@@ -231,7 +158,7 @@ get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 function get_connectivity(qpu::UnionAnyonQPU)
     md = get_metadata(qpu)
 
-    if haskey(md, "excluded_positions")
+    if length(md["excluded_positions"]) > 0
         return with_excluded_positions(qpu.connectivity, md["excluded_positions"])
     end
 
@@ -286,21 +213,34 @@ set_of_native_gates = [
     ControlZ,
 ]
 
+const PATH_MACHINES = "machines"
+
 function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
 
-    # TODO: the metadata will eventually be fetched from the host server.
-    # It is hardcoded for the time being
+    path_url = get_host(client) * "/" * PATH_MACHINES
+
+    response = get_request(
+        get_requestor(client),
+        path_url,
+        client.user,
+        client.access_token,
+        get_realm(client),
+        Dict{String,String}("machineName" => get_machine_name(qpu)),
+    )
+
+    body = JSON.parse(read_response_body(response.body))
+
+    @assert length(body) > 0 "no metadata exists for machine with name $(get_machine_name(qpu))"
+    @assert length(body) == 1 "invalid server response, should only return metadata for a single machine"
+
+    machineMetadata = body[1]
 
     generation = "Yukon"
     serial_number = "ANYK202201"
-    excluded_positions = Vector{Int}()
 
     if qpu isa AnyonYamaskaQPU
         generation = "Yamaska"
         serial_number = "ANYK202301"
-    elseif qpu isa AnyonYamaska6QPU
-        generation = "Yamaska"
-        serial_number = "ANYK202301-6"
     end
 
     output = Metadata(
@@ -311,6 +251,13 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         "qubit_count" => get_num_qubits(qpu.connectivity),
         "connectivity_type" => get_connectivity_label(qpu.connectivity),
     )
+
+    if haskey(machineMetadata, "disconnectedQubits")
+        output["excluded_positions"] = convert(Vector{Int}, body[1]["disconnectedQubits"])
+        qpu.metadata["excluded_positions"] = output["excluded_positions"]
+    else
+        output["excluded_positions"] = Vector{Int}()
+    end
 
     realm = get_realm(qpu)
     if realm != ""
@@ -478,7 +425,15 @@ it is not sent to the host, and an error is throw.
 # Example
 
 ```jldoctest  
-julia> qpu = AnyonYukonQPU(client, "project_id");
+julia> qpu = AnyonYukonQPU(client, "project_id")
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    project_id
+   qubit_count:   6 
+   connectivity_type:  linear
+   realm:         test-realm
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
 Dict{String, Int64} with 1 entry:

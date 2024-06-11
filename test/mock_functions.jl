@@ -7,6 +7,9 @@ expected_access_token = "not_a_real_access_token"
 expected_project_id = "project_id"
 expected_machine_name = "machine"
 expected_realm = "test-realm"
+expected_empty_queries = Dict{String,String}()
+
+no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
 make_common_substring(machine_name) =
     "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
@@ -24,6 +27,7 @@ make_expected_json(machine_name) =
 
 expected_json_generic = make_expected_json("machine")
 expected_json_yukon = make_expected_json(Snowflurry.AnyonYukonMachineName)
+expected_json_yamaska = make_expected_json(Snowflurry.AnyonYamaskaMachineName)
 
 expected_json_non_default_bit_count =
     common_substring_yukon *
@@ -114,12 +118,16 @@ end
 
 expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
 
-function make_request_checker(input_realm::String = "")::Function
+function make_request_checker(
+    input_realm::String = "",
+    input_queries::Dict{String,String} = (),
+)::Function
     function request_checker(
         url::String,
         user::String,
         input_access_token::String,
         realm::String,
+        queries::Dict{String,String} = (),
     )
         myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
         match_obj = match(myregex, url)
@@ -129,6 +137,10 @@ function make_request_checker(input_realm::String = "")::Function
         )
         @assert realm == input_realm ("received: \n$realm, expected: \n$input_realm")
         @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
+
+        @assert input_queries == queries (
+            "received: \n$queries, expected: \n$input_queries"
+        )
 
         if !isnothing(match_obj)
             # caller is :get_status
@@ -173,6 +185,17 @@ stubCircuitSubmittedResponse() = HTTP.Response(
     body = "{\"id\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\", \"histogram\":{\"001\":100}}",
 )
 
+yukonMetadata = "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\"}]"
+
+yamaskaMetadata = "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\"}]"
+
+
+yukonMetadataWithDisconnectedQubits = "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6]}]"
+
+yamaskaMetadataWithDisconnectedQubits = "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\",\"disconnectedQubits\":[7,8,9,10,11,12]}]"
+
+stubMetadataResponse(body::String) = HTTP.Response(200, [], body = body)
+
 # Returns a function that will yield the given responses in order as it's
 # repeatedly called.
 function stub_response_sequence(response_sequence::Vector{HTTP.Response})
@@ -188,3 +211,40 @@ function stub_response_sequence(response_sequence::Vector{HTTP.Response})
         return response_sequence[idx]
     end
 end
+
+
+# Returns a function that will call the given request_checkers in order as it's
+# repeatedly called.
+function stub_request_checker_sequence(request_checkers::Vector{Function})
+    idx = 0
+
+    # Allow but ignore whatever parameters callers want because we're returning
+    # the next response regardless of what's passed.
+    return function (args...; kwargs...)
+        if idx >= length(request_checkers)
+            throw(ErrorException("too many requests; response sequence exhausted"))
+        end
+        idx += 1
+        return request_checkers[idx](args...; kwargs...)
+    end
+end
+
+yukon_requestor_with_realm = MockRequestor(
+    stub_request_checker_sequence([
+        function (args...; kwargs...)
+            return stubMetadataResponse(yukonMetadata)
+        end,
+        make_request_checker(expected_realm, expected_empty_queries),
+    ]),
+    make_post_checker(expected_json_yukon, expected_realm),
+)
+
+yamaska_requestor_with_realm = MockRequestor(
+    stub_request_checker_sequence([
+        function (args...; kwargs...)
+            return stubMetadataResponse(yamaskaMetadata)
+        end,
+        make_request_checker(expected_realm, expected_empty_queries),
+    ]),
+    make_post_checker(expected_json_yamaska, expected_realm),
+)

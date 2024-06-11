@@ -2,7 +2,6 @@
 ```@docs
 AnyonYukonQPU
 AnyonYamaskaQPU
-AnyonYamaska6QPU
 VirtualQPU
 Client
 get_host

@@ -46,7 +46,6 @@ export
     Readout,
     AnyonYukonQPU,
     AnyonYamaskaQPU,
-    AnyonYamaska6QPU,
     VirtualQPU,
     Metadata,
     Client,
@@ -278,7 +277,14 @@ using PrecompileTools
         project_id = project_id,
         realm = realm,
     )
-    transpiler = get_transpiler(qpu)
+    try
+        # returns DNS error
+        transpiler = get_transpiler(qpu)
+    catch e
+        @assert typeof(e) == HTTP.Exceptions.ConnectError "error type: $(typeof(e))"
+    end
+    transpiler =
+        Snowflurry.get_anyon_transpiler(; atol = 1e-6, connectivity = qpu.connectivity)
 
     circuit = QuantumCircuit(qubit_count = qubit_count, instructions = [readout(1, 1)])
     transpiled_circuit = transpile(transpiler, circuit)

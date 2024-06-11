@@ -328,6 +328,10 @@ end
     circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_y(2)])
     map = Dict(1 => 2)
     @test_throws ErrorException permute_qubits!(circuit, map)
+
+    circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
+    map = Dict(2 => 3, 3 => 2)
+    @test_throws ErrorException permute_qubits!(circuit, map)
 end
 
 @testset "permute_qubits" begin

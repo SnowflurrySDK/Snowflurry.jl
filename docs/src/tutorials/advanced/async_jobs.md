@@ -4,9 +4,11 @@
 DocTestSetup = quote
     ENV["THUNDERHEAD_USER"] = "test-user"
     ENV["THUNDERHEAD_API_TOKEN"] = "not-a-real-token"
-    ENV["THUNDERHEAD_HOST"] = "thunderhead.anyonsys.com"
+    ENV["THUNDERHEAD_HOST"] = "http://thunderhead.anyonsys.com"
     ENV["THUNDERHEAD_PROJECT_ID"] = "test-project"
     ENV["THUNDERHEAD_REALM"] = "test-realm"
+    include("../test/mock_functions.jl")
+    include("../test/docstest_helpers.jl")
 end
 ```
 
@@ -26,7 +28,6 @@ In `Snowflurry`, communicating with a quantum processor will [yield](https://doc
 To provide maximum flexibility, Snowflurry does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
 
 We will start by importing Snowflurry, building our circuit and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../anyon_qpu.md) tutorial.
-
 
 ```jldoctest asynchronous_job; output = false
 using Snowflurry

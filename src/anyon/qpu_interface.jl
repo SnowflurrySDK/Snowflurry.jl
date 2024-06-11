@@ -23,8 +23,14 @@ end
 
 abstract type Requestor end
 
-get_request(requestor::Requestor, ::String, ::String, ::String, ::String) =
-    throw(NotImplementedError(:get_request, requestor))
+get_request(
+    requestor::Requestor,
+    ::String,
+    ::String,
+    ::String,
+    ::String,
+    queries::Dict{String,String} = (),
+) = throw(NotImplementedError(:get_request, requestor))
 post_request(requestor::Requestor, ::String, ::String, ::String, ::String, ::String) =
     throw(NotImplementedError(:post_request, requestor))
 
@@ -107,7 +113,12 @@ get_request(
     user::String,
     access_token::String,
     realm::String,
-)::HTTP.Response = requestor.getter(url, headers = make_headers(user, access_token, realm))
+    queries::Dict{String,String} = Dict{String,String}(),
+)::HTTP.Response = requestor.getter(
+    url,
+    headers = make_headers(user, access_token, realm);
+    query = queries,
+)
 
 get_request(
     mock_requestor::MockRequestor,
@@ -115,7 +126,8 @@ get_request(
     user::String,
     access_token::String,
     realm::String,
-)::HTTP.Response = mock_requestor.request_checker(url, user, access_token, realm)
+    queries::Dict{String,String} = Dict{String,String}(),
+)::HTTP.Response = mock_requestor.request_checker(url, user, access_token, realm, queries)
 
 const error_msg_empty_project_id = "project_id cannot be empty"
 
@@ -256,7 +268,7 @@ Returns circuitID.
 # Example
 
 ```jldoctest mylabel
-julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
+julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -310,10 +322,10 @@ the histogram of the job results, as computed on the `QPU`.
 
 
 ```jldoctest
-julia> jobID = submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "machine")
+julia> jobID = submit_job(submit_job_client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
-julia> get_status(client, jobID)
+julia> get_status(submit_job_client, jobID)
 (Status: SUCCEEDED
 , Dict("001" => 100))
 
@@ -377,7 +389,7 @@ end
 
 abstract type AbstractQPU end
 
-get_metadata(qpu::AbstractQPU) = throw(NotImplementedError(:get_metadata, qpu))
+get_metadata(qpu::AbstractQPU)::Metadata = throw(NotImplementedError(:get_metadata, qpu))
 
 is_native_instruction(::AbstractInstruction, c::AbstractConnectivity) =
     throw(NotImplementedError(:is_native_instruction, c))
@@ -406,7 +418,7 @@ Quantum Simulator:
 """
 struct VirtualQPU <: AbstractQPU end
 
-get_metadata(qpu::VirtualQPU) =
+get_metadata(::VirtualQPU)::Metadata =
     Metadata("developers" => "Anyon Systems Inc.", "package" => "Snowflurry.jl")
 
 get_transpiler(::VirtualQPU) = SequentialTranspiler([
@@ -433,15 +445,7 @@ read_response_body(body::Base.CodeUnits{UInt8,String}) =
 function read_response_body(body::Vector{UInt8})::String
     # convert response body from binary to ASCII
     read_buffer = IOBuffer(reinterpret(UInt8, body))
-    body_string = String(readuntil(read_buffer, 0x00))
-
-    if length(body_string) != length(body)
-        throw(
-            ArgumentError(
-                "Server returned an erroneous message, with nul terminator before end of string.",
-            ),
-        )
-    end
+    body_string = read(read_buffer, String)
 
     return body_string
 end

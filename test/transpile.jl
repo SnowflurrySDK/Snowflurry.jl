@@ -671,11 +671,19 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of native gates" begin
-    qpu = AnyonYukonQPU(;
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        project_id = expected_project_id,
+    requestor = MockRequestor(
+        stub_response_sequence([stubMetadataResponse(yukonMetadata)]),
+        make_post_checker(expected_json_yukon),
+    )
+    qpu = AnyonYukonQPU(
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
+        status_request_throttle = no_throttle,
     )
 
     qubit_count = 2
@@ -746,11 +754,19 @@ end
 end
 
 @testset "AnyonYukonQPU: sequential transpilation" begin
-    qpu = AnyonYukonQPU(;
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        project_id = expected_project_id,
+    requestor = MockRequestor(
+        stub_response_sequence([stubMetadataResponse(yukonMetadata)]),
+        make_post_checker(expected_json_yukon),
+    )
+    qpu = AnyonYukonQPU(
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
+        status_request_throttle = no_throttle,
     )
     transpiler = get_transpiler(qpu)
 
@@ -771,11 +787,19 @@ end
 end
 
 @testset "AnyonYukonQPU: transpilation of a Ghz circuit" begin
-    qpu = AnyonYukonQPU(;
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        project_id = expected_project_id,
+    requestor = MockRequestor(
+        stub_response_sequence([stubMetadataResponse(yukonMetadata)]),
+        make_post_checker(expected_json_yukon),
+    )
+    qpu = AnyonYukonQPU(
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
+        status_request_throttle = no_throttle,
     )
 
     qubit_count = 5
@@ -862,15 +886,6 @@ end
             ),
             # testing with LatticeConnectivity(6,4) induces massive demand on simulate(), with 24-qubit Kets
             Snowflurry.LatticeConnectivity(3, 4),
-        )
-        (
-            AnyonYamaska6QPU(;
-                host = expected_host,
-                user = expected_user,
-                access_token = expected_access_token,
-                project_id = expected_project_id,
-            ),
-            Snowflurry.AnyonYamaska6Connectivity,
         )
     ]
 
