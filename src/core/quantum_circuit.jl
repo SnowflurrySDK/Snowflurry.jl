@@ -631,7 +631,7 @@ gates_display_symbols = Dict(
     RotationX => ["Rx(%s)", "theta"],
     RotationY => ["Ry(%s)", "theta"],
     RotationZ => ["Rz(%s)", "lambda"],
-    PhaseShift => ["P(%s)", "lambda"],
+    PhaseShift => ["P(%s)", "phi"],
     Universal => ["U(θ=%s,ϕ=%s,λ=%s)", "theta", "phi", "lambda"],
     ControlZ => [control_display_symbol, "Z"],
     ControlX => [control_display_symbol, "X"],
