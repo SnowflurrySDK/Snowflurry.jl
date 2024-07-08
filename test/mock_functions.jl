@@ -185,13 +185,25 @@ stubCircuitSubmittedResponse() = HTTP.Response(
     body = "{\"id\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\", \"histogram\":{\"001\":100}}",
 )
 
-yukonMetadata = "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\"}]"
+function makeMetadataResponseJSON(machineMetadata::String)::String
+    return "{\"items\":$(machineMetadata),\"total\":1,\"skipped\":0}"
+end
 
-yamaskaMetadata = "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\"}]"
+yukonMetadata = makeMetadataResponseJSON(
+    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\"}]",
+)
 
-yukonMetadataWithDisconnectedQubits = "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6]}]"
+yamaskaMetadata = makeMetadataResponseJSON(
+    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\"}]",
+)
 
-yamaskaMetadataWithDisconnectedQubits = "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\",\"disconnectedQubits\":[7,8,9,10,11,12]}]"
+yukonMetadataWithDisconnectedQubits = makeMetadataResponseJSON(
+    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6]}]",
+)
+
+yamaskaMetadataWithDisconnectedQubits = makeMetadataResponseJSON(
+    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"Calcul Québec\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"lattice\",\"disconnectedQubits\":[7,8,9,10,11,12]}]",
+)
 
 stubMetadataResponse(body::String) = HTTP.Response(200, [], body = body)
 

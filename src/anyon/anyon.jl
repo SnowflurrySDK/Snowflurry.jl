@@ -237,12 +237,18 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         Dict{String,String}("machineName" => get_machine_name(qpu)),
     )
 
-    body = JSON.parse(read_response_body(response.body))
+    raw_body = read_response_body(response.body)
 
-    @assert length(body) > 0 "no metadata exists for machine with name $(get_machine_name(qpu))"
-    @assert length(body) == 1 "invalid server response, should only return metadata for a single machine"
+    @assert length(raw_body)>2 "cannot parse response: $raw_body"
 
-    machineMetadata = body[1]
+    body = JSON.parse(raw_body)
+
+    @assert body["total"] == 1 "invalid server response, should only return metadata for a single machine. Received: $body"
+
+    @assert length(body["items"]) > 0 "no metadata exists for machine with name $(get_machine_name(qpu))"
+    @assert length(body["items"]) == 1 "invalid server response, should only return metadata for a single machine. Received: $body"
+
+    machineMetadata = body["items"][1]
     serial_number = ""
 
     if qpu isa AnyonYukonQPU
@@ -283,7 +289,8 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     )
 
     if haskey(machineMetadata, "disconnectedQubits")
-        output["excluded_positions"] = convert(Vector{Int}, body[1]["disconnectedQubits"])
+        output["excluded_positions"] =
+            convert(Vector{Int}, machineMetadata["disconnectedQubits"])
         qpu.metadata["excluded_positions"] = output["excluded_positions"]
     else
         output["excluded_positions"] = Vector{Int}()
