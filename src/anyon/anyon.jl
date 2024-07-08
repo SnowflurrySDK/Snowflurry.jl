@@ -239,7 +239,7 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
 
     raw_body = read_response_body(response.body)
 
-    @assert length(raw_body)>2 "cannot parse response: $raw_body"
+    @assert length(raw_body) > 2 "cannot parse response: $raw_body"
 
     body = JSON.parse(raw_body)
 
