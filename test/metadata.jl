@@ -61,19 +61,17 @@ include("mock_functions.jl")
 end
 
 @testset "Construct AnyonYukonQPU with faulty metadata object" begin
-    faultyMetadataList=[
+    faultyMetadataList = [
         "{\"items\":[],\"total\":0,\"skipped\":0}",
         "{\"items\":[{\"name\":\"first-machine\"},{\"name\":\"second-machine\"}],\"total\":2,\"skipped\":0}",
         "{\"items\":[],\"total\":1,\"skipped\":0}",
         "{}",
         "",
     ]
-    
+
     for metadata in faultyMetadataList
         requestor = MockRequestor(
-            stub_response_sequence([
-                stubMetadataResponse(metadata),
-            ]),
+            stub_response_sequence([stubMetadataResponse(metadata)]),
             make_post_checker(""),
         )
         qpu = AnyonYukonQPU(
