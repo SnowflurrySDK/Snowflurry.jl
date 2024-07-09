@@ -296,11 +296,15 @@ function submit_job(
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "id") (
-        "Server returned an invalid response, without a job ID field."
+    @assert haskey(body, "job") (
+        "Server returned an invalid response, without a job field. Received: $body"
     )
 
-    return body["id"]
+    @assert haskey(body["job"], "id") (
+        "Server returned an invalid response, without a job id field. Received: $body"
+    )
+
+    return body["job"]["id"]
 end
 
 """
@@ -345,45 +349,48 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
 
     body = JSON.parse(read_response_body(response.body))
 
-    @assert haskey(body, "status") "missing \"status\" key in body: $body"
-    @assert haskey(body["status"], "type") "missing \"type\" key in body: $body"
+    @assert haskey(body, "job") "Invalid server response: missing \"job\" field in body: $body"
 
-    if !(body["status"]["type"] in possible_status_list)
+    job = body["job"]
+
+    @assert haskey(job, "status") "Invalid server response: missing \"status\" key in body: $job"
+    @assert haskey(job["status"], "type") "Invalid server response: missing \"type\" key in body: $job"
+
+    if !(job["status"]["type"] in possible_status_list)
         throw(
             ArgumentError(
-                "Server returned unrecognized status type: $(body["status"]["type"])",
+                "Server returned unrecognized status type: $(job["status"]["type"])",
             ),
         )
     end
 
-    if body["status"]["type"] == failed_status
-        message = if haskey(body["status"], "message")
-            body["status"]["message"]
+    if job["status"]["type"] == failed_status
+        message = if haskey(job["status"], "message")
+            job["status"]["message"]
         else
-            "no failure information available. raw response: '$(string(body))'"
+            "no failure information available. raw response: '$(string(job))'"
         end
         return Status(type = failed_status, message = message), Dict{String,Int}()
 
-    elseif body["status"]["type"] == cancelled_status
-        return Status(type = body["status"]["type"]), Dict{String,Int}()
+    elseif job["status"]["type"] == cancelled_status
+        return Status(type = job["status"]["type"]), Dict{String,Int}()
 
-    elseif body["status"]["type"] == queued_status ||
-           body["status"]["type"] == running_status
-        return Status(type = body["status"]["type"]), Dict{String,Int}()
+    elseif job["status"]["type"] == queued_status || job["status"]["type"] == running_status
+        return Status(type = job["status"]["type"]), Dict{String,Int}()
 
     else
-        @assert body["status"]["type"] == succeeded_status
-        @assert haskey(body, "result") "missing \"result\" key in body: $body"
+        @assert job["status"]["type"] == succeeded_status
+        @assert haskey(body, "result") "Invalid server response: missing \"result\" key in body: $body"
         result = body["result"]
 
         # convert from Dict{String,String} to Dict{String,Int}
         histogram = Dict{String,Int}()
-        @assert haskey(result, "histogram") "missing \"histogram\" key in body: $body"
+        @assert haskey(result, "histogram") "Invalid server response: missing \"histogram\" key in body: $result"
         for (key, val) in result["histogram"]
             histogram[key] = round(Int, val)
         end
 
-        return Status(type = body["status"]["type"]), histogram
+        return Status(type = job["status"]["type"]), histogram
     end
 end
 
