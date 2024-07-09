@@ -11,31 +11,54 @@ expected_empty_queries = Dict{String,String}()
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
+make_job_str(machine_name) =
+    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\"}"
+
 make_common_substring(machine_name) =
-    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"circuit\":{\"operations\":"
+    "{\"job\":$(make_job_str(machine_name)),\"circuit\":{\"operations\":"
 
-common_substring_yukon = make_common_substring(Snowflurry.AnyonYukonMachineName)
-common_substring_yamaska = make_common_substring(Snowflurry.AnyonYamaskaMachineName)
+function make_expected_job_submit_response(
+    machine_name::String,
+    operations_str::String,
+)::String
+    job_str = make_job_str(machine_name)
+    return job_str[1:length(job_str)-1] * ",\"circuit\":{\"operations\":" * operations_str
+end
 
-make_expected_json(machine_name) =
-    make_common_substring(machine_name) *
+common_substring_yukon =
+    make_expected_job_submit_response(Snowflurry.AnyonYukonMachineName, "")
+common_substring_yamaska =
+    make_expected_job_submit_response(Snowflurry.AnyonYamaskaMachineName, "")
+
+expected_operations_substr =
     "[" *
     "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
     "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}," *
     "{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}" *
     "],\"bitCount\":3,\"qubitCount\":3}}"
 
-expected_json_generic = make_expected_json("machine")
-expected_json_yukon = make_expected_json(Snowflurry.AnyonYukonMachineName)
-expected_json_yamaska = make_expected_json(Snowflurry.AnyonYamaskaMachineName)
+make_expected_json(machine_name) =
+    make_common_substring(machine_name) * expected_operations_substr
 
-expected_json_non_default_bit_count =
-    common_substring_yukon *
+expected_json_generic =
+    make_expected_job_submit_response(expected_machine_name, expected_operations_substr)
+expected_json_yukon = make_expected_job_submit_response(
+    Snowflurry.AnyonYukonMachineName,
+    expected_operations_substr,
+)
+expected_json_yamaska = make_expected_job_submit_response(
+    Snowflurry.AnyonYamaskaMachineName,
+    expected_operations_substr,
+)
+
+expected_json_non_default_bit_count = make_expected_job_submit_response(
+    Snowflurry.AnyonYukonMachineName,
     "[" *
     "{\"parameters\":{},\"type\":\"x\",\"qubits\":[2]}," *
     "{\"parameters\":{},\"type\":\"cz\",\"qubits\":[1,0]}," *
     "{\"bits\":[0],\"type\":\"readout\",\"qubits\":[0]}" *
-    "],\"bitCount\":7,\"qubitCount\":3}}"
+    "],\"bitCount\":7,\"qubitCount\":3}}",
+)
 
 expected_json_last_qubit_Yukon =
     common_substring_yukon *
@@ -116,7 +139,7 @@ function make_post_checker_doctests(input_realm::String = "")::Function
     end
 end
 
-expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
+expected_get_status_response_body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"}},\"result\":{\"histogram\":{\"001\":100}}}"
 
 function make_request_checker(
     input_realm::String = "",
@@ -155,13 +178,13 @@ function stubStatusResponse(status::String)::HTTP.Response
         HTTP.Response(
             200,
             [],
-            body = "{\"status\":{\"type\":\"$status\"}, \"result\":{\"histogram\":{\"001\":100}}}",
+            body = "{\"job\":{\"status\":{\"type\":\"$status\"}}, \"result\":{\"histogram\":{\"001\":100}}}",
         )
     else
         HTTP.Response(
             200,
             [],
-            body = "{\"status\":{\"type\":\"$status\"}, \"result\":{\"histogram\":{}}}",
+            body = "{\"job\":{\"status\":{\"type\":\"$status\"}}, \"result\":{\"histogram\":{}}}",
         )
     end
 end
@@ -169,7 +192,7 @@ end
 stubFailedStatusResponse() = HTTP.Response(
     200,
     [],
-    body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}",
+    body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}}",
 )
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
 stubFailureResult() =
@@ -177,12 +200,12 @@ stubFailureResult() =
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],
-    body = "{\"status\":{\"type\":\"$(Snowflurry.cancelled_status)\"}}",
+    body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.cancelled_status)\"}}}",
 )
 stubCircuitSubmittedResponse() = HTTP.Response(
     200,
     [],
-    body = "{\"id\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\", \"histogram\":{\"001\":100}}",
+    body = "{\"job\":{\"id\":\"8050e1ed-5e4c-4089-ab53-cccda1658cd0\"}, \"histogram\":{\"001\":100}}",
 )
 
 function makeMetadataResponseJSON(machineMetadata::String)::String
