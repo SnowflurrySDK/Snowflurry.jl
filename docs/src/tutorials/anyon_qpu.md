@@ -147,7 +147,7 @@ The final circuit `c_transpiled` is now ready to be submitted to the QPU:
 
 ```julia
 shot_count = 200
-result = run_job(qpu, c_transpiled, shot_count)
+result, qpu_time = run_job(qpu, c_transpiled, shot_count)
 println(result)
 ```
 which should print something like:

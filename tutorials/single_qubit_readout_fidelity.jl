@@ -19,6 +19,6 @@ qpu = AnyonYukonQPU(
 )
 
 shot_count = 200
-result = run_job(qpu, circuit, shot_count)
+result, qpu_time = run_job(qpu, circuit, shot_count)
 
 println(result)

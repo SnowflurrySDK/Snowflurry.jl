@@ -423,8 +423,8 @@ transpiler, or any other transpiler passed as a key-word argument.
 The transpiled circuit is then run on the AnyonYukonQPU, repeatedly for the
 specified number of repetitions (shot_count).
 
-Returns the histogram of the completed circuit calculations, or an error
-message.
+Returns the histogram of the completed circuit calculations, along with the job's 
+execution time on the `QPU` (in milliseconds), or an error message.
 
 # Example
 
@@ -432,8 +432,7 @@ message.
 julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 542)
 
 ```
 """
@@ -442,7 +441,7 @@ function transpile_and_run_job(
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler = get_transpiler(qpu),
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -454,7 +453,8 @@ end
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
 number of repetitions (shot_count).
-Returns the histogram of the completed circuit calculations, or an error
+Returns the histogram of the completed circuit calculations, along with the 
+simulation's execution time (in milliseconds) or an error
 message.
 If the circuit received in invalid - for instance, it is missing a `Readout` -
 it is not sent to the host, and an error is throw.
@@ -473,8 +473,7 @@ Quantum Processing Unit:
    realm:         test-realm
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 542)
 
 ```
 """
@@ -482,7 +481,7 @@ function run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
     client = get_client(qpu)
 
@@ -500,7 +499,8 @@ function run_job(
     jobID =
         submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
-    status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
+    status, histogram, qpu_time =
+        poll_for_results(client, jobID, qpu.status_request_throttle)
 
     status_type = get_status_type(status)
 
@@ -512,7 +512,7 @@ function run_job(
         @assert status_type == succeeded_status (
             "Server returned an unrecognized status type: $status_type"
         )
-        return histogram
+        return histogram, qpu_time
     end
 end
 
@@ -523,14 +523,14 @@ function poll_for_results(
     client::Client,
     jobID::String,
     request_throttle::Function,
-)::Tuple{Status,Dict{String,Int}}
-    (status, histogram) = get_status(client, jobID)
+)::Tuple{Status,Dict{String,Int},Int}
+    (status, histogram, qpu_time) = get_status(client, jobID)
     while get_status_type(status) in [queued_status, running_status]
         request_throttle()
-        (status, histogram) = get_status(client, jobID)
+        (status, histogram, qpu_time) = get_status(client, jobID)
     end
 
-    return status, histogram
+    return status, histogram, qpu_time
 end
 
 """
