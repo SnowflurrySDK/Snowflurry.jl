@@ -102,7 +102,7 @@ for let's say 100 shots.
 
 ```julia
 shots_count = 100
-result = run_job(qpu_v, c, shots_count)
+result, qpu_time = run_job(qpu_v, c, shots_count)
 ```
 The `result` object is a `Dict{String, Int64}` that summarizes how many times each state was measured in the shots run on the QPU. 
 **It contains only non-zero entries.**

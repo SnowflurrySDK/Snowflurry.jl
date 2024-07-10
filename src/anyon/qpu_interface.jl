@@ -320,7 +320,8 @@ Returns status::Dict containing status["type"]:
 In the case of status["type"]=="FAILED", the server error is contained in status["message"].
 
 In the case of status["type"]=="SUCCEEDED", the second element in the return Tuple is 
-the histogram of the job results, as computed on the `QPU`.
+the histogram of the job results, as computed on the `QPU`, and the third element is the 
+execution time on the `QPU`, in milliseconds. 
 
 # Example
 
@@ -331,11 +332,12 @@ julia> jobID = submit_job(submit_job_client, QuantumCircuit(qubit_count = 3, ins
 
 julia> get_status(submit_job_client, jobID)
 (Status: SUCCEEDED
-, Dict("001" => 100))
+, Dict("001" => 100)
+, 421)
 
 ```
 """
-function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String,Int}}
+function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String,Int},Int}
 
     path_url = get_host(client) * "/" * path_jobs * "/" * "$circuitID"
 
@@ -370,13 +372,13 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
         else
             "no failure information available. raw response: '$(string(job))'"
         end
-        return Status(type = failed_status, message = message), Dict{String,Int}()
+        return Status(type = failed_status, message = message), Dict{String,Int}(), 0
 
     elseif job["status"]["type"] == cancelled_status
-        return Status(type = job["status"]["type"]), Dict{String,Int}()
+        return Status(type = job["status"]["type"]), Dict{String,Int}(), 0
 
     elseif job["status"]["type"] == queued_status || job["status"]["type"] == running_status
-        return Status(type = job["status"]["type"]), Dict{String,Int}()
+        return Status(type = job["status"]["type"]), Dict{String,Int}(), 0
 
     else
         @assert job["status"]["type"] == succeeded_status
@@ -390,7 +392,13 @@ function get_status(client::Client, circuitID::String)::Tuple{Status,Dict{String
             histogram[key] = round(Int, val)
         end
 
-        return Status(type = job["status"]["type"]), histogram
+        @assert haskey(job, "qpuTimeMilliSeconds") "Invalid server response: missing \"qpuTimeMilliSeconds\" key in body: $job"
+
+        qpu_time = job["qpuTimeMilliSeconds"]
+        @assert typeof(qpu_time) == Int "Invalid server response: \"qpuTimeMilliSeconds\" value: $(job["qpuTimeMilliSeconds"]) is not an integer"
+        @assert qpu_time > 0 "Invalid server response: \"qpuTimeMilliSeconds\" value: $(job["qpuTimeMilliSeconds"]) is not a positive integer"
+
+        return Status(type = job["status"]["type"]), histogram, qpu_time
     end
 end
 
@@ -481,7 +489,7 @@ function transpile_and_run_job(
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler = get_transpiler(qpu),
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -506,12 +514,15 @@ Dict{String, Int64} with 1 entry:
 ```
 """
 function run_job(
-    qpu::VirtualQPU,
+    ::VirtualQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
+    start_time_ns = time()
     data = simulate_shots(circuit, shot_count)
+    end_time_ns = time()
+    elasped_time_ms = Int(round(Float64(end_time_ns - start_time_ns) * 1e3))
 
     histogram = Dict{String,Int}()
 
@@ -523,5 +534,5 @@ function run_job(
         end
     end
 
-    return histogram
+    return histogram, elasped_time_ms
 end
