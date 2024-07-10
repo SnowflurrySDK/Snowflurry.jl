@@ -423,8 +423,8 @@ transpiler, or any other transpiler passed as a key-word argument.
 The transpiled circuit is then run on the AnyonYukonQPU, repeatedly for the
 specified number of repetitions (shot_count).
 
-Returns the histogram of the completed circuit calculations, or an error
-message.
+Returns the histogram of the completed circuit calculations, along with the job's 
+execution time on the `QPU` (in milliseconds), or an error message.
 
 # Example
 
@@ -432,8 +432,7 @@ message.
 julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 542)
 
 ```
 """
@@ -454,7 +453,8 @@ end
 
 Run a circuit computation on a `QPU` service, repeatedly for the specified
 number of repetitions (shot_count).
-Returns the histogram of the completed circuit calculations, or an error
+Returns the histogram of the completed circuit calculations, along with the 
+simulation's execution time (in milliseconds) or an error
 message.
 If the circuit received in invalid - for instance, it is missing a `Readout` -
 it is not sent to the host, and an error is throw.
@@ -473,8 +473,7 @@ Quantum Processing Unit:
    realm:         test-realm
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 542)
 
 ```
 """

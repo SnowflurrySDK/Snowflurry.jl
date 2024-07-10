@@ -321,7 +321,7 @@ In the case of status["type"]=="FAILED", the server error is contained in status
 
 In the case of status["type"]=="SUCCEEDED", the second element in the return Tuple is 
 the histogram of the job results, as computed on the `QPU`, and the third element is the 
-execution time on the `QPU`, in milliseconds. 
+job's execution time on the `QPU`, in milliseconds. 
 
 # Example
 
@@ -332,8 +332,7 @@ julia> jobID = submit_job(submit_job_client, QuantumCircuit(qubit_count = 3, ins
 
 julia> get_status(submit_job_client, jobID)
 (Status: SUCCEEDED
-, Dict("001" => 100)
-, 421)
+, Dict("001" => 100), 542)
 
 ```
 """
@@ -475,12 +474,11 @@ number of repetitions (shot_count). Returns the histogram of the
 completed circuit calculations, or an error message.
 
 # Example
-```jldoctest 
+```jldoctest filter = r"[0-9]+"
 julia> qpu=VirtualQPU();
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]) ,100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 117)
 
 ```
 """
@@ -508,8 +506,7 @@ completed circuit measurements, as prescribed by the `Readouts` present.
 julia> qpu = VirtualQPU();
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]), 100)
-Dict{String, Int64} with 1 entry:
-  "001" => 100
+(Dict("001" => 100), 0)
 
 ```
 """
