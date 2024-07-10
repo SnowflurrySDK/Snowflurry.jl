@@ -442,7 +442,7 @@ function transpile_and_run_job(
     circuit::QuantumCircuit,
     shot_count::Integer;
     transpiler::Transpiler = get_transpiler(qpu),
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
     transpiled_circuit = transpile(transpiler, circuit)
 
@@ -482,7 +482,7 @@ function run_job(
     qpu::UnionAnyonQPU,
     circuit::QuantumCircuit,
     shot_count::Integer,
-)::Dict{String,Int}
+)::Tuple{Dict{String,Int},Int}
 
     client = get_client(qpu)
 
@@ -537,7 +537,21 @@ function submit_and_fetch_result(
     jobID =
         submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
-    return poll_for_results(client, jobID, qpu.status_request_throttle)
+    status, histogram, qpu_time =
+        poll_for_results(client, jobID, qpu.status_request_throttle)
+
+    status_type = get_status_type(status)
+
+    if status_type == failed_status
+        throw(ErrorException(get_status_message(status)))
+    elseif status_type == cancelled_status
+        throw(ErrorException(cancelled_status))
+    else
+        @assert status_type == succeeded_status (
+            "Server returned an unrecognized status type: $status_type"
+        )
+        return histogram, qpu_time
+    end
 end
 
 # 100ms between queries to host by default
@@ -547,14 +561,14 @@ function poll_for_results(
     client::Client,
     jobID::String,
     request_throttle::Function,
-)::Tuple{Status,Dict{String,Int}}
-    (status, histogram) = get_status(client, jobID)
+)::Tuple{Status,Dict{String,Int},Int}
+    (status, histogram, qpu_time) = get_status(client, jobID)
     while get_status_type(status) in [queued_status, running_status]
         request_throttle()
-        (status, histogram) = get_status(client, jobID)
+        (status, histogram, qpu_time) = get_status(client, jobID)
     end
 
-    return status, histogram
+    return status, histogram, qpu_time
 end
 
 """

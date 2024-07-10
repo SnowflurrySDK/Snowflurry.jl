@@ -204,10 +204,11 @@ end
     circuit_json =
         serialize_job(circuit, shot_count, expected_machine_name, expected_project_id)
 
-    @test circuit_json == make_expected_job_submit_response(
-        expected_machine_name,
-        expected_operations_substr,
-    )
+    job_str = make_job_str(expected_machine_name)
+    @test circuit_json ==
+          job_str[1:length(job_str)-1] *
+          ",\"circuit\":{\"operations\":" *
+          expected_operations_substr
 
     test_client = Client(
         host = expected_host,
@@ -229,7 +230,7 @@ end
         expected_machine_name,
     )
 
-    status, histogram = get_status(test_client, jobID)
+    status, histogram, qpu_time = get_status(test_client, jobID)
 
     @test get_status_type(status) in [
         Snowflurry.queued_status,
@@ -289,7 +290,7 @@ end
         access_token = expected_access_token,
         requestor = requestor,
     )
-    status, histogram = get_status(test_client, "jobID not used in this test")
+    status, histogram, qpu_time = get_status(test_client, "jobID not used in this test")
     @test get_status_type(status) == Snowflurry.failed_status
     @test get_status_message(status) == "mocked"
 
@@ -320,7 +321,7 @@ end
         access_token = expected_access_token,
         requestor = requestor,
     )
-    status, histogram = get_status(test_client, "jobID not used in this test")
+    status, histogram, qpu_time = get_status(test_client, "jobID not used in this test")
     @test status.type == Snowflurry.failed_status
     @test status.message != ""
 end
@@ -1003,7 +1004,7 @@ end
         qubit_count = 3,
         instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)],
     )
-    histogram = run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 
@@ -1028,7 +1029,7 @@ end
         expected_project_id,
         status_request_throttle = no_throttle,
     )
-    histogram = run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 
@@ -1053,7 +1054,7 @@ end
         expected_project_id,
         status_request_throttle = no_throttle,
     )
-    @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
+    @test_throws ErrorException histogram, qpu_time = run_job(qpu, circuit, shot_count)
 
     #verify that run_job throws an error if the job was cancelled
     requestor = MockRequestor(
@@ -1076,7 +1077,7 @@ end
         expected_project_id,
         status_request_throttle = no_throttle,
     )
-    @test_throws ErrorException histogram = run_job(qpu, circuit, shot_count)
+    @test_throws ErrorException histogram, qpu_time = run_job(qpu, circuit, shot_count)
 end
 
 @testset "run_job on AnyonQPUs: with realm" begin
@@ -1137,7 +1138,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    histogram = run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 
@@ -1162,7 +1163,7 @@ end
 
     @test Snowflurry.get_realm(qpu) == expected_realm
 
-    histogram = run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
 end
@@ -1298,7 +1299,7 @@ end
 
         qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
 
-        histogram = transpile_and_run_job(
+        histogram, qpu_time = transpile_and_run_job(
             qpu,
             circuit,
             shot_count;
@@ -1352,7 +1353,7 @@ end
 
     println(qpu) #coverage for Base.show(::IO,::VirtualQPU)
 
-    histogram = transpile_and_run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = transpile_and_run_job(qpu, circuit, shot_count)
 
     @test histogram == Dict("001" => shot_count)
 
@@ -1382,7 +1383,7 @@ end
 
     qpu = VirtualQPU()
 
-    histogram = transpile_and_run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = transpile_and_run_job(qpu, circuit, shot_count)
 
     @test haskey(histogram, "0")
     @test haskey(histogram, "1")
@@ -1406,7 +1407,7 @@ end
         ],
     )
 
-    histogram = transpile_and_run_job(qpu, circuit, shot_count)
+    histogram, qpu_time = transpile_and_run_job(qpu, circuit, shot_count)
 
     @test haskey(histogram, "00")
     @test haskey(histogram, "11")
@@ -1429,7 +1430,7 @@ end
 
         qpu = VirtualQPU()
 
-        histogram = transpile_and_run_job(qpu, circuit, shot_count)
+        histogram, qpu_time = transpile_and_run_job(qpu, circuit, shot_count)
 
         @test haskey(histogram, "1")
         pop!(histogram, "1")

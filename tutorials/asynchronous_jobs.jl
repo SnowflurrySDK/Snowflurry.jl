@@ -36,5 +36,5 @@ end
 
 fibonacci(30)
 
-result = fetch(task)
+result, qpu_time = fetch(task)
 println(result)
