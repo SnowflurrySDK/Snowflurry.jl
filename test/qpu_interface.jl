@@ -326,6 +326,44 @@ end
     @test status.type == Snowflurry.failed_status
     @test status.message != ""
     @test qpu_time == 0
+
+    test_get = stub_response_sequence([
+        # Simulate a response with an invalid qpuTimeMilliSeconds.
+        HTTP.Response(
+            200,
+            [],
+            body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"qpuTimeMilliSeconds\":\"not-an-integer\"},\"result\":{\"histogram\":{}}}",
+        ),
+    ])
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+    @test_throws AssertionError(
+        "Invalid server response: \"qpuTimeMilliSeconds\" value: not-an-integer is not an integer",
+    ) get_status(test_client, "jobID not used in this test")
+
+    test_get = stub_response_sequence([
+        # Simulate a response with 0 qpuTimeMilliSeconds.
+        HTTP.Response(
+            200,
+            [],
+            body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"qpuTimeMilliSeconds\":0},\"result\":{\"histogram\":{}}}",
+        ),
+    ])
+    requestor = HTTPRequestor(test_get, test_post)
+    test_client = Client(
+        host = expected_host,
+        user = expected_user,
+        access_token = expected_access_token,
+        requestor = requestor,
+    )
+    @test_throws AssertionError(
+        "Invalid server response: \"qpuTimeMilliSeconds\" value: 0 is not a positive integer",
+    ) get_status(test_client, "jobID not used in this test")
 end
 
 
