@@ -11,8 +11,10 @@ expected_empty_queries = Dict{String,String}()
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
+expected_qpu_time = 542
+
 make_sumbit_job_str(machine_name) =
-    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"qpuTimeMilliSeconds\":542}"
+    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"qpuTimeMilliSeconds\":$expected_qpu_time}"
 
 make_job_str(machine_name) =
     "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\"}"
@@ -198,11 +200,6 @@ stubFailedStatusResponse() = HTTP.Response(
     body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}}",
 )
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-stubFailureResult() = HTTP.Response(
-    200,
-    [],
-    body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}}",
-)
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],

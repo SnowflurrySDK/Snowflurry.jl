@@ -293,6 +293,7 @@ end
     status, histogram, qpu_time = get_status(test_client, "jobID not used in this test")
     @test get_status_type(status) == Snowflurry.failed_status
     @test get_status_message(status) == "mocked"
+    @test qpu_time == 0
 
     test_get = stub_response_sequence([
         # Simulate a response containing an invalid job status.
@@ -324,6 +325,7 @@ end
     status, histogram, qpu_time = get_status(test_client, "jobID not used in this test")
     @test status.type == Snowflurry.failed_status
     @test status.message != ""
+    @test qpu_time == 0
 end
 
 
@@ -1007,6 +1009,7 @@ end
     histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
+    @test qpu_time == expected_qpu_time
 
     #verify that run_job blocks until a 'long-running' job completes
     requestor = MockRequestor(
@@ -1032,6 +1035,7 @@ end
     histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
+    @test qpu_time == expected_qpu_time
 
     #verify that run_job throws an error if the QPU returns an error
     requestor = MockRequestor(
@@ -1040,7 +1044,6 @@ end
             stubStatusResponse(Snowflurry.running_status),
             stubStatusResponse(Snowflurry.running_status),
             stubFailedStatusResponse(),
-            stubFailureResult(),
         ]),
         make_post_checker(expected_json_yukon),
     )
@@ -1141,6 +1144,7 @@ end
     histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
+    @test qpu_time == expected_qpu_time
 
     qpu = AnyonYamaskaQPU(
         yamaska_test_client,
@@ -1166,6 +1170,7 @@ end
     histogram, qpu_time = run_job(qpu, circuit, shot_count)
     @test histogram == Dict("001" => shot_count)
     @test !haskey(histogram, "error_msg")
+    @test qpu_time == expected_qpu_time
 end
 
 @testset "run_job with invalid circuits on AnyonYukonQPU" begin
@@ -1308,6 +1313,7 @@ end
 
         @test histogram == Dict("001" => shot_count)
         @test !haskey(histogram, "error_msg")
+        @test qpu_time == expected_qpu_time
 
         # submit circuit with qubit_count_circuit==qubit_count_qpu
         requestor = MockRequestor(request_checker, post_checker_last_qubit)

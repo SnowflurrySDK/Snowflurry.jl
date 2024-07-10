@@ -478,7 +478,7 @@ completed circuit calculations, or an error message.
 julia> qpu=VirtualQPU();
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]) ,100)
-(Dict("001" => 100), 117)
+(Dict("001" => 100), 132)
 
 ```
 """
