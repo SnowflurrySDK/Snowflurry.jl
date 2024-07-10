@@ -474,7 +474,7 @@ number of repetitions (shot_count). Returns the histogram of the
 completed circuit calculations, or an error message.
 
 # Example
-```jldoctest filter = r"[0-9]+"
+```jldoctest; filter =  r", [0-9]+" => ", 132"
 julia> qpu=VirtualQPU();
 
 julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]) ,100)
@@ -502,11 +502,11 @@ number of repetitions (shot_count). Returns the histogram of the
 completed circuit measurements, as prescribed by the `Readouts` present.
 
 # Example
-```jldoctest 
+```jldoctest; filter =  r", [0-9]+" => ", 147"
 julia> qpu = VirtualQPU();
 
 julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]), 100)
-(Dict("001" => 100), 0)
+(Dict("001" => 100), 147)
 
 ```
 """
