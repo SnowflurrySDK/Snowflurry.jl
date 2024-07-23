@@ -1295,8 +1295,14 @@ end
     circuits = [
         QuantumCircuit(qubit_count = 2, instructions = [default_readout]),
         QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2), default_readout]),
-        QuantumCircuit(qubit_count = 2, instructions = [root_zz_dagger(1, 2), default_readout]),
-        QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2), root_zz_dagger(1, 2), default_readout]),
+        QuantumCircuit(
+            qubit_count = 2,
+            instructions = [root_zz_dagger(1, 2), default_readout],
+        ),
+        QuantumCircuit(
+            qubit_count = 2,
+            instructions = [root_zz(1, 2), root_zz_dagger(1, 2), default_readout],
+        ),
     ]
 
     for circuit in circuits

@@ -786,7 +786,10 @@ q[1]:──Z_m90─────────────*──
 q[2]:───────────Z_m90────Z──
 ```
 """
-function transpile(::CastRootZZToZ90AndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(
+    ::CastRootZZToZ90AndCZGateTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
     output = QuantumCircuit(
@@ -797,15 +800,10 @@ function transpile(::CastRootZZToZ90AndCZGateTranspiler, circuit::QuantumCircuit
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Snowflurry.Gate{RootZZ}
-            (target_1,target_2 ) = get_connected_qubits(instr)
-            push!(
-                output,
-                z_90(target_1),
-                z_90(target_2),
-                control_z(target_1, target_2),
-            )
+            (target_1, target_2) = get_connected_qubits(instr)
+            push!(output, z_90(target_1), z_90(target_2), control_z(target_1, target_2))
         elseif instr isa Snowflurry.Gate{RootZZDagger}
-            (target_1,target_2 ) = get_connected_qubits(instr)
+            (target_1, target_2) = get_connected_qubits(instr)
             push!(
                 output,
                 z_minus_90(target_1),
