@@ -559,7 +559,7 @@ function get_anyon_transpiler(;
         CastToffoliToCXGateTranspiler(),
         CastCXToCZGateTranspiler(),
         CastISwapToCZGateTranspiler(),
-        CastRootZZToRZAndCZGateTranspiler(),
+        CastRootZZToZ90AndCZGateTranspiler(),
         SwapQubitsForAdjacencyTranspiler(connectivity),
         CastSwapToCZGateTranspiler(),
         CompressSingleQubitGatesTranspiler(),

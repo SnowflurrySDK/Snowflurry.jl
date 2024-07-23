@@ -64,7 +64,7 @@ export
     CompressSingleQubitGatesTranspiler,
     CastToPhaseShiftAndHalfRotationXTranspiler,
     CastRxToRzAndHalfRotationXTranspiler,
-    CastRootZZToRZAndCZGateTranspiler,
+    CastRootZZToZ90AndCZGateTranspiler,
     SwapQubitsForAdjacencyTranspiler,
     CastUniversalToRzRxRzTranspiler,
     SimplifyRxGatesTranspiler,

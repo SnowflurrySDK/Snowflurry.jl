@@ -738,12 +738,12 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
-struct CastRootZZToRZAndCZGateTranspiler <: Transpiler end
+struct CastRootZZToZ90AndCZGateTranspiler <: Transpiler end
 
 """
-    transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    transpile(::CastRootZZToZ90AndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `CastRootZZToRZAndCZGateTranspiler` transpiler stage which
+Implementation of the `CastRootZZToZ90AndCZGateTranspiler` transpiler stage which
 converts all `RootZZ` and `RootZZDagger` gates into `Z90` 
 (or `ZM90`) gates and a `ControlZ` gate. The result of the
 input and output circuit on any arbitrary state `Ket` is unchanged (up to a
@@ -751,7 +751,7 @@ global phase).
 
 # Examples
 ```jldoctest
-julia> transpiler = CastRootZZToRZAndCZGateTranspiler();
+julia> transpiler = CastRootZZToZ90AndCZGateTranspiler();
 
 julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2)])
 Quantum Circuit Object:
@@ -786,7 +786,7 @@ q[1]:──Z_m90─────────────*──
 q[2]:───────────Z_m90────Z──
 ```
 """
-function transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+function transpile(::CastRootZZToZ90AndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
     output = QuantumCircuit(
