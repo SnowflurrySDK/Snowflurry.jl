@@ -1624,7 +1624,7 @@ on the first qubit and pi/2 on the second.
 
 The `DiagonalOperator` is defined as:
 ```math
-R_z(\\lambda) = \\begin{bmatrix}
+R_{ZZ} = \\begin{bmatrix}
     1-i & 0 & 0 & 0 \\\\
     0 & 1+i & 0 & 0 \\\\
     0 & 0 & 1+i & 0 \\\\
@@ -1643,7 +1643,7 @@ Return the `DiagonalOperator` which is the complex conjugate of [`root_zz()`](@r
 
 The `DiagonalOperator` is defined as:
 ```math
-R_z(\\lambda) = \\begin{bmatrix}
+R_{ZZ}^\\dagger = \\begin{bmatrix}
     1+i & 0 & 0 & 0 \\\\
     0 & 1-i & 0 & 0 \\\\
     0 & 0 & 1-i & 0 \\\\

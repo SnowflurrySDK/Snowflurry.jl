@@ -744,7 +744,8 @@ struct CastRootZZToRZAndCZGateTranspiler <: Transpiler end
     transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
 Implementation of the `CastRootZZToRZAndCZGateTranspiler` transpiler stage which
-expands all Toffoli gates into `CX` gates and single-qubit gates. The result of the
+converts all `RootZZ` and `RootZZDagger` gates into `Z90` 
+(or `ZM90`) gates and a `ControlZ` gate. The result of the
 input and output circuit on any arbitrary state `Ket` is unchanged (up to a
 global phase).
 
@@ -752,27 +753,37 @@ global phase).
 ```jldoctest
 julia> transpiler = CastRootZZToRZAndCZGateTranspiler();
 
-julia> circuit = QuantumCircuit(qubit_count = 3, instructions = [root_zz(1, 2)])
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2)])
 Quantum Circuit Object:
-   qubit_count: 3
-   bit_count: 3
-q[1]:──*──
-       |
-q[2]:──*──
-       |
-q[3]:──X──
+   qubit_count: 2
+   bit_count: 2
+q[1]:──√ZZ──
+        |
+q[2]:──√ZZ──
 
 julia> transpile(transpiler, circuit)
 Quantum Circuit Object:
-   qubit_count: 3 
-   bit_count: 3 
-q[1]:──────────────────*────────────────────*──────────────*─────────T──────────*──
-                       |                    |              |                    |  
-q[2]:───────*──────────|─────────*──────────|────T─────────X──────────────T†────X──
-            |          |         |          |                                      
-q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──────────────────
-                                                                                   
+   qubit_count: 2
+   bit_count: 2
+q[1]:──Z_90────────────*──
+                       |
+q[2]:──────────Z_90────Z──
 
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [root_zz_dagger(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 2
+   bit_count: 2
+q[1]:──√ZZ†──
+        |
+q[2]:──√ZZ†──
+
+julia> transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+   bit_count: 2
+q[1]:──Z_m90─────────────*──
+                         |
+q[2]:───────────Z_m90────Z──
 ```
 """
 function transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
