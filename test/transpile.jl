@@ -60,6 +60,8 @@ test_instructions = [
         swap(2, 4),
         iswap(4, 1),
         iswap_dagger(1, 3),
+        root_zz(1, 2),
+        root_zz_dagger(1, 3),
     ],
 ]
 
@@ -715,6 +717,7 @@ end
         rotation(target, theta, phi),
         rotation_x(target, theta),
         rotation_y(target, theta),
+        root_zz(target, control),
     ]
 
     for (gates_list, input_is_native) in
@@ -1286,6 +1289,24 @@ end
     @test length(get_circuit_instructions(transpiled_circuit)) == 0
 end
 
+@testset "CastRootZZToRZAndCZGateTranspiler: Readout" begin
+    transpiler = CastRootZZToRZAndCZGateTranspiler()
+
+    circuits = [
+        QuantumCircuit(qubit_count = 2, instructions = [default_readout]),
+        QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2), default_readout]),
+        QuantumCircuit(qubit_count = 2, instructions = [root_zz_dagger(1, 2), default_readout]),
+        QuantumCircuit(qubit_count = 2, instructions = [root_zz(1, 2), root_zz_dagger(1, 2), default_readout]),
+    ]
+
+    for circuit in circuits
+        transpiled_circuit = transpile(transpiler, circuit)
+
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.RootZZ)
+        @test compare_circuits(circuit, transpiled_circuit)
+    end
+end
+
 @testset "SimplifyRxGatesTranspiler: Readout" begin
     transpiler = SimplifyRxGatesTranspiler()
 
@@ -1705,6 +1726,7 @@ end
         CastUniversalToRzRxRzTranspiler(),
         SimplifyRxGatesTranspiler(),
         CastRxToRzAndHalfRotationXTranspiler(),
+        CastRootZZToRZAndCZGateTranspiler(),
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),

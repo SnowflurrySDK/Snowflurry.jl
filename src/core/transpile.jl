@@ -738,6 +738,77 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
+struct CastRootZZToRZAndCZGateTranspiler <: Transpiler end
+
+"""
+    transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Implementation of the `CastRootZZToRZAndCZGateTranspiler` transpiler stage which
+expands all Toffoli gates into `CX` gates and single-qubit gates. The result of the
+input and output circuit on any arbitrary state `Ket` is unchanged (up to a
+global phase).
+
+# Examples
+```jldoctest
+julia> transpiler = CastRootZZToRZAndCZGateTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 3, instructions = [root_zz(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 3
+   bit_count: 3
+q[1]:──*──
+       |
+q[2]:──*──
+       |
+q[3]:──X──
+
+julia> transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──────────────────*────────────────────*──────────────*─────────T──────────*──
+                       |                    |              |                    |  
+q[2]:───────*──────────|─────────*──────────|────T─────────X──────────────T†────X──
+            |          |         |          |                                      
+q[3]:──H────X────T†────X────T────X────T†────X─────────T─────────H──────────────────
+                                                                                   
+
+```
+"""
+function transpile(::CastRootZZToRZAndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    qubit_count = get_num_qubits(circuit)
+    bit_count = get_num_bits(circuit)
+    output = QuantumCircuit(
+        qubit_count = qubit_count,
+        bit_count = bit_count,
+        name = get_name(circuit),
+    )
+
+    for instr in get_circuit_instructions(circuit)
+        if instr isa Snowflurry.Gate{RootZZ}
+            (target_1,target_2 ) = get_connected_qubits(instr)
+            push!(
+                output,
+                z_90(target_1),
+                z_90(target_2),
+                control_z(target_1, target_2),
+            )
+        elseif instr isa Snowflurry.Gate{RootZZDagger}
+            (target_1,target_2 ) = get_connected_qubits(instr)
+            push!(
+                output,
+                z_minus_90(target_1),
+                z_minus_90(target_2),
+                control_z(target_1, target_2),
+            )
+        else
+            push!(output, instr)
+        end
+    end
+
+    return output
+end
+
 struct CastToPhaseShiftAndHalfRotationXTranspiler <: Transpiler
     atol::Real
 end

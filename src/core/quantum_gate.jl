@@ -1617,6 +1617,46 @@ rotation_z(lambda, T::Type{<:Complex} = ComplexF64) =
     DiagonalOperator(T[exp(-im * lambda / 2.0), exp(im * lambda / 2.0)])
 
 """
+    root_zz()
+
+Return the `DiagonalOperator` that, when applied twice in sequence, applies a rotation of `z` by -pi/2
+on the first qubit and pi/2 on the second.
+
+The `DiagonalOperator` is defined as:
+```math
+R_z(\\lambda) = \\begin{bmatrix}
+    1-i & 0 & 0 & 0 \\\\
+    0 & 1+i & 0 & 0 \\\\
+    0 & 0 & 1+i & 0 \\\\
+    0 & 0 & 0 & 1-i \\\\
+\\end{bmatrix}.
+```
+"""
+root_zz(T::Type{<:Complex} = ComplexF64) = DiagonalOperator(
+    T[exp(-im * pi / 4), exp(im * pi / 4), exp(im * pi / 4), exp(-im * pi / 4)],
+)
+
+"""
+    root_zz_dagger()
+
+Return the `DiagonalOperator` which is the complex conjugate of [`root_zz()`](@ref).
+
+The `DiagonalOperator` is defined as:
+```math
+R_z(\\lambda) = \\begin{bmatrix}
+    1+i & 0 & 0 & 0 \\\\
+    0 & 1-i & 0 & 0 \\\\
+    0 & 0 & 1-i & 0 \\\\
+    0 & 0 & 0 & 1+i \\\\
+\\end{bmatrix}.
+```
+"""
+root_zz_dagger(T::Type{<:Complex} = ComplexF64) = DiagonalOperator(
+    T[exp(im * pi / 4), exp(-im * pi / 4), exp(-im * pi / 4), exp(im * pi / 4)],
+)
+
+
+"""
     universal(theta, phi, lambda)
 
 Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
@@ -2225,6 +2265,52 @@ get_operator(gate::ISwapDagger, T::Type{<:Complex} = ComplexF64) = iswap_dagger(
 Base.inv(::ISwapDagger) = ISwap()
 
 get_num_connected_qubits(::ISwapDagger) = 2
+
+
+"""
+    root_zz(qubit_1, qubit_2)
+
+Return the root of a ZZ `Gate` which, when two are applied in sequence, are equivalent to 
+one rotation_z(-pi/2) `Operator` to `qubit_1` and one rotation_z(pi/2) to `qubit_2.`
+
+
+The corresponding `Operator` is [`root_zz()`](@ref).
+"""
+function root_zz(qubit_1::Integer, qubit_2::Integer)
+    ensure_target_qubits_are_different([qubit_1, qubit_2])
+    return Gate(RootZZ(), [qubit_1, qubit_2])
+end
+
+struct RootZZ <: AbstractGateSymbol end
+
+get_operator(gate::RootZZ, T::Type{<:Complex} = ComplexF64) = root_zz(T)
+
+Base.inv(::RootZZ) = RootZZDagger()
+
+get_num_connected_qubits(::RootZZ) = 2
+
+"""
+    root_zz_dagger(qubit_1, qubit_2)
+
+Return the complex conjugate of a root of ZZ `Gate`.
+
+
+The corresponding `Operator` is [`root_zz_dagger()`](@ref).
+"""
+function root_zz_dagger(qubit_1::Integer, qubit_2::Integer)
+    ensure_target_qubits_are_different([qubit_1, qubit_2])
+    return Gate(RootZZDagger(), [qubit_1, qubit_2])
+end
+
+struct RootZZDagger <: AbstractGateSymbol end
+
+get_operator(gate::RootZZDagger, T::Type{<:Complex} = ComplexF64) = root_zz_dagger(T)
+
+Base.inv(::RootZZDagger) = RootZZ()
+
+get_num_connected_qubits(::RootZZDagger) = 2
+
+
 
 
 """
