@@ -1289,8 +1289,8 @@ end
     @test length(get_circuit_instructions(transpiled_circuit)) == 0
 end
 
-@testset "CastRootZZToRZAndCZGateTranspiler: Readout" begin
-    transpiler = CastRootZZToRZAndCZGateTranspiler()
+@testset "CastRootZZToZ90AndCZGateTranspiler: Readout" begin
+    transpiler = CastRootZZToZ90AndCZGateTranspiler()
 
     circuits = [
         QuantumCircuit(qubit_count = 2, instructions = [default_readout]),
@@ -1732,7 +1732,7 @@ end
         CastUniversalToRzRxRzTranspiler(),
         SimplifyRxGatesTranspiler(),
         CastRxToRzAndHalfRotationXTranspiler(),
-        CastRootZZToRZAndCZGateTranspiler(),
+        CastRootZZToZ90AndCZGateTranspiler(),
         CompressRzGatesTranspiler(),
         SimplifyRzGatesTranspiler(),
         ReadoutsAreFinalInstructionsTranspiler(),
