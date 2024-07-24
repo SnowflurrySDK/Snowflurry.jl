@@ -494,17 +494,21 @@ function run_job(
 end
 
 function submit_with_retries(f::Function, args...)::Tuple{Dict{String,Int},Int}
-    attempts=3
+    attempts = 3
 
-    while attempts>0 
+    while attempts > 0
         status, histogram, qpu_time = f(args...)
 
         status_type = get_status_type(status)
 
         if status_type == failed_status
-            attempts-=1
-            if attempts == 0 
-                throw(ErrorException(get_status_message(status)))
+            attempts -= 1
+            if attempts == 0
+                throw(
+                    ErrorException(
+                        "job has failed with the following message: $(get_status_message(status))",
+                    ),
+                )
             end
         elseif status_type == cancelled_status
             throw(ErrorException("job was cancelled"))
@@ -517,9 +521,14 @@ function submit_with_retries(f::Function, args...)::Tuple{Dict{String,Int},Int}
     end
 end
 
-function submit_and_fetch_result(client::Client, circuit::QuantumCircuit, shot_count::Int, qpu::UnionAnyonQPU)::Tuple{Status,Dict{String,Int},Int}
+function submit_and_fetch_result(
+    client::Client,
+    circuit::QuantumCircuit,
+    shot_count::Int,
+    qpu::UnionAnyonQPU,
+)::Tuple{Status,Dict{String,Int},Int}
     jobID =
-    submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
+        submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
     return poll_for_results(client, jobID, qpu.status_request_throttle)
 end
