@@ -1309,6 +1309,7 @@ end
         transpiled_circuit = transpile(transpiler, circuit)
 
         @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.RootZZ)
+        @test !circuit_contains_gate_type(transpiled_circuit, Snowflurry.RootZZDagger)
         @test compare_circuits(circuit, transpiled_circuit)
     end
 end
