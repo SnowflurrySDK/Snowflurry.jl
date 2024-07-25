@@ -23,6 +23,8 @@ rotation
 rotation_x
 rotation_y
 rotation_z
+root_zz
+root_zz_dagger
 phase_shift
 universal
 control_z

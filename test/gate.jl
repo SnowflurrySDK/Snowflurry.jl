@@ -171,6 +171,7 @@ end
     @test get_instruction_symbol(get_gate_symbol(H)) == "h"
     @test get_symbol_for_instruction("h") == Snowflurry.Hadamard
     @test get_display_symbols(get_gate_symbol(H)) == ["H"]
+    @test get_gate_parameters(get_gate_symbol(H)) == Dict()
 
     @test get_matrix(2 * h_oper) == get_matrix(h_oper) .* 2
 
@@ -183,6 +184,7 @@ end
     @test inv(X) == X
     @test isequal(X, sigma_x(1))
     @test !isequal(X, sigma_x(2))
+    @test get_gate_parameters(get_gate_symbol(X)) == Dict()
 
     Y = sigma_y(1)
     @test get_instruction_symbol(get_gate_symbol(Y)) == "y"
@@ -192,6 +194,7 @@ end
     @test inv(Y) == Y
     @test isequal(Y, sigma_y(1))
     @test !isequal(Y, sigma_y(2))
+    @test get_gate_parameters(get_gate_symbol(Y)) == Dict()
 
     Z = sigma_z(1)
     @test get_instruction_symbol(get_gate_symbol(Z)) == "z"
@@ -201,6 +204,7 @@ end
     @test inv(Z) == Z
     @test isequal(Z, sigma_z(1))
     @test !isequal(Z, sigma_z(2))
+    @test get_gate_parameters(get_gate_symbol(Z)) == Dict()
 
     CX = control_x(1, 2)
 
@@ -213,6 +217,7 @@ end
     @test !isequal(CX, control_x(1, 3))
     @test !isequal(CX, control_x(3, 2))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CX)) == 1
+    @test get_gate_parameters(get_gate_symbol(CX)) == Dict()
 
     CZ = control_z(1, 2)
     @test get_instruction_symbol(get_gate_symbol(CZ)) == "cz"
@@ -224,6 +229,7 @@ end
     @test !isequal(CZ, control_z(1, 3))
     @test !isequal(CZ, control_z(3, 2))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CZ)) == 1
+    @test get_gate_parameters(get_gate_symbol(CZ)) == Dict()
 
     SWAP = swap(1, 2)
     @test get_instruction_symbol(get_gate_symbol(SWAP)) == "swap"
@@ -234,6 +240,7 @@ end
     @test isequal(SWAP, SWAP)
     @test !isequal(SWAP, swap(1, 3))
     @test !isequal(SWAP, swap(3, 2))
+    @test get_gate_parameters(get_gate_symbol(SWAP)) == Dict()
 
     CCX = toffoli(1, 2, 3)
     @test get_instruction_symbol(get_gate_symbol(CCX)) == "ccx"
@@ -249,6 +256,7 @@ end
     @test !isequal(CCX, toffoli(1, 4, 3))
     @test !isequal(CCX, toffoli(1, 2, 4))
     @test Snowflurry.get_num_target_qubits(get_gate_symbol(CCX)) == 1
+    @test get_gate_parameters(get_gate_symbol(CCX)) == Dict()
 
     ψ_0 = fock(0, 2)
     ψ_1 = fock(1, 2)
@@ -261,6 +269,7 @@ end
     @test T * ψ_1 ≈ exp(im * pi / 4.0) * ψ_1
     @test isequal(T, pi_8(1))
     @test !isequal(T, pi_8(2))
+    @test get_gate_parameters(get_gate_symbol(T)) == Dict()
 
     x90 = x_90(1)
     @test get_instruction_symbol(get_gate_symbol(x90)) == "x_90"
@@ -272,6 +281,7 @@ end
     ]
     @test isequal(x90, x_90(1))
     @test !isequal(x90, x_90(2))
+    @test get_gate_parameters(get_gate_symbol(x90)) == Dict()
 
     xm90 = x_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(xm90)) == "x_minus_90"
@@ -283,6 +293,7 @@ end
     ]
     @test isequal(xm90, x_minus_90(1))
     @test !isequal(xm90, x_minus_90(2))
+    @test get_gate_parameters(get_gate_symbol(xm90)) == Dict()
 
     y90 = y_90(1)
     @test get_instruction_symbol(get_gate_symbol(y90)) == "y_90"
@@ -294,6 +305,8 @@ end
     ]
     @test isequal(y90, y_90(1))
     @test !isequal(y90, y_90(2))
+    @test get_gate_parameters(get_gate_symbol(y90)) == Dict()
+
 
     ym90 = y_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(ym90)) == "y_minus_90"
@@ -305,6 +318,7 @@ end
     ]
     @test isequal(ym90, y_minus_90(1))
     @test !isequal(ym90, y_minus_90(2))
+    @test get_gate_parameters(get_gate_symbol(ym90)) == Dict()
 
     z90 = z_90(1)
     @test get_instruction_symbol(get_gate_symbol(z90)) == "z_90"
@@ -316,6 +330,7 @@ end
     ]
     @test isequal(z90, z_90(1))
     @test !isequal(z90, z_90(2))
+    @test get_gate_parameters(get_gate_symbol(z90)) == Dict()
 
     zm90 = z_minus_90(1)
     @test get_instruction_symbol(get_gate_symbol(zm90)) == "z_minus_90"
@@ -327,6 +342,8 @@ end
     ]
     @test isequal(zm90, z_minus_90(1))
     @test !isequal(zm90, z_minus_90(2))
+    @test get_gate_parameters(get_gate_symbol(zm90)) == Dict()
+
 
     r = rotation(1, pi / 2, pi / 2)
     @test get_instruction_symbol(get_gate_symbol(r)) == "r"
@@ -374,6 +391,38 @@ end
     @test isequal(rz, rotation_z(1, -pi / 2))
     @test !isequal(rz, rotation_z(2, -pi / 2))
     @test !isequal(rz, rotation_z(1, -pi / 3))
+
+    rootzz = root_zz(1, 2)
+    @test get_instruction_symbol(get_gate_symbol(rootzz)) == "root_zz"
+    @test get_symbol_for_instruction("root_zz") == Snowflurry.RootZZ
+    @test get_display_symbols(get_gate_symbol(rootzz)) == ["√ZZ", "√ZZ"]
+    @test rootzz * Ket([1 / 8^0.5 for _ = 1:8]) ≈ Ket([
+        0.25 - 0.25im,
+        0.25 - 0.25im,
+        0.25 + 0.25im,
+        0.25 + 0.25im,
+        0.25 + 0.25im,
+        0.25 + 0.25im,
+        0.25 - 0.25im,
+        0.25 - 0.25im,
+    ])
+    @test get_gate_parameters(get_gate_symbol(rootzz)) == Dict()
+
+    rootzzdag = root_zz_dagger(1, 2)
+    @test get_instruction_symbol(get_gate_symbol(rootzzdag)) == "root_zz_dag"
+    @test get_symbol_for_instruction("root_zz_dag") == Snowflurry.RootZZDagger
+    @test get_display_symbols(get_gate_symbol(rootzzdag)) == ["√ZZ†", "√ZZ†"]
+    @test rootzzdag * Ket([1 / 8^0.5 for _ = 1:8]) ≈ Ket([
+        0.25 + 0.25im,
+        0.25 + 0.25im,
+        0.25 - 0.25im,
+        0.25 - 0.25im,
+        0.25 - 0.25im,
+        0.25 - 0.25im,
+        0.25 + 0.25im,
+        0.25 + 0.25im,
+    ])
+    @test get_gate_parameters(get_gate_symbol(rootzzdag)) == Dict()
 
     p = phase_shift(1, pi / 4)
     @test get_instruction_symbol(get_gate_symbol(p)) == "p"
@@ -786,6 +835,15 @@ end
     inverse_rz = inv(rz)
     @test get_connected_qubits(rz) == get_connected_qubits(inverse_rz)
 
+    rootzz = root_zz(1, 2)
+    @test test_inverse(rootzz)
+    inverse_rootzz = inv(rootzz)
+    @test get_connected_qubits(rootzz) == get_connected_qubits(inverse_rootzz)
+
+    rootzzdag = root_zz_dagger(1, 2)
+    @test test_inverse(rootzzdag)
+    inverse_rootzzdag = inv(rootzzdag)
+    @test get_connected_qubits(rootzz) == get_connected_qubits(inverse_rootzzdag)
 
     p = phase_shift(1, pi / 3)
     @test test_inverse(p)
@@ -1041,6 +1099,8 @@ end
         rotation_x(1, theta),
         rotation_y(1, theta),
         rotation_z(1, theta),
+        root_zz(1, 2),
+        root_zz_dagger(1, 2),
         sigma_x(1),
         sigma_y(1),
         sigma_z(1),
