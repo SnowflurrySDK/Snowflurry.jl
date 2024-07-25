@@ -76,6 +76,7 @@ function make_headers(
     headers = Dict{String,String}(
         "Authorization" => encode_to_basic_authorization(user, access_token),
         "Content-Type" => "application/json",
+        user_agent_header_key => "Snowflurry/$(package_version)",
     )
 
     # Optional headers
