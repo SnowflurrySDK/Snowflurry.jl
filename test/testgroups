@@ -5,6 +5,7 @@ transpile
 transpile_trivial_gates
 circuit
 qpu_interface
+submit_with_retries
 metadata
 abstract_operator
 sparse_operator

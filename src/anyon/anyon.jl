@@ -490,23 +490,47 @@ function run_job(
     # throws error if circuit is invalid
     transpile(transpiler, circuit)
 
+    return submit_with_retries(submit_and_fetch_result, client, circuit, shot_count, qpu)
+end
+
+function submit_with_retries(f::Function, args...)::Dict{String,Int}
+    attempts = 3
+
+    while attempts > 0
+        status, histogram = f(args...)
+
+        status_type = get_status_type(status)
+
+        if status_type == failed_status
+            attempts -= 1
+            if attempts == 0
+                throw(
+                    ErrorException(
+                        "job has failed with the following message: $(get_status_message(status))",
+                    ),
+                )
+            end
+        elseif status_type == cancelled_status
+            throw(ErrorException("job was cancelled"))
+        else
+            @assert status_type == succeeded_status (
+                "Server returned an unrecognized status type: $status_type"
+            )
+            return histogram
+        end
+    end
+end
+
+function submit_and_fetch_result(
+    client::Client,
+    circuit::QuantumCircuit,
+    shot_count::Int,
+    qpu::UnionAnyonQPU,
+)::Tuple{Status,Dict{String,Int}}
     jobID =
         submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
-    status, histogram = poll_for_results(client, jobID, qpu.status_request_throttle)
-
-    status_type = get_status_type(status)
-
-    if status_type == failed_status
-        throw(ErrorException(get_status_message(status)))
-    elseif status_type == cancelled_status
-        throw(ErrorException(cancelled_status))
-    else
-        @assert status_type == succeeded_status (
-            "Server returned an unrecognized status type: $status_type"
-        )
-        return histogram
-    end
+    return poll_for_results(client, jobID, qpu.status_request_throttle)
 end
 
 # 100ms between queries to host by default
