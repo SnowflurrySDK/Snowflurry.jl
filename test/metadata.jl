@@ -37,7 +37,9 @@ include("mock_functions.jl")
 
     for (metadata, key, received_val, expected_val) in faultyMetadataList
         requestor = MockRequestor(
-            stub_response_sequence([stubMetadataResponse(metadata)]),
+            stub_response_sequence([
+                stubMetadataResponse(makeMetadataResponseJSON(metadata)),
+            ]),
             make_post_checker(""),
         )
         qpu = AnyonYukonQPU(
@@ -58,6 +60,37 @@ include("mock_functions.jl")
     end
 end
 
+@testset "Construct AnyonYukonQPU with faulty metadata object" begin
+    faultyMetadataList = [
+        "{\"items\":[],\"total\":0,\"skipped\":0}",
+        "{\"items\":[{\"name\":\"first-machine\"},{\"name\":\"second-machine\"}],\"total\":2,\"skipped\":0}",
+        "{\"items\":[],\"total\":1,\"skipped\":0}",
+        "{}",
+        "",
+    ]
+
+    for metadata in faultyMetadataList
+        requestor = MockRequestor(
+            stub_response_sequence([stubMetadataResponse(metadata)]),
+            make_post_checker(""),
+        )
+        qpu = AnyonYukonQPU(
+            Client(
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                requestor = requestor,
+                realm = expected_realm,
+            ),
+            expected_project_id,
+            status_request_throttle = no_throttle,
+        )
+
+        @test_throws AssertionError get_metadata(qpu)
+    end
+
+end
+
 @testset "Construct AnyonYukonQPU with missing metadata keys" begin
 
     qpus_to_metadata = Dict(
@@ -71,7 +104,7 @@ end
         for metadataStr in metadata_list
             for key in keys_to_delete
                 metadata = JSON.parse(metadataStr)
-                delete!(metadata[1], key)
+                delete!(metadata["items"][1], key)
                 metadata_with_missing_entry = JSON.json(metadata)
 
                 requestor = MockRequestor(
@@ -98,7 +131,7 @@ end
 
             # check error message for "offline" status
             metadata = JSON.parse(metadataStr)
-            metadata[1]["status"] = "offline"
+            metadata["items"][1]["status"] = "offline"
             metadata_with_offline_status = JSON.json(metadata)
 
             requestor = MockRequestor(
@@ -124,7 +157,7 @@ end
 
             # missing serial number does not throw error
             metadata = JSON.parse(metadataStr)
-            delete!(metadata[1]["metadata"], "Serial Number")
+            delete!(metadata["items"][1]["metadata"], "Serial Number")
             metadata_with_no_serial_number = JSON.json(metadata)
 
             requestor = MockRequestor(
@@ -155,27 +188,38 @@ end
 @testset "Construct AnyonYamaskaQPU with faulty metadata" begin
 
     faultyMetadataList = [
-        ("[{\"name\":\"wrong-name\"}]", "name", "wrong-name", "yamaska")
         (
-            "[{\"name\":\"yamaska\",\"type\":\"wrong-type\"}]",
+            makeMetadataResponseJSON("[{\"name\":\"wrong-name\"}]"),
+            "name",
+            "wrong-name",
+            "yamaska",
+        )
+        (
+            makeMetadataResponseJSON("[{\"name\":\"yamaska\",\"type\":\"wrong-type\"}]"),
             "type",
             "wrong-type",
             "quantum-computer",
         )
         (
-            "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":0}]",
+            makeMetadataResponseJSON(
+                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":0}]",
+            ),
             "qubitCount",
             0,
             12,
         )
         (
-            "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":0}]",
+            makeMetadataResponseJSON(
+                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":0}]",
+            ),
             "bitCount",
             0,
             12,
         )
         (
-            "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"wrong-connectivity\"}]",
+            makeMetadataResponseJSON(
+                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"wrong-connectivity\"}]",
+            ),
             "connectivity",
             "wrong-connectivity",
             "lattice",
