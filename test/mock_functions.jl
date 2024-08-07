@@ -128,38 +128,6 @@ expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succee
 
 
 function make_request_checker(
-    input_realm::String = "",
-    input_queries::Dict{String,String} = (),
-)::Function
-    function request_checker(
-        url::String,
-        user::String,
-        input_access_token::String,
-        realm::String,
-        queries::Dict{String,String} = (),
-    )
-        myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
-        match_obj = match(myregex, url)
-
-        @assert input_access_token == expected_access_token (
-            "received: \n$input_access_token, expected: \n$expected_access_token"
-        )
-        @assert realm == input_realm ("received: \n$realm, expected: \n$input_realm")
-        @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
-
-        @assert input_queries == queries (
-            "received: \n$queries, expected: \n$input_queries"
-        )
-
-        if !isnothing(match_obj)
-            # caller is :get_status
-            return HTTP.Response(200, [], body = expected_get_status_response_body)
-        end
-        throw(NotImplementedError(:get_request, url))
-    end
-end
-
-function make_request_checker_for_get_status(
     expected_response::HTTP.Response,
     input_realm::String = "",
     input_queries::Dict{String,String} = Dict{String,String}(),
@@ -302,7 +270,7 @@ yukon_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_response, expected_realm, expected_empty_queries),
     ]),
     make_post_checker(expected_json_yukon, expected_realm),
 )
@@ -312,7 +280,7 @@ yamaska_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_response, expected_realm, expected_empty_queries),
     ]),
     make_post_checker(expected_json_yamaska, expected_realm),
 )

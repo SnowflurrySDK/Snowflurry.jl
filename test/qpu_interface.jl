@@ -5,17 +5,13 @@ using HTTP
 include("mock_functions.jl")
 
 generic_requestor = MockRequestor(
-    make_request_checker_for_get_status(
-        expected_response,
-        expected_realm,
-        expected_empty_queries,
-    ),
+    make_request_checker(expected_response, expected_realm, expected_empty_queries),
     make_post_checker(expected_json_generic, expected_realm),
 )
 
 
 no_realm_requestor_generic = MockRequestor(
-    make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
+    make_request_checker(expected_response, "", expected_empty_queries),
     make_post_checker(expected_json_generic),
 )
 
@@ -24,26 +20,18 @@ yukon_requestor_with_empty_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
+        make_request_checker(expected_response, "", expected_empty_queries),
     ]),
     make_post_checker(expected_json_yukon),
 )
 
 yukon_requestor = MockRequestor(
-    make_request_checker_for_get_status(
-        expected_response,
-        expected_realm,
-        expected_empty_queries,
-    ),
+    make_request_checker(expected_response, expected_realm, expected_empty_queries),
     make_post_checker(expected_json_yukon, expected_realm),
 )
 
 yamaska_requestor = MockRequestor(
-    make_request_checker_for_get_status(
-        expected_response,
-        expected_realm,
-        expected_empty_queries,
-    ),
+    make_request_checker(expected_response, expected_realm, expected_empty_queries),
     make_post_checker(
         make_expected_json(Snowflurry.AnyonYamaskaMachineName),
         expected_realm,
@@ -55,7 +43,7 @@ yamaska_requestor_with_empty_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
+        make_request_checker(expected_response, "", expected_empty_queries),
     ]),
     make_post_checker(expected_json_yamaska),
 )
@@ -300,10 +288,8 @@ end
     ]
 
     for (job_id, stub_response, expected_status_type, expected_message) in statuses
-        requestor = MockRequestor(
-            make_request_checker_for_get_status(stub_response, expected_realm),
-            test_post,
-        )
+        requestor =
+            MockRequestor(make_request_checker(stub_response, expected_realm), test_post)
 
         test_client = Client(
             host = expected_host,
@@ -1226,7 +1212,7 @@ end
             function (args...; kwargs...)
                 return stubMetadataResponse(yukonMetadata)
             end,
-            make_request_checker("", expected_empty_queries),
+            make_request_checker(expected_response, "", expected_empty_queries),
             function (args...; kwargs...)
                 return stubStatusResponse(Snowflurry.succeeded_status)
             end,
@@ -1235,7 +1221,7 @@ end
             function (args...; kwargs...)
                 return stubMetadataResponse(yamaskaMetadata)
             end,
-            make_request_checker("", expected_empty_queries),
+            make_request_checker(expected_response, "", expected_empty_queries),
             function (args...; kwargs...)
                 return stubStatusResponse(Snowflurry.succeeded_status)
             end,
