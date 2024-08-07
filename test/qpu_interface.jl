@@ -5,12 +5,17 @@ using HTTP
 include("mock_functions.jl")
 
 generic_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker_for_get_status(
+        expected_response,
+        expected_realm,
+        expected_empty_queries,
+    ),
     make_post_checker(expected_json_generic, expected_realm),
 )
 
+
 no_realm_requestor_generic = MockRequestor(
-    make_request_checker("", expected_empty_queries),
+    make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
     make_post_checker(expected_json_generic),
 )
 
@@ -19,18 +24,26 @@ yukon_requestor_with_empty_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker("", expected_empty_queries),
+        make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
     ]),
     make_post_checker(expected_json_yukon),
 )
 
 yukon_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker_for_get_status(
+        expected_response,
+        expected_realm,
+        expected_empty_queries,
+    ),
     make_post_checker(expected_json_yukon, expected_realm),
 )
 
 yamaska_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker_for_get_status(
+        expected_response,
+        expected_realm,
+        expected_empty_queries,
+    ),
     make_post_checker(
         make_expected_json(Snowflurry.AnyonYamaskaMachineName),
         expected_realm,
@@ -42,7 +55,7 @@ yamaska_requestor_with_empty_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker("", expected_empty_queries),
+        make_request_checker_for_get_status(expected_response, "", expected_empty_queries),
     ]),
     make_post_checker(expected_json_yamaska),
 )
@@ -269,59 +282,48 @@ end
 
     @test circuit_json == expected_json_non_default_bit_count
 end
-
 @testset "job status" begin
-    # We don't expect a POST during this test. Returning nothing should cause a
-    # failure if a POST is attempted
     test_post = () -> Nothing
 
-    test_get = stub_response_sequence([
-        # Simulate a response for a failed job.
-        stubFailedStatusResponse(),
-    ])
-    requestor = HTTPRequestor(test_get, test_post)
-    test_client = Client(
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        requestor = requestor,
-    )
-    status, histogram = get_status(test_client, "jobID not used in this test")
-    @test get_status_type(status) == Snowflurry.failed_status
-    @test get_status_message(status) == "mocked"
+    statuses = [
+        (
+            "jobID not used in this test",
+            stubFailedStatusResponse(),
+            Snowflurry.failed_status,
+            "mocked",
+        ),
+        ("jobID_queued", stubQueuedStatusResponse(), Snowflurry.queued_status, ""),
+        ("jobID_running", stubRunningStatusResponse(), Snowflurry.running_status, ""),
+        ("jobID_cancelled", stubCancelledResultResponse(), Snowflurry.cancelled_status, ""),
+        ("jobID_successful", stubSuccessStatusResponse(), Snowflurry.succeeded_status, ""),
+        ("jobID_invalid", stubFailedStatusResponse(), Snowflurry.failed_status, "invalid"),
+    ]
 
-    test_get = stub_response_sequence([
-        # Simulate a response containing an invalid job status.
-        stubStatusResponse("not a valid status"),
-    ])
+    for (job_id, stub_response, expected_status_type, expected_message) in statuses
+        requestor = MockRequestor(
+            make_request_checker_for_get_status(stub_response, expected_realm),
+            test_post,
+        )
 
-    requestor = HTTPRequestor(test_get, test_post)
-    test_client = Client(
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        requestor = requestor,
-    )
-    @test_throws ArgumentError get_status(test_client, "jobID not used in this test")
+        test_client = Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            realm = expected_realm,
+            requestor = requestor,
+        )
 
-    malformedResponse = stubFailedStatusResponse()
-    # A failure response _should_ have a 'message' field but, if things go very
-    # wrong, the user should still get something useful.
-    body = "{\"status\":{\"type\":\"FAILED\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
-    malformedResponse.body = collect(UInt8, body)
-    test_get = stub_response_sequence([malformedResponse])
-    requestor = HTTPRequestor(test_get, test_post)
-    test_client = Client(
-        host = expected_host,
-        user = expected_user,
-        access_token = expected_access_token,
-        requestor = requestor,
-    )
-    status, histogram = get_status(test_client, "jobID not used in this test")
-    @test status.type == Snowflurry.failed_status
-    @test status.message != ""
+        status, histogram = Snowflurry.get_status(test_client, job_id)
+
+        @test get_status_type(status) == expected_status_type
+
+        if expected_message == "invalid"
+            @test status.message != ""
+        elseif expected_message != ""
+            @test get_status_message(status) == expected_message
+        end
+    end
 end
-
 
 function test_print_connectivity(input::Snowflurry.UnionAnyonQPU, expected::String)
     io = IOBuffer()

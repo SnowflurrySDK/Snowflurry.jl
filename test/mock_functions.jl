@@ -8,6 +8,11 @@ expected_project_id = "project_id"
 expected_machine_name = "machine"
 expected_realm = "test-realm"
 expected_empty_queries = Dict{String,String}()
+expected_response = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"SUCCEEDED\"},\"result\":{\"histogram\":{\"001\":100}}}",
+)
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
@@ -105,6 +110,7 @@ function make_post_checker_doctests(input_realm::String = "")::Function
         expected_url = expected_host * "/" * Snowflurry.path_jobs
 
         @assert url == expected_url ("received: \n$url, \nexpected: \n$expected_url")
+
         @assert input_access_token == expected_access_token (
             "received: \n$input_access_token, expected: \n$expected_access_token"
         )
@@ -116,7 +122,10 @@ function make_post_checker_doctests(input_realm::String = "")::Function
     end
 end
 
+expected_empty_queries = Dict{String,String}()
+
 expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
+
 
 function make_request_checker(
     input_realm::String = "",
@@ -150,6 +159,42 @@ function make_request_checker(
     end
 end
 
+function make_request_checker_for_get_status(
+    expected_response::HTTP.Response,
+    input_realm::String = "",
+    input_queries::Dict{String,String} = Dict{String,String}(),
+)::Function
+    function get_checker(
+        url::String,
+        user::String,
+        input_access_token::String,
+        realm::String,
+        queries::Dict{String,String} = (),
+    )
+        myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
+
+        match_obj = match(myregex, url)
+
+        @assert input_access_token == expected_access_token (
+            "received: \n$input_access_token, expected: \n$expected_access_token"
+        )
+
+        @assert realm == input_realm ("received: \n$realm, expected: \n$input_realm")
+
+        @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
+
+        @assert input_queries == queries (
+            "received: \n$queries, expected: \n$input_queries"
+        )
+
+        if !isnothing(match_obj)
+            return expected_response
+        end
+        throw(NotImplementedError(:get_request, url))
+    end
+end
+
+
 function stubStatusResponse(status::String)::HTTP.Response
     if status == Snowflurry.succeeded_status
         HTTP.Response(
@@ -171,14 +216,38 @@ stubFailedStatusResponse() = HTTP.Response(
     [],
     body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}",
 )
+
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
+
 stubFailureResult() =
     HTTP.Response(200, [], body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}")
+
+
+stubQueuedStatusResponse() =
+    HTTP.Response(200, [], body = "{\"status\":{\"type\":\"$(Snowflurry.queued_status)\"}}")
+
+
+stubRunningStatusResponse() = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"$(Snowflurry.running_status)\"}}",
+)
+
+
+stubSuccessStatusResponse() = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"}, \"result\":{\"histogram\":{\"001\":100}}}",
+)
+
+
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],
     body = "{\"status\":{\"type\":\"$(Snowflurry.cancelled_status)\"}}",
 )
+
+
 stubCircuitSubmittedResponse() = HTTP.Response(
     200,
     [],
