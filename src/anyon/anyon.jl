@@ -1,7 +1,7 @@
 using Snowflurry
 
 const AnyonYukonConnectivity = LineConnectivity(6)
-const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 3, 3, 2])
+const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 5, 6, 5, 3, 1])
 
 const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
 
@@ -72,7 +72,7 @@ end
     AnyonYamaskaQPU <: AbstractQPU
 
 A data structure to represent an Anyon System's Yamaska generation QPU, 
-consisting of 12 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`](@ref)).
+consisting of 24 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
 - `status_request_throttle ::Function` -- Used to rate-limit job status requests.
@@ -87,7 +87,7 @@ Quantum Processing Unit:
    generation:    Yamaska
    serial_number: ANYK202301
    project_id:    test-project
-   qubit_count:   12 
+   qubit_count:   24 
    connectivity_type:  2D-lattice
    realm:         test-realm
 ```
@@ -263,8 +263,8 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         # qpu isa AnyonYamaskaQPU
         assert_expected_entry(machineMetadata, "name", "yamaska")
         assert_expected_entry(machineMetadata, "type", "quantum-computer")
-        assert_expected_entry(machineMetadata, "qubitCount", 12)
-        assert_expected_entry(machineMetadata, "bitCount", 12)
+        assert_expected_entry(machineMetadata, "qubitCount", 24)
+        assert_expected_entry(machineMetadata, "bitCount", 24)
         assert_expected_entry(machineMetadata, "connectivity", "lattice")
 
         generation = "Yamaska"

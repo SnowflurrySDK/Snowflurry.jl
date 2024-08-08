@@ -206,19 +206,19 @@ end
             ),
             "qubitCount",
             0,
-            12,
+            24,
         )
         (
             makeMetadataResponseJSON(
-                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":0}]",
+                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":24,\"bitCount\":0}]",
             ),
             "bitCount",
             0,
-            12,
+            24,
         )
         (
             makeMetadataResponseJSON(
-                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":12,\"bitCount\":12,\"connectivity\":\"wrong-connectivity\"}]",
+                "[{\"name\":\"yamaska\",\"type\":\"quantum-computer\",\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"wrong-connectivity\"}]",
             ),
             "connectivity",
             "wrong-connectivity",

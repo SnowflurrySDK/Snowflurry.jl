@@ -111,7 +111,9 @@ excluded positions: [1, 5, 9]
 ```
 
 !!! note
-    To match the qubit numbering used in the hardware implementation of AnyonYamaskaQPU, the LatticeConnectivity must be built using: `LatticeConnectivity([1, 3, 3, 3, 2])`, which is provided as the package const `Snowflurry.AnyonYamaskaConnectivity`.
+    To match the qubit numbering used in the hardware implementation of AnyonYamaskaQPU, 
+    the LatticeConnectivity must be built using: `LatticeConnectivity([1, 3, 5, 6, 5, 3, 1])`, 
+    which is provided as the package const `Snowflurry.AnyonYamaskaConnectivity`.
 
 """
 struct LatticeConnectivity <: AbstractConnectivity
