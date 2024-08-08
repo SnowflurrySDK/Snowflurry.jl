@@ -1,9 +1,8 @@
 using Snowflurry
 
-circuit = QuantumCircuit(qubit_count = 1, name = "sigma_x")
+circuit = QuantumCircuit(qubit_count = 3, name = "sigma_x")
 
-push!(circuit, sigma_x(1))
-push!(circuit, readout(1, 1))
+push!(circuit, readout(3, 3))
 
 user = ENV["THUNDERHEAD_USER"]
 token = ENV["THUNDERHEAD_API_TOKEN"]
