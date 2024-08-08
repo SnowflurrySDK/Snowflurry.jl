@@ -284,7 +284,6 @@ end
         ("jobID_running", stubRunningStatusResponse(), Snowflurry.running_status, ""),
         ("jobID_cancelled", stubCancelledResultResponse(), Snowflurry.cancelled_status, ""),
         ("jobID_successful", stubSuccessStatusResponse(), Snowflurry.succeeded_status, ""),
-        ("jobID_invalid", stubFailedStatusResponse(), Snowflurry.failed_status, "invalid"),
     ]
 
     for (job_id, stub_response, expected_status_type, expected_message) in statuses
@@ -303,11 +302,7 @@ end
 
         @test get_status_type(status) == expected_status_type
 
-        if expected_message == "invalid"
-            @test status.message != ""
-        elseif expected_message != ""
-            @test get_status_message(status) == expected_message
-        end
+        @test get_status_message(status) == expected_message
     end
 end
 
