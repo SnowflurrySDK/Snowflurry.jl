@@ -8,6 +8,11 @@ expected_project_id = "project_id"
 expected_machine_name = "machine"
 expected_realm = "test-realm"
 expected_empty_queries = Dict{String,String}()
+expected_response = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"SUCCEEDED\"},\"result\":{\"histogram\":{\"001\":100}}}",
+)
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
@@ -105,6 +110,7 @@ function make_post_checker_doctests(input_realm::String = "")::Function
         expected_url = expected_host * "/" * Snowflurry.path_jobs
 
         @assert url == expected_url ("received: \n$url, \nexpected: \n$expected_url")
+
         @assert input_access_token == expected_access_token (
             "received: \n$input_access_token, expected: \n$expected_access_token"
         )
@@ -116,13 +122,17 @@ function make_post_checker_doctests(input_realm::String = "")::Function
     end
 end
 
+expected_empty_queries = Dict{String,String}()
+
 expected_get_status_response_body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"result\":{\"histogram\":{\"001\":100}}}"
 
+
 function make_request_checker(
+    expected_response::HTTP.Response,
     input_realm::String = "",
-    input_queries::Dict{String,String} = (),
+    input_queries::Dict{String,String} = Dict{String,String}(),
 )::Function
-    function request_checker(
+    function get_checker(
         url::String,
         user::String,
         input_access_token::String,
@@ -130,12 +140,15 @@ function make_request_checker(
         queries::Dict{String,String} = (),
     )
         myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
+
         match_obj = match(myregex, url)
 
         @assert input_access_token == expected_access_token (
             "received: \n$input_access_token, expected: \n$expected_access_token"
         )
+
         @assert realm == input_realm ("received: \n$realm, expected: \n$input_realm")
+
         @assert user == expected_user ("received: \n$user, expected: \n$expected_user")
 
         @assert input_queries == queries (
@@ -143,12 +156,12 @@ function make_request_checker(
         )
 
         if !isnothing(match_obj)
-            # caller is :get_status
-            return HTTP.Response(200, [], body = expected_get_status_response_body)
+            return expected_response
         end
         throw(NotImplementedError(:get_request, url))
     end
 end
+
 
 function stubStatusResponse(status::String)::HTTP.Response
     if status == Snowflurry.succeeded_status
@@ -171,14 +184,38 @@ stubFailedStatusResponse() = HTTP.Response(
     [],
     body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}",
 )
+
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
+
 stubFailureResult() =
     HTTP.Response(200, [], body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}")
+
+
+stubQueuedStatusResponse() =
+    HTTP.Response(200, [], body = "{\"status\":{\"type\":\"$(Snowflurry.queued_status)\"}}")
+
+
+stubRunningStatusResponse() = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"$(Snowflurry.running_status)\"}}",
+)
+
+
+stubSuccessStatusResponse() = HTTP.Response(
+    200,
+    [],
+    body = "{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"}, \"result\":{\"histogram\":{\"001\":100}}}",
+)
+
+
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],
     body = "{\"status\":{\"type\":\"$(Snowflurry.cancelled_status)\"}}",
 )
+
+
 stubCircuitSubmittedResponse() = HTTP.Response(
     200,
     [],
@@ -233,7 +270,7 @@ yukon_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_response, expected_realm, expected_empty_queries),
     ]),
     make_post_checker(expected_json_yukon, expected_realm),
 )
@@ -243,7 +280,7 @@ yamaska_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_response, expected_realm, expected_empty_queries),
     ]),
     make_post_checker(expected_json_yamaska, expected_realm),
 )
