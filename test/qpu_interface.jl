@@ -931,7 +931,7 @@ end
               "   generation:    Yamaska\n" *
               "   serial_number: ANYK202301\n" *
               "   project_id:    project_id\n" *
-              "   qubit_count:   12\n" *
+              "   qubit_count:   24\n" *
               "   connectivity_type:  2D-lattice\n" *
               "\n"
 
@@ -955,17 +955,22 @@ end
 
         test_print_connectivity(
             qpu,
-            "        1 \n" *
-            "        | \n" *
-            "  9 ──  5 ──  2 \n" *
-            "        |     | \n" *
-            "       10 ──  6 ──  3 \n" *
-            "              |     | \n" *
-            "             11 ──  7 ──  4 \n" *
-            "                    |     | \n" *
-            "                   12 ──  8 \n" *
+            "              1 \n" *
+            "              | \n" *
+            "        9 ──  5 ──  2 \n" *
+            "        |     |     | \n" *
+            " 17 ── 13 ── 10 ──  6 ──  3 \n" *
+            "  |     |     |     |     | \n" *
+            " 21 ── 18 ── 14 ── 11 ──  7 ──  4 \n" *
+            "        |     |     |     |     | \n" *
+            "       22 ── 19 ── 15 ── 12 ──  8 \n" *
+            "              |     |     | \n" *
+            "             23 ── 20 ── 16 \n" *
+            "                    | \n" *
+            "                   24 \n" *
             "\n",
         )
+
 
         @test get_connectivity_label(get_connectivity(qpu)) ==
               Snowflurry.lattice_connectivity_label
@@ -975,7 +980,7 @@ end
             "generation" => "Yamaska",
             "serial_number" => "ANYK202301",
             "project_id" => expected_project_id,
-            "qubit_count" => 12,
+            "qubit_count" => 24,
             "connectivity_type" => Snowflurry.lattice_connectivity_label,
             "excluded_positions" => expected_excluded_positions,
         )
@@ -1198,7 +1203,7 @@ end
           "   generation:    Yamaska\n" *
           "   serial_number: ANYK202301\n" *
           "   project_id:    project_id\n" *
-          "   qubit_count:   12\n" *
+          "   qubit_count:   24\n" *
           "   connectivity_type:  2D-lattice\n" *
           "   realm:         test-realm\n" *
           "\n"
