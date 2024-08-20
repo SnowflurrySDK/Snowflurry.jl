@@ -81,6 +81,18 @@ Base.@kwdef struct QuantumCircuit
     end
 end
 
+function update_circuit_qubit_count(
+    quantum_cicuit::QuantumCircuit,
+    qubit_count::Int,
+)::QuantumCircuit
+    return QuantumCircuit(
+        qubit_count,
+        quantum_cicuit.bit_count,
+        quantum_cicuit.instructions,
+        quantum_cicuit.name,
+    )
+end
+
 function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     if !(c0.qubit_count == c1.qubit_count && c0.bit_count == c1.bit_count)
         return false
