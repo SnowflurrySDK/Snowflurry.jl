@@ -195,8 +195,11 @@ stubFailedStatusResponse() = HTTP.Response(
     body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}}",
 )
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-stubFailureResult() =
-    HTTP.Response(200, [], body = "{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}")
+stubFailureResult() = HTTP.Response(
+    200,
+    [],
+    body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}}",
+)
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],
