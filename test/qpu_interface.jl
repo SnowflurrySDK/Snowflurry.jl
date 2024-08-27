@@ -204,7 +204,10 @@ end
     circuit_json =
         serialize_job(circuit, shot_count, expected_machine_name, expected_project_id)
 
-    @test circuit_json == expected_json_generic
+    @test circuit_json == make_expected_job_submit_response(
+        expected_machine_name,
+        expected_operations_substr,
+    )
 
     test_client = Client(
         host = expected_host,
@@ -307,7 +310,7 @@ end
     malformedResponse = stubFailedStatusResponse()
     # A failure response _should_ have a 'message' field but, if things go very
     # wrong, the user should still get something useful.
-    body = "{\"status\":{\"type\":\"FAILED\"},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
+    body = "{\"job\":{\"status\":{\"type\":\"FAILED\"}},\"these aren't the droids you're looking for\":\"*waves-hand*\"}"
     malformedResponse.body = collect(UInt8, body)
     test_get = stub_response_sequence([malformedResponse])
     requestor = HTTPRequestor(test_get, test_post)
