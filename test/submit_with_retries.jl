@@ -10,6 +10,7 @@ expected_c = Dict{String,Int}("key" => 789)
 args = [expected_a, expected_b, expected_c]
 
 expected_histogram = Dict{String,Int}("00" => 23, "10" => 321)
+expected_qpu_time = 42
 expected_error_msg = "expected_message"
 
 failed_status = Snowflurry.Status(Snowflurry.failed_status, expected_error_msg)
@@ -18,13 +19,13 @@ succeeded_status = Snowflurry.Status(Snowflurry.succeeded_status, "")
 invalid_status_type = "INVALID"
 invalid_status = Snowflurry.Status(invalid_status_type, "")
 
-success_tuple = (succeeded_status, expected_histogram)
-failure_tuple = (failed_status, Dict{String,Int}())
-cancellation_tuple = (cancelled_status, Dict{String,Int}())
-invalid_response_tuple = (invalid_status, Dict{String,Int}())
+success_tuple = (succeeded_status, expected_histogram, expected_qpu_time)
+failure_tuple = (failed_status, Dict{String,Int}(), expected_qpu_time)
+cancellation_tuple = (cancelled_status, Dict{String,Int}(), expected_qpu_time)
+invalid_response_tuple = (invalid_status, Dict{String,Int}(), expected_qpu_time)
 
 function make_submitter_spy(
-    return_tuples::Array{Tuple{Status,Dict{String,Int}}},
+    return_tuples::Array{Tuple{Status,Dict{String,Int},Int}},
 
     # must be a reference value, so the caller can assert the mutated binding
     # see: https://docs.julialang.org/en/v1/manual/functions/#man-argument-passing
@@ -53,13 +54,14 @@ end
     for (return_tuple, expected_attempts) in test_specs
         attempts_counter = [0]
 
-        histogram = Snowflurry.submit_with_retries(
+        histogram, qpu_time = Snowflurry.submit_with_retries(
             make_submitter_spy(return_tuple, attempts_counter),
             args...,
         )
 
         @test attempts_counter[1] == expected_attempts
         @test histogram == expected_histogram
+        @test qpu_time == expected_qpu_time
     end
 end
 

@@ -11,6 +11,11 @@ expected_empty_queries = Dict{String,String}()
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
+expected_qpu_time = 542
+
+make_sumbit_job_str(machine_name) =
+    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"qpuTimeMilliSeconds\":$expected_qpu_time}"
+
 make_job_str(machine_name) =
     "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\"}"
 
@@ -139,7 +144,7 @@ function make_post_checker_doctests(input_realm::String = "")::Function
     end
 end
 
-expected_get_status_response_body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"}},\"result\":{\"histogram\":{\"001\":100}}}"
+expected_get_status_response_body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.succeeded_status)\"},\"qpuTimeMilliSeconds\":542},\"result\":{\"histogram\":{\"001\":100}}}"
 
 function make_request_checker(
     input_realm::String = "",
@@ -178,7 +183,7 @@ function stubStatusResponse(status::String)::HTTP.Response
         HTTP.Response(
             200,
             [],
-            body = "{\"job\":{\"status\":{\"type\":\"$status\"}}, \"result\":{\"histogram\":{\"001\":100}}}",
+            body = "{\"job\":{\"status\":{\"type\":\"$status\"},\"qpuTimeMilliSeconds\":542}, \"result\":{\"histogram\":{\"001\":100}}}",
         )
     else
         HTTP.Response(
@@ -195,11 +200,6 @@ stubFailedStatusResponse() = HTTP.Response(
     body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\",\"message\":\"mocked\"}}}",
 )
 stubResult() = HTTP.Response(200, [], body = "{\"histogram\":{\"001\":100}}")
-stubFailureResult() = HTTP.Response(
-    200,
-    [],
-    body = "{\"job\":{\"status\":{\"type\":\"$(Snowflurry.failed_status)\"}}}",
-)
 stubCancelledResultResponse() = HTTP.Response(
     200,
     [],
