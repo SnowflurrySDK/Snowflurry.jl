@@ -246,12 +246,7 @@ end
 
     shot_count = 100
 
-    serialize_job(
-        circuit,
-        shot_count,
-        Snowflurry.AnyonYukonMachineName,
-        "",
-    )
+    serialize_job(circuit, shot_count, Snowflurry.AnyonYukonMachineName, "")
 end
 
 @testset "serialize_job: non-default bit_count" begin
@@ -994,10 +989,7 @@ end
 
     for qpu in qpus
 
-        qpu(
-            test_client,
-            "",
-        )
+        qpu(test_client, "")
 
         qpu(;
             host = expected_host,
