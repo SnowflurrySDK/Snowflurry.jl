@@ -129,8 +129,6 @@ get_request(
     queries::Dict{String,String} = Dict{String,String}(),
 )::HTTP.Response = mock_requestor.request_checker(url, user, access_token, realm, queries)
 
-const error_msg_empty_project_id = "project_id cannot be empty"
-
 """
     serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 

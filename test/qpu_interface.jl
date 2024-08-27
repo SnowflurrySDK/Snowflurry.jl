@@ -240,13 +240,13 @@ end
     ]
 end
 
-@testset "serialize_job: empty project_id" begin
+@testset "serialize_job: empty project_id should not throw error" begin
 
     circuit = QuantumCircuit(qubit_count = 1)
 
     shot_count = 100
 
-    @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) serialize_job(
+    serialize_job(
         circuit,
         shot_count,
         Snowflurry.AnyonYukonMachineName,
@@ -982,7 +982,7 @@ end
     end
 end
 
-@testset "AnyonQPUs with empty project_id" begin
+@testset "AnyonQPUs with empty project_id succeeds" begin
     qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
 
     test_client = Client(
@@ -994,12 +994,12 @@ end
 
     for qpu in qpus
 
-        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(
+        qpu(
             test_client,
             "",
         )
 
-        @test_throws ArgumentError(Snowflurry.error_msg_empty_project_id) qpu(;
+        qpu(;
             host = expected_host,
             user = expected_user,
             access_token = expected_access_token,
