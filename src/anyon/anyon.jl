@@ -499,11 +499,11 @@ function run_job(
     return submit_with_retries(submit_and_fetch_result, client, circuit, shot_count, qpu)
 end
 
-function submit_with_retries(f::Function, args...)::Dict{String,Int}
+function submit_with_retries(f::Function, args...)::Tuple{Dict{String,Int},Int}
     attempts = 3
 
     while attempts > 0
-        status, histogram = f(args...)
+        status, histogram, qpu_time = f(args...)
 
         status_type = get_status_type(status)
 
@@ -522,7 +522,7 @@ function submit_with_retries(f::Function, args...)::Dict{String,Int}
             @assert status_type == succeeded_status (
                 "Server returned an unrecognized status type: $status_type"
             )
-            return histogram
+            return histogram, qpu_time
         end
     end
 end
@@ -532,7 +532,7 @@ function submit_and_fetch_result(
     circuit::QuantumCircuit,
     shot_count::Int,
     qpu::UnionAnyonQPU,
-)::Tuple{Status,Dict{String,Int}}
+)::Tuple{Status,Dict{String,Int},Int}
     jobID =
         submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 
@@ -549,7 +549,7 @@ function submit_and_fetch_result(
         @assert status_type == succeeded_status (
             "Server returned an unrecognized status type: $status_type"
         )
-        return histogram, qpu_time
+        return status, histogram, qpu_time
     end
 end
 
