@@ -129,8 +129,6 @@ get_request(
     queries::Dict{String,String} = Dict{String,String}(),
 )::HTTP.Response = mock_requestor.request_checker(url, user, access_token, realm, queries)
 
-const error_msg_empty_project_id = "project_id cannot be empty"
-
 """
     serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 
@@ -155,18 +153,12 @@ function serialize_job(
     circuit::QuantumCircuit,
     shot_count::Integer,
     machine_name::String,
-    project_id::String,
+    project_id::String = "",
 )::String
-
-    if project_id == ""
-        throw(ArgumentError(error_msg_empty_project_id))
-    end
-
     job_description = Dict(
         "name" => get_name(circuit),
         "type" => "circuit",
         "machineName" => machine_name,
-        "projectID" => project_id,
         "circuit" => Dict{String,Any}(
             "operations" => Vector{Dict{String,Any}}(),
             "bitCount" => get_num_bits(circuit),
@@ -175,6 +167,9 @@ function serialize_job(
         "shotCount" => shot_count,
     )
 
+    if project_id != ""
+        job_description["projectID"] = project_id
+    end
 
     for instr in get_circuit_instructions(circuit)
         if instr isa Readout

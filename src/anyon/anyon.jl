@@ -38,12 +38,9 @@ struct AnyonYukonQPU <: AbstractQPU
 
     function AnyonYukonQPU(
         client::Client,
-        project_id::String;
+        project_id::String = "";
         status_request_throttle = default_status_request_throttle,
     )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
         new(client, status_request_throttle, AnyonYukonConnectivity, project_id, Metadata())
     end
 
@@ -51,13 +48,10 @@ struct AnyonYukonQPU <: AbstractQPU
         host::String,
         user::String,
         access_token::String,
-        project_id::String,
+        project_id::String = "",
         realm::String = "",
         status_request_throttle = default_status_request_throttle,
     )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
         new(
             Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
@@ -101,12 +95,9 @@ struct AnyonYamaskaQPU <: AbstractQPU
 
     function AnyonYamaskaQPU(
         client::Client,
-        project_id::String;
+        project_id::String = "";
         status_request_throttle = default_status_request_throttle,
     )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
         new(
             client,
             status_request_throttle,
@@ -119,14 +110,10 @@ struct AnyonYamaskaQPU <: AbstractQPU
         host::String,
         user::String,
         access_token::String,
-        project_id::String,
+        project_id::String = "",
         realm::String = "",
         status_request_throttle = default_status_request_throttle,
     )
-        if project_id == ""
-            throw(ArgumentError(error_msg_empty_project_id))
-        end
-
         new(
             Client(host = host, user = user, access_token = access_token, realm = realm),
             status_request_throttle,
