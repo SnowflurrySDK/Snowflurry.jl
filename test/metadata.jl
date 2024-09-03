@@ -222,3 +222,59 @@ end
 
     end
 end
+
+@testset "Getting metadata for offline QPUs succeeds" begin
+
+    qpus_to_metadata = [
+        (
+            AnyonYukonQPU,
+            yukonMetadataWithOfflineStatus,
+            Metadata(
+                "manufacturer" => "Anyon Systems Inc.",
+                "generation" => "Yukon",
+                "serial_number" => "ANYK202201",
+                "project_id" => expected_project_id,
+                "qubit_count" => 6,
+                "connectivity_type" => Snowflurry.line_connectivity_label,
+                "excluded_positions" => Int[],
+                "status" => "offline",
+                "realm" => "test-realm",
+            ),
+        ),
+        (
+            AnyonYamaskaQPU,
+            yamaskaMetadataWithOfflineStatus,
+            Metadata(
+                "manufacturer" => "Anyon Systems Inc.",
+                "generation" => "Yamaska",
+                "serial_number" => "ANYK202301",
+                "project_id" => expected_project_id,
+                "qubit_count" => 24,
+                "connectivity_type" => Snowflurry.lattice_connectivity_label,
+                "excluded_positions" => Int[],
+                "status" => "offline",
+                "realm" => "test-realm",
+            ),
+        ),
+    ]
+
+    for (qpu_ctor, metadata, expected_metadata) in qpus_to_metadata
+        requestor = MockRequestor(
+            stub_response_sequence([stubMetadataResponse(metadata)]),
+            make_post_checker(""),
+        )
+        qpu = qpu_ctor(
+            Client(
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                requestor = requestor,
+                realm = expected_realm,
+            ),
+            expected_project_id,
+            status_request_throttle = no_throttle,
+        )
+
+        @test expected_metadata == get_metadata(qpu)
+    end
+end
