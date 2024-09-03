@@ -5,32 +5,30 @@ using HTTP
 include("mock_functions.jl")
 
 generic_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker(expected_realm),
     make_post_checker(expected_json_generic, expected_realm),
 )
 
-no_realm_requestor_generic = MockRequestor(
-    make_request_checker("", expected_empty_queries),
-    make_post_checker(expected_json_generic),
-)
+no_realm_requestor_generic =
+    MockRequestor(make_request_checker(""), make_post_checker(expected_json_generic))
 
 yukon_requestor_with_empty_realm = MockRequestor(
     stub_request_checker_sequence([
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker("", expected_empty_queries),
+        make_request_checker(""),
     ]),
     make_post_checker(expected_json_yukon),
 )
 
 yukon_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker(expected_realm),
     make_post_checker(expected_json_yukon, expected_realm),
 )
 
 yamaska_requestor = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker(expected_realm),
     make_post_checker(
         make_expected_json(Snowflurry.AnyonYamaskaMachineName),
         expected_realm,
@@ -42,7 +40,7 @@ yamaska_requestor_with_empty_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker("", expected_empty_queries),
+        make_request_checker(""),
     ]),
     make_post_checker(expected_json_yamaska),
 )
@@ -76,7 +74,6 @@ end
         expected_user,
         expected_access_token,
         expected_realm,
-        expected_empty_queries,
     )
     @test_throws NotImplementedError post_request(
         non_impl_requestor,
@@ -92,15 +89,6 @@ end
 @testset "requestor: MockRequestor" begin
     #ensure MockRequestor behaves as expected
 
-    @test_throws NotImplementedError get_request(
-        yukon_requestor,
-        "erroneous_url",
-        expected_user,
-        expected_access_token,
-        expected_realm,
-        expected_empty_queries,
-    )
-
     expected_response = HTTP.Response(200, [], body = expected_get_status_response_body)
 
     jobID = "1234-abcd"
@@ -114,14 +102,6 @@ end
     )
 
     compare_responses(expected_response, response)
-
-    @test_throws NotImplementedError get_request(
-        yukon_requestor,
-        expected_host * "/" * string(Snowflurry.path_jobs, "wrong_ending"),
-        expected_user,
-        expected_access_token,
-        expected_realm,
-    )
 
     @test_throws AssertionError("received: \nwrong-user, expected: \n$expected_user") get_request(
         yukon_requestor,
@@ -858,6 +838,7 @@ end
             "qubit_count" => 6,
             "connectivity_type" => Snowflurry.line_connectivity_label,
             "excluded_positions" => expected_excluded_positions,
+            "status" => "online",
         )
 
     end
@@ -892,6 +873,7 @@ end
         "connectivity_type" => Snowflurry.line_connectivity_label,
         "realm" => expected_realm,
         "excluded_positions" => Vector{Int}(),
+        "status" => "online",
     )
 end
 
@@ -978,6 +960,7 @@ end
             "qubit_count" => 24,
             "connectivity_type" => Snowflurry.lattice_connectivity_label,
             "excluded_positions" => expected_excluded_positions,
+            "status" => "online",
         )
     end
 end
@@ -1049,6 +1032,7 @@ end
     #verify that run_job blocks until a 'long-running' job completes
     requestor = MockRequestor(
         stub_response_sequence([
+            stubMetadataResponse(yukonMetadata),
             stubStatusResponse(Snowflurry.queued_status),
             stubStatusResponse(Snowflurry.running_status),
             stubStatusResponse(Snowflurry.running_status),
@@ -1075,6 +1059,7 @@ end
     #verify that run_job throws an error if the QPU returns an error
     requestor = MockRequestor(
         stub_response_sequence([
+            stubMetadataResponse(yukonMetadata),
             stubStatusResponse(Snowflurry.queued_status),
             stubStatusResponse(Snowflurry.running_status),
             stubStatusResponse(Snowflurry.running_status),
@@ -1097,6 +1082,7 @@ end
     #verify that run_job throws an error if the job was cancelled
     requestor = MockRequestor(
         stub_response_sequence([
+            stubMetadataResponse(yukonMetadata),
             stubStatusResponse(Snowflurry.queued_status),
             stubStatusResponse(Snowflurry.running_status),
             stubStatusResponse(Snowflurry.running_status),
@@ -1259,29 +1245,9 @@ end
 
 @testset "transpile_and_run_job on AnyonYukonQPU and AnyonYamaskaQPU" begin
 
-    qpus_and_connectivities = [
-        (AnyonYukonQPU, Snowflurry.AnyonYukonConnectivity),
-        (AnyonYamaskaQPU, Snowflurry.AnyonYamaskaConnectivity),
-    ]
-    request_checkers = [
-        stub_request_checker_sequence([
-            function (args...; kwargs...)
-                return stubMetadataResponse(yukonMetadata)
-            end,
-            make_request_checker("", expected_empty_queries),
-            function (args...; kwargs...)
-                return stubStatusResponse(Snowflurry.succeeded_status)
-            end,
-        ]),
-        stub_request_checker_sequence([
-            function (args...; kwargs...)
-                return stubMetadataResponse(yamaskaMetadata)
-            end,
-            make_request_checker("", expected_empty_queries),
-            function (args...; kwargs...)
-                return stubStatusResponse(Snowflurry.succeeded_status)
-            end,
-        ]),
+    test_specs = [
+        ("yukon", AnyonYukonQPU, yukonMetadata, Snowflurry.AnyonYukonConnectivity),
+        ("yamaska", AnyonYamaskaQPU, yamaskaMetadata, Snowflurry.AnyonYamaskaConnectivity),
     ]
     post_checkers_toffoli = [
         make_post_checker(expected_json_Toffoli_Yukon),
@@ -1293,18 +1259,19 @@ end
     ]
 
     for (
-        (QPU, connectivity),
-        request_checker,
+        (qpu_name, QPU, metadata, connectivity),
         post_checker_toffoli,
         post_checker_last_qubit,
-    ) in zip(
-        qpus_and_connectivities,
-        request_checkers,
-        post_checkers_toffoli,
-        post_checkers_last_qubit,
-    )
+    ) in zip(test_specs, post_checkers_toffoli, post_checkers_last_qubit)
 
-        requestor = MockRequestor(request_checker, make_post_checker(expected_json_yukon))
+        requestor = MockRequestor(
+            make_request_checker(
+                "",
+                Dict("machineName" => qpu_name),
+                return_metadata = metadata,
+            ),
+            make_post_checker(expected_json_yukon),
+        )
         test_client = Client(
             host = expected_host,
             user = expected_user,
@@ -1329,7 +1296,19 @@ end
         )
 
         # using default transpiler with full connectivity
-        requestor = MockRequestor(request_checker, post_checker_toffoli)
+        requestor = MockRequestor(
+            stub_request_checker_sequence(
+                Function[
+                    make_request_checker(
+                        "",
+                        Dict("machineName" => qpu_name),
+                        return_metadata = metadata,
+                    ),
+                    make_request_checker(""),
+                ],
+            ),
+            post_checker_toffoli,
+        )
         test_client = Client(
             host = expected_host,
             user = expected_user,
@@ -1351,7 +1330,19 @@ end
         @test qpu_time == expected_qpu_time
 
         # submit circuit with qubit_count_circuit==qubit_count_qpu
-        requestor = MockRequestor(request_checker, post_checker_last_qubit)
+        requestor = MockRequestor(
+            stub_request_checker_sequence(
+                Function[
+                    make_request_checker(
+                        "",
+                        Dict("machineName" => qpu_name),
+                        return_metadata = metadata,
+                    ),
+                    make_request_checker(""),
+                ],
+            ),
+            post_checker_last_qubit,
+        )
         test_client = Client(
             host = expected_host,
             user = expected_user,
@@ -1372,6 +1363,43 @@ end
             shot_count;
             transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
         ) # no error thrown
+    end
+end
+
+@testset "Submission failure: status offline" begin
+
+    expected_metadata_str_list =
+        [yukonMetadataWithOfflineStatus, yamaskaMetadataWithOfflineStatus]
+
+    qpus = [AnyonYukonQPU, AnyonYamaskaQPU]
+
+    for (expected_metadata_str, qpu_ctor) in zip(expected_metadata_str_list, qpus)
+        requestor = MockRequestor(
+            stub_response_sequence([stubMetadataResponse(expected_metadata_str)]),
+            () -> Nothing,
+        )
+
+        qpu = qpu_ctor(
+            Client(
+                host = expected_host,
+                user = expected_user,
+                access_token = expected_access_token,
+                requestor = requestor,
+            ),
+            expected_project_id,
+            status_request_throttle = no_throttle,
+        )
+
+        circuit = QuantumCircuit(
+            qubit_count = 2,
+            instructions = [sigma_x(1), readout(1, 1)],
+            name = "sigma_x job",
+        )
+        shot_count = 100
+
+        @test_throws AssertionError(
+            "cannot submit jobs to: $(Snowflurry.get_machine_name(qpu)); current status is : \"offline\"",
+        ) run_job(qpu, circuit, shot_count)
     end
 end
 

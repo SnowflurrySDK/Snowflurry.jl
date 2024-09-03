@@ -7,7 +7,6 @@ expected_access_token = "not_a_real_access_token"
 expected_project_id = "project_id"
 expected_machine_name = "machine"
 expected_realm = "test-realm"
-expected_empty_queries = Dict{String,String}()
 
 no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
@@ -148,7 +147,8 @@ expected_get_status_response_body = "{\"job\":{\"status\":{\"type\":\"$(Snowflur
 
 function make_request_checker(
     input_realm::String = "",
-    input_queries::Dict{String,String} = (),
+    input_queries::Dict{String,String} = Dict{String,String}();
+    return_metadata::String = "",
 )::Function
     function request_checker(
         url::String,
@@ -157,8 +157,6 @@ function make_request_checker(
         realm::String,
         queries::Dict{String,String} = (),
     )
-        myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
-        match_obj = match(myregex, url)
 
         @assert input_access_token == expected_access_token (
             "received: \n$input_access_token, expected: \n$expected_access_token"
@@ -170,9 +168,18 @@ function make_request_checker(
             "received: \n$queries, expected: \n$input_queries"
         )
 
+
+        myregex = Regex("(.*)(/$(Snowflurry.path_jobs)/)([^/]*)\$")
+        match_obj = match(myregex, url)
         if !isnothing(match_obj)
             # caller is :get_status
             return HTTP.Response(200, [], body = expected_get_status_response_body)
+        else
+            myregex = Regex("(.*)(/$(Snowflurry.PATH_MACHINES))\$")
+            match_obj = match(myregex, url)
+            if !isnothing(match_obj)
+                return HTTP.Response(200, [], body = return_metadata)
+            end
         end
         throw(NotImplementedError(:get_request, url))
     end
@@ -231,6 +238,14 @@ yamaskaMetadataWithDisconnectedQubits = makeMetadataResponseJSON(
     "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"CalculQC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"lattice\",\"disconnectedQubits\":[7,8,9,10,11,12]}]",
 )
 
+yukonMetadataWithOfflineStatus = makeMetadataResponseJSON(
+    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"offline\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\"}]",
+)
+
+yamaskaMetadataWithOfflineStatus = makeMetadataResponseJSON(
+    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"CalculQC\",\"status\":\"offline\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"lattice\"}]",
+)
+
 stubMetadataResponse(body::String) = HTTP.Response(200, [], body = body)
 
 # Returns a function that will yield the given responses in order as it's
@@ -271,7 +286,7 @@ yukon_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_realm),
     ]),
     make_post_checker(expected_json_yukon, expected_realm),
 )
@@ -281,7 +296,7 @@ yamaska_requestor_with_realm = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yamaskaMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_realm),
     ]),
     make_post_checker(expected_json_yamaska, expected_realm),
 )
