@@ -299,6 +299,13 @@ using PrecompileTools
         @assert typeof(e) == HTTP.Exceptions.ConnectError
     end
 
+    try
+        # coverage for post_request()
+        submit_job(get_client(qpu), circuit, 100, "", "yukon")
+    catch e
+        @assert typeof(e) == HTTP.Exceptions.ConnectError
+    end
+
     circuit = QuantumCircuit(
         qubit_count = qubit_count,
         instructions = [hadamard(1), control_x(1, 2), readout(2, 1)],

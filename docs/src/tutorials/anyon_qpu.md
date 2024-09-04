@@ -65,9 +65,10 @@ get_metadata(qpu)
 
 # output
 
-Dict{String, Union{Int64, String, Vector{Int64}}} with 8 entries:
+Dict{String, Union{Int64, String, Vector{Int64}}} with 9 entries:
   "qubit_count"        => 6
   "generation"         => "Yukon"
+  "status"             => "online"
   "manufacturer"       => "Anyon Systems Inc."
   "realm"              => "test-realm"
   "serial_number"      => "ANYK202201"

@@ -69,7 +69,7 @@ using Snowflurry
 With Snowflurry imported, we can define our two-qubit circuit.
 
 ```julia
-c = QuantumCircuit(qubit_count=2)
+c = QuantumCircuit(qubit_count = 2)
 print(c)
 
 # output
@@ -141,7 +141,7 @@ The script below puts all the steps above together:
 
 ```julia
 using Snowflurry, SnowflurryPlots
-c = QuantumCircuit(qubit_count=2)
+c = QuantumCircuit(qubit_count = 2)
 push!(c, hadamard(1))
 push!(c, control_x(1, 2))
 ψ = simulate(c)

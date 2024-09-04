@@ -226,7 +226,7 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
 
     raw_body = read_response_body(response.body)
 
-    @assert length(raw_body) > 2 "cannot parse response: $raw_body"
+    @assert length(raw_body) > 2 "cannot parse response: $(response.body)"
 
     body = JSON.parse(raw_body)
 
@@ -258,7 +258,6 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     end
 
     @assert haskey(machineMetadata, "status") "key \"status\" missing from returned metadata"
-    @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : \"$(machineMetadata["status"])\""
 
     if haskey(machineMetadata, "metadata")
         if haskey(machineMetadata["metadata"], "Serial Number")
@@ -273,12 +272,12 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         "project_id" => get_project_id(qpu),
         "qubit_count" => get_num_qubits(qpu.connectivity),
         "connectivity_type" => get_connectivity_label(qpu.connectivity),
+        "status" => machineMetadata["status"],
     )
 
     if haskey(machineMetadata, "disconnectedQubits")
         output["excluded_positions"] =
             convert(Vector{Int}, machineMetadata["disconnectedQubits"])
-        qpu.metadata["excluded_positions"] = output["excluded_positions"]
     else
         output["excluded_positions"] = Vector{Int}()
     end
@@ -470,8 +469,6 @@ function run_job(
     shot_count::Integer,
 )::Tuple{Dict{String,Int},Int}
 
-    client = get_client(qpu)
-
     # ensure only valid circuits are sent to the host
     transpiler = SequentialTranspiler([
         CircuitContainsAReadoutTranspiler(),
@@ -483,7 +480,7 @@ function run_job(
     # throws error if circuit is invalid
     transpile(transpiler, circuit)
 
-    return submit_with_retries(submit_and_fetch_result, client, circuit, shot_count, qpu)
+    return submit_with_retries(submit_and_fetch_result, circuit, shot_count, qpu)
 end
 
 function submit_with_retries(f::Function, args...)::Tuple{Dict{String,Int},Int}
@@ -515,11 +512,16 @@ function submit_with_retries(f::Function, args...)::Tuple{Dict{String,Int},Int}
 end
 
 function submit_and_fetch_result(
-    client::Client,
     circuit::QuantumCircuit,
     shot_count::Int,
     qpu::UnionAnyonQPU,
 )::Tuple{Status,Dict{String,Int},Int}
+
+    machineMetadata = get_metadata(qpu)
+    @assert machineMetadata["status"] == "online" "cannot submit jobs to: $(get_machine_name(qpu)); current status is : \"$(machineMetadata["status"])\""
+
+    client = get_client(qpu)
+
     jobID =
         submit_job(client, circuit, shot_count, get_project_id(qpu), get_machine_name(qpu))
 

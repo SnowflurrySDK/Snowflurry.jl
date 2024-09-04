@@ -29,7 +29,7 @@ get_request(
     ::String,
     ::String,
     ::String,
-    queries::Dict{String,String} = (),
+    queries::Dict{String,String} = Dict{String,String}(),
 ) = throw(NotImplementedError(:get_request, requestor))
 post_request(requestor::Requestor, ::String, ::String, ::String, ::String, ::String) =
     throw(NotImplementedError(:post_request, requestor))

@@ -13,7 +13,7 @@ requestor_transpilation = MockRequestor(
         function (args...; kwargs...)
             return stubMetadataResponse(yukonMetadata)
         end,
-        make_request_checker(expected_realm, expected_empty_queries),
+        make_request_checker(expected_realm),
     ]),
     make_post_checker(expected_json_transpiled, expected_realm),
 )
@@ -26,7 +26,7 @@ client_anyon = Client(
 )
 
 yukon_requestor_with_realm_for_get_status = MockRequestor(
-    make_request_checker(expected_realm, expected_empty_queries),
+    make_request_checker(expected_realm),
     make_post_checker(expected_json_yukon, expected_realm),
 )
 
