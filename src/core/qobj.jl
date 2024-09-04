@@ -1140,16 +1140,16 @@ function get_num_qubits(x::AbstractOperator)
     if num_rows != num_columns
         throw(ErrorException("$(typeof(x)) is not square"))
     end
-    qubit_count = log2(num_rows)
-    if mod(qubit_count, 1) != 0
+    if num_rows < 2 || count_ones(num_rows) != 1
         throw(
             DomainError(
-                qubit_count,
+                num_rows,
                 "$(typeof(x)) does not correspond to an integer number of qubits",
             ),
         )
     end
-    return Int(qubit_count)
+
+    return trailing_zeros(num_rows)
 end
 
 """
@@ -1172,16 +1172,16 @@ julia> get_num_qubits(ψ)
 ```
 """
 function get_num_qubits(x::Union{Ket,Bra})
-    qubit_count = log2(length(x))
-    if mod(qubit_count, 1) != 0
+    size = length(x)
+    if size < 2 || count_ones(size) != 1
         throw(
             DomainError(
-                qubit_count,
+                size,
                 "Ket or Bra does not correspond to an integer number of qubits",
             ),
         )
     end
-    return Int(qubit_count)
+    return trailing_zeros(size)
 end
 
 """

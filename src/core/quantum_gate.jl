@@ -1066,7 +1066,7 @@ function apply_operator!(
     # with first qubit on the rightmost side
     target_qubit_index_list =
         Vector{UInt64}([qubit_count - t for t in reverse(connected_qubits)])
-    target_qubit_index_count = UInt64(log2(N))
+    target_qubit_index_count = UInt64(trailing_zeros(N))
 
     diagonal_in_matrix = operator.data
 

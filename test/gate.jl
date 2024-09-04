@@ -609,7 +609,7 @@ function Snowflurry.get_num_connected_qubits(gate::DenseGate)
     matrix = get_matrix(gate.operator)
     rows, cols = size(matrix)
     @assert rows == cols
-    num_connected_qubits = Int(round(log2(rows)))
+    num_connected_qubits = trailing_zeros(rows)
     @assert 2^num_connected_qubits == rows
     return num_connected_qubits
 end
