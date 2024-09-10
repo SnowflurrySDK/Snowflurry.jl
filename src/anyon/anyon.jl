@@ -604,5 +604,6 @@ function get_anyon_transpiler(;
         SimplifyRzGatesTranspiler(atol),
         ReadoutsAreFinalInstructionsTranspiler(),
         RejectNonNativeInstructionsTranspiler(connectivity),
+        RejectGatesOnExcludedPositionsTranspiler(connectivity),
     ])
 end

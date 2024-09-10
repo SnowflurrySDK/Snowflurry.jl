@@ -2457,10 +2457,8 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    (found_invalid_gates, message) = are_gates_at_excluded_positions(
-        transpiler.connectivity,
-        circuit,
-    )
+    (found_invalid_gates, message) =
+        are_gates_at_excluded_positions(transpiler.connectivity, circuit)
 
     if found_invalid_gates
         throw(DomainError(transpiler.connectivity, message))
@@ -2471,8 +2469,30 @@ end
 
 function are_gates_at_excluded_positions(
     connectivity::AllToAllConnectivity,
-    circuit::QuantumCircuit
+    circuit::QuantumCircuit,
 )::Tuple{Bool,String}
+
+    return (false, "")
+end
+
+function are_gates_at_excluded_positions(
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
+    circuit::QuantumCircuit,
+)::Tuple{Bool,String}
+
+    excluded_positions = get_excluded_positions(connectivity)
+    for instruction in get_circuit_instructions(circuit)
+        qubits = get_connected_qubits(instruction)
+        for (qubit, position) in Iterators.product(qubits, excluded_positions)
+            if qubit == position
+                gate_name = typeof(get_gate_symbol(instruction))
+                message =
+                    "the $gate_name gate on qubits $qubits cannot be applied " *
+                    "since qubit $position is unavailable"
+                return (true, message)
+            end
+        end
+    end
 
     return (false, "")
 end

@@ -1838,7 +1838,7 @@ end
     end
 end
 
-@testset "RejectGatesOnExcludedPositionsTranspiler" begin
+@testset "RejectGatesOnExcludedPositionsTranspiler for all-to-all" begin
 
     connectivity = AllToAllConnectivity()
 
@@ -1850,4 +1850,26 @@ end
     transpiler = RejectGatesOnExcludedPositionsTranspiler(connectivity)
 
     @test isequal(transpile(transpiler, circuit), circuit)
+end
+
+@testset "RejectGatesOnExcludedPositionsTranspiler for line connectivity" begin
+
+    excluded_positions = [2]
+    connectivity = LineConnectivity(4, excluded_positions)
+    transpiler = RejectGatesOnExcludedPositionsTranspiler(connectivity)
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 4,
+        instructions = [sigma_x(4), control_z(1, 2)],
+        name = "test-name",
+    )
+    @test_throws DomainError transpile(transpiler, invalid_circuit)
+
+    valid_circuit = QuantumCircuit(
+        qubit_count = 4,
+        instructions = [sigma_x(1), control_z(3, 4)],
+        name = "test-name",
+    )
+
+    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 end
