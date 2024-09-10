@@ -2447,3 +2447,32 @@ function transpile(
 
     return circuit
 end
+
+struct RejectGatesOnExcludedPositionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+end
+
+function transpile(
+    transpiler::RejectGatesOnExcludedPositionsTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    (found_invalid_gates, message) = are_gates_at_excluded_positions(
+        transpiler.connectivity,
+        circuit,
+    )
+
+    if found_invalid_gates
+        throw(DomainError(transpiler.connectivity, message))
+    end
+
+    return circuit
+end
+
+function are_gates_at_excluded_positions(
+    connectivity::AllToAllConnectivity,
+    circuit::QuantumCircuit
+)::Tuple{Bool,String}
+
+    return (false, "")
+end
