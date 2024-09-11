@@ -10,8 +10,7 @@ using Snowflurry
 
 ```
 
-We can then create an empty [`QuantumCircuit`](@ref) by specifying the number of qubits (`qubit_count`) and classical bits (`bit_count`) the circuit will involve. 
-The classical bits (or result bits) are ordinary memory registries that each store the output of a [`Readout`](@ref) operation on a particular qubit.
+We can then create an empty [`QuantumCircuit`](@ref) by specifying the largest qubit index (`qubit_count`) and the number of classical bits (`bit_count`). In most cases, it can be assumed that `qubit_count` is equal to the number of qubits in the circuit. See [Circuit Transpilation](@ref) for more details about the relationship between the largest qubit index and the number of qubits. The classical bits (or result bits) are ordinary memory registries that each store the output of a [`Readout`](@ref) operation on a particular qubit.
 
 ```jldoctest basics
 c = QuantumCircuit(qubit_count = 2, bit_count = 2)

@@ -5,7 +5,7 @@
 
 A data structure to represent a *quantum circuit*.
 # Fields
-- `qubit_count::Int` -- number of qubits (i.e., quantum register size).
+- `qubit_count::Int` -- largest qubit index (e.g. specifying `qubit_count=n` enables the use of qubits 1 to n).
 - `bit_count::Int` -- Optional: number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
 - `instructions::Vector{AbstractInstruction}` -- Optional: the sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on qubits. Defaults to empty Vector.
 - `name::String` -- Optional: name of the circuit job, used to identify it when sending to a hardware or virtual QPU. 

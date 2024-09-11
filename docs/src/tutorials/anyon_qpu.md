@@ -144,6 +144,9 @@ q[1]:──Z_90────────────X_90────Z_90───
 q[2]:──────────Z_90────────────────────X_90────Z_90────Z────Z_90────X_90────Z_90─────────✲──
 ```
 
+!!! note
+	It may be beneficial to select specific qubits on the QPU in order to reduce the impact of noise on the results. For instance, one could select qubits 2 and 6 for the execution of a two-qubit circuit. This requires setting `qubit_count` to 6 for the construction of the `QuantumCircuit` since `qubit_count` represents the largest qubit index. Setting `qubit_count` to 2 will not enable the application of a quantum gate to qubit 6 even though gates are only applied to two qubits.
+
 The final circuit `c_transpiled` is now ready to be submitted to the QPU:
 
 ```julia
