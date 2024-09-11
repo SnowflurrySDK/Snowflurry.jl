@@ -2483,12 +2483,12 @@ function are_gates_at_excluded_positions(
     excluded_positions = get_excluded_positions(connectivity)
     for instruction in get_circuit_instructions(circuit)
         qubits = get_connected_qubits(instruction)
-        for (qubit, position) in Iterators.product(qubits, excluded_positions)
-            if qubit == position
+        for qubit in qubits
+            if qubit in excluded_positions
                 gate_name = typeof(get_gate_symbol(instruction))
                 message =
                     "the $gate_name gate on qubits $qubits cannot be applied " *
-                    "since qubit $position is unavailable"
+                    "since qubit $qubit is unavailable"
                 return (true, message)
             end
         end
