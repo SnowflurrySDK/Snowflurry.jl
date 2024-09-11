@@ -40,7 +40,7 @@ The basic process for setting up a fork is
     where `new_branch_name` is the name of your new branch.
 1.  Do your work and commit your changes to this branch.
 1.  If you have drifted out of sync with the master from the
-    main Snowflurry repository you may need to merge in changes. To do this,
+    main Snowflurry repository, you may need to merge in changes. To do this,
     first update your local master and then merge the local master
     into your branch:
 
@@ -63,44 +63,41 @@ The basic process for setting up a fork is
     ```shell
     git push origin new_branch_name
     ```
-1.  Now when you navigate to the Snowflurry page on github,
-    [https://github.com/SnowflurrySDK/Snowflurry.jl](https://github.com/SnowflurrySDK/Snowflurry.jl)
+1.  Now, when you navigate to the [Snowflurry page on GitHub](https://github.com/SnowflurrySDK/Snowflurry.jl),
     you should see the option to create a new pull request from
-    your clone repository. Alternatively you can create the pull request
+    your cloned repository. Alternatively, you can create the pull request
     by navigating to the "Pull requests" tab in the page, and selecting
     the appropriate branches.
-1.  The reviewer will comment on your code and may ask for changes,
-    you can perform these locally, and then push the new commit following
+1.  The reviewer will comment on your code and may ask for changes.
+    You can perform these changes locally and push the new commits following
     the same process as above.
 
 ## Julia Coding Style Guide
 
-We adhere to Julia recommended [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
+We adhere to the recommended Julia [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
 
 ## Code Testing Standards
 
 When a pull request is created or updated, various automatic checks will
-run to ensure that the change won't break Snowflurry and meets our coding standards.
+run to ensure that the changes won't break Snowflurry and meet our coding standards.
 
 Snowflurry contains a continuous integration tool to verify testing. See our
-[development page](docs/src/development.md) on how to run the continuous
+[development page](docs/src/development.md) to learn how to run the continuous
 integration checks locally.
 
-Please be aware of the following code standards that will be applied to any
-new changes.
+Please be aware that all changes have to meet the following coding standards.
 
 - **Tests**.
   Existing tests must continue to pass (or be updated) when new changes are
-  introduced. You have two ways to run the unittests:
+  introduced. There are two ways to run the unit tests:
 
-1. Use `Pkg.test`:
-   Type the following in the REPL:
+1. Use `Pkg.test` by typing the following in the REPL:
 
 ```julia
 julia>using Pkg; Pkg.test("Snowflurry"; coverage=true)
 ```
 
-2. Run `test/runtests.jl`: Include the `test/runtests.jl` script in the REPL:
+2. Run `test/runtests.jl` by including the `test/runtests.jl` script in the REPL:
 
 ```julia
 julia> include("test/runtests.jl")
@@ -118,6 +115,15 @@ phase_kickback |    1      1
   Code should be covered by tests.
   We use [Coverage.jl](https://github.com/JuliaCI/Coverage.jl) to compute
   coverage. We don't require 100% coverage, but expect better than 80% code coverage.
-- **VS Code Coding Style**.
-  We highly recommend developing the code in VS Code and using its [Julia Formatter Extention](https://marketplace.visualstudio.com/items?itemName=singularitti.vscode-julia-formatter).
+- **Formatting**.
+  We require the use of [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl)
+  for formatting. The files in Snowflurry can be formatted by entering the following in the
+  REPL from the Snowflurry root directory:
+
+```julia
+julia> using JuliaFormatter
+
+julia> format(".");
+
+```
 

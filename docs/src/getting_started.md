@@ -8,7 +8,7 @@ The following installation steps are for people interested in using Snowflurry i
 
 Make sure your system has Julia installed. If not, download the latest version from [https://julialang.org/downloads/](https://julialang.org/downloads/).
 
-We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-Term Support (LTS) release](https://julialang.org/downloads/#long_term_support_release). Any release in-between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
+We officially support the [latest stable release](https://julialang.org/downloads/#current_stable_release) and the [latest Long-Term Support (LTS) release](https://julialang.org/downloads/#long_term_support_release). Any release in between should work (please submit a Github issue if they don't), but we only actively test against the LTS and the latest stable version.
 
 ### Installing the Snowflurry package
 
@@ -42,11 +42,11 @@ Pkg.add(url="https://github.com/SnowflurrySDK/SnowflurryPlots.jl", rev="main")
 
 ## Typical workflow
 
-A typical workflow to execute a quantum circuit on a quantum service consists of these three steps.
+A typical workflow to execute a quantum circuit on a quantum service consists of these three steps:
 
 - Create: Build the circuit using quantum gates.
 
-- Transpile: transform the circuit into an equivalent one, but with improved performance and ensuring compatibility with the chosen quantum service.
+- Transpile: Transform the circuit into an equivalent one, but with improved performance and guaranteed compatibility with the chosen quantum service.
 
 - Execute: Run the compiled circuits on the specified quantum service. The quantum service could be a remote quantum hardware or a local simulator.
 
