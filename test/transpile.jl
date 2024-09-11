@@ -1873,3 +1873,25 @@ end
 
     @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 end
+
+@testset "RejectGatesOnExcludedPositionsTranspiler for lattice connectivity" begin
+
+    excluded_positions = [2, 7]
+    connectivity = LatticeConnectivity(3, 3, excluded_positions)
+    transpiler = RejectGatesOnExcludedPositionsTranspiler(connectivity)
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 7,
+        instructions = [sigma_x(1), control_z(4, 7)],
+        name = "test-name",
+    )
+    @test_throws DomainError transpile(transpiler, invalid_circuit)
+
+    valid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(5), control_z(1, 4)],
+        name = "test-name",
+    )
+
+    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
+end
