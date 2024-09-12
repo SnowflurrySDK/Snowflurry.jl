@@ -506,20 +506,33 @@ end
 end
 
 
-@testset "AbstractConnectivity: excluded_positions" begin
+@testset "AbstractConnectivity: excluded positions and couplers" begin
 
     excluded_positions = [1, 2, 3, 9, 10]
+    excluded_couplers = [(2, 3), (5, 4)]
 
-    connectivity = LineConnectivity(12, excluded_positions)
+    connectivity = LineConnectivity(12, excluded_positions, excluded_couplers)
 
     @test get_excluded_positions(connectivity) == excluded_positions
+    @test get_excluded_couplers(connectivity) == [(2, 3), (4, 5)]
 
-    connectivity_alternate =
-        Snowflurry.with_excluded_positions(LineConnectivity(12), excluded_positions)
+    alternate_positions =
+        Snowflurry.with_excluded_positions(
+            LineConnectivity(12, [1], excluded_couplers), excluded_positions
+            )
 
-    @test connectivity.dimension == connectivity_alternate.dimension
-    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+    @test connectivity.dimension == alternate_positions.dimension
+    @test connectivity.excluded_positions == alternate_positions.excluded_positions
+    @test connectivity.excluded_couplers == alternate_positions.excluded_couplers
 
+    alternate_couplers =
+        Snowflurry.with_excluded_couplers(
+            LineConnectivity(12, excluded_positions), excluded_couplers
+            )
+
+    @test connectivity.dimension == alternate_couplers.dimension
+    @test connectivity.excluded_positions == alternate_couplers.excluded_positions
+    @test connectivity.excluded_couplers == alternate_couplers.excluded_couplers
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         4 => [5],
@@ -539,6 +552,7 @@ end
           "LineConnectivity{12}\n" *
           "1──2──3──4──5──6──7──8──9──10──11──12\n" *
           "excluded positions: [1, 2, 3, 9, 10]\n" *
+          "excluded couplers: [(2, 3), (4, 5)]\n" *
           "\n"
 
     @test path_search(1, 12, connectivity) == []
@@ -571,6 +585,42 @@ end
         [2, 2],
     )
 
+    @test_throws AssertionError(
+        "coupler (3, 3) must connect to different qubits"
+        ) LineConnectivity(
+        12,
+        Int[],
+        [(3, 3)]
+    )
+
+    @test_throws AssertionError("coupler (1, 3) is not nearest-neighbor") LineConnectivity(
+        12,
+        Int[],
+        [(1, 3)]
+    )
+
+    @test_throws AssertionError(
+        "coupler (0, 1) must have qubits with indices greater than 0"
+        ) LineConnectivity(
+        12,
+        Int[],
+        [(0, 1)]
+    )
+
+    @test_throws AssertionError(
+        "coupler (12, 13) must have qubits with indices smaller than 13"
+        ) LineConnectivity(
+        12,
+        Int[],
+        [(12, 13)]
+    )
+
+    @test_throws AssertionError("excluded_couplers must be unique") LineConnectivity(
+        12,
+        Int[],
+        [(1, 2), (2, 1)]
+    )
+
     @test isinf(get_qubits_distance(1, 12, connectivity))
 
     io = IOBuffer()
@@ -581,11 +631,11 @@ end
 
     @test get_excluded_positions(connectivity) == excluded_positions
 
-    connectivity_alternate =
+    alternate_positions =
         Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
-    @test connectivity.qubits_per_row == connectivity_alternate.qubits_per_row
-    @test connectivity.dimensions == connectivity_alternate.dimensions
-    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+    @test connectivity.qubits_per_row == alternate_positions.qubits_per_row
+    @test connectivity.dimensions == alternate_positions.dimensions
+    @test connectivity.excluded_positions == alternate_positions.excluded_positions
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [6, 5],
@@ -701,6 +751,12 @@ end
         Int[],
     )
     @test_throws NotImplementedError get_excluded_positions(NonExistentConnectivity())
+
+    @test_throws NotImplementedError Snowflurry.with_excluded_couplers(
+        NonExistentConnectivity(),
+        Tuple{Int, Int}[],
+    )
+    @test_throws NotImplementedError get_excluded_couplers(NonExistentConnectivity())
 end
 
 @testset "get_qubits_distance" begin
