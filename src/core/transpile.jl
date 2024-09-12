@@ -2447,3 +2447,135 @@ function transpile(
 
     return circuit
 end
+
+struct RejectGatesOnExcludedPositionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+end
+
+"""
+    transpile(
+        transpiler::RejectGatesOnExcludedPositionsTranspiler,
+        circuit::QuantumCircuit
+    )::QuantumCircuit
+
+Throws a `DomainError` if an `Instruction` in the `circuit` operates on an excluded qubit.
+The excluded qubits are specified with the parameter `excluded_positions` in certain
+`AbstractConnectivity` objects. The `circuit` remains unchanged if no error is thrown.
+
+# Examples
+```jldoctest
+julia> excluded_positions = [2];
+
+julia> connectivity = LineConnectivity(4, excluded_positions)
+LineConnectivity{4}
+1──2──3──4
+excluded positions: [2]
+
+
+julia> transpiler = RejectGatesOnExcludedPositionsTranspiler(connectivity);
+
+julia> invalid_circuit = QuantumCircuit(
+               qubit_count = 4,
+               instructions = [sigma_x(4), control_z(1, 2)],
+           )
+Quantum Circuit Object:
+   qubit_count: 4 
+   bit_count: 4 
+q[1]:───────*──
+            |  
+q[2]:───────Z──
+               
+q[3]:──────────
+               
+q[4]:──X───────
+               
+
+
+
+julia> transpile(transpiler, invalid_circuit)
+ERROR: DomainError with LineConnectivity{4}
+1──2──3──4
+excluded positions: [2]
+:
+the Snowflurry.ControlZ gate on qubits [1, 2] cannot be applied since qubit 2 is unavailable
+[...]
+
+julia> valid_circuit = QuantumCircuit(
+               qubit_count = 4,
+               instructions = [sigma_x(1), control_z(3, 4)],
+           )
+Quantum Circuit Object:
+   qubit_count: 4 
+   bit_count: 4 
+q[1]:──X───────
+               
+q[2]:──────────
+               
+q[3]:───────*──
+            |  
+q[4]:───────Z──
+               
+
+
+
+julia> transpiled_circuit = transpile(transpiler, valid_circuit)
+Quantum Circuit Object:
+   qubit_count: 4 
+   bit_count: 4 
+q[1]:──X───────
+               
+q[2]:──────────
+               
+q[3]:───────*──
+            |  
+q[4]:───────Z──
+               
+
+
+
+```
+"""
+function transpile(
+    transpiler::RejectGatesOnExcludedPositionsTranspiler,
+    circuit::QuantumCircuit,
+)::QuantumCircuit
+
+    (found_invalid_gates, message) =
+        are_gates_at_excluded_positions(transpiler.connectivity, circuit)
+
+    if found_invalid_gates
+        throw(DomainError(transpiler.connectivity, message))
+    end
+
+    return circuit
+end
+
+function are_gates_at_excluded_positions(
+    connectivity::AllToAllConnectivity,
+    circuit::QuantumCircuit,
+)::Tuple{Bool,String}
+
+    return (false, "")
+end
+
+function are_gates_at_excluded_positions(
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
+    circuit::QuantumCircuit,
+)::Tuple{Bool,String}
+
+    excluded_positions = get_excluded_positions(connectivity)
+    for instruction in get_circuit_instructions(circuit)
+        qubits = get_connected_qubits(instruction)
+        for qubit in qubits
+            if qubit in excluded_positions
+                gate_name = typeof(get_gate_symbol(instruction))
+                message =
+                    "the $gate_name gate on qubits $qubits cannot be applied " *
+                    "since qubit $qubit is unavailable"
+                return (true, message)
+            end
+        end
+    end
+
+    return (false, "")
+end

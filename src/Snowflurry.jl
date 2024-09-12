@@ -78,6 +78,7 @@ export
     UnsupportedGatesTranspiler,
     DecomposeSingleTargetSingleControlGatesTranspiler,
     RejectNonNativeInstructionsTranspiler,
+    RejectGatesOnExcludedPositionsTranspiler,
 
     # Functions
     controlled,
