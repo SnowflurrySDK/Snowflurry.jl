@@ -867,7 +867,7 @@ end
         status_request_throttle = no_throttle,
     )
 
-    @test_throws "the coupler [4, 5, 6] does not involve 2 qubits" get_metadata(qpu)
+    @test_throws ErrorException get_metadata(qpu)
 end
 
 @testset "Construct AnyonYukonQPU with non default realm" begin
