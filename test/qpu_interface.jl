@@ -773,11 +773,14 @@ end
 end
 
 @testset "Construct AnyonYukonQPU" begin
-    expected_metadata_str_list = [yukonMetadata, yukonMetadataWithDisconnectedQubits]
+    expected_metadata_str_list = [yukonMetadata, yukonMetadataWithExcludedComponents]
     expected_excluded_positions_list = [Int[], Int[3, 4, 5, 6]]
+    expected_excluded_couplers_list = [Tuple{Int,Int}[], Tuple{Int,Int}[(4, 5), (5, 6)]]
 
-    for (expected_metadata_str, expected_excluded_positions) in
-        zip(expected_metadata_str_list, expected_excluded_positions_list)
+    for (i_metadata, expected_metadata_str) in enumerate(expected_metadata_str_list)
+
+        expected_excluded_positions = expected_excluded_positions_list[i_metadata]
+        expected_excluded_couplers = expected_excluded_couplers_list[i_metadata]
         requestor = MockRequestor(
             stub_response_sequence([stubMetadataResponse(expected_metadata_str)]),
             make_post_checker(expected_json_yukon),
@@ -838,6 +841,7 @@ end
             "qubit_count" => 6,
             "connectivity_type" => Snowflurry.line_connectivity_label,
             "excluded_positions" => expected_excluded_positions,
+            "excluded_couplers" => expected_excluded_couplers,
             "status" => "online",
         )
 
@@ -873,16 +877,20 @@ end
         "connectivity_type" => Snowflurry.line_connectivity_label,
         "realm" => expected_realm,
         "excluded_positions" => Vector{Int}(),
+        "excluded_couplers" => Vector{Tuple{Int,Int}}(),
         "status" => "online",
     )
 end
 
 @testset "Construct AnyonYamaskaQPU" begin
-    expected_metadata_str_list = [yamaskaMetadata, yamaskaMetadataWithDisconnectedQubits]
+    expected_metadata_str_list = [yamaskaMetadata, yamaskaMetadataWithExcludedComponents]
     expected_excluded_positions_list = [Int[], Int[7, 8, 9, 10, 11, 12]]
+    expected_excluded_couplers_list = [Tuple{Int,Int}[], Tuple{Int,Int}[(7, 12), (12, 8)]]
 
-    for (expected_metadata_str, expected_excluded_positions) in
-        zip(expected_metadata_str_list, expected_excluded_positions_list)
+    for (i_metadata, expected_metadata_str) in enumerate(expected_metadata_str_list)
+
+        expected_excluded_positions = expected_excluded_positions_list[i_metadata]
+        expected_excluded_couplers = expected_excluded_couplers_list[i_metadata]
         requestor = MockRequestor(
             stub_response_sequence([stubMetadataResponse(expected_metadata_str)]),
             make_post_checker(""),
@@ -960,6 +968,7 @@ end
             "qubit_count" => 24,
             "connectivity_type" => Snowflurry.lattice_connectivity_label,
             "excluded_positions" => expected_excluded_positions,
+            "excluded_couplers" => expected_excluded_couplers,
             "status" => "online",
         )
     end
