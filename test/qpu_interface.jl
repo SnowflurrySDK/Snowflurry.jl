@@ -848,6 +848,28 @@ end
     end
 end
 
+@testset "Construct AnyonYukonQPU with invalid coupler entries" begin
+    expected_metadata_str = yukonMetadataWithInvalidCouplerEntries
+
+    requestor = MockRequestor(
+        stub_response_sequence([stubMetadataResponse(expected_metadata_str)]),
+        make_post_checker(expected_json_yukon),
+    )
+
+    qpu = AnyonYukonQPU(
+        Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = requestor,
+        ),
+        expected_project_id,
+        status_request_throttle = no_throttle,
+    )
+
+    @test_throws "the coupler [4, 5, 6] does not involve 2 qubits" get_metadata(qpu)
+end
+
 @testset "Construct AnyonYukonQPU with non default realm" begin
 
     requestor = MockRequestor(
