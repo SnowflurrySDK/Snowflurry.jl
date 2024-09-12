@@ -65,7 +65,7 @@ get_metadata(qpu)
 
 # output
 
-Dict{String, Union{Int64, String, Vector{Int64}}} with 9 entries:
+Dict{String, Union{Int64, Vector{Int64}, Vector{Tuple{Int64, Int64}}, String}} with 10 entries:
   "qubit_count"        => 6
   "generation"         => "Yukon"
   "status"             => "online"
@@ -75,6 +75,7 @@ Dict{String, Union{Int64, String, Vector{Int64}}} with 9 entries:
   "project_id"         => "test-project"
   "connectivity_type"  => "linear"
   "excluded_positions" => Int64[]
+  "excluded_couplers"  => Tuple{Int64, Int64}[]
 ```
 
 We now continue to build a small circuit to create a Bell state as was presented in the previous tutorials:
