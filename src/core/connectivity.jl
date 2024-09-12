@@ -44,13 +44,15 @@ struct LineConnectivity <: AbstractConnectivity
             @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
         end
 
-        sorted_couplers = get_sorted_excluded_couplers(dimension, excluded_couplers)
+        sorted_couplers = get_sorted_excluded_couplers_for_line(
+            dimension, excluded_couplers
+        )
 
         new(dimension, excluded_positions, sorted_couplers)
     end
 end
 
-function get_sorted_excluded_couplers(
+function get_sorted_excluded_couplers_for_line(
     dimension::Int,
     excluded_couplers::Vector{Tuple{Int,Int}},
 )::Vector{Tuple{Int,Int}}
@@ -676,7 +678,12 @@ get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} =
     throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """
-    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity, excluded::Vector{Int} = Vector{Int}([]))
+    path_search(
+        origin::Int,
+        target::Int,
+        connectivity::AbstractConnectivity,
+        excluded::Vector{Int} = Vector{Int}([])
+    )::Vector{Int}
 
 Find the shortest path between origin and target qubits in terms of 
 Manhattan distance, using the Breadth-First Search algorithm, on any 
@@ -799,7 +806,6 @@ function path_search(
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
-    @assert target > 0 "target must be non-negative"
 
     qubit_count = connectivity.dimension
 
@@ -815,6 +821,14 @@ function path_search(
     for e in all_excluded_positions
         if origin ≤ e ≤ target || target ≤ e ≤ origin
             # no path exists due to excluded positions
+            return []
+        end
+    end
+
+    for coupler in get_excluded_couplers(connectivity)
+        if (origin <= coupler[1] & coupler[2] <= target) ||
+            (target <= coupler[1] & coupler[2] <= origin)
+
             return []
         end
     end

@@ -556,7 +556,8 @@ end
           "\n"
 
     @test path_search(1, 12, connectivity) == []
-    @test path_search(7, 4, connectivity) == Vector{Int}(collect(4:7))
+    @test path_search(7, 4, connectivity) == []
+    @test path_search(7, 5, connectivity) == Vector{Int}(collect(5:7))
     @test path_search(1, 1, connectivity) == []
 
     exclusion_cases = [[5], [5, 7], [8]]
