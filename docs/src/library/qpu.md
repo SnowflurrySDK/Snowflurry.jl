@@ -14,6 +14,7 @@ SequentialTranspiler
 AllToAllConnectivity
 LineConnectivity
 LatticeConnectivity
+get_excluded_couplers
 path_search
 get_adjacency_list
 get_qubits_distance
