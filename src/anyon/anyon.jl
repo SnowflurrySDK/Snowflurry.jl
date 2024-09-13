@@ -282,12 +282,12 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         output["excluded_positions"] = Vector{Int}()
     end
 
-    if haskey(machineMetadata, "excludedCouplers")
-        raw_excluded_couplers =
-            convert(Vector{Vector{Int}}, machineMetadata["excludedCouplers"])
-        output["excluded_couplers"] = convert_excluded_couplers(raw_excluded_couplers)
+    if haskey(machineMetadata, "disconnectedCouplers")
+        raw_excluded_connections =
+            convert(Vector{Vector{Int}}, machineMetadata["disconnectedCouplers"])
+        output["excluded_connections"] = convert_excluded_connections(raw_excluded_connections)
     else
-        output["excluded_couplers"] = Vector{Tuple{Int,Int}}()
+        output["excluded_connections"] = Vector{Tuple{Int,Int}}()
     end
 
     realm = get_realm(qpu)
@@ -298,14 +298,14 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     return output
 end
 
-function convert_excluded_couplers(
-    excluded_couplers::Vector{Vector{Int}},
+function convert_excluded_connections(
+    excluded_connections::Vector{Vector{Int}},
 )::Vector{Tuple{Int,Int}}
 
-    num_couplers = length(excluded_couplers)
+    num_couplers = length(excluded_connections)
     converted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
 
-    for (i_coupler, coupler) in enumerate(excluded_couplers)
+    for (i_coupler, coupler) in enumerate(excluded_connections)
         if length(coupler) != 2
             throw(ErrorException("the coupler $coupler does not involve 2 qubits"))
         end
