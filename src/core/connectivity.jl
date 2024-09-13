@@ -967,9 +967,15 @@ function path_search(
         end
     end
 
+<<<<<<< HEAD
     for connection in get_excluded_connections(connectivity)
         if (origin <= connection[1] & connection[2] <= target) ||
            (target <= connection[1] & connection[2] <= origin)
+=======
+    for coupler in get_excluded_connections(connectivity)
+        if (origin <= coupler[1] & coupler[2] <= target) ||
+           (target <= coupler[1] & coupler[2] <= origin)
+>>>>>>> 9fd9e0d (refactor: rename to disconnectedCouplers and excluded_connections)
 
             return []
         end

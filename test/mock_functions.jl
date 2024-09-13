@@ -243,7 +243,7 @@ yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
 )
 
 yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
-    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6],\"excludedCouplers\":[[4, 5, 6]]}]",
+    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedCouplers\":[3,4,5,6],\"excludedCouplers\":[[4, 5, 6]]}]",
 )
 
 yukonMetadataWithOfflineStatus = makeMetadataResponseJSON(
