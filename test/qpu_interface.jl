@@ -640,7 +640,7 @@ end
         alternate_positions.qubits_per_printout_line
     @test connectivity.dimensions == alternate_positions.dimensions
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
-    @test connectivity.excluded_connections == sorted_connections
+    @test connectivity.excluded_connections == alternate_positions.excluded_connections
 
     alternate_connections = Snowflurry.with_excluded_connections(
         LatticeConnectivity(6, 4, excluded_positions),
@@ -650,7 +650,7 @@ end
         alternate_connections.qubits_per_printout_line
     @test connectivity.dimensions == alternate_connections.dimensions
     @test connectivity.excluded_positions == alternate_connections.excluded_positions
-    @test connectivity.excluded_connections == sorted_connections
+    @test connectivity.excluded_connections == alternate_connections.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [5],
