@@ -222,7 +222,12 @@ struct LatticeConnectivity <: AbstractConnectivity
 
         @assert +(qubits_per_printout_line...) == qubit_count "Failed to build lattice"
 
-        new(qubits_per_printout_line, (nrows, ncols), excluded_positions)
+        sorted_connections = get_sorted_excluded_connections_for_lattice(
+            nrows, ncols, excluded_connections
+        )
+
+        new(qubits_per_printout_line, (nrows, ncols), excluded_positions,
+            sorted_connections)
     end
 end
 
@@ -232,14 +237,50 @@ function get_sorted_excluded_connections_for_lattice(
     excluded_connections = Vector{Tuple{Int, Int}}()
 )::Vector{Tuple{Int,Int}}
 
-    num_couplers = length(excluded_connections)
-    sorted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
-    for (i_coupler, coupler) in enumerate(excluded_connections)
-        if coupler[1] == coupler[2]
-            throw(AssertionError("coupler $coupler must connect to different qubits"))
+    num_connections = length(excluded_connections)
+    sorted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if connection[1] == connection[2]
+            throw(AssertionError("connection $connection must connect to different qubits"))
         end
 
+        if connection[1] > connection[2]
+            sorted_connection = (connection[2], connection[1])
+        else
+            sorted_connection = connection
+        end
+
+        if sorted_connection[1] < 1
+            throw(AssertionError(
+                "connection $connection must have qubits with indices greater than 0"
+            ))
+        end
+
+        num_qubits = nrows * ncols
+        if sorted_connection[2] > num_qubits
+            throw(AssertionError(
+                "connection $connection must have qubits with indices less than" *
+                " $(num_qubits + 1)"
+            ))
+        end
+        
+        first_qubit_row_index = ((sorted_connection[1] - 1) ÷ ncols) + 1
+        near_index = sorted_connection[1] + ncols
+        coupler_exists = sorted_connection[2] == near_index ||
+            (isodd(first_qubit_row_index) && sorted_connection[2] == near_index + 1) ||
+            (iseven(first_qubit_row_index) && sorted_connection[2] == near_index - 1)
+        
+        if !coupler_exists
+            throw(AssertionError("connection $connection does not exist"))
+        end
+
+        sorted_connections[i_connection] = sorted_connection
     end
+
+    if !(sorted_connections == unique(sorted_connections))
+        throw(AssertionError("excluded_connections must be unique"))
+    end
+    return sorted_connections
 end
 
 function Base.show(io::IO, connectivity::LatticeConnectivity)
@@ -298,12 +339,18 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
-    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
+    get_excluded_connections(
+        connectivity::Union{LineConnectivity,LatticeConnectivity}
+    )::Vector{Tuple{Int,Int}}
 
-Return the list of `excluded_connections` for the `LineConnectivity`.
+Return the list of `excluded_connections` for the `connectivity`.
 """
-get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
-    connectivity.excluded_connections
+function get_excluded_connections(
+    connectivity::Union{LineConnectivity,LatticeConnectivity}
+)::Vector{Tuple{Int,Int}}
+
+    return connectivity.excluded_connections
+end
 
 """
     get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
@@ -882,15 +929,9 @@ function path_search(
         end
     end
 
-<<<<<<< HEAD
     for connection in get_excluded_connections(connectivity)
         if (origin <= connection[1] & connection[2] <= target) ||
            (target <= connection[1] & connection[2] <= origin)
-=======
-    for coupler in get_excluded_connections(connectivity)
-        if (origin <= coupler[1] & coupler[2] <= target) ||
-           (target <= coupler[1] & coupler[2] <= origin)
->>>>>>> 9fd9e0d (refactor: rename to disconnectedCouplers and excluded_connections)
 
             return []
         end

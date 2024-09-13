@@ -624,10 +624,14 @@ end
     io = IOBuffer()
 
     excluded_positions = collect(13:24)
+    excluded_connections = [(9, 14), (14, 10), (14, 18), (14, 17), (8, 4)]
 
-    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+    connectivity = LatticeConnectivity(6, 4, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
+    @test get_excluded_connections(connectivity) == [
+        (9, 14), (10, 14), (14, 18), (14, 17), (4, 8)
+    ]
 
     alternate_positions =
         Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
@@ -721,6 +725,24 @@ end
         6,
         4,
         [2, 2],
+    )
+
+    @test_throws(
+        AssertionError("connection (1, 1) must connect to different qubits"),
+        LatticeConnectivity(6, 4, Int[], [(1, 1)])
+    )
+    @test_throws(
+        AssertionError("connection (0, 1) must have qubits with indices greater than 0"),
+        LatticeConnectivity(6, 4, Int[], [(0, 1)])
+    )
+    @test_throws(
+        AssertionError("connection (24, 25) must have qubits with indices less than 25"),
+        LatticeConnectivity(6, 4, Int[], [(24, 25)])
+    )
+
+    @test_throws(
+        AssertionError("connection (1, 2) does not exist"),
+        LatticeConnectivity(6, 4, Int[], [(1, 2)])
     )
 
     excluded_positions = [5, 6, 2]
