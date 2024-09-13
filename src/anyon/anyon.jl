@@ -303,17 +303,17 @@ function convert_excluded_connections(
     excluded_connections::Vector{Vector{Int}},
 )::Vector{Tuple{Int,Int}}
 
-    num_couplers = length(excluded_connections)
-    converted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
+    num_connections = length(excluded_connections)
+    converted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
 
-    for (i_coupler, coupler) in enumerate(excluded_connections)
-        if length(coupler) != 2
-            throw(ErrorException("the coupler $coupler does not involve 2 qubits"))
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if length(connection) != 2
+            throw(ErrorException("the coupler $connection does not involve 2 qubits"))
         end
-        converted_couplers[i_coupler] = (coupler[1], coupler[2])
+        converted_connections[i_connection] = (connection[1], connection[2])
     end
 
-    return converted_couplers
+    return converted_connections
 end
 
 """
