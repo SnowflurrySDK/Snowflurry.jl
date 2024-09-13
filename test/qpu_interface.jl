@@ -907,7 +907,8 @@ end
 @testset "Construct AnyonYamaskaQPU" begin
     expected_metadata_str_list = [yamaskaMetadata, yamaskaMetadataWithExcludedComponents]
     expected_excluded_positions_list = [Int[], Int[7, 8, 9, 10, 11, 12]]
-    expected_excluded_connections_list = [Tuple{Int,Int}[], Tuple{Int,Int}[(7, 12), (12, 8)]]
+    expected_excluded_connections_list =
+        [Tuple{Int,Int}[], Tuple{Int,Int}[(7, 12), (12, 8)]]
 
     for (i_metadata, expected_metadata_str) in enumerate(expected_metadata_str_list)
 

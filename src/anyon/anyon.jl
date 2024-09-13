@@ -285,7 +285,8 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     if haskey(machineMetadata, "disconnectedCouplers")
         raw_excluded_connections =
             convert(Vector{Vector{Int}}, machineMetadata["disconnectedCouplers"])
-        output["excluded_connections"] = convert_excluded_connections(raw_excluded_connections)
+        output["excluded_connections"] =
+            convert_excluded_connections(raw_excluded_connections)
     else
         output["excluded_connections"] = Vector{Tuple{Int,Int}}()
     end
