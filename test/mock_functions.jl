@@ -246,7 +246,7 @@ yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
 )
 
 yamaskaMetadataWithExcludedComponents = makeMetadataResponseJSON(
-    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"CalculQC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"lattice\",\"disconnectedCouplers\":[7,8,9,10,11,12],\"excludedCouplers\":[[7, 12], [12, 8]]}]",
+    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"CalculQC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"lattice\",\"disconnectedQubits\":[7,8,9,10,11,12],\"disconnectedConnections\":[[7, 12], [12, 8]]}]",
 )
 
 yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
