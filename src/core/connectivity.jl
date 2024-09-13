@@ -365,12 +365,18 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
-    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
+    get_excluded_connections(
+        connectivity::Union{LineConnectivity,LatticeConnectivity}
+    )::Vector{Tuple{Int,Int}}
 
-Return the list of `excluded_connections` for the `LineConnectivity`.
+Return the list of `excluded_connections` for the `connectivity`.
 """
-get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
-    connectivity.excluded_connections
+function get_excluded_connections(
+    connectivity::Union{LineConnectivity,LatticeConnectivity}
+)::Vector{Tuple{Int,Int}}
+
+    return connectivity.excluded_connections
+end
 
 """
     get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
