@@ -275,9 +275,9 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         "status" => machineMetadata["status"],
     )
 
-    if haskey(machineMetadata, "disconnectedCouplers")
+    if haskey(machineMetadata, "disconnectedQubits")
         output["excluded_positions"] =
-            convert(Vector{Int}, machineMetadata["disconnectedCouplers"])
+            convert(Vector{Int}, machineMetadata["disconnectedQubits"])
     else
         output["excluded_positions"] = Vector{Int}()
     end
