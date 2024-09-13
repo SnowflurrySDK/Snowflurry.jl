@@ -613,6 +613,7 @@ end
     )
 
     @test isinf(get_qubits_distance(1, 12, connectivity))
+    @test isinf(get_qubits_distance(1, 12, LineConnectivity(12, Int[], [(6, 5)])))
 
     io = IOBuffer()
 
