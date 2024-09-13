@@ -625,20 +625,32 @@ end
 
     excluded_positions = collect(13:24)
     excluded_connections = [(9, 14), (14, 10), (14, 18), (14, 17), (8, 4)]
+    sorted_connections = [(9, 14), (10, 14), (14, 18), (14, 17), (4, 8)]
 
     connectivity = LatticeConnectivity(6, 4, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
-    @test get_excluded_connections(connectivity) == [
-        (9, 14), (10, 14), (14, 18), (14, 17), (4, 8)
-    ]
+    @test get_excluded_connections(connectivity) == sorted_connections
 
-    alternate_positions =
-        Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
+    alternate_positions = Snowflurry.with_excluded_positions(
+        LatticeConnectivity(6, 4, Int[], excluded_connections),
+        excluded_positions,
+    )
     @test connectivity.qubits_per_printout_line ==
-          alternate_positions.qubits_per_printout_line
+        alternate_positions.qubits_per_printout_line
     @test connectivity.dimensions == alternate_positions.dimensions
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
+    @test connectivity.excluded_connections == sorted_connections
+
+    alternate_connections = Snowflurry.with_excluded_connections(
+        LatticeConnectivity(6, 4, excluded_positions),
+        excluded_connections,
+    )
+    @test connectivity.qubits_per_printout_line ==
+        alternate_connections.qubits_per_printout_line
+    @test connectivity.dimensions == alternate_connections.dimensions
+    @test connectivity.excluded_positions == alternate_connections.excluded_positions
+    @test connectivity.excluded_connections == sorted_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [5],

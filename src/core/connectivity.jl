@@ -179,13 +179,13 @@ struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_printout_line::Vector{Int}
     dimensions::Tuple{Int,Int}
     excluded_positions::Vector{Int}
-    excluded_connections::Vector{Tuple{Int, Int}}
+    excluded_connections::Vector{Tuple{Int,Int}}
 
     function LatticeConnectivity(
         nrows::Int,
         ncols::Int,
         excluded_positions = Vector{Int}(),
-        excluded_connections = Vector{Tuple{Int, Int}}()
+        excluded_connections = Vector{Tuple{Int,Int}}(),
     )
 
         @assert nrows >= 2 "nrows must be at least 2"
@@ -222,9 +222,8 @@ struct LatticeConnectivity <: AbstractConnectivity
 
         @assert +(qubits_per_printout_line...) == qubit_count "Failed to build lattice"
 
-        sorted_connections = get_sorted_excluded_connections_for_lattice(
-            nrows, ncols, excluded_connections
-        )
+        sorted_connections =
+            get_sorted_excluded_connections_for_lattice(nrows, ncols, excluded_connections)
 
         new(qubits_per_printout_line, (nrows, ncols), excluded_positions,
             sorted_connections)
@@ -234,7 +233,7 @@ end
 function get_sorted_excluded_connections_for_lattice(
     nrows::Int,
     ncols::Int,
-    excluded_connections = Vector{Tuple{Int, Int}}()
+    excluded_connections = Vector{Tuple{Int,Int}}(),
 )::Vector{Tuple{Int,Int}}
 
     num_connections = length(excluded_connections)
@@ -251,25 +250,30 @@ function get_sorted_excluded_connections_for_lattice(
         end
 
         if sorted_connection[1] < 1
-            throw(AssertionError(
-                "connection $connection must have qubits with indices greater than 0"
-            ))
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices greater than 0",
+                ),
+            )
         end
 
         num_qubits = nrows * ncols
         if sorted_connection[2] > num_qubits
-            throw(AssertionError(
-                "connection $connection must have qubits with indices less than" *
-                " $(num_qubits + 1)"
-            ))
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices less than" *
+                    " $(num_qubits + 1)",
+                ),
+            )
         end
-        
+
         first_qubit_row_index = ((sorted_connection[1] - 1) ÷ ncols) + 1
         near_index = sorted_connection[1] + ncols
-        coupler_exists = sorted_connection[2] == near_index ||
+        coupler_exists =
+            sorted_connection[2] == near_index ||
             (isodd(first_qubit_row_index) && sorted_connection[2] == near_index + 1) ||
             (iseven(first_qubit_row_index) && sorted_connection[2] == near_index - 1)
-        
+
         if !coupler_exists
             throw(AssertionError("connection $connection does not exist"))
         end
@@ -321,7 +325,9 @@ with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
 )::LatticeConnectivity =
-    LatticeConnectivity(c.dimensions[1], c.dimensions[2], excluded_positions)
+    LatticeConnectivity(
+        c.dimensions[1], c.dimensions[2], excluded_positions, c.excluded_connections
+    )
 
 with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
@@ -331,6 +337,12 @@ with_excluded_connections(
     excluded_connections::Vector{Tuple{Int,Int}},
 )::LineConnectivity =
     LineConnectivity(c.dimension, c.excluded_positions, excluded_connections)
+
+with_excluded_connections(
+    c::LatticeConnectivity,
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::LatticeConnectivity =
+    LatticeConnectivity(c.qubits_per_row, c.excluded_positions, excluded_connections)
 
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
@@ -346,7 +358,7 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
 Return the list of `excluded_connections` for the `connectivity`.
 """
 function get_excluded_connections(
-    connectivity::Union{LineConnectivity,LatticeConnectivity}
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
 )::Vector{Tuple{Int,Int}}
 
     return connectivity.excluded_connections
