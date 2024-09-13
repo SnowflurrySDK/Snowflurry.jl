@@ -372,7 +372,7 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
 Return the list of `excluded_connections` for the `connectivity`.
 """
 function get_excluded_connections(
-    connectivity::Union{LineConnectivity,LatticeConnectivity}
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
 )::Vector{Tuple{Int,Int}}
 
     return connectivity.excluded_connections

@@ -637,7 +637,7 @@ end
         excluded_positions,
     )
     @test connectivity.qubits_per_printout_line ==
-          alternate_positions.qubits_per_printout_line
+        alternate_positions.qubits_per_printout_line
     @test connectivity.dimensions == alternate_positions.dimensions
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
     @test connectivity.excluded_connections == alternate_positions.excluded_connections
