@@ -11,7 +11,7 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
 # Fields
 - `dimension         ::Int` -- Qubit count in this connectivity.
 - `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
-- `excluded_couplers::Vector{Tuple{Int, Int}}` -- Optional: List of couplers on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of couplers on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
 
 
 # Example
@@ -30,13 +30,13 @@ excluded positions: [1, 2, 3]
 struct LineConnectivity <: AbstractConnectivity
     dimension::Int
     excluded_positions::Vector{Int}
-    excluded_couplers::Vector{Tuple{Int,Int}}
+    excluded_connections::Vector{Tuple{Int,Int}}
 
     function LineConnectivity(
         dimension::Int,
         excluded_positions::Vector{Int} = Vector{Int}(),
-        excluded_couplers::Vector{Tuple{Int, Int}} = Vector{Tuple{Int, Int}}()
-        )
+        excluded_connections::Vector{Tuple{Int,Int}} = Vector{Tuple{Int,Int}}(),
+    )
         @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
 
         for e in excluded_positions
@@ -44,26 +44,25 @@ struct LineConnectivity <: AbstractConnectivity
             @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
         end
 
-        sorted_couplers = get_sorted_excluded_couplers_for_line(
-            dimension, excluded_couplers
-        )
+        sorted_couplers =
+            get_sorted_excluded_connections_for_line(dimension, excluded_connections)
 
         new(dimension, excluded_positions, sorted_couplers)
     end
 end
 
-function get_sorted_excluded_couplers_for_line(
+function get_sorted_excluded_connections_for_line(
     dimension::Int,
-    excluded_couplers::Vector{Tuple{Int,Int}},
+    excluded_connections::Vector{Tuple{Int,Int}},
 )::Vector{Tuple{Int,Int}}
 
-    num_couplers = length(excluded_couplers)
-    sorted_couplers = Vector{Tuple{Int, Int}}(undef, num_couplers)
-    for (i_coupler, coupler) in enumerate(excluded_couplers)
+    num_couplers = length(excluded_connections)
+    sorted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
+    for (i_coupler, coupler) in enumerate(excluded_connections)
         if coupler[1] == coupler[2]
             throw(AssertionError("coupler $coupler must connect to different qubits"))
         end
-        
+
         if coupler[1] == coupler[2] + 1
             sorted_coupler = (coupler[2], coupler[1])
         elseif coupler[1] == coupler[2] - 1
@@ -73,19 +72,26 @@ function get_sorted_excluded_couplers_for_line(
         end
 
         if sorted_coupler[1] < 1
-            throw(AssertionError("coupler $coupler must have qubits with indices " *
-                "greater than 0"))
+            throw(
+                AssertionError(
+                    "coupler $coupler must have qubits with indices " * "greater than 0",
+                ),
+            )
         end
-        
+
         if sorted_coupler[2] > dimension
-            throw(AssertionError("coupler $coupler must have qubits with indices " *
-                "smaller than $(dimension+1)"))
+            throw(
+                AssertionError(
+                    "coupler $coupler must have qubits with indices " *
+                    "smaller than $(dimension+1)",
+                ),
+            )
         end
 
         sorted_couplers[i_coupler] = sorted_coupler
     end
 
-    @assert sorted_couplers == unique(sorted_couplers) "excluded_couplers must be unique"
+    @assert sorted_couplers == unique(sorted_couplers) "excluded_connections must be unique"
     return sorted_couplers
 end
 
@@ -230,8 +236,8 @@ function Base.show(io::IO, connectivity::LineConnectivity)
     if !isempty(connectivity.excluded_positions)
         println(io, "excluded positions: $(connectivity.excluded_positions)")
     end
-    if !isempty(connectivity.excluded_couplers)
-        println(io, "excluded couplers: $(connectivity.excluded_couplers)")
+    if !isempty(connectivity.excluded_connections)
+        println(io, "excluded couplers: $(connectivity.excluded_connections)")
     end
 end
 
@@ -244,20 +250,22 @@ with_excluded_positions(connectivity::AbstractConnectivity, ::Vector{Int}) =
 with_excluded_positions(
     c::LineConnectivity,
     excluded_positions::Vector{Int},
-)::LineConnectivity = LineConnectivity(c.dimension, excluded_positions, c.excluded_couplers)
+)::LineConnectivity =
+    LineConnectivity(c.dimension, excluded_positions, c.excluded_connections)
 
 with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
 )::LatticeConnectivity = LatticeConnectivity(c.qubits_per_row, excluded_positions)
 
-with_excluded_couplers(connectivity::AbstractConnectivity, ::Vector{Tuple{Int, Int}}) =
+with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
 
-with_excluded_couplers(
+with_excluded_connections(
     c::LineConnectivity,
-    excluded_couplers::Vector{Tuple{Int, Int}},
-)::LineConnectivity = LineConnectivity(c.dimension, c.excluded_positions, excluded_couplers)
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::LineConnectivity =
+    LineConnectivity(c.dimension, c.excluded_positions, excluded_connections)
 
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
@@ -266,20 +274,20 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
-    get_excluded_couplers(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
+    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
 
-Return the list of `excluded_couplers` for the `LineConnectivity`.
+Return the list of `excluded_connections` for the `LineConnectivity`.
 """
-get_excluded_couplers(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}} =
-    connectivity.excluded_couplers
+get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
+    connectivity.excluded_connections
 
 """
-    get_excluded_couplers(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
+    get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
 
 Throws a NotImplementedError.
 """
-get_excluded_couplers(connectivity::AbstractConnectivity) =
-    throw(NotImplementedError(:get_excluded_couplers, connectivity))
+get_excluded_connections(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_excluded_connections, connectivity))
 
 """
     AllToAllConnectivity <:AbstractConnectivity
@@ -825,9 +833,9 @@ function path_search(
         end
     end
 
-    for coupler in get_excluded_couplers(connectivity)
+    for coupler in get_excluded_connections(connectivity)
         if (origin <= coupler[1] & coupler[2] <= target) ||
-            (target <= coupler[1] & coupler[2] <= origin)
+           (target <= coupler[1] & coupler[2] <= origin)
 
             return []
         end

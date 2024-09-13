@@ -509,30 +509,30 @@ end
 @testset "AbstractConnectivity: excluded positions and couplers" begin
 
     excluded_positions = [1, 2, 3, 9, 10]
-    excluded_couplers = [(2, 3), (5, 4)]
+    excluded_connections = [(2, 3), (5, 4)]
 
-    connectivity = LineConnectivity(12, excluded_positions, excluded_couplers)
+    connectivity = LineConnectivity(12, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
-    @test get_excluded_couplers(connectivity) == [(2, 3), (4, 5)]
+    @test get_excluded_connections(connectivity) == [(2, 3), (4, 5)]
 
-    alternate_positions =
-        Snowflurry.with_excluded_positions(
-            LineConnectivity(12, [1], excluded_couplers), excluded_positions
-            )
+    alternate_positions = Snowflurry.with_excluded_positions(
+        LineConnectivity(12, [1], excluded_connections),
+        excluded_positions,
+    )
 
     @test connectivity.dimension == alternate_positions.dimension
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
-    @test connectivity.excluded_couplers == alternate_positions.excluded_couplers
+    @test connectivity.excluded_connections == alternate_positions.excluded_connections
 
-    alternate_couplers =
-        Snowflurry.with_excluded_couplers(
-            LineConnectivity(12, excluded_positions), excluded_couplers
-            )
+    alternate_couplers = Snowflurry.with_excluded_connections(
+        LineConnectivity(12, excluded_positions),
+        excluded_connections,
+    )
 
     @test connectivity.dimension == alternate_couplers.dimension
     @test connectivity.excluded_positions == alternate_couplers.excluded_positions
-    @test connectivity.excluded_couplers == alternate_couplers.excluded_couplers
+    @test connectivity.excluded_connections == alternate_couplers.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         4 => [5],
@@ -586,40 +586,30 @@ end
         [2, 2],
     )
 
-    @test_throws AssertionError(
-        "coupler (3, 3) must connect to different qubits"
-        ) LineConnectivity(
+    @test_throws AssertionError("coupler (3, 3) must connect to different qubits") LineConnectivity(
         12,
         Int[],
-        [(3, 3)]
+        [(3, 3)],
     )
 
     @test_throws AssertionError("coupler (1, 3) is not nearest-neighbor") LineConnectivity(
         12,
         Int[],
-        [(1, 3)]
+        [(1, 3)],
     )
 
     @test_throws AssertionError(
-        "coupler (0, 1) must have qubits with indices greater than 0"
-        ) LineConnectivity(
-        12,
-        Int[],
-        [(0, 1)]
-    )
+        "coupler (0, 1) must have qubits with indices greater than 0",
+    ) LineConnectivity(12, Int[], [(0, 1)])
 
     @test_throws AssertionError(
-        "coupler (12, 13) must have qubits with indices smaller than 13"
-        ) LineConnectivity(
-        12,
-        Int[],
-        [(12, 13)]
-    )
+        "coupler (12, 13) must have qubits with indices smaller than 13",
+    ) LineConnectivity(12, Int[], [(12, 13)])
 
-    @test_throws AssertionError("excluded_couplers must be unique") LineConnectivity(
+    @test_throws AssertionError("excluded_connections must be unique") LineConnectivity(
         12,
         Int[],
-        [(1, 2), (2, 1)]
+        [(1, 2), (2, 1)],
     )
 
     @test isinf(get_qubits_distance(1, 12, connectivity))
@@ -753,11 +743,11 @@ end
     )
     @test_throws NotImplementedError get_excluded_positions(NonExistentConnectivity())
 
-    @test_throws NotImplementedError Snowflurry.with_excluded_couplers(
+    @test_throws NotImplementedError Snowflurry.with_excluded_connections(
         NonExistentConnectivity(),
-        Tuple{Int, Int}[],
+        Tuple{Int,Int}[],
     )
-    @test_throws NotImplementedError get_excluded_couplers(NonExistentConnectivity())
+    @test_throws NotImplementedError get_excluded_connections(NonExistentConnectivity())
 end
 
 @testset "get_qubits_distance" begin
