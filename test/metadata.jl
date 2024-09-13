@@ -94,8 +94,8 @@ end
 @testset "Construct AnyonYukonQPU with missing metadata keys" begin
 
     qpus_to_metadata = Dict(
-        AnyonYukonQPU => [yukonMetadata, yukonMetadataWithDisconnectedQubits],
-        AnyonYamaskaQPU => [yamaskaMetadata, yamaskaMetadataWithDisconnectedQubits],
+        AnyonYukonQPU => [yukonMetadata, yukonMetadataWithExcludedComponents],
+        AnyonYamaskaQPU => [yamaskaMetadata, yamaskaMetadataWithExcludedComponents],
     )
 
     keys_to_delete = ["name", "type", "qubitCount", "bitCount", "connectivity", "status"]
@@ -237,6 +237,7 @@ end
                 "qubit_count" => 6,
                 "connectivity_type" => Snowflurry.line_connectivity_label,
                 "excluded_positions" => Int[],
+                "excluded_connections" => Tuple{Int,Int}[],
                 "status" => "offline",
                 "realm" => "test-realm",
             ),
@@ -252,6 +253,7 @@ end
                 "qubit_count" => 24,
                 "connectivity_type" => Snowflurry.lattice_connectivity_label,
                 "excluded_positions" => Int[],
+                "excluded_connections" => Tuple{Int,Int}[],
                 "status" => "offline",
                 "realm" => "test-realm",
             ),

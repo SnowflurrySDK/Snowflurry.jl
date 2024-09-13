@@ -3,7 +3,7 @@ using Snowflurry
 const AnyonYukonConnectivity = LineConnectivity(6)
 const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 5, 6, 5, 3, 1])
 
-const Metadata = Dict{String,Union{String,Int,Vector{Int}}}
+const Metadata = Dict{String,Union{String,Int,Vector{Int},Vector{Tuple{Int,Int}}}}
 
 """
     AnyonYukonQPU <: AbstractQPU
@@ -282,12 +282,38 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
         output["excluded_positions"] = Vector{Int}()
     end
 
+    if haskey(machineMetadata, "disconnectedConnections")
+        raw_excluded_connections =
+            convert(Vector{Vector{Int}}, machineMetadata["disconnectedConnections"])
+        output["excluded_connections"] =
+            convert_excluded_connections(raw_excluded_connections)
+    else
+        output["excluded_connections"] = Vector{Tuple{Int,Int}}()
+    end
+
     realm = get_realm(qpu)
     if realm != ""
         output["realm"] = realm
     end
 
     return output
+end
+
+function convert_excluded_connections(
+    excluded_connections::Vector{Vector{Int}},
+)::Vector{Tuple{Int,Int}}
+
+    num_connections = length(excluded_connections)
+    converted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if length(connection) != 2
+            throw(ErrorException("the coupler $connection does not involve 2 qubits"))
+        end
+        converted_connections[i_connection] = (connection[1], connection[2])
+    end
+
+    return converted_connections
 end
 
 """
