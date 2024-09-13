@@ -535,8 +535,7 @@ end
     @test connectivity.excluded_connections == alternate_couplers.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
-        4 => [5],
-        5 => [4, 6],
+        5 => [6],
         6 => [5, 7],
         7 => [6, 8],
         8 => [7],

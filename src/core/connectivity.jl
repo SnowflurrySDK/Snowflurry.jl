@@ -657,16 +657,23 @@ function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int
         if !(target in connectivity.excluded_positions)
             neighbors = Vector{Int}()
 
-            if target - 1 > 0 && !(target - 1 in connectivity.excluded_positions)
+            if target - 1 > 0 &&
+               !(target - 1 in connectivity.excluded_positions) &&
+               !((target - 1, target) in connectivity.excluded_connections)
+
                 push!(neighbors, target - 1)
             end
 
             if target + 1 ≤ connectivity.dimension &&
-               !(target + 1 in connectivity.excluded_positions)
+               !(target + 1 in connectivity.excluded_positions) &&
+               !((target, target + 1) in connectivity.excluded_connections)
+
                 push!(neighbors, target + 1)
             end
 
-            adjacency_list[target] = neighbors
+            if !isempty(neighbors)
+                adjacency_list[target] = neighbors
+            end
         end
     end
 
