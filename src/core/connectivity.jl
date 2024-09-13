@@ -11,10 +11,11 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
 # Fields
 - `dimension         ::Int` -- Qubit count in this connectivity.
 - `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
-- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of couplers on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in Vector must be unique.
 
-Note: Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
-changed to (1, 2)).
+!!! note
+    Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
+    changed to (1, 2)).
 
 
 # Example
