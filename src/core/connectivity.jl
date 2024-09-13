@@ -65,7 +65,7 @@ function get_sorted_excluded_connections_for_line(
     sorted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
     for (i_connection, connection) in enumerate(excluded_connections)
         if connection[1] == connection[2]
-            throw(AssertionError("coupler $connection must connect to different qubits"))
+            throw(AssertionError("connection $connection must connect to different qubits"))
         end
 
         if connection[1] == connection[2] + 1
@@ -73,13 +73,14 @@ function get_sorted_excluded_connections_for_line(
         elseif connection[1] == connection[2] - 1
             sorted_connection = connection
         else
-            throw(AssertionError("coupler $connection is not nearest-neighbor"))
+            throw(AssertionError("connection $connection is not nearest-neighbor"))
         end
 
         if sorted_connection[1] < 1
             throw(
                 AssertionError(
-                    "coupler $connection must have qubits with indices " * "greater than 0",
+                    "connection $connection must have qubits with indices " *
+                    "greater than 0",
                 ),
             )
         end
@@ -87,7 +88,7 @@ function get_sorted_excluded_connections_for_line(
         if sorted_connection[2] > dimension
             throw(
                 AssertionError(
-                    "coupler $connection must have qubits with indices " *
+                    "connection $connection must have qubits with indices " *
                     "smaller than $(dimension+1)",
                 ),
             )
@@ -96,7 +97,9 @@ function get_sorted_excluded_connections_for_line(
         sorted_connections[i_connection] = sorted_connection
     end
 
-    @assert sorted_connections == unique(sorted_connections) "excluded_connections must be unique"
+    if sorted_connections != unique(sorted_connections)
+        throw(AssertionError("excluded_connections must be unique"))
+    end
     return sorted_connections
 end
 

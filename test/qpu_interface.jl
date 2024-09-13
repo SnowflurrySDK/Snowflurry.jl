@@ -586,24 +586,24 @@ end
         [2, 2],
     )
 
-    @test_throws AssertionError("coupler (3, 3) must connect to different qubits") LineConnectivity(
+    @test_throws AssertionError("connection (3, 3) must connect to different qubits") LineConnectivity(
         12,
         Int[],
         [(3, 3)],
     )
 
-    @test_throws AssertionError("coupler (1, 3) is not nearest-neighbor") LineConnectivity(
+    @test_throws AssertionError("connection (1, 3) is not nearest-neighbor") LineConnectivity(
         12,
         Int[],
         [(1, 3)],
     )
 
     @test_throws AssertionError(
-        "coupler (0, 1) must have qubits with indices greater than 0",
+        "connection (0, 1) must have qubits with indices greater than 0",
     ) LineConnectivity(12, Int[], [(0, 1)])
 
     @test_throws AssertionError(
-        "coupler (12, 13) must have qubits with indices smaller than 13",
+        "connection (12, 13) must have qubits with indices smaller than 13",
     ) LineConnectivity(12, Int[], [(12, 13)])
 
     @test_throws AssertionError("excluded_connections must be unique") LineConnectivity(
