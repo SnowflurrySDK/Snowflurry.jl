@@ -44,10 +44,10 @@ struct LineConnectivity <: AbstractConnectivity
             @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
         end
 
-        sorted_couplers =
+        sorted_connections =
             get_sorted_excluded_connections_for_line(dimension, excluded_connections)
 
-        new(dimension, excluded_positions, sorted_couplers)
+        new(dimension, excluded_positions, sorted_connections)
     end
 end
 
@@ -56,43 +56,43 @@ function get_sorted_excluded_connections_for_line(
     excluded_connections::Vector{Tuple{Int,Int}},
 )::Vector{Tuple{Int,Int}}
 
-    num_couplers = length(excluded_connections)
-    sorted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
-    for (i_coupler, coupler) in enumerate(excluded_connections)
-        if coupler[1] == coupler[2]
-            throw(AssertionError("coupler $coupler must connect to different qubits"))
+    num_connections = length(excluded_connections)
+    sorted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if connection[1] == connection[2]
+            throw(AssertionError("coupler $connection must connect to different qubits"))
         end
 
-        if coupler[1] == coupler[2] + 1
-            sorted_coupler = (coupler[2], coupler[1])
-        elseif coupler[1] == coupler[2] - 1
-            sorted_coupler = coupler
+        if connection[1] == connection[2] + 1
+            sorted_connection = (connection[2], connection[1])
+        elseif connection[1] == connection[2] - 1
+            sorted_connection = connection
         else
-            throw(AssertionError("coupler $coupler is not nearest-neighbor"))
+            throw(AssertionError("coupler $connection is not nearest-neighbor"))
         end
 
-        if sorted_coupler[1] < 1
+        if sorted_connection[1] < 1
             throw(
                 AssertionError(
-                    "coupler $coupler must have qubits with indices " * "greater than 0",
+                    "coupler $connection must have qubits with indices " * "greater than 0",
                 ),
             )
         end
 
-        if sorted_coupler[2] > dimension
+        if sorted_connection[2] > dimension
             throw(
                 AssertionError(
-                    "coupler $coupler must have qubits with indices " *
+                    "coupler $connection must have qubits with indices " *
                     "smaller than $(dimension+1)",
                 ),
             )
         end
 
-        sorted_couplers[i_coupler] = sorted_coupler
+        sorted_connections[i_connection] = sorted_connection
     end
 
-    @assert sorted_couplers == unique(sorted_couplers) "excluded_connections must be unique"
-    return sorted_couplers
+    @assert sorted_connections == unique(sorted_connections) "excluded_connections must be unique"
+    return sorted_connections
 end
 
 """
@@ -237,7 +237,7 @@ function Base.show(io::IO, connectivity::LineConnectivity)
         println(io, "excluded positions: $(connectivity.excluded_positions)")
     end
     if !isempty(connectivity.excluded_connections)
-        println(io, "excluded couplers: $(connectivity.excluded_connections)")
+        println(io, "excluded connections: $(connectivity.excluded_connections)")
     end
 end
 
@@ -840,9 +840,9 @@ function path_search(
         end
     end
 
-    for coupler in get_excluded_connections(connectivity)
-        if (origin <= coupler[1] & coupler[2] <= target) ||
-           (target <= coupler[1] & coupler[2] <= origin)
+    for connection in get_excluded_connections(connectivity)
+        if (origin <= connection[1] & connection[2] <= target) ||
+           (target <= connection[1] & connection[2] <= origin)
 
             return []
         end

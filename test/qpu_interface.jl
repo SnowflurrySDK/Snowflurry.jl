@@ -506,7 +506,7 @@ end
 end
 
 
-@testset "AbstractConnectivity: excluded positions and couplers" begin
+@testset "AbstractConnectivity: excluded positions and connections" begin
 
     excluded_positions = [1, 2, 3, 9, 10]
     excluded_connections = [(2, 3), (5, 4)]
@@ -525,14 +525,14 @@ end
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
     @test connectivity.excluded_connections == alternate_positions.excluded_connections
 
-    alternate_couplers = Snowflurry.with_excluded_connections(
+    alternate_connection = Snowflurry.with_excluded_connections(
         LineConnectivity(12, excluded_positions),
         excluded_connections,
     )
 
-    @test connectivity.dimension == alternate_couplers.dimension
-    @test connectivity.excluded_positions == alternate_couplers.excluded_positions
-    @test connectivity.excluded_connections == alternate_couplers.excluded_connections
+    @test connectivity.dimension == alternate_connection.dimension
+    @test connectivity.excluded_positions == alternate_connection.excluded_positions
+    @test connectivity.excluded_connections == alternate_connection.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         5 => [6],
@@ -551,7 +551,7 @@ end
           "LineConnectivity{12}\n" *
           "1──2──3──4──5──6──7──8──9──10──11──12\n" *
           "excluded positions: [1, 2, 3, 9, 10]\n" *
-          "excluded couplers: [(2, 3), (4, 5)]\n" *
+          "excluded connections: [(2, 3), (4, 5)]\n" *
           "\n"
 
     @test path_search(1, 12, connectivity) == []
