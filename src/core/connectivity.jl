@@ -17,9 +17,6 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
     Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
     changed to (1, 2)).
 
-Note: Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
-changed to (1, 2)).
-
 
 # Example
 ```jldoctest
