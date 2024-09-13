@@ -113,6 +113,7 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 - `qubits_per_printout_line::Vector{Int}` -- number of qubits in each line, when constructing the printout.
 - `dimensions              ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
 - `excluded_positions      ::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of couplers on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
 
 
 # Example
@@ -178,8 +179,14 @@ struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_printout_line::Vector{Int}
     dimensions::Tuple{Int,Int}
     excluded_positions::Vector{Int}
+    excluded_connections::Vector{Tuple{Int, Int}}
 
-    function LatticeConnectivity(nrows::Int, ncols::Int, excluded_positions = Vector{Int}())
+    function LatticeConnectivity(
+        nrows::Int,
+        ncols::Int,
+        excluded_positions = Vector{Int}(),
+        excluded_connections = Vector{Tuple{Int, Int}}()
+    )
 
         @assert nrows >= 2 "nrows must be at least 2"
         @assert ncols >= 2 "ncols must be at least 2"
@@ -216,6 +223,22 @@ struct LatticeConnectivity <: AbstractConnectivity
         @assert +(qubits_per_printout_line...) == qubit_count "Failed to build lattice"
 
         new(qubits_per_printout_line, (nrows, ncols), excluded_positions)
+    end
+end
+
+function get_sorted_excluded_connections_for_lattice(
+    nrows::Int,
+    ncols::Int,
+    excluded_connections = Vector{Tuple{Int, Int}}()
+)::Vector{Tuple{Int,Int}}
+
+    num_couplers = length(excluded_connections)
+    sorted_couplers = Vector{Tuple{Int,Int}}(undef, num_couplers)
+    for (i_coupler, coupler) in enumerate(excluded_connections)
+        if coupler[1] == coupler[2]
+            throw(AssertionError("coupler $coupler must connect to different qubits"))
+        end
+
     end
 end
 
