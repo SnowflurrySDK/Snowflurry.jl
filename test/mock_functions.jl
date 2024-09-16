@@ -231,7 +231,6 @@ yamaskaMetadata = makeMetadataResponseJSON(
 )
 
 yukonMetadataWithExcludedComponents = makeMetadataResponseJSON(
-<<<<<<< HEAD
     "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6],\"disconnectedConnections\":[[4, 5], [5, 6]]}]",
 )
 
@@ -241,17 +240,6 @@ yamaskaMetadataWithExcludedComponents = makeMetadataResponseJSON(
 
 yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
     "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedQubits\":[3,4,5,6],\"disconnectedConnections\":[[4, 5, 6]]}]",
-=======
-    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedCouplers\":[3,4,5,6],\"excludedCouplers\":[[4, 5], [5, 6]]}]",
-)
-
-yamaskaMetadataWithExcludedComponents = makeMetadataResponseJSON(
-    "[{\"id\":\"6b770575-c40f-4d81-a9de-b1969a028ca5\",\"name\":\"yamaska\",\"hostServer\":\"yamaska.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"CalculQC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202301\"},\"qubitCount\":24,\"bitCount\":24,\"connectivity\":\"lattice\",\"disconnectedCouplers\":[7,8,9,10,11,12],\"excludedCouplers\":[[7, 12], [12, 8]]}]",
-)
-
-yukonMetadataWithInvalidCouplerEntries = makeMetadataResponseJSON(
-    "[{\"id\":\"64c5ec18-03a8-480e-a4dc-9377c109e659\",\"name\":\"yukon\",\"hostServer\":\"yukon.anyonsys.com\",\"type\":\"quantum-computer\",\"owner\":\"DRDC\",\"status\":\"online\",\"metadata\":{\"Serial Number\":\"ANYK202201\"},\"qubitCount\":6,\"bitCount\":6,\"connectivity\":\"linear\",\"disconnectedCouplers\":[3,4,5,6],\"excludedCouplers\":[[4, 5, 6]]}]",
->>>>>>> 9fd9e0d (refactor: rename to disconnectedCouplers and excluded_connections)
 )
 
 yukonMetadataWithOfflineStatus = makeMetadataResponseJSON(
