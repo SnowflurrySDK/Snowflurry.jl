@@ -79,6 +79,7 @@ export
     DecomposeSingleTargetSingleControlGatesTranspiler,
     RejectNonNativeInstructionsTranspiler,
     RejectGatesOnExcludedPositionsTranspiler,
+    RejectGatesOnExcludedConnectionsTranspiler,
 
     # Functions
     controlled,

@@ -1897,3 +1897,17 @@ end
 
     @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 end
+
+@testset "RejectGatesOnExcludedConnectionsTranspiler for all-to-all" begin
+
+    connectivity = AllToAllConnectivity()
+
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [control_z(1, 2)],
+        name = "test-name",
+    )
+    transpiler = RejectGatesOnExcludedConnectionsTranspiler(connectivity)
+
+    @test isequal(transpile(transpiler, circuit), circuit)
+end
