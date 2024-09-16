@@ -760,9 +760,11 @@ end
     )
 
     excluded_positions = [5, 6, 2]
-
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
+    @test isinf(get_qubits_distance(1, 9, connectivity))
 
+    excluded_connections = [(5, 9), (1, 6)]
+    connectivity = LatticeConnectivity(6, 4, Int[], excluded_connections)
     @test isinf(get_qubits_distance(1, 9, connectivity))
 end
 
