@@ -359,15 +359,6 @@ with_excluded_connections(
     excluded_connections,
 )
 
-with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
-    throw(NotImplementedError(:with_excluded_positions, connectivity))
-
-with_excluded_connections(
-    c::LineConnectivity,
-    excluded_connections::Vector{Tuple{Int,Int}},
-)::LineConnectivity =
-    LineConnectivity(c.dimension, c.excluded_positions, excluded_connections)
-
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
 
