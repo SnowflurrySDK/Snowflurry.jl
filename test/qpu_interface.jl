@@ -705,7 +705,9 @@ end
           "                    | \n" *
           "                   24 \n" *
           "\n" *
-          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n\n"
+          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n" *
+          "excluded connections: [(9, 14), (10, 14), (14, 18), (14, 17), (4, 8)]\n\n"
+          
 
     @test path_search(1, 8, connectivity) == [8, 12, 7, 11, 6, 10, 5, 1]
     excluded = [12, 11]

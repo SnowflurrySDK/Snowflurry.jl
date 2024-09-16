@@ -233,7 +233,7 @@ end
 function get_sorted_excluded_connections_for_lattice(
     nrows::Int,
     ncols::Int,
-    excluded_connections = Vector{Tuple{Int,Int}}(),
+    excluded_connections::Vector{Tuple{Int,Int}},
 )::Vector{Tuple{Int,Int}}
 
     num_connections = length(excluded_connections)
@@ -295,6 +295,9 @@ function Base.show(io::IO, connectivity::LatticeConnectivity)
     print_connectivity(connectivity, Vector{Int}(), io)
     if !isempty(connectivity.excluded_positions)
         println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
+    if !isempty(connectivity.excluded_connections)
+        println(io, "excluded connections: $(connectivity.excluded_connections)")
     end
 end
 
