@@ -376,22 +376,6 @@ get_excluded_connections(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_connections, connectivity))
 
 """
-    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
-
-Return the list of `excluded_connections` for the `LineConnectivity`.
-"""
-get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
-    connectivity.excluded_connections
-
-"""
-    get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
-
-Throws a NotImplementedError.
-"""
-get_excluded_connections(connectivity::AbstractConnectivity) =
-    throw(NotImplementedError(:get_excluded_connections, connectivity))
-
-"""
     AllToAllConnectivity <:AbstractConnectivity
 
 A data structure to represent all-to-all qubit connectivity in an Anyon System's QPU.  
