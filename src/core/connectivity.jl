@@ -113,7 +113,7 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 - `qubits_per_printout_line::Vector{Int}` -- number of qubits in each line, when constructing the printout.
 - `dimensions              ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
 - `excluded_positions      ::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
-- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of couplers on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in Vector must be unique.
 
 
 # Example
