@@ -798,9 +798,7 @@ function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int
                 push!(neighbors, target + 1)
             end
 
-            if !isempty(neighbors)
-                adjacency_list[target] = neighbors
-            end
+            adjacency_list[target] = neighbors
         end
     end
 
