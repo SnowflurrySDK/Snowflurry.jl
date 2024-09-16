@@ -364,6 +364,12 @@ get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
 get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 
+get_excluded_couplers(c::LineConnectivity) =
+    c.excluded_couplers
+
+get_excluded_couplers(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_excluded_couplers, connectivity))
+
 """
     get_excluded_connections(
         connectivity::Union{LineConnectivity,LatticeConnectivity}
