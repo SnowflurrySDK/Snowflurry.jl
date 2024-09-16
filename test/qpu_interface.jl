@@ -506,25 +506,38 @@ end
 end
 
 
-@testset "AbstractConnectivity: excluded_positions" begin
+@testset "AbstractConnectivity: excluded positions and connections" begin
 
     excluded_positions = [1, 2, 3, 9, 10]
+    excluded_connections = [(2, 3), (5, 4), (5, 6)]
 
-    connectivity = LineConnectivity(12, excluded_positions)
+    connectivity = LineConnectivity(12, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
+    @test get_excluded_connections(connectivity) == [(2, 3), (4, 5), (5, 6)]
 
-    connectivity_alternate =
-        Snowflurry.with_excluded_positions(LineConnectivity(12), excluded_positions)
+    alternate_positions = Snowflurry.with_excluded_positions(
+        LineConnectivity(12, [1], excluded_connections),
+        excluded_positions,
+    )
 
-    @test connectivity.dimension == connectivity_alternate.dimension
-    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+    @test connectivity.dimension == alternate_positions.dimension
+    @test connectivity.excluded_positions == alternate_positions.excluded_positions
+    @test connectivity.excluded_connections == alternate_positions.excluded_connections
 
+    alternate_connection = Snowflurry.with_excluded_connections(
+        LineConnectivity(12, excluded_positions),
+        excluded_connections,
+    )
+
+    @test connectivity.dimension == alternate_connection.dimension
+    @test connectivity.excluded_positions == alternate_connection.excluded_positions
+    @test connectivity.excluded_connections == alternate_connection.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
-        4 => [5],
-        5 => [4, 6],
-        6 => [5, 7],
+        4 => [],
+        5 => [],
+        6 => [7],
         7 => [6, 8],
         8 => [7],
         11 => [12],
@@ -539,10 +552,12 @@ end
           "LineConnectivity{12}\n" *
           "1──2──3──4──5──6──7──8──9──10──11──12\n" *
           "excluded positions: [1, 2, 3, 9, 10]\n" *
+          "excluded connections: [(2, 3), (4, 5), (5, 6)]\n" *
           "\n"
 
     @test path_search(1, 12, connectivity) == []
-    @test path_search(7, 4, connectivity) == Vector{Int}(collect(4:7))
+    @test path_search(7, 4, connectivity) == []
+    @test path_search(8, 6, connectivity) == Vector{Int}(collect(6:8))
     @test path_search(1, 1, connectivity) == []
 
     exclusion_cases = [[5], [5, 7], [8]]
@@ -571,7 +586,34 @@ end
         [2, 2],
     )
 
+    @test_throws AssertionError("connection (3, 3) must connect to different qubits") LineConnectivity(
+        12,
+        Int[],
+        [(3, 3)],
+    )
+
+    @test_throws AssertionError("connection (1, 3) is not nearest-neighbor") LineConnectivity(
+        12,
+        Int[],
+        [(1, 3)],
+    )
+
+    @test_throws AssertionError(
+        "connection (0, 1) must have qubits with indices greater than 0",
+    ) LineConnectivity(12, Int[], [(0, 1)])
+
+    @test_throws AssertionError(
+        "connection (12, 13) must have qubits with indices smaller than 13",
+    ) LineConnectivity(12, Int[], [(12, 13)])
+
+    @test_throws AssertionError("excluded_connections must be unique") LineConnectivity(
+        12,
+        Int[],
+        [(1, 2), (2, 1)],
+    )
+
     @test isinf(get_qubits_distance(1, 12, connectivity))
+    @test isinf(get_qubits_distance(1, 12, LineConnectivity(12, Int[], [(6, 5)])))
 
     io = IOBuffer()
 
@@ -581,11 +623,11 @@ end
 
     @test get_excluded_positions(connectivity) == excluded_positions
 
-    connectivity_alternate =
+    alternate_positions =
         Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
-    @test connectivity.qubits_per_row == connectivity_alternate.qubits_per_row
-    @test connectivity.dimensions == connectivity_alternate.dimensions
-    @test connectivity.excluded_positions == connectivity_alternate.excluded_positions
+    @test connectivity.qubits_per_row == alternate_positions.qubits_per_row
+    @test connectivity.dimensions == alternate_positions.dimensions
+    @test connectivity.excluded_positions == alternate_positions.excluded_positions
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [6, 5],
@@ -701,6 +743,12 @@ end
         Int[],
     )
     @test_throws NotImplementedError get_excluded_positions(NonExistentConnectivity())
+
+    @test_throws NotImplementedError Snowflurry.with_excluded_connections(
+        NonExistentConnectivity(),
+        Tuple{Int,Int}[],
+    )
+    @test_throws NotImplementedError get_excluded_connections(NonExistentConnectivity())
 end
 
 @testset "get_qubits_distance" begin

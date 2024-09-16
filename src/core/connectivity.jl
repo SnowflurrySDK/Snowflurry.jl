@@ -11,6 +11,11 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@r
 # Fields
 - `dimension         ::Int` -- Qubit count in this connectivity.
 - `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in Vector must be unique.
+
+!!! note
+    Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
+    changed to (1, 2)).
 
 
 # Example
@@ -19,18 +24,24 @@ julia> connectivity = LineConnectivity(6)
 LineConnectivity{6}
 1──2──3──4──5──6
 
-julia> connectivity = LineConnectivity(6, [1,2,3])
+julia> connectivity = LineConnectivity(6, [1,2,3], [(3, 2), (3, 4)])
 LineConnectivity{6}
 1──2──3──4──5──6
 excluded positions: [1, 2, 3]
+excluded connections: [(2, 3), (3, 4)]
 
 ```
 """
 struct LineConnectivity <: AbstractConnectivity
     dimension::Int
     excluded_positions::Vector{Int}
+    excluded_connections::Vector{Tuple{Int,Int}}
 
-    function LineConnectivity(dimension::Int, excluded_positions = Vector{Int}())
+    function LineConnectivity(
+        dimension::Int,
+        excluded_positions::Vector{Int} = Vector{Int}(),
+        excluded_connections::Vector{Tuple{Int,Int}} = Vector{Tuple{Int,Int}}(),
+    )
         @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
 
         for e in excluded_positions
@@ -38,8 +49,58 @@ struct LineConnectivity <: AbstractConnectivity
             @assert e ≤ dimension "elements in excluded_positions must be ≤ $dimension"
         end
 
-        new(dimension, excluded_positions)
+        sorted_connections =
+            get_sorted_excluded_connections_for_line(dimension, excluded_connections)
+
+        new(dimension, excluded_positions, sorted_connections)
     end
+end
+
+function get_sorted_excluded_connections_for_line(
+    dimension::Int,
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::Vector{Tuple{Int,Int}}
+
+    num_connections = length(excluded_connections)
+    sorted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if connection[1] == connection[2]
+            throw(AssertionError("connection $connection must connect to different qubits"))
+        end
+
+        if connection[1] == connection[2] + 1
+            sorted_connection = (connection[2], connection[1])
+        elseif connection[1] == connection[2] - 1
+            sorted_connection = connection
+        else
+            throw(AssertionError("connection $connection is not nearest-neighbor"))
+        end
+
+        if sorted_connection[1] < 1
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices " *
+                    "greater than 0",
+                ),
+            )
+        end
+
+        if sorted_connection[2] > dimension
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices " *
+                    "smaller than $(dimension+1)",
+                ),
+            )
+        end
+
+        sorted_connections[i_connection] = sorted_connection
+    end
+
+    if sorted_connections != unique(sorted_connections)
+        throw(AssertionError("excluded_connections must be unique"))
+    end
+    return sorted_connections
 end
 
 """
@@ -183,6 +244,9 @@ function Base.show(io::IO, connectivity::LineConnectivity)
     if !isempty(connectivity.excluded_positions)
         println(io, "excluded positions: $(connectivity.excluded_positions)")
     end
+    if !isempty(connectivity.excluded_connections)
+        println(io, "excluded connections: $(connectivity.excluded_connections)")
+    end
 end
 
 get_connectivity_label(connectivity::AbstractConnectivity) =
@@ -194,18 +258,44 @@ with_excluded_positions(connectivity::AbstractConnectivity, ::Vector{Int}) =
 with_excluded_positions(
     c::LineConnectivity,
     excluded_positions::Vector{Int},
-)::LineConnectivity = LineConnectivity(c.dimension, excluded_positions)
+)::LineConnectivity =
+    LineConnectivity(c.dimension, excluded_positions, c.excluded_connections)
 
 with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
 )::LatticeConnectivity = LatticeConnectivity(c.qubits_per_row, excluded_positions)
 
+with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
+    throw(NotImplementedError(:with_excluded_positions, connectivity))
+
+with_excluded_connections(
+    c::LineConnectivity,
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::LineConnectivity =
+    LineConnectivity(c.dimension, c.excluded_positions, excluded_connections)
+
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
 
 get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
+
+"""
+    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
+
+Return the list of `excluded_connections` for the `LineConnectivity`.
+"""
+get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
+    connectivity.excluded_connections
+
+"""
+    get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
+
+Throws a NotImplementedError.
+"""
+get_excluded_connections(connectivity::AbstractConnectivity) =
+    throw(NotImplementedError(:get_excluded_connections, connectivity))
 
 """
     AllToAllConnectivity <:AbstractConnectivity
@@ -516,7 +606,8 @@ end
     get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
 Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict where `key => value` pairs
-are each qubit number => an Vector of the qubits that are adjacent (neighbors) to it on this particular connectivity.
+are each qubit number => a Vector of the qubits that are adjacent (neighbors) to it on this particular connectivity.
+Positions in `connectivity.excluded_positions` are not given a key in the adjacency list.
 
 # Example
 ```jldoctest
@@ -575,12 +666,17 @@ function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int
         if !(target in connectivity.excluded_positions)
             neighbors = Vector{Int}()
 
-            if target - 1 > 0 && !(target - 1 in connectivity.excluded_positions)
+            if target - 1 > 0 &&
+               !(target - 1 in connectivity.excluded_positions) &&
+               !((target - 1, target) in connectivity.excluded_connections)
+
                 push!(neighbors, target - 1)
             end
 
             if target + 1 ≤ connectivity.dimension &&
-               !(target + 1 in connectivity.excluded_positions)
+               !(target + 1 in connectivity.excluded_positions) &&
+               !((target, target + 1) in connectivity.excluded_connections)
+
                 push!(neighbors, target + 1)
             end
 
@@ -604,7 +700,12 @@ get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}} =
     throw(NotImplementedError(:get_adjacency_list, connectivity))
 
 """
-    path_search(origin::Int, target::Int, connectivity::AbstractConnectivity, excluded::Vector{Int} = Vector{Int}([]))
+    path_search(
+        origin::Int,
+        target::Int,
+        connectivity::AbstractConnectivity,
+        excluded::Vector{Int} = Vector{Int}([])
+    )::Vector{Int}
 
 Find the shortest path between origin and target qubits in terms of 
 Manhattan distance, using the Breadth-First Search algorithm, on any 
@@ -727,7 +828,6 @@ function path_search(
 
     @assert origin > 0 "origin must be non-negative"
     @assert target > 0 "target must be non-negative"
-    @assert target > 0 "target must be non-negative"
 
     qubit_count = connectivity.dimension
 
@@ -743,6 +843,14 @@ function path_search(
     for e in all_excluded_positions
         if origin ≤ e ≤ target || target ≤ e ≤ origin
             # no path exists due to excluded positions
+            return []
+        end
+    end
+
+    for connection in get_excluded_connections(connectivity)
+        if (origin <= connection[1] & connection[2] <= target) ||
+           (target <= connection[1] & connection[2] <= origin)
+
             return []
         end
     end
