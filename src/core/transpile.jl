@@ -2606,3 +2606,31 @@ function are_gates_at_excluded_connections(
 
     return (false, "")
 end
+
+function are_gates_at_excluded_connections(
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
+    circuit::QuantumCircuit,
+)::Tuple{Bool,String}
+
+    excluded_connections = get_excluded_connections(connectivity)
+    for instruction in get_circuit_instructions(circuit)
+        qubits = get_connected_qubits(instruction)
+
+        for connection in excluded_connections
+            matching_indices = indexin(connection, qubits)
+            found_excluded_connection =
+                nothing ∉ matching_indices &&
+                abs(matching_indices[1] - matching_indices[2]) == 1
+
+            if found_excluded_connection
+                gate_name = typeof(get_gate_symbol(instruction))
+                message =
+                    "the $gate_name gate on qubits $qubits cannot be applied " *
+                    "since connection $connection is unavailable"
+                return (true, message)
+            end
+        end
+    end
+
+    return (false, "")
+end
