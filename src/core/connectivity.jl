@@ -267,7 +267,7 @@ function get_sorted_excluded_connections_for_lattice(
             )
         end
 
-        first_qubit_row_index = ((sorted_connection[1] - 1) ÷ ncols) + 1
+        first_qubit_row_index = (div((sorted_connection[1] - 1), ncols)) + 1
         near_index = sorted_connection[1] + ncols
         coupler_exists =
             sorted_connection[2] == near_index ||
