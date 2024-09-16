@@ -667,26 +667,38 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
             tcol = ind[2]
 
             if trow - 1 > 0 && qubit_placement[trow-1, tcol] != 0
-                if !(qubit_placement[trow-1, tcol] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow-1, tcol])
+                north_qubit = qubit_placement[trow-1, tcol]
+                if !(north_qubit in connectivity.excluded_positions) &&
+                   !((north_qubit, target) in connectivity.excluded_connections)
+
+                    push!(neighbors, north_qubit)
                 end
             end
 
             if trow + 1 <= nrows && qubit_placement[trow+1, tcol] != 0
-                if !(qubit_placement[trow+1, tcol] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow+1, tcol])
+                south_qubit = qubit_placement[trow+1, tcol]
+                if !(south_qubit in connectivity.excluded_positions) &&
+                   !((target, south_qubit) in connectivity.excluded_connections)
+
+                    push!(neighbors, south_qubit)
                 end
             end
 
             if tcol - 1 > 0 && qubit_placement[trow, tcol-1] != 0
-                if !(qubit_placement[trow, tcol-1] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow, tcol-1])
+                west_qubit = qubit_placement[trow, tcol-1]
+                if !(west_qubit in connectivity.excluded_positions) &&
+                   !((target, west_qubit) in connectivity.excluded_connections)
+
+                    push!(neighbors, west_qubit)
                 end
             end
 
             if tcol + 1 <= ncols && qubit_placement[trow, tcol+1] != 0
-                if !(qubit_placement[trow, tcol+1] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow, tcol+1])
+                east_qubit = qubit_placement[trow, tcol+1]
+                if !(east_qubit in connectivity.excluded_positions) &&
+                   !((east_qubit, target) in connectivity.excluded_connections)
+
+                    push!(neighbors, east_qubit)
                 end
             end
 
