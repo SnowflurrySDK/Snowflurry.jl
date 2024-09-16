@@ -606,7 +606,8 @@ end
     get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
 Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict where `key => value` pairs
-are each qubit number => an Vector of the qubits that are adjacent (neighbors) to it on this particular connectivity.
+are each qubit number => a Vector of the qubits that are adjacent (neighbors) to it on this particular connectivity.
+Positions in `connectivity.excluded_positions` are not given a key in the adjacency list.
 
 # Example
 ```jldoctest
@@ -679,9 +680,7 @@ function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int
                 push!(neighbors, target + 1)
             end
 
-            if !isempty(neighbors)
-                adjacency_list[target] = neighbors
-            end
+            adjacency_list[target] = neighbors
         end
     end
 

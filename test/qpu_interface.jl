@@ -509,12 +509,12 @@ end
 @testset "AbstractConnectivity: excluded positions and connections" begin
 
     excluded_positions = [1, 2, 3, 9, 10]
-    excluded_connections = [(2, 3), (6, 5)]
+    excluded_connections = [(2, 3), (5, 4), (5, 6)]
 
     connectivity = LineConnectivity(12, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
-    @test get_excluded_connections(connectivity) == [(2, 3), (5, 6)]
+    @test get_excluded_connections(connectivity) == [(2, 3), (4, 5), (5, 6)]
 
     alternate_positions = Snowflurry.with_excluded_positions(
         LineConnectivity(12, [1], excluded_connections),
@@ -535,8 +535,8 @@ end
     @test connectivity.excluded_connections == alternate_connection.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
-        4 => [5],
-        5 => [4],
+        4 => [],
+        5 => [],
         6 => [7],
         7 => [6, 8],
         8 => [7],
@@ -552,12 +552,12 @@ end
           "LineConnectivity{12}\n" *
           "1──2──3──4──5──6──7──8──9──10──11──12\n" *
           "excluded positions: [1, 2, 3, 9, 10]\n" *
-          "excluded connections: [(2, 3), (5, 6)]\n" *
+          "excluded connections: [(2, 3), (4, 5), (5, 6)]\n" *
           "\n"
 
     @test path_search(1, 12, connectivity) == []
     @test path_search(7, 4, connectivity) == []
-    @test path_search(7, 5, connectivity) == Vector{Int}(collect(5:7))
+    @test path_search(8, 6, connectivity) == Vector{Int}(collect(6:8))
     @test path_search(1, 1, connectivity) == []
 
     exclusion_cases = [[5], [5, 7], [8]]
