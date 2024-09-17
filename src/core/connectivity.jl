@@ -267,12 +267,12 @@ function get_sorted_excluded_connections_for_lattice(
             )
         end
 
-        first_qubit_row_index = (div((sorted_connection[1] - 1), ncols)) + 1
+        first_qubit_row_index = ((sorted_connection[1] - 1) ÷ ncols) + 1
         near_index = sorted_connection[1] + ncols
         coupler_exists =
             sorted_connection[2] == near_index ||
-            (isodd(first_qubit_row_index) && sorted_connection[2] == near_index + 1) ||
-            (iseven(first_qubit_row_index) && sorted_connection[2] == near_index - 1)
+            (isodd(first_qubit_row_index) && sorted_connection[2] == near_index - 1) ||
+            (iseven(first_qubit_row_index) && sorted_connection[2] == near_index + 1)
 
         if !coupler_exists
             throw(AssertionError("connection $connection does not exist"))
@@ -345,7 +345,9 @@ with_excluded_connections(
     c::LatticeConnectivity,
     excluded_connections::Vector{Tuple{Int,Int}},
 )::LatticeConnectivity =
-    LatticeConnectivity(c.qubits_per_row, c.excluded_positions, excluded_connections)
+    LatticeConnectivity(
+        c.dimensions[1], c.dimensions[2], c.excluded_positions, excluded_connections
+    )
 
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions

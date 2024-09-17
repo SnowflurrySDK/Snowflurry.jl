@@ -624,8 +624,8 @@ end
     io = IOBuffer()
 
     excluded_positions = collect(13:24)
-    excluded_connections = [(9, 14), (14, 10), (14, 18), (14, 17), (8, 4), (3, 8)]
-    sorted_connections = [(9, 14), (10, 14), (14, 18), (14, 17), (4, 8), (3, 8)]
+    excluded_connections = [(9, 13), (13, 10), (13, 18), (13, 17), (7, 4), (4, 8)]
+    sorted_connections = [(9, 13), (10, 13), (13, 18), (13, 17), (4, 7), (4, 8)]
 
     connectivity = LatticeConnectivity(6, 4, excluded_positions, excluded_connections)
 
@@ -706,7 +706,7 @@ end
           "                   24 \n" *
           "\n" *
           "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n" *
-          "excluded connections: [(9, 14), (10, 14), (14, 18), (14, 17), (4, 8), (3, 8)]" *
+          "excluded connections: [(9, 13), (10, 13), (13, 18), (13, 17), (4, 7), (4, 8)]" *
           "\n\n"
 
     @test path_search(1, 8, connectivity) == [8, 12, 7, 11, 6, 10, 5, 1]
@@ -763,9 +763,9 @@ end
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
     @test isinf(get_qubits_distance(1, 9, connectivity))
 
-    excluded_connections = [(5, 9), (1, 6)]
+    excluded_connections = [(2, 5), (2, 6)]
     connectivity = LatticeConnectivity(6, 4, Int[], excluded_connections)
-    @test isinf(get_qubits_distance(1, 9, connectivity))
+    @test isinf(get_qubits_distance(2, 10, connectivity))
 end
 
 @testset "is_native_instruction: NotImplemented" begin
