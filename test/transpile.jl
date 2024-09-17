@@ -501,6 +501,16 @@ end
     #               |     | 
     #              12 ──  9 
 
+    #         1 
+    #         | 
+    #   7 ──  4 ──  2 
+    #   |     |     | 
+    #  10 ──  8 ──  5 ──  3 
+    #         |     |     | 
+    #        11 ──  9 ──  6 
+    #               | 
+    #              12 
+
     test_specs = [
         # (gates list       gates_in_output)
         ([swap(4, 1)], 1),          # no effect
@@ -510,20 +520,20 @@ end
         ([iswap(1, 8)], 3),
         ([iswap(8, 1)], 3),
         ([control_z(5, 2)], 1),     # no effect
-        ([control_z(5, 3)], 5),     # target at bottom
-        ([control_z(4, 3)], 9),    # target on top
-        ([toffoli(7, 5, 2)], 1),    # no effect
-        ([toffoli(7, 2, 5)], 1),    # no effect
-        ([toffoli(2, 5, 7)], 1),    # no effect
+        ([control_z(5, 1)], 5),     # target at bottom
+        ([control_z(1, 6)], 9),     # target on top
+        ([toffoli(7, 4, 2)], 1),    # no effect
+        ([toffoli(7, 2, 4)], 1),    # no effect
+        ([toffoli(2, 4, 7)], 1),    # no effect
         ([toffoli(7, 2, 1)], 3),    # 1 swap required
         ([toffoli(1, 2, 7)], 3),    # 1 swap required
-        ([toffoli(7, 2, 6)], 5),    # 1 swap required on 2 targets
-        ([toffoli(7, 6, 2)], 5),    # 1 swap required on 2 targets
-        ([toffoli(7, 8, 12)], 5),   # 1 swap required on 2 targets
-        ([toffoli(7, 12, 8)], 5),   # 1 swap required on 2 targets
-        ([toffoli(4, 10, 2)], 7),   # 1 swap required on 2 targets
-        ([toffoli(4, 12, 9)], 13), # 3 swap required on 2 targets
-        ([control_z(3, 4), toffoli(1, 7, 8)], 12), # sequence of gates
+        ([toffoli(7, 2, 5)], 5),    # 1 swap required on 2 targets
+        ([toffoli(7, 5, 2)], 5),    # 1 swap required on 2 targets
+        ([toffoli(7, 8, 11)], 5),   # 1 swap required on 2 targets
+        ([toffoli(7, 11, 8)], 5),   # 1 swap required on 2 targets
+        ([toffoli(6, 11, 2)], 7),   # 1 swap required on 2 targets
+        ([toffoli(6, 10, 7)], 13),  # 3 swap required on 2 targets
+        ([control_z(1, 6), toffoli(1, 7, 8)], 12), # sequence of gates
     ]
 
     for (input_gates, gates_in_output) in test_specs
