@@ -545,6 +545,38 @@ end
     end
 end
 
+@testset "SwapQubitsForAdjacencyTranspiler{LatticeConnectivity}: update qubit count" begin
+
+    nrows = 4
+    ncols = 3
+    transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols))
+
+    # LatticeConnectivity{4,3}
+    #         4 ──  1 
+    #         |     | 
+    #  10 ──  7 ──  5 ──  2 
+    #         |     |     | 
+    #        11 ──  8 ──  6 ──  3 
+    #               |     | 
+    #              12 ──  9 
+
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        instructions = [control_z(1, 2)],
+        name = "test-name",
+    )
+
+    transpiled_circuit = transpile(transpiler, circuit)
+
+    gates = get_circuit_instructions(transpiled_circuit)
+
+    @test length(gates) == 3
+
+    new_qubit_count = 5
+    larger_original_circuit = update_circuit_qubit_count(circuit, new_qubit_count)
+    @test compare_circuits(larger_original_circuit, transpiled_circuit)
+end
+
 @testset "SwapQubitsForAdjacencyTranspiler{LatticeConnectivity}: excluded_positions" begin
 
     nrows = 4

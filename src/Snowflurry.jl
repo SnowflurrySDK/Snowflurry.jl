@@ -104,6 +104,7 @@ export
     fock_dm,
     expected_value,
     get_name,
+    update_circuit_qubit_count,
     get_num_qubits,
     get_num_bits,
     get_num_bodies,
