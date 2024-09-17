@@ -400,3 +400,19 @@ end
     )
     @test isequal(c0, c6) == false
 end
+
+@testset "update_circuit_qubit_count" begin
+    circuit = QuantumCircuit(
+        qubit_count = 1,
+        bit_count = 2,
+        instructions = [sigma_x(1)],
+        name = "test_circuit",
+    )
+    larger_qubit_count = 3
+    larger_circuit = update_circuit_qubit_count(circuit, larger_qubit_count)
+
+    @test get_num_qubits(larger_circuit) == larger_qubit_count
+    @test get_num_bits(larger_circuit) == get_num_bits(circuit)
+    @test get_name(larger_circuit) == get_name(circuit)
+    @test get_circuit_instructions(larger_circuit) == get_circuit_instructions(circuit)
+end
