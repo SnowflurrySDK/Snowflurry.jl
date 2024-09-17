@@ -493,14 +493,6 @@ end
     transpiler = SwapQubitsForAdjacencyTranspiler(LatticeConnectivity(nrows, ncols))
 
     # LatticeConnectivity{4,3}
-    #         4 ──  1 
-    #         |     | 
-    #  10 ──  7 ──  5 ──  2 
-    #         |     |     | 
-    #        11 ──  8 ──  6 ──  3 
-    #               |     | 
-    #              12 ──  9 
-
     #         1 
     #         | 
     #   7 ──  4 ──  2 
