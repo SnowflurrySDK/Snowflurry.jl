@@ -631,7 +631,8 @@ end
 
     alternate_positions =
         Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
-    @test connectivity.qubits_per_printout_line == alternate_positions.qubits_per_printout_line
+    @test connectivity.qubits_per_printout_line ==
+          alternate_positions.qubits_per_printout_line
     @test connectivity.dimensions == alternate_positions.dimensions
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
 
@@ -796,8 +797,10 @@ end
         qubit_placement = zeros(Int, nrows, ncols)
         qubit_count = get_num_qubits(connectivity)
 
-        qubit_numbering =
-            Snowflurry.assign_qubit_numbering(qubits_per_printout_line, connectivity.dimensions[2])
+        qubit_numbering = Snowflurry.assign_qubit_numbering(
+            qubits_per_printout_line,
+            connectivity.dimensions[2],
+        )
 
         for (irow, qubit_count) in enumerate(qubits_per_printout_line)
             offset = offsets[irow]
