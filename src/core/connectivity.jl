@@ -256,7 +256,8 @@ with_excluded_positions(
 with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
-)::LatticeConnectivity = LatticeConnectivity(c.dimensions[1], c.dimensions[2], excluded_positions)
+)::LatticeConnectivity =
+    LatticeConnectivity(c.dimensions[1], c.dimensions[2], excluded_positions)
 
 with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
