@@ -550,7 +550,8 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
 
     adjacency_list = Dict{Int,Vector{Int}}()
 
-    qubit_numbering = assign_qubit_numbering(qubits_per_printout_line, connectivity.dimensions[2])
+    qubit_numbering =
+        assign_qubit_numbering(qubits_per_printout_line, connectivity.dimensions[2])
 
     for (irow, qubit_count) in enumerate(qubits_per_printout_line)
         offset = offsets[irow]
