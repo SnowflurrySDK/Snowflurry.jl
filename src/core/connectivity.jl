@@ -117,23 +117,23 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 
 # Example
 The following lattice has 4 rows, made of qubits 
-`[1, 5, 9]`, `[2, 6, 10]`, `[3, 7, 11]` and `[8, 4, 12]`, with each of those rows having 3 elements.
+`[1, 5, 9]`, `[2, 6, 10]`, `[3, 7, 11]` and `[4, 8, 12]`, with each of those rows having 3 elements.
 
-The corresponding `qubits_per_row` field is `[2, 3, 3, 3, 1]`, the number of qubits in each line
+The corresponding `qubits_per_row` field is `[1, 3, 3, 3, 2]`, the number of qubits in each line
 in the printed representation.
 
 ```jldoctest
 julia> connectivity = LatticeConnectivity(3, 4)
 LatticeConnectivity{3,4}
-  5 ──  1
-  |     |
-  9 ──  6 ──  2
-        |     |
-       10 ──  7 ──  3
-              |     |
-             11 ──  8 ──  4
-                    |
-                   12 
+        1 
+        | 
+  9 ──  5 ──  2 
+        |     | 
+       10 ──  6 ──  3 
+              |     | 
+             11 ──  7 ──  4 
+                    |     | 
+                   12 ──  8 
 
 ```
 
@@ -141,40 +141,37 @@ Lattices of arbitrary dimensions can be built:
 ```jldoctest
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              5 ──  1
-              |     |
-       13 ──  9 ──  6 ──  2
-        |     |     |     |
- 21 ── 17 ── 14 ── 10 ──  7 ──  3
-        |     |     |     |     |
-       22 ── 18 ── 15 ── 11 ──  8 ──  4
-              |     |     |     |
-             23 ── 19 ── 16 ── 12
-                    |     |
-                   24 ── 20 
+              1 
+              | 
+        9 ──  5 ──  2 
+        |     |     | 
+ 17 ── 13 ── 10 ──  6 ──  3 
+  |     |     |     |     | 
+ 21 ── 18 ── 14 ── 11 ──  7 ──  4 
+        |     |     |     |     | 
+       22 ── 19 ── 15 ── 12 ──  8 
+              |     |     | 
+             23 ── 20 ── 16 
+                    | 
+                   24 
 ```
 
 Optionally, lattices with excluded positions can be defined:
 ```jldoctest
 julia> connectivity = LatticeConnectivity(3, 4, [1, 5, 9])
 LatticeConnectivity{3,4}
-  5 ──  1 
-  |     | 
-  9 ──  6 ──  2 
+        1 
+        | 
+  9 ──  5 ──  2 
         |     | 
-       10 ──  7 ──  3 
+       10 ──  6 ──  3 
               |     | 
-             11 ──  8 ──  4 
-                    | 
-                   12 
+             11 ──  7 ──  4 
+                    |     | 
+                   12 ──  8 
 
 excluded positions: [1, 5, 9]
 ```
-
-!!! note
-    To match the qubit numbering used in the hardware implementation of AnyonYamaskaQPU, 
-    the LatticeConnectivity must be built using: `LatticeConnectivity([1, 3, 5, 6, 5, 3, 1])`, 
-    which is provided as the package const `Snowflurry.AnyonYamaskaConnectivity`.
 
 """
 struct LatticeConnectivity <: AbstractConnectivity
@@ -188,7 +185,7 @@ struct LatticeConnectivity <: AbstractConnectivity
         @assert ncols >= 2 "ncols must be at least 2"
 
         qubit_count = nrows * ncols
-        placing_queue = [nrows for _ = 1:ncols]
+        placing_queue = [ncols for _ = 1:nrows]
         qubits_per_row = Vector{Int}()
 
         @assert excluded_positions == unique(excluded_positions) "elements in excluded_positions must be unique"
@@ -198,30 +195,25 @@ struct LatticeConnectivity <: AbstractConnectivity
             @assert e ≤ qubit_count "elements in excluded_positions must be ≤ $qubit_count"
         end
 
-        cursor = 0
+        current_col = 0
+        current_max_row = -1
+
         while !all(map(x -> x == 0, placing_queue))
-            cursor += 1
+            current_col += 1
+            current_max_row += 2
             row_count = 0
-            for pos = 1:minimum([cursor, ncols])
-                increment = minimum([2, placing_queue[pos]])
-                row_count += increment
-                placing_queue[pos] -= increment
+
+            for pos = 1:minimum([current_max_row, nrows])
+                if placing_queue[pos] > 0
+                    row_count += 1
+                    placing_queue[pos] -= 1
+                end
             end
 
             push!(qubits_per_row, row_count)
         end
 
         @assert +(qubits_per_row...) == qubit_count "Failed to build lattice"
-
-        new(qubits_per_row, (nrows, ncols), excluded_positions)
-    end
-
-    function LatticeConnectivity(
-        qubits_per_row::Vector{Int},
-        excluded_positions = Vector{Int}(),
-    )
-        nrows = maximum(qubits_per_row)
-        ncols = ceil(+(qubits_per_row...) / nrows)
 
         new(qubits_per_row, (nrows, ncols), excluded_positions)
     end
@@ -264,7 +256,7 @@ with_excluded_positions(
 with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
-)::LatticeConnectivity = LatticeConnectivity(c.qubits_per_row, excluded_positions)
+)::LatticeConnectivity = LatticeConnectivity(c.dimensions[1], c.dimensions[2], excluded_positions)
 
 with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
@@ -627,30 +619,30 @@ Dict{Int64, Vector{Int64}} with 6 entries:
 
 julia> connectivity = LatticeConnectivity(3, 4)
 LatticeConnectivity{3,4}
-  5 ──  1
-  |     |
-  9 ──  6 ──  2
-        |     |
-       10 ──  7 ──  3
-              |     |
-             11 ──  8 ──  4
-                    |
-                   12 
+        1 
+        | 
+  9 ──  5 ──  2 
+        |     | 
+       10 ──  6 ──  3 
+              |     | 
+             11 ──  7 ──  4 
+                    |     | 
+                   12 ──  8 
   
 julia> get_adjacency_list(connectivity)
 Dict{Int64, Vector{Int64}} with 12 entries:
-  5  => [9, 1]
-  12 => [8]
-  8  => [3, 12, 11, 4]
-  1  => [6, 5]
-  6  => [1, 10, 9, 2]
-  11 => [7, 8]
-  9  => [5, 6]
-  3  => [8, 7]
-  7  => [2, 11, 10, 3]
-  4  => [8]
-  2  => [7, 6]
-  10 => [6, 7]
+  5  => [1, 10, 9, 2]
+  12 => [7, 8]
+  8  => [4, 12]
+  1  => [5]
+  6  => [2, 11, 10, 3]
+  11 => [6, 7]
+  9  => [5]
+  3  => [7, 6]
+  7  => [3, 12, 11, 4]
+  4  => [8, 7]
+  2  => [6, 5]
+  10 => [5, 6]
 
 ```
 
@@ -734,17 +726,19 @@ The qubits along the path between origin and target are marker with `( )`
 ```jldoctest; output=false
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              5 ──  1
-              |     |
-       13 ──  9 ──  6 ──  2
-        |     |     |     |
- 21 ── 17 ── 14 ── 10 ──  7 ──  3
-        |     |     |     |     |
-       22 ── 18 ── 15 ── 11 ──  8 ──  4
-              |     |     |     |
-             23 ── 19 ── 16 ── 12
-                    |     |
-                   24 ── 20 
+              1 
+              | 
+        9 ──  5 ──  2 
+        |     |     | 
+ 17 ── 13 ── 10 ──  6 ──  3 
+  |     |     |     |     | 
+ 21 ── 18 ── 14 ── 11 ──  7 ──  4 
+        |     |     |     |     | 
+       22 ── 19 ── 15 ── 12 ──  8 
+              |     |     | 
+             23 ── 20 ── 16 
+                    | 
+                   24 
 
 
 julia> path = path_search(3, 24, connectivity)
@@ -753,7 +747,7 @@ julia> path = path_search(3, 24, connectivity)
  20
  16
  12
-  8
+  7
   3
 
 ```

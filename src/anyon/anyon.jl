@@ -1,7 +1,7 @@
 using Snowflurry
 
 const AnyonYukonConnectivity = LineConnectivity(6)
-const AnyonYamaskaConnectivity = LatticeConnectivity([1, 3, 5, 6, 5, 3, 1])
+const AnyonYamaskaConnectivity = LatticeConnectivity(6, 4)
 
 const Metadata = Dict{String,Union{String,Int,Vector{Int},Vector{Tuple{Int,Int}}}}
 
@@ -335,17 +335,19 @@ julia> get_qubits_distance(2, 5, connectivity)
 
 julia> connectivity = LatticeConnectivity(6, 4)
 LatticeConnectivity{6,4}
-              5 ──  1
-              |     |
-       13 ──  9 ──  6 ──  2
-        |     |     |     |
- 21 ── 17 ── 14 ── 10 ──  7 ──  3
-        |     |     |     |     |
-       22 ── 18 ── 15 ── 11 ──  8 ──  4
-              |     |     |     |
-             23 ── 19 ── 16 ── 12
-                    |     |
-                   24 ── 20 
+              1 
+              | 
+        9 ──  5 ──  2 
+        |     |     | 
+ 17 ── 13 ── 10 ──  6 ──  3 
+  |     |     |     |     | 
+ 21 ── 18 ── 14 ── 11 ──  7 ──  4 
+        |     |     |     |     | 
+       22 ── 19 ── 15 ── 12 ──  8 
+              |     |     | 
+             23 ── 20 ── 16 
+                    | 
+                   24 
 
 
 julia> get_qubits_distance(3, 24, connectivity)
