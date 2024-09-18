@@ -137,7 +137,6 @@ LatticeConnectivity{3,4}
                    12 ──  8 
 
 
-
 ```
 
 Lattices of arbitrary dimensions can be built:
