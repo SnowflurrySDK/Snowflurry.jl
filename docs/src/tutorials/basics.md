@@ -147,7 +147,9 @@ states. These states do not have classical counterparts. They form building bloc
 interesting concepts in quantum computing and quantum communication.
 
 !!! note "Qubit ordering convention"
-	In Snowflurry, the leftmost qubit in a state is associated with the first qubit in a circuit. For example, if a circuit is in state $|01\rangle$, it means that qubit 1 is in state $|0\rangle$ and qubit 2 is in state $|1\rangle$.
+	In Snowflurry, the leftmost qubit in a state is associated with the first qubit in a
+      circuit. For example, if a circuit is in state $|01\rangle$, it means that qubit 1 is
+      in state $|0\rangle$ and qubit 2 is in state $|1\rangle$.
 
 ## Circuit Simulation
 We can verify that our circuit performs as expected by simulating it on our local machine.
@@ -184,7 +186,8 @@ circuit `c` for a given number of shots, let's say 100 times, on a quantum
 computer simulator.
 
 !!! note
-	We must add readout operations to specify which qubits we want to measure. We will explore readouts in more details in the [next tutorial](virtual_qpu.md).
+	We must add readout operations to specify which qubits we want to measure. We will
+      explore readouts in more details in the [next tutorial](virtual_qpu.md).
 
 ```julia
 using SnowflurryPlots

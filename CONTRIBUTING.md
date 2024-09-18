@@ -1,6 +1,7 @@
 # How to Contribute
 
-Snowflurry is a community driven project and we'd love to accept your patches and contributions to this project.
+Snowflurry is a community driven project and we'd love to accept your patches and
+contributions to this project.
 
 To streamline the process, we have some guidelines to follow. Please also
 note that we have a [code of conduct](CODE_OF_CONDUCT.md) to make Snowflurry an
@@ -63,7 +64,8 @@ The basic process for setting up a fork is
     ```shell
     git push origin new_branch_name
     ```
-1.  Now, when you navigate to the [Snowflurry page on GitHub](https://github.com/SnowflurrySDK/Snowflurry.jl),
+1.  Now, when you navigate to the
+    [Snowflurry page on GitHub](https://github.com/SnowflurrySDK/Snowflurry.jl),
     you should see the option to create a new pull request from
     your cloned repository. Alternatively, you can create the pull request
     by navigating to the "Pull requests" tab in the page, and selecting
@@ -74,7 +76,9 @@ The basic process for setting up a fork is
 
 ## Julia Coding Style Guide
 
-We adhere to the recommended Julia [Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this document before getting started!
+We adhere to the recommended Julia
+[Style Guide](https://docs.julialang.org/en/v1/manual/style-guide/). Please consult this
+document before getting started!
 
 ## Code Testing Standards
 

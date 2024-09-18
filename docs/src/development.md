@@ -2,9 +2,12 @@
 
 ## Installing Snowflurry for local development
 
-When developing Snowflurry, you must ensure that you are using a local copy of Snowflurry, not the latest released version. The easiest way to achieve that is to set the project to the local directory.
+When developing Snowflurry, you must ensure that you are using a local copy of Snowflurry,
+not the latest released version. The easiest way to achieve that is to set the project to
+the local directory.
 
-If you are starting a new instance of Julia, then you can activate the Snowflurry project with
+If you are starting a new instance of Julia, then you can activate the Snowflurry project
+with
 
 ```bash
 julia --project=.
@@ -17,7 +20,8 @@ using Pkg
 Pkg.activate(".")
 ```
 
-If the current directory is not the Snowflurry project, replace `.` with the Snowflurry project path.
+If the current directory is not the Snowflurry project, replace `.` with the Snowflurry
+project path.
 
 
 ## Running tests
@@ -43,7 +47,10 @@ Open a Julia REPL using the docs project
 julia --project=./docs
 ```
 
-If it is your first time building the docs, you need to instantiate the Julia project and add the Snowflurry project as a development dependency. This means that Julia's package manager must add the version of Snowflurry which is located in the current working directory, `pwd()`, not the one which is registered at JuliaHub.
+If it is your first time building the docs, you need to instantiate the Julia project and
+add the Snowflurry project as a development dependency. This means that Julia's package
+manager must add the version of Snowflurry which is located in the current working
+directory, `pwd()`, not the one which is registered at JuliaHub.
 
 ```julia
 using Pkg
@@ -51,7 +58,9 @@ Pkg.develop(PackageSpec(path=pwd()))
 Pkg.instantiate()
 ```
 
-At this point, the project status should be similar to the one below. The versions might be slightly different, but what is important is that the `Status` line refers to the `docs/Project.toml` and that `Snowflurry` refers to `<pwd()>/Snowflurry.jl`.
+At this point, the project status should be similar to the one below. The versions might be
+slightly different, but what is important is that the `Status` line refers to the
+`docs/Project.toml` and that `Snowflurry` refers to `<pwd()>/Snowflurry.jl`.
 
 ```julia
 Pkg.status()
@@ -88,7 +97,8 @@ root directory
 julia --project=. coverage.jl
 ```
 
-The script returns the number of covered and total lines. An example of the script's output is shown below
+The script returns the number of covered and total lines. An example of the script's output
+is shown below
 
 ```text
 Covered lines: 1373
