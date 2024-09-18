@@ -1,18 +1,28 @@
 # Running a Circuit on Real Hardware
 
-In the [previous tutorial](virtual_qpu.md), we learnt how to run a quantum circuit on a virtual QPU. We also learnt that every QPU driver should adhere to the `AbstractQPU` API.
+In the [previous tutorial](virtual_qpu.md), we learned how to execute a quantum circuit on a
+virtual QPU. We also learned that every QPU object should adhere to the `AbstractQPU`
+interface.
 
-In this tutorial, we will learn how to submit a job to real hardware. At the moment, we have only implemented the driver for Anyon's quantum processors but we welcome contributions from other members of the community, as well as other hardware vendors to use `Snowflurry` with a variety of machines.
+In this tutorial, we will learn how to submit a job to a real quantum processor. At the
+moment, we have only implemented QPU types for Anyon's quantum processors. However, we
+welcome contributions from other members of the community. We also invite other hardware
+vendors to use `Snowflurry` for their quantum processors.
 
 ## Anyon QPU
 
 !!! note
-	This tutorial is written for the selected partners and users who have been granted access to Anyon's hardware.
+	This tutorial is written for the selected partners and users who have been granted access
+      to Anyon's hardware.
 
-The current release of `Snowflurry` supports Anyon's Yukon quantum processor (see [`AnyonYukonQPU`](@ref)) which is made from an array of 6 tunable superconducting transmon qubits interleaved with 5 tunable couplers.
-The following generation of QPU, called [`AnyonYamaskaQPU`](@ref) is also implemented, in which 12 qubits are arranged in a lattice, along with 14 couplers. 
+The current release of `Snowflurry` supports Anyon's Yukon quantum processor (see
+[`AnyonYukonQPU`](@ref)). The processor consists of an array of 6 tunable superconducting
+transmon qubits interleaved with 5 tunable couplers. The following generation of QPU, called
+Yamaska (see [`AnyonYamaskaQPU`](@ref)), is also supported in `Snowflurry`. This QPU
+contains 24 qubits and 35 couplers that are positioned in a two-dimensional lattice. 
 
-We can start by defining a `qpu` variable to point to the host computer that will queue jobs on the quantum processor and provide it with user credentials. A valid project_id is also required to submit jobs on Anyon infrastructure:
+We can start by defining a `qpu` variable that points to the host computer that will queue
+jobs and submit them to the quantum processor:
 
 ```jldoctest anyon_qpu_tutorial; output = false
 using Snowflurry
@@ -36,12 +46,14 @@ Quantum Processing Unit:
    realm:         test-realm
 
 ```
+We should also provide user credentials and a `project_id` if needed. These are required in
+order to submit jobs through Thunderhead.
 
 !!! danger "Keep your credentials safe!"
-	If you plan to make your code public or work in a shared environment, it is best to use environment variables to set the user credentials rather than hardcoding them!
+	If you plan to make your code public or work in a shared environment, it is best to use
+      environment variables to set the user credentials rather than hardcoding them!
 
-
-We can now print the `qpu` object to print further information about the hardware:
+We can now print the `qpu` object to obtain further information about the hardware:
 
 ```jldoctest anyon_qpu_tutorial
 println(qpu)
@@ -58,7 +70,8 @@ Quantum Processing Unit:
    realm:         test-realm
 ```
 
-Alternatively, one can use the `get_metadata` function to obtain a `Dict` object corresponding to the QPU information:
+Alternatively, we can use the `get_metadata` function to obtain a `Dict` object
+that contains information about the `qpu`:
 
 ```jldoctest anyon_qpu_tutorial
 get_metadata(qpu)
@@ -78,7 +91,8 @@ Dict{String, Union{Int64, Vector{Int64}, Vector{Tuple{Int64, Int64}}, String}} w
   "excluded_positions"   => Int64[]
 ```
 
-We now continue to build a small circuit to create a Bell state as was presented in the previous tutorials:
+We now build a small circuit that creates a Bell state, as was presented in the previous
+[tutorials](basics.md):
 
 ```jldoctest anyon_qpu_tutorial; output = true
 c = QuantumCircuit(qubit_count = 2)
@@ -94,30 +108,38 @@ q[2]:───────X─────────✲──
 
 ## Circuit Transpilation
 
-The circuit above cannot be directly executed on the quantum processor. This is because the quantum processor only implements a set of *native gates*. This means that any arbitrary gate should first be *transpiled* into a set of *native* gates that can run on the QPU.
+The previous circuit cannot be directly executed on the quantum processor. This is because
+the quantum processor only implements a set of *native gates*. This means that any arbitrary
+gate should first be *transpiled* into a set of *native* gates that can run on the QPU.
 
-If you examine the `src/anyon/anyon.jl` file, you notice that Anyon Yukon Processor implements the following set of native gates:
+If we examine the `src/anyon/anyon.jl` file, we notice that the Anyon processors implement
+the following set of native gates:
 ```
- set_of_native_gates=[
-        PhaseShift,
-        Pi8,
-        Pi8Dagger,
-        SigmaX,
-        SigmaY,
-        SigmaZ,
-        X90,
-        XM90,
-        Y90,
-        YM90,
-        Z90,
-        ZM90,
-        ControlZ,
-    ]
+set_of_native_gates = [
+    Identity,
+    PhaseShift,
+    Pi8,
+    Pi8Dagger,
+    SigmaX,
+    SigmaY,
+    SigmaZ,
+    X90,
+    XM90,
+    Y90,
+    YM90,
+    Z90,
+    ZM90,
+    ControlZ,
+]
 ```
 
-Snowflurry is designed to allow users to design and use their own transpilers for different QPUs. Alternatively, a user may opt not to use the default transpilers that are implemented for each QPU driver.
+Snowflurry is designed to allow users to design and use their own transpilers for different 
+QPUs. Alternatively, a user may opt not to use the default transpilers that are implemented
+for each QPU type.
 
-Let's see how we can transpile the above circuit, `c`, to a circuit that can run on Anyon's QPU. We first define a `transpiler` object that refers to the default transpiler for AnyonYukonQPU which shipped with `Snowflurry`:
+Let's see how we can transpile the above circuit, `c`, to a circuit that can run on one of
+Anyon's QPUs. We first define a `transpiler` object that refers to the default transpiler
+for the [`AnyonYukonQPU`](@ref):
 
 ```jldoctest anyon_qpu_tutorial; output = false
 transpiler = get_transpiler(qpu)
@@ -148,22 +170,30 @@ q[2]:──────────Z_90─────────────�
 ```
 
 !!! note
-	It may be beneficial to select specific qubits on the QPU in order to reduce the impact of noise on the results. For instance, one could select qubits 2 and 6 for the execution of a two-qubit circuit. This requires setting `qubit_count` to 6 for the construction of the `QuantumCircuit` since `qubit_count` represents the largest qubit index. Setting `qubit_count` to 2 will not enable the application of a quantum gate to qubit 6 even though gates are only applied to two qubits.
+	It may be beneficial to select specific qubits on the QPU in order to reduce the impact
+      of noise on the results. For instance, one could select qubits 2 and 6 for the
+      execution of a two-qubit circuit. This requires setting `qubit_count` to 6 for the
+      construction of the `QuantumCircuit` since `qubit_count` represents the largest
+      qubit index. Setting `qubit_count` to 2 will not enable the application of a quantum
+      gate to qubit 6 even though gates are only applied to two qubits.
 
-The final circuit `c_transpiled` is now ready to be submitted to the QPU:
+The final circuit `c_transpiled` is now ready to be submitted to the QPU
 
 ```julia
 shot_count = 200
 result, qpu_time = run_job(qpu, c_transpiled, shot_count)
 println(result)
 ```
-which should print something like:
+where printing the results yields
 ```julia
 Dict("11" => 97, "00" => 83, "01" => 11, "10" => 9)
 ```
 
-The results show that the samples are mostly sampled between state $\left|00\right\rangle$ and $\left|11\right\rangle$. We do see some finite population in $\left|01\right\rangle$ and $\left|10\right\rangle$ that are due to the error in the computation. (The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it.)
-
+The results show that states $\left|00\right\rangle$ and $\left|11\right\rangle$ were
+measured most often. States $\left|01\right\rangle$ and $\left|10\right\rangle$ were also
+measured a few times due to errors in the computation.
 
 !!! note
-	The user can skip the explicit transpiling step by using the `transpile_and_run_job` function. This function will use the default transpiler of the QPU and then submit the job to the machine.
+	The user can skip the explicit transpilation step by using the `transpile_and_run_job`
+      function. This function uses the default transpiler of the QPU and submits the job to
+      the machine.

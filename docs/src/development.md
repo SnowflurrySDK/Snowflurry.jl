@@ -41,26 +41,24 @@ Pkg.test()
 
 ## Build the documentation
 
-Open a Julia REPL using the docs project
+Open a Julia REPL using the docs project:
 
 ```bash
 julia --project=./docs
 ```
 
 If it is your first time building the docs, you need to instantiate the Julia project and
-add the Snowflurry project as a development dependency. This means that Julia's package
-manager must add the version of Snowflurry which is located in the current working
-directory, `pwd()`, not the one which is registered at JuliaHub.
+add the Snowflurry project as a development dependency:
 
 ```julia
 using Pkg
 Pkg.develop(PackageSpec(path=pwd()))
 Pkg.instantiate()
 ```
+In other words, Julia's package manager must add the version of Snowflurry which is located
+in the current working directory, `pwd()`, not the one which is registered at JuliaHub.
 
-At this point, the project status should be similar to the one below. The versions might be
-slightly different, but what is important is that the `Status` line refers to the
-`docs/Project.toml` and that `Snowflurry` refers to `<pwd()>/Snowflurry.jl`.
+At this point, the project status should be similar to the one below:
 
 ```julia
 Pkg.status()
@@ -75,8 +73,10 @@ Pkg.status()
   [2913bbd2] StatsBase v0.33.21
   [de0858da] Printf
 ```
+The versions might be slightly different, but what is important is that the `Status` line
+refers to the `docs/Project.toml` and that `Snowflurry` refers to `<pwd()>/Snowflurry.jl`.
 
-You can then run the following to build the documentation website.
+You can then run the following to build the documentation website:
 
 ```julia
 include("./docs/make.jl")
@@ -84,21 +84,21 @@ include("./docs/make.jl")
 
 ## Determine the coverage locally
 
-If you haven't already, instantiate the project with Julia's package manager.
+If you haven't already, instantiate the project with Julia's package manager:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.Instantiate()'
 ```
 
 You can determine the coverage by executing the following command from the project
-root directory
+root directory:
 
 ```bash
 julia --project=. coverage.jl
 ```
 
 The script returns the number of covered and total lines. An example of the script's output
-is shown below
+is shown below:
 
 ```text
 Covered lines: 1373

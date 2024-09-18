@@ -60,7 +60,7 @@ The basic process for setting up a fork is
     #You may need to fix merge conflicts for both of these merge commands.
     ```
 
-1.  Finally, push your change to your clone
+1.  Finally, push your change to your clone:
     ```shell
     git push origin new_branch_name
     ```

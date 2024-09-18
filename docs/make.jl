@@ -35,7 +35,7 @@ makedocs(
         "Tutorials" => [
             "Basics" => "tutorials/basics.md"
             "Virtual QPU" => "tutorials/virtual_qpu.md"
-            "Real hardware" => "tutorials/anyon_qpu.md"
+            "Real Hardware" => "tutorials/anyon_qpu.md"
         ],
         "Advanced Examples" => ["Asynchronous Jobs" => "tutorials/advanced/async_jobs.md"],
         "API Reference" => [

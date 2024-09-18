@@ -5,7 +5,7 @@ convenient way to represent this sequence of operations is to use a *quantum cir
 
 Let's start with an example.
 
-The first step is to import `Snowflurry`.
+The first step is to import `Snowflurry`:
 
 ```jldoctest basics; output = false
 using Snowflurry
@@ -14,12 +14,7 @@ using Snowflurry
 ```
 
 We can then create an empty [`QuantumCircuit`](@ref) by specifying the largest qubit index
-(`qubit_count`) and the number of classical bits (`bit_count`). In most cases, it can be
-assumed that `qubit_count` is equal to the number of qubits in the circuit. See
-[Circuit Transpilation](@ref) for more details about the relationship between the largest
-qubit index and the number of qubits. The classical bits (or result bits) form a classical
-register, where each bit stores the output of a [`Readout`](@ref) operation on a particular
-qubit.
+(`qubit_count`) and the number of classical bits (`bit_count`):
 
 ```jldoctest basics
 c = QuantumCircuit(qubit_count = 2, bit_count = 2)
@@ -32,9 +27,14 @@ q[1]:
 q[2]:
      
 ```
+In most cases, it can be assumed that `qubit_count` is equal to the number of qubits in the
+circuit. See [Circuit Transpilation](@ref) for more details about the relationship between
+the largest qubit index and the number of qubits. The classical bits (or result bits) form a
+classical register, where each bit stores the output of a [`Readout`](@ref) operation on a
+particular qubit.
 
 The `bit_count` parameter is optional. The `bit_count` is set to the same value as the
-`qubit_count` if the `bit_count` is not provided. 
+`qubit_count` if the `bit_count` is not provided:
 
 ```jldoctest basics
 c = QuantumCircuit(qubit_count = 2)
@@ -47,7 +47,7 @@ q[1]:
 q[2]:
      
 ```
-We can visualize a `QuantumCircuit` object at any point by printing it.
+We can visualize a `QuantumCircuit` object at any point by printing it:
 
 ```jldoctest basics
 print(c)
@@ -84,7 +84,7 @@ simultaneously)!
 
 We construct a Hadamard gate that operates on qubit 1 by calling the [`hadamard()`](@ref)
 function with the parameter `target` set to 1. We add the gate to our circuit `c` by calling
-the `push!` function.
+the `push!` function:
 ```jldoctest basics
 push!(c, hadamard(1))
 # output
@@ -123,7 +123,7 @@ is the `control_qubit` while qubit 2 is the `target_qubit`. This means that a bi
 [`sigma_x`](@ref), is applied to qubit 2 if qubit 1 is in state $|1\rangle$. Qubit 2 remains
 unchanged if qubit 1 is in state $|0\rangle$. 
 
-Let's add our CNOT gate to our circuit `c`.
+Let's add our CNOT gate to our circuit `c`:
  ```jldoctest basics
 push!(c, control_x(1, 2))
 # output
@@ -142,7 +142,7 @@ maximally-entangled quantum state
 |\psi\rangle = \frac{1}{\sqrt{2}}\left(\left|00\right\rangle+\left|11\right\rangle\right).
 ```
 This state is one of the four celebrated
-[Bell States](https://en.wikipedia.org/wiki/Bell_state), which are also known as the EPR
+[Bell states](https://en.wikipedia.org/wiki/Bell_state), which are also known as the EPR
 states. These states do not have classical counterparts. They form building blocks for many
 interesting concepts in quantum computing and quantum communication.
 
@@ -151,8 +151,8 @@ interesting concepts in quantum computing and quantum communication.
       circuit. For example, if a circuit is in state $|01\rangle$, it means that qubit 1 is
       in state $|0\rangle$ and qubit 2 is in state $|1\rangle$.
 
-## Circuit Simulation
-We can verify that our circuit performs as expected by simulating it on our local machine.
+## Circuit Simulations
+We can verify that our circuit performs as expected by simulating it on our local machine:
 ```jldoctest basics
 simulate(c)
 # output
@@ -167,7 +167,7 @@ The output of the [`simulate()`](@ref) function is a [`Ket`](@ref) object. A `Ke
 complex vector that represents the state of a quantum object such as our two-qubit
 system. This state is also known as a wave function.
 
-## Histogram
+## Histograms
 In the previous section, we used the `simulate` function to obtain the state of a
 two-qubit register after applying our circuit, `c`. However, in the real world, we cannot
 directly determine the state of a quantum register. Rather, we need to execute the
@@ -189,6 +189,7 @@ computer simulator.
 	We must add readout operations to specify which qubits we want to measure. We will
       explore readouts in more details in the [next tutorial](virtual_qpu.md).
 
+Let's generate a histogram for our circuit:
 ```julia
 using SnowflurryPlots
 push!(c, readout(1, 1), readout(2, 2))

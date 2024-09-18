@@ -1,28 +1,38 @@
-# Run a circuit on a Virtual QPU
+# Running a Circuit on a Virtual QPU
 
-In the [previous tutorial](basics.md), we introduced some basic concepts of quantum computing, namely the quantum circuit and quantum gates.
+In the [previous tutorial](basics.md), we introduced some basic concepts of quantum
+computing, namely the quantum circuit and the quantum gate.
 
-We also learnt how to build a quantum circuit using `Snowflurry` and simulate the result of such circuit using our local machine.
+We also learned how to build and simulate a quantum circuit using `Snowflurry`. This
+simulation was performed on our local machine. To harness the power of quantum computing,
+we need to execute circuits on a Quantum Processing Unit (QPU).
 
-In this tutorial, we will cover the steps involved in running a quantum circuit on a virtual Quantum Processing Unit (QPU).
+In this tutorial, we will cover the steps involved in running a quantum circuit on a virtual
+QPU.
 
-
-## QPU Object
-Interactions with different QPUs are facilitated using `struct`s (objects) that represent QPU hardware.  These structures are used to implement a harmonized interface and are derived from an `abstract type` called `AbstractQPU`. This interface gives you a unified way to write code that is agnostic of the quantum service you are using. The interface dictates how to get metadata about the QPU, how to run a quantum circuit on the QPU, and more.
+## QPU Objects
+Quantum processing units are represented as
+[composite types](https://docs.julialang.org/en/v1/manual/types/#Composite-Types) (i.e.
+structs or objects) in `Snowflurry`. Every QPU type is derived from an `abstract type`
+called `AbstractQPU`. This allows us to write code that is agnostic of the selected quantum
+service. It also gives us a uniform way to retrieve metadata about the QPU, run quantum
+circuits on the QPU, and much more.
 
 !!! warning
-	You should not use `AbstractQPU`, rather use a QPU object which is derived from `AbstractQPU`. For further details on the implemented derived QPUs, see the [Library page](../library/qpu.md#Quantum-Processing-Unit).
+	You should not use `AbstractQPU` directly. Instead, use a QPU type that is derived from
+      `AbstractQPU`. See the [Library page](../library/qpu.md#Quantum-Processing-Unit) for a
+      detailed description of implemented QPU types.
 
-Now that you know what QPU objects are, let's get started by importing `Snowflurry`:
+### Virtual QPUs
+Let's now learn how to use a QPU object. The first step is to import `Snowflurry`:
 ```jldoctest get_qpu_metadata_tutorial; output = false
 using Snowflurry
 
 # output
 
 ```
-### Virtual QPU
-Next, we are going to create a virtual QPU which will run on our local machine:
 
+We are then going to create a virtual QPU which will run on our local machine:
 ```jldoctest get_qpu_metadata_tutorial; output = true
 qpu_v = VirtualQPU()
 # output
@@ -31,7 +41,8 @@ Quantum Simulator:
    package:     Snowflurry.jl
 
 ```
-We can print QPU's meta data by simply using
+
+We can print our QPU's metadata by calling
 ```jldoctest get_qpu_metadata_tutorial; output = true
 print(qpu_v)
 # output
@@ -40,8 +51,8 @@ Quantum Simulator:
    package:     Snowflurry.jl
 
 ```
-or alternatively, retrieve the QPU metadata in a `Dict{String,String}` format through the following command:
-
+or we can retrieve the QPU metadata in a `Dict{String,String}` format using the following
+command:
 ```jldoctest get_qpu_metadata_tutorial; output = true
 get_metadata(qpu_v)
 # output
@@ -52,8 +63,8 @@ Dict{String, Union{Int64, Vector{Int64}, Vector{Tuple{Int64, Int64}}, String}} w
 
 ```
 
-Now, let's create a circuit to create a Bell pair as was explained in the previous tutorial:
-
+Now, let's create a circuit that generates a Bell state, as explained in the
+[previous tutorial](basics.md):
 ```jldoctest get_qpu_metadata_tutorial; output = true
 c = QuantumCircuit(qubit_count = 2)
 push!(c, hadamard(1), control_x(1, 2))
@@ -66,14 +77,16 @@ q[1]:──H────*──
 q[2]:───────X──
 ```
 
-Although we've created a circuit that makes a Bell pair, we need to *measure*
-something in order to collect any results. In Snowflurry, we can use a
-[`Readout`](@ref) instruction to perform a measurement, which are built 
-using the [`readout()`](@ref) helper function.
+Although we've created a circuit that produces a Bell pair, we need to *measure*
+our qubits in order to collect results. In Snowflurry, we use
+[`Readout`](@ref) instructions to indicate that a measurement must be taken.
+These instructions can be built using the [`readout()`](@ref) helper function.
 
 !!! note
-	Measurements are always performed in the ``Z`` basis (also known as the computational basis).
+	Measurements are always performed in the ``Z`` basis
+      (also known as the computational basis).
 
+Let's add [`Readout`](@ref) instructions to each qubit:
 ```jldoctest get_qpu_metadata_tutorial; output = true
 push!(c, readout(1, 1), readout(2, 2))
 # output
@@ -84,43 +97,59 @@ q[1]:──H────*────✲───────
             |            
 q[2]:───────X─────────✲──
 ```
-Here we see that a `readout` instruction can be added to a circuit like any
-other gate. Each readout instruction needs two parameters: which qubit to
-measure and which result bit to write to. For example, `readout(2, 4)` means
-"read qubit 2 and store the result in classical bit 4". So, in this example,
-the first readout reads from qubit 1 and writes that result to bit 1 of the
-result. The second readout does the same for qubit 2 and bit 2 of the result.
+Here, we see that a `readout` instruction can be added to a circuit like any
+other gate. Each readout instruction needs two parameters. The first is the index of the
+qubit to measure. The second is the index of the classical bit in which the
+result will be stored. For example, calling `readout(2, 4)` generates an
+`instruction` that tells the QPU to measure qubit 2 and store the result in classical bit 4.
+In the previous circuit, the first readout instruction indicates that qubit 1 is measured
+and that the result is written to bit 1. The second readout instruction tells the QPU to
+repeat this process for qubit 2 and bit 2.
 
-In Snowflurry, `readout` instructions can read from any qubit and write to any
-result bit but with some restrictions:
-- Any `readout` operation must be the final operation applied to its target qubit
-  - We plan to lift this restriction in future versions of Snowflurry
-- Separate `readout` operations must write to separate result bits
+In Snowflurry, `readout` instructions can involve the measurement of any qubit and the
+storing of results in any bit. However, there are some restrictions:
+- Every `readout` instruction must be the final instruction that is applied to the target
+   qubit.
+  - We plan to lift this restriction in future versions of Snowflurry.
+- Distinct `readout` instructions must write to distinct result bits.
 
-With our measurements defined, we can now run this circuit on the virtual qpu
-for let's say 100 shots.
-
+Now that we've added `readout` instructions to our circuit, let's run it on the virtual QPU
+for 100 shots:
 ```julia
 shots_count = 100
 result, qpu_time = run_job(qpu_v, c, shots_count)
 ```
-The `result` object is a `Dict{String, Int64}` that summarizes how many times each state was measured in the shots run on the QPU. 
-**It contains only non-zero entries.**
+
+The `result` object is a `Dict{String, Int64}` that indicates how many times each state was
+measured on the QPU:
 
 ```julia
 print(result)
 
 Dict("00" => 53, "11" => 47)
 ```
-Here we see that, after measurement, the classical result bits were set to $\left|00\right\rangle$
-in 53 of the 100 shots. In the other 47 shots, the result bits were set to $\left|11\right\rangle$.
-(The qubit ordering convention used is qubit number 1 on the left, with each following qubit to the right of it.)
+Here, we see that the classical bits were set to "00" in 53 of the 100 shots while they
+were set to "11" in the other 47 shots. **Only non-zero entries are stored in the `result`
+object.**
 
-!!! note
-	The reason the number of measured values for states $\left|00\right\rangle$ and $\left|11\right\rangle$ are not necessarily equal is due to the fact that `VirtualQPU` tries to mimic the statistical nature of real hardware. By increasing the `shots_count` the experiment will confirm that the probability of  $\left|00\right\rangle$ and  $\left|11\right\rangle$ are equal.
+!!! note "Qubit and bit ordering convention"
+	In Snowflurry, the leftmost qubit in a state is associated with the first qubit in a
+      circuit. For example, if a circuit is in state $|01\rangle$, it means that qubit 1 is
+      in state $|0\rangle$ and qubit 2 is in state $|1\rangle$. The same convention is
+      used for classical bits.
+
+!!! note "Statistical uncertainty"
+	The reason why the number of "00" and "11" bit strings is not equal is due to the fact
+      that the `VirtualQPU` tries to mimic the statistical nature of real QPUs. The
+      statistical uncertainty can be reduced by increasing the `shots_count` in the
+      simulation. A simulation with more shots should provide stronger indications that the
+      probability of obtaining "00" and "11" is equal.
 
 
-The virtual QPU currently mimics an ideal hardware with no error. Therefore, the states  $\left|01\right\rangle$ and  $\left|10\right\rangle$ have a probability of zero, and they are never measured. 
-In future versions, we expect to add noise models for sources such as crosstalk, thermal noise, etc.
+The virtual QPU currently mimics an ideal hardware with no errors. The probability of
+measuring states $\left|01\right\rangle$ or $\left|10\right\rangle$ in the
+previous example was, therefore, zero. Noise models should be added in future versions of
+`Snowflurry` for noise sources such as crosstalk, thermal noise, and more.
 
-In the [next tutorial](anyon_qpu.md), we will show how to submit a job to real quantum processing hardware.
+In the [next tutorial](anyon_qpu.md), we will show how to submit a job to real quantum
+processing hardware.

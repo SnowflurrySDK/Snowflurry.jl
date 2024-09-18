@@ -77,13 +77,13 @@ for an introduction to quantum logic gates). This circuit is shown below:
 	/>
 </div>
 
-First, we'll import Snowflurry.
+First, we'll import Snowflurry:
 
 ```julia
 using Snowflurry
 ```
 
-We can then define our two-qubit circuit.
+We can then define our two-qubit circuit:
 
 ```julia
 c = QuantumCircuit(qubit_count = 2)
@@ -101,7 +101,7 @@ q[2]:
 In Snowflurry, all qubits start in state $\left|0\right\rangle$. Our circuit is, therefore,
 in state $\left|00\right\rangle$. The qubit ordering convention used is qubit number 1 on
 the left, with each following qubit to the right of it. We now proceed by adding gates to
-our circuit.
+our circuit:
 
 ```julia
 push!(c, hadamard(1))
@@ -131,7 +131,7 @@ for performance and only use gates which are supported by a specific quantum pro
 won't transpile the circuit in our example since it is relatively small and the simulator in
 Snowflurry can handle every gate.
 
-Next, we'll simulate our circuit to see if we've built what we expect.
+Next, we'll simulate our circuit to see if we've built what we expect:
 
 ```julia
 ψ = simulate(c)
@@ -149,9 +149,7 @@ Some of you may have recognized that the resultant state is the Bell state, an e
 superposition of the $\left|00\right\rangle$ and $\left|11\right\rangle$ states.
 
 Finally, we can use [SnowflurryPlots](https://github.com/SnowflurrySDK/SnowflurryPlots.jl)
-to generate a histogram that shows the measurement output distribution for our Bell state.
-We specified that the quantum computer simulator had to take 100 shots (i.e. measurements)
-to create the distribution.
+to generate a histogram that shows the measurement output distribution for our Bell state:
 
 ```julia
 using SnowflurryPlots
@@ -166,6 +164,9 @@ plot_histogram(c, 100)
 		"
 	/>
 </div>
+
+We specified that the quantum computer simulator had to take 100 shots (i.e. measurements)
+to create the distribution.
 
 The following script combines all the previous steps:
 
