@@ -2449,6 +2449,15 @@ end
 
 struct RejectNonNativeInstructionsTranspiler <: Transpiler
     connectivity::AbstractConnectivity
+    native_gates::Vector{DataType}
+
+    function RejectNonNativeInstructionsTranspiler(
+        connectivity::AbstractConnectivity,
+        native_gates::Vector{DataType} = set_of_native_gates,
+    )
+
+        return new(connectivity, native_gates)
+    end
 end
 
 function transpile(
@@ -2456,11 +2465,8 @@ function transpile(
     circuit::QuantumCircuit,
 )::QuantumCircuit
 
-    (passed, message) = is_native_circuit(
-        get_num_qubits(transpiler.connectivity),
-        circuit,
-        transpiler.connectivity,
-    )
+    (passed, message) =
+        is_native_circuit(circuit, transpiler.connectivity, transpiler.native_gates)
 
     if !passed
         throw(DomainError(transpiler.connectivity, message))

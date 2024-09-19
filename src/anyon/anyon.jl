@@ -374,31 +374,49 @@ end
 
 const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
 
-function is_native_instruction(gate::Gate, connectivity::GeometricConnectivity)::Bool
-    if any(x -> x in connectivity.excluded_positions, get_connected_qubits(gate))
+function is_native_instruction(
+    gate::Gate,
+    connectivity::GeometricConnectivity,
+    native_gates::Vector{DataType} = set_of_native_gates,
+)::Bool
+
+    num_qubits = get_num_qubits(connectivity)
+    qubits = get_connected_qubits(gate)
+    if any(x -> (x > num_qubits), qubits)
         return false
     end
 
-    if gate isa Gate{ControlZ}
-        # on ControlZ gates are native only if targets are adjacent
-
-        targets = get_connected_qubits(gate)
-
-        return (get_qubits_distance(targets[1], targets[2], connectivity) == 1)
+    if gate.symbol isa AbstractControlledGateSymbol
+        for (i_qubit, first_qubit) in enumerate(qubits[1:end-1])
+            next_qubit = qubits[i_qubit+1]
+            distance = get_qubits_distance(first_qubit, next_qubit, connectivity)
+            if distance != 1
+                return false
+            end
+        end
     end
 
-    return (typeof(get_gate_symbol(gate)) in set_of_native_gates)
+    return (typeof(get_gate_symbol(gate)) in native_gates)
 end
 
-is_native_instruction(readout::Readout, connectivity::GeometricConnectivity)::Bool =
-    !any(x -> x in connectivity.excluded_positions, get_connected_qubits(readout))
+
+function is_native_instruction(
+    readout::Readout,
+    connectivity::GeometricConnectivity,
+    native_gates::Vector{DataType} = set_of_native_gates,
+)::Bool
+
+    return true
+end
 
 function is_native_circuit(
-    qubit_count_qpu::Int,
     circuit::QuantumCircuit,
     connectivity::GeometricConnectivity,
+    native_gates::Vector{DataType} = set_of_native_gates,
 )::Tuple{Bool,String}
+
     qubit_count_circuit = get_num_qubits(circuit)
+    qubit_count_qpu = get_num_qubits(connectivity)
     if qubit_count_circuit > qubit_count_qpu
         return (
             false,
@@ -407,11 +425,11 @@ function is_native_circuit(
     end
 
     for instr in get_circuit_instructions(circuit)
-        if !is_native_instruction(instr, connectivity)
+        if !is_native_instruction(instr, connectivity, native_gates)
             return (
                 false,
                 "Instruction type $(typeof(instr)) with targets $(get_connected_qubits(instr))" *
-                " is not native on connectivity with excluded_positions: $(get_excluded_positions(connectivity))",
+                " is not native on the connectivity",
             )
         end
     end
