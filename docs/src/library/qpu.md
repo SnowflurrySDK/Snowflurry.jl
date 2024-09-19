@@ -6,6 +6,7 @@ VirtualQPU
 Client
 get_host
 submit_job
+Status
 get_status
 run_job
 transpile_and_run_job

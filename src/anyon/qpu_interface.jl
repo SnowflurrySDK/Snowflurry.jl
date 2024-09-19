@@ -4,6 +4,16 @@ using HTTP
 using JSON
 using TOML
 
+"""
+    Status
+
+A data structure that stores the status of a quantum computation.  
+# Fields
+- `type::String` -- Word describing the status of the computation.
+- `message::String` -- Optional: message providing additional details about the computation status.
+
+See [get_status](@ref) for more details about possible `type` strings.
+"""
 Base.@kwdef struct Status
     type::String
     message::String = ""
