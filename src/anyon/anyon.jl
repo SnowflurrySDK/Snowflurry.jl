@@ -374,6 +374,42 @@ end
 
 const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
 
+"""
+    is_native_instruction(
+        gate::Union{Gate},
+        connectivity::Union{LineConnectivity,LatticeConnectivity},
+        native_gates::Vector{DataType} = set_of_native_gates,
+    )::Bool
+
+Returns `true` if the `gate` is a native instruction for the `connectivity` and the list of
+possible `native_gates`. The native gates for the Anyon QPUs are used by default.
+
+A native instruction is defined as an instruction that is in `native_gates` and that
+satisifies the `connecitivity`. It does not check to determine if the `gate` is placed at
+the `excluded_positions` or `excluded_connections` of the `connectivity`.
+
+# Example
+
+```jldoctest  
+julia> connectivity = LineConnectivity(3)
+LineConnectivity{3}
+1──2──3
+
+
+julia> is_native_instruction(control_z(1, 2), connectivity)
+true
+
+julia> is_native_instruction(control_z(1, 3), connectivity)
+false
+
+julia> is_native_instruction(toffoli(1, 2, 3), connectivity)
+false
+
+julia> is_native_instruction(toffoli(1, 2, 3), connectivity, [Snowflurry.Toffoli])
+true
+
+```
+"""
 function is_native_instruction(
     gate::Gate,
     connectivity::GeometricConnectivity,
@@ -399,7 +435,17 @@ function is_native_instruction(
     return (typeof(get_gate_symbol(gate)) in native_gates)
 end
 
+"""
+    is_native_instruction(
+        readout::Readout,
+        connectivity::Union{LineConnectivity,LatticeConnectivity},
+        native_gates::Vector{DataType} = set_of_native_gates,
+    )::Bool
 
+Always returns `true` since `readout` is a native instruction.
+
+```
+"""
 function is_native_instruction(
     readout::Readout,
     connectivity::GeometricConnectivity,
@@ -610,7 +656,7 @@ SequentialTranspiler(Transpiler[CircuitContainsAReadoutTranspiler(), ReadoutsDoN
 1──2──3──4──5──6
 ), CastSwapToCZGateTranspiler()  …  SimplifyTrivialGatesTranspiler(1.0e-6), CastUniversalToRzRxRzTranspiler(), SimplifyRxGatesTranspiler(1.0e-6), CastRxToRzAndHalfRotationXTranspiler(), CompressRzGatesTranspiler(), SimplifyRzGatesTranspiler(1.0e-6), ReadoutsAreFinalInstructionsTranspiler(), RejectNonNativeInstructionsTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
-), RejectGatesOnExcludedPositionsTranspiler(LineConnectivity{6}
+, DataType[Snowflurry.Identity, Snowflurry.PhaseShift, Snowflurry.Pi8, Snowflurry.Pi8Dagger, Snowflurry.SigmaX, Snowflurry.SigmaY, Snowflurry.SigmaZ, Snowflurry.X90, Snowflurry.XM90, Snowflurry.Y90, Snowflurry.YM90, Snowflurry.Z90, Snowflurry.ZM90, Snowflurry.ControlZ]), RejectGatesOnExcludedPositionsTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
 ), RejectGatesOnExcludedConnectionsTranspiler(LineConnectivity{6}
 1──2──3──4──5──6
