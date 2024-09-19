@@ -1835,11 +1835,15 @@ end
     @test_throws DomainError transpile(default_transpiler, circuit)
 
     custom_native_gates = [Snowflurry.Toffoli]
-    custom_transpiler = RejectNonNativeInstructionsTranspiler(
-        connectivity, custom_native_gates
-    )
+    custom_transpiler =
+        RejectNonNativeInstructionsTranspiler(connectivity, custom_native_gates)
 
     @test isequal(transpile(custom_transpiler, circuit), circuit)
+
+    @test_throws(
+        NotImplementedError,
+        RejectNonNativeInstructionsTranspiler(AllToAllConnectivity())
+    )
 end
 
 @testset "is_native_instruction" begin
