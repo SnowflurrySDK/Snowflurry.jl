@@ -385,7 +385,7 @@ Returns `true` if the `gate` is a native instruction for the `connectivity` and 
 possible `native_gates`. The native gates for the Anyon QPUs are used by default.
 
 A native instruction is defined as an instruction that is in `native_gates` and that
-satisifies the `connecitivity`. It does not check to determine if the `gate` is placed at
+satisifies the `connectivity`. It does not check to determine if the `gate` is placed at
 the `excluded_positions` or `excluded_connections` of the `connectivity`.
 
 # Example
@@ -442,7 +442,24 @@ end
         native_gates::Vector{DataType} = set_of_native_gates,
     )::Bool
 
-Always returns `true` since `readout` is a native instruction.
+Returns `true` if the `readout` satisfies the connectivity.
+
+It does not check to determine if the `gate` is placed at the `excluded_positions` of the
+`connectivity`.
+
+# Example
+
+```jldoctest  
+julia> connectivity = LineConnectivity(3)
+LineConnectivity{3}
+1──2──3
+
+
+julia> is_native_instruction(readout(2, 2), connectivity)
+true
+
+julia> is_native_instruction(readout(4, 4), connectivity)
+false
 
 ```
 """
@@ -452,9 +469,76 @@ function is_native_instruction(
     native_gates::Vector{DataType} = set_of_native_gates,
 )::Bool
 
-    return true
+    num_qubits = get_num_qubits(connectivity)
+    return readout.connected_qubit <= num_qubits
 end
 
+"""
+    is_native_circuit(
+        circuit::QuantumCircuit,
+        connectivity::GeometricConnectivity,
+        native_gates::Vector{DataType} = set_of_native_gates,
+    )::Tuple{Bool,String}
+
+Returns `(true, "")` if the `circuit` only contains native instructions for the
+`connectivity` and the list of possible `native_gates`. It returns
+`(false, "error_message")` otherwise. The native gates for the Anyon QPUs are used by
+default.
+
+See [`is_native_instruction`](@ref) for more details about the identification of native
+instructions.
+
+# Example
+
+```jldoctest  
+julia> connectivity = LineConnectivity(3)
+LineConnectivity{3}
+1──2──3
+
+
+julia> native_circuit = QuantumCircuit(
+           qubit_count = 3,
+           instructions = [sigma_x(1), control_z(2, 3)]
+       )
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X───────
+               
+q[2]:───────*──
+            |  
+q[3]:───────Z──
+               
+
+julia> is_native_circuit(native_circuit, connectivity)
+(true, "")
+
+julia> foreign_circuit = QuantumCircuit(
+           qubit_count = 3,
+           instructions = [sigma_x(1), toffoli(1, 2, 3)]
+       )
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X────*──
+            |  
+q[2]:───────*──
+            |  
+q[3]:───────X──
+               
+
+julia> is_native_circuit(foreign_circuit, connectivity)
+(false, "Instruction type Gate{Snowflurry.Toffoli} with targets [1, 2, 3] is not native on the connectivity")
+
+julia> is_native_circuit(
+            foreign_circuit,
+            connectivity,
+            [Snowflurry.Toffoli, Snowflurry.SigmaX]
+        )
+(true, "")
+
+```
+"""
 function is_native_circuit(
     circuit::QuantumCircuit,
     connectivity::GeometricConnectivity,

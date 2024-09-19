@@ -1851,6 +1851,7 @@ end
     @test is_native_instruction(pi_8_dagger(8), connectivity)
     @test is_native_instruction(control_z(5, 6), connectivity)
     @test is_native_instruction(readout(7, 7), connectivity)
+    @test !is_native_instruction(readout(10, 10), connectivity)
     @test !is_native_instruction(toffoli(1, 2, 3), connectivity)
     @test !is_native_instruction(pi_8_dagger(10), connectivity)
     @test !is_native_instruction(control_z(5, 7), connectivity)
