@@ -1802,9 +1802,7 @@ end
 
     connectivities_and_targets = [
         (LineConnectivity(12), (1, 2))
-        (LineConnectivity(12, collect(9:12)), (1, 2))
         (LatticeConnectivity(3, 4), (1, 5))
-        (LatticeConnectivity(3, 4, collect(9:12)), (1, 5))
     ]
 
     for (connectivity, targets) in connectivities_and_targets
@@ -1829,6 +1827,19 @@ end
 
         @test isequal(transpile(transpiler, circuit), circuit)
     end
+
+    connectivity = LineConnectivity(12)
+    default_transpiler = RejectNonNativeInstructionsTranspiler(connectivity)
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [toffoli(1, 2, 3)])
+
+    @test_throws DomainError transpile(default_transpiler, circuit)
+
+    custom_native_gates = [Snowflurry.Toffoli]
+    custom_transpiler = RejectNonNativeInstructionsTranspiler(
+        connectivity, custom_native_gates
+    )
+
+    @test isequal(transpile(custom_transpiler, circuit), circuit)
 end
 
 @testset "is_native_instruction" begin
