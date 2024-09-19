@@ -624,27 +624,43 @@ end
     io = IOBuffer()
 
     excluded_positions = collect(13:24)
+    excluded_connections = [(9, 13), (13, 10), (13, 18), (13, 17), (7, 4), (4, 8)]
+    sorted_connections = [(9, 13), (10, 13), (13, 18), (13, 17), (4, 7), (4, 8)]
 
-    connectivity = LatticeConnectivity(6, 4, excluded_positions)
+    connectivity = LatticeConnectivity(6, 4, excluded_positions, excluded_connections)
 
     @test get_excluded_positions(connectivity) == excluded_positions
+    @test get_excluded_connections(connectivity) == sorted_connections
 
-    alternate_positions =
-        Snowflurry.with_excluded_positions(LatticeConnectivity(6, 4), excluded_positions)
+    alternate_positions = Snowflurry.with_excluded_positions(
+        LatticeConnectivity(6, 4, Int[], excluded_connections),
+        excluded_positions,
+    )
     @test connectivity.qubits_per_printout_line ==
           alternate_positions.qubits_per_printout_line
     @test connectivity.dimensions == alternate_positions.dimensions
     @test connectivity.excluded_positions == alternate_positions.excluded_positions
+    @test connectivity.excluded_connections == alternate_positions.excluded_connections
+
+    alternate_connections = Snowflurry.with_excluded_connections(
+        LatticeConnectivity(6, 4, excluded_positions),
+        excluded_connections,
+    )
+    @test connectivity.qubits_per_printout_line ==
+          alternate_connections.qubits_per_printout_line
+    @test connectivity.dimensions == alternate_connections.dimensions
+    @test connectivity.excluded_positions == alternate_connections.excluded_positions
+    @test connectivity.excluded_connections == alternate_connections.excluded_connections
 
     expected_adjacency_list = Dict{Int,Vector{Int}}(
         1 => [5],
         2 => [6, 5],
         3 => [7, 6],
-        4 => [8, 7],
+        4 => [],
         5 => [1, 10, 9, 2],
         6 => [2, 11, 10, 3],
-        7 => [3, 12, 11, 4],
-        8 => [4, 12],
+        7 => [3, 12, 11],
+        8 => [12],
         9 => [5],
         10 => [5, 6],
         11 => [6, 7],
@@ -689,11 +705,13 @@ end
           "                    | \n" *
           "                   24 \n" *
           "\n" *
-          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n\n"
+          "excluded positions: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]\n" *
+          "excluded connections: [(9, 13), (10, 13), (13, 18), (13, 17), (4, 7), (4, 8)]" *
+          "\n\n"
 
     @test path_search(1, 8, connectivity) == [8, 12, 7, 11, 6, 10, 5, 1]
-    excluded = [12, 11]
-    @test path_search(1, 8, connectivity, excluded) == [8, 4, 7, 3, 6, 10, 5, 1]
+    excluded = [11, 10]
+    @test path_search(1, 8, connectivity, excluded) == [8, 12, 7, 3, 6, 2, 5, 1]
     @test path_search(1, 1, connectivity) == [1]
 
     @test path_search(1, 9, connectivity, [5, 6]) == []
@@ -723,11 +741,31 @@ end
         [2, 2],
     )
 
+    @test_throws(
+        AssertionError("connection (1, 1) must connect to different qubits"),
+        LatticeConnectivity(6, 4, Int[], [(1, 1)])
+    )
+    @test_throws(
+        AssertionError("connection (0, 1) must have qubits with indices greater than 0"),
+        LatticeConnectivity(6, 4, Int[], [(0, 1)])
+    )
+    @test_throws(
+        AssertionError("connection (24, 25) must have qubits with indices less than 25"),
+        LatticeConnectivity(6, 4, Int[], [(24, 25)])
+    )
+
+    @test_throws(
+        AssertionError("connection (1, 2) does not exist"),
+        LatticeConnectivity(6, 4, Int[], [(1, 2)])
+    )
+
     excluded_positions = [5, 6, 2]
-
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
-
     @test isinf(get_qubits_distance(1, 9, connectivity))
+
+    excluded_connections = [(2, 5), (2, 6)]
+    connectivity = LatticeConnectivity(6, 4, Int[], excluded_connections)
+    @test isinf(get_qubits_distance(2, 10, connectivity))
 end
 
 @testset "is_native_instruction: NotImplemented" begin

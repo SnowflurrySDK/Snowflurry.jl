@@ -113,10 +113,11 @@ This connectivity type is encountered in `QPUs` such as the [`AnyonYamaskaQPU`](
 - `qubits_per_printout_line::Vector{Int}` -- number of qubits in each line, when constructing the printout.
 - `dimensions              ::Vector{Int}` -- number of rows and columns (turned 45° in the printout).
 - `excluded_positions      ::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled, and cannot be interacted with. Elements in Vector must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in Vector must be unique.
 
 
 # Example
-The following lattice has 4 rows, made of qubits 
+The following lattice has 3 rows, made of qubits 
 `[1, 2, 3, 4]`, `[ 5, 6, 7, 8]`, and `[9, 10, 11, 12]`, with each of those rows having 4 elements.
 
 The corresponding `qubits_per_printout_line` field is `[1, 3, 3, 3, 2]`, the number of qubits in each line
@@ -134,6 +135,7 @@ LatticeConnectivity{3,4}
              11 ──  7 ──  4 
                     |     | 
                    12 ──  8 
+
 
 ```
 
@@ -178,8 +180,14 @@ struct LatticeConnectivity <: AbstractConnectivity
     qubits_per_printout_line::Vector{Int}
     dimensions::Tuple{Int,Int}
     excluded_positions::Vector{Int}
+    excluded_connections::Vector{Tuple{Int,Int}}
 
-    function LatticeConnectivity(nrows::Int, ncols::Int, excluded_positions = Vector{Int}())
+    function LatticeConnectivity(
+        nrows::Int,
+        ncols::Int,
+        excluded_positions = Vector{Int}(),
+        excluded_connections = Vector{Tuple{Int,Int}}(),
+    )
 
         @assert nrows >= 2 "nrows must be at least 2"
         @assert ncols >= 2 "ncols must be at least 2"
@@ -215,8 +223,73 @@ struct LatticeConnectivity <: AbstractConnectivity
 
         @assert +(qubits_per_printout_line...) == qubit_count "Failed to build lattice"
 
-        new(qubits_per_printout_line, (nrows, ncols), excluded_positions)
+        sorted_connections =
+            get_sorted_excluded_connections_for_lattice(nrows, ncols, excluded_connections)
+
+        new(
+            qubits_per_printout_line,
+            (nrows, ncols),
+            excluded_positions,
+            sorted_connections,
+        )
     end
+end
+
+function get_sorted_excluded_connections_for_lattice(
+    nrows::Int,
+    ncols::Int,
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::Vector{Tuple{Int,Int}}
+
+    num_connections = length(excluded_connections)
+    sorted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    for (i_connection, connection) in enumerate(excluded_connections)
+        if connection[1] == connection[2]
+            throw(AssertionError("connection $connection must connect to different qubits"))
+        end
+
+        if connection[1] > connection[2]
+            sorted_connection = (connection[2], connection[1])
+        else
+            sorted_connection = connection
+        end
+
+        if sorted_connection[1] < 1
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices greater than 0",
+                ),
+            )
+        end
+
+        num_qubits = nrows * ncols
+        if sorted_connection[2] > num_qubits
+            throw(
+                AssertionError(
+                    "connection $connection must have qubits with indices less than" *
+                    " $(num_qubits + 1)",
+                ),
+            )
+        end
+
+        first_qubit_row_index = (div((sorted_connection[1] - 1), ncols)) + 1
+        near_index = sorted_connection[1] + ncols
+        coupler_exists =
+            sorted_connection[2] == near_index ||
+            (isodd(first_qubit_row_index) && sorted_connection[2] == near_index - 1) ||
+            (iseven(first_qubit_row_index) && sorted_connection[2] == near_index + 1)
+
+        if !coupler_exists
+            throw(AssertionError("connection $connection does not exist"))
+        end
+
+        sorted_connections[i_connection] = sorted_connection
+    end
+
+    if !(sorted_connections == unique(sorted_connections))
+        throw(AssertionError("excluded_connections must be unique"))
+    end
+    return sorted_connections
 end
 
 function Base.show(io::IO, connectivity::LatticeConnectivity)
@@ -227,6 +300,9 @@ function Base.show(io::IO, connectivity::LatticeConnectivity)
     print_connectivity(connectivity, Vector{Int}(), io)
     if !isempty(connectivity.excluded_positions)
         println(io, "excluded positions: $(connectivity.excluded_positions)")
+    end
+    if !isempty(connectivity.excluded_connections)
+        println(io, "excluded connections: $(connectivity.excluded_connections)")
     end
 end
 
@@ -256,8 +332,12 @@ with_excluded_positions(
 with_excluded_positions(
     c::LatticeConnectivity,
     excluded_positions::Vector{Int},
-)::LatticeConnectivity =
-    LatticeConnectivity(c.dimensions[1], c.dimensions[2], excluded_positions)
+)::LatticeConnectivity = LatticeConnectivity(
+    c.dimensions[1],
+    c.dimensions[2],
+    excluded_positions,
+    c.excluded_connections,
+)
 
 with_excluded_connections(connectivity::AbstractConnectivity, ::Vector{Tuple{Int,Int}}) =
     throw(NotImplementedError(:with_excluded_positions, connectivity))
@@ -268,6 +348,16 @@ with_excluded_connections(
 )::LineConnectivity =
     LineConnectivity(c.dimension, c.excluded_positions, excluded_connections)
 
+with_excluded_connections(
+    c::LatticeConnectivity,
+    excluded_connections::Vector{Tuple{Int,Int}},
+)::LatticeConnectivity = LatticeConnectivity(
+    c.dimensions[1],
+    c.dimensions[2],
+    c.excluded_positions,
+    excluded_connections,
+)
+
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
 
@@ -275,12 +365,18 @@ get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 
 """
-    get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int, Int}}
+    get_excluded_connections(
+        connectivity::Union{LineConnectivity,LatticeConnectivity}
+    )::Vector{Tuple{Int,Int}}
 
-Return the list of `excluded_connections` for the `LineConnectivity`.
+Return the list of `excluded_connections` for the `connectivity`.
 """
-get_excluded_connections(connectivity::LineConnectivity)::Vector{Tuple{Int,Int}} =
-    connectivity.excluded_connections
+function get_excluded_connections(
+    connectivity::Union{LineConnectivity,LatticeConnectivity},
+)::Vector{Tuple{Int,Int}}
+
+    return connectivity.excluded_connections
+end
 
 """
     get_excluded_connections(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
@@ -566,26 +662,38 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
             tcol = ind[2]
 
             if trow - 1 > 0 && qubit_placement[trow-1, tcol] != 0
-                if !(qubit_placement[trow-1, tcol] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow-1, tcol])
+                north_qubit = qubit_placement[trow-1, tcol]
+                if !(north_qubit in connectivity.excluded_positions) &&
+                   !((north_qubit, target) in connectivity.excluded_connections)
+
+                    push!(neighbors, north_qubit)
                 end
             end
 
             if trow + 1 <= nrows && qubit_placement[trow+1, tcol] != 0
-                if !(qubit_placement[trow+1, tcol] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow+1, tcol])
+                south_qubit = qubit_placement[trow+1, tcol]
+                if !(south_qubit in connectivity.excluded_positions) &&
+                   !((target, south_qubit) in connectivity.excluded_connections)
+
+                    push!(neighbors, south_qubit)
                 end
             end
 
             if tcol - 1 > 0 && qubit_placement[trow, tcol-1] != 0
-                if !(qubit_placement[trow, tcol-1] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow, tcol-1])
+                west_qubit = qubit_placement[trow, tcol-1]
+                if !(west_qubit in connectivity.excluded_positions) &&
+                   !((target, west_qubit) in connectivity.excluded_connections)
+
+                    push!(neighbors, west_qubit)
                 end
             end
 
             if tcol + 1 <= ncols && qubit_placement[trow, tcol+1] != 0
-                if !(qubit_placement[trow, tcol+1] in connectivity.excluded_positions)
-                    push!(neighbors, qubit_placement[trow, tcol+1])
+                east_qubit = qubit_placement[trow, tcol+1]
+                if !(east_qubit in connectivity.excluded_positions) &&
+                   !((east_qubit, target) in connectivity.excluded_connections)
+
+                    push!(neighbors, east_qubit)
                 end
             end
 
