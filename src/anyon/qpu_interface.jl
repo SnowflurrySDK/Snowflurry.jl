@@ -19,7 +19,34 @@ Base.@kwdef struct Status
     message::String = ""
 end
 
+"""
+    get_status_type(s::Status)::String
+
+Returns the type associated with the `Status` of a quantum computation.
+
+See [get_status](@ref) for more details about possible `type` strings.
+
+# Examples
+```jldoctest
+julia> get_status_type(Status(type = "SUCCEEDED"))
+"SUCCEEDED"
+
+```
+"""
 get_status_type(s::Status) = s.type
+
+"""
+    get_status_message(s::Status)::String
+
+Returns the message associated with the `Status` of a quantum computation.
+
+# Examples
+```jldoctest
+julia> get_status_message(Status(type = "FAILED", message = "something failed"))
+"something failed"
+
+```
+"""
 get_status_message(s::Status) = s.message
 
 function Base.show(io::IO, status::Status)
@@ -458,6 +485,36 @@ function Base.show(io::IO, qpu::VirtualQPU)
     println(io, "   package:     $(metadata["package"])")
 end
 
+"""
+    read_response_body(body::Base.CodeUnits{UInt8,String})::String
+
+Returns a `String` from Unicode code units.
+
+See the [Julia documentation](https://docs.julialang.org/en/v1/base/strings/#lib-strings)
+for more details about code units.
+
+# Example
+```jldoctest
+julia> string = "my string"
+"my string"
+
+julia> body = codeunits(string)
+9-element Base.CodeUnits{UInt8, String}:
+ 0x6d
+ 0x79
+ 0x20
+ 0x73
+ 0x74
+ 0x72
+ 0x69
+ 0x6e
+ 0x67
+
+julia> read_response_body(body)
+"my string"
+
+```
+"""
 read_response_body(body::Base.CodeUnits{UInt8,String}) =
     read_response_body(convert(Vector{UInt8}, body))
 

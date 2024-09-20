@@ -134,6 +134,39 @@ get_machine_name(::AnyonYukonQPU)::String = AnyonYukonMachineName
 get_machine_name(::AnyonYamaskaQPU)::String = AnyonYamaskaMachineName
 get_machine_name(::VirtualQPU)::String = AnyonVirtualMachineName
 
+"""
+    get_client(qpu_service::UnionAnyonQPU)
+
+Returns the client that is associated with the `qpu_service`.
+
+# Example
+```jldoctest
+julia> qpu = AnyonYukonQPU(
+           host = "http://example.anyonsys.com",
+           user = "test_user",
+           access_token = "not_a_real_access_token",
+           project_id = "test-project",
+           realm = "test-realm"
+       )
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    test-project
+   qubit_count:   6
+   connectivity_type:  linear
+   realm:         test-realm
+
+
+julia> get_client(qpu)
+Client for QPU service:
+   host:         http://example.anyonsys.com
+   user:         test_user 
+   realm:        test-realm 
+
+
+```
+"""
 get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
 get_project_id(qpu_service::UnionAnyonQPU) = qpu_service.project_id
@@ -152,6 +185,35 @@ function get_connectivity(qpu::UnionAnyonQPU)
     return qpu.connectivity
 end
 
+"""
+    print_connectivity(qpu::AbstractQPU, io::IO = stdout)
+
+Prints the qubit connectivity of the `qpu` to `io`.
+
+# Example
+```jldoctest
+julia> qpu = AnyonYukonQPU(
+           host = "http://example.anyonsys.com",
+           user = "test_user",
+           access_token = "not_a_real_access_token",
+           project_id = "test-project",
+           realm = "test-realm"
+       )
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    test-project
+   qubit_count:   6
+   connectivity_type:  linear
+   realm:         test-realm
+
+
+julia> print_connectivity(qpu)
+1──2──3──4──5──6
+
+```
+"""
 print_connectivity(qpu::AbstractQPU, io::IO = stdout) =
     print_connectivity(get_connectivity(qpu), Int[], io)
 

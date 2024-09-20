@@ -419,7 +419,29 @@ print_connectivity(connectivity::AbstractConnectivity, args...) =
 print_connectivity(connectivity::AllToAllConnectivity, ::Vector{Int}, io::IO = stdout) =
     println(io, connectivity)
 
-function print_connectivity(connectivity::LineConnectivity, ::Vector{Int}, io::IO = stdout)
+"""
+    print_connectivity(
+        connectivity::LineConnectivity,
+        ::Vector{Int} = Int[],
+        io::IO = stdout
+    )
+
+Prints the `connectivity` to `io`.
+
+Qubits with their index in `path` are highlighted.
+
+# Example
+```jldoctest
+julia> print_connectivity(LineConnectivity(3))
+1──2──3
+
+```
+"""
+function print_connectivity(
+    connectivity::LineConnectivity,
+    ::Vector{Int} = Int[],
+    io::IO = stdout,
+)
     dim = connectivity.dimension
 
     diagram = [string(n) * "──" for n = 1:dim-1]
@@ -477,6 +499,41 @@ function assign_qubit_numbering(
     return [reverse(row) for row in qubit_numbering]
 end
 
+"""
+    print_connectivity(
+        connectivity::LatticeConnectivity,
+        path::Vector{Int} = Vector{Int}(),
+        io::IO = stdout,
+    )
+
+Prints the `connectivity` to `io`.
+
+Qubits with their index in `path` are highlighted.
+
+# Example
+```jldoctest
+julia> print_connectivity(LatticeConnectivity(3, 3))
+      1 
+      | 
+ 7 ── 4 ── 2 
+      |    | 
+      8 ── 5 ── 3 
+           |    | 
+           9 ── 6 
+
+
+julia> print_connectivity(LatticeConnectivity(3, 3), [2, 6, 3])
+      1 
+      | 
+ 7 ── 4 ──(2)
+      |    | 
+      8 ── 5 ──(3)
+           |    | 
+           9 ──(6)
+
+
+```
+"""
 function print_connectivity(
     connectivity::LatticeConnectivity,
     path::Vector{Int} = Vector{Int}(), # path of qubits to highlight in printout
@@ -521,7 +578,6 @@ function print_connectivity(
         )
 
         println(io, vertical_lines)
-
     end
 end
 

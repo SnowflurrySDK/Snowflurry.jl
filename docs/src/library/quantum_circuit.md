@@ -1,6 +1,10 @@
 # Quantum Circuit
 ```@docs
 QuantumCircuit
+get_num_qubits
+get_num_bits
+get_name
+get_circuit_instructions
 push!
 pop!
 append!
@@ -16,6 +20,9 @@ serialize_job
 transpile
 compare_circuits
 circuit_contains_gate_type
+get_display_symbols
+get_instruction_symbol
+get_symbol_for_instruction
 permute_qubits!
 permute_qubits
 ```

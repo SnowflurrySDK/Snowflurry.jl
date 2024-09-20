@@ -132,11 +132,37 @@ Base.inv(instr::InstructionType) where {InstructionType<:AbstractInstruction} =
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
+"""
+    get_gate_parameters(gate::AbstractGateSymbol)::Dict{String,Real}
+
+Returns a `Dict` containing the name and the value of each parameter in a `gate`.
+
+# Examples
+```jldoctest
+julia> get_gate_parameters(get_gate_symbol(universal(1, π/2, π/4, -π/3)))
+Dict{String, Float64} with 3 entries:
+  "theta"  => 1.5708
+  "phi"    => 0.785398
+  "lambda" => -1.0472
+
+```
+"""
 get_gate_parameters(gate::AbstractGateSymbol) = Dict{String,Real}()
 
-# TODO(#293): Change default to throw not implemented
-get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
+"""
+    get_num_connected_qubits(gate::AbstractGateSymbol)::Int
 
+Returns the number of qubits to which the `gate` is applied.
+
+# Examples
+```jldoctest
+julia> get_num_connected_qubits(get_gate_symbol(control_z(1, 3)))
+2
+
+```
+"""
+get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
+# TODO(#293): Change default to throw not implemented
 
 """
     Gate <: AbstractInstruction
@@ -224,10 +250,38 @@ function Base.show(io::IO, gate::Gate)
     end
 end
 
+"""
+    get_gate_symbol(gate::Gate)::AbstractGateSymbol
+
+Returns the symbol that is associated with a `gate`.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1);
+
+julia> get_gate_symbol(gate)
+Snowflurry.SigmaX()
+
+```
+"""
 function get_gate_symbol(gate::Gate)::AbstractGateSymbol
     return gate.symbol
 end
 
+"""
+    get_connected_qubits(instruction::AbstractInstruction)::AbstractVector{Int}
+
+Returns the indices of the qubits on which the `instruction` is applied.
+
+# Examples
+```jldoctest
+julia> get_connected_qubits(control_z(1, 3))
+2-element Vector{Int64}:
+ 1
+ 3
+
+```
+"""
 get_connected_qubits(instr::AbstractInstruction)::AbstractVector{Int} =
     throw(NotImplementedError(:get_connected_qubits, instr))
 
@@ -239,12 +293,39 @@ function Base.inv(gate::Gate)::Gate
     return Gate(inv(get_gate_symbol(gate)), get_connected_qubits(gate))
 end
 
+"""
+    get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+
+Returns a list of the control qubits for a `gate`.
+
+# Examples
+```jldoctest
+julia> get_control_qubits(toffoli(1, 4, 6))
+2-element Vector{Int64}:
+ 1
+ 4
+
+```
+"""
 function get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     connected_qubits = get_connected_qubits(gate)
     num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
     return Vector(view(connected_qubits, 1:num_control_qubits))
 end
 
+"""
+    get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+
+Returns a list of the target qubits for a `gate`.
+
+# Examples
+```jldoctest
+julia> get_target_qubits(toffoli(1, 4, 6))
+1-element Vector{Int64}:
+ 6
+
+```
+"""
 function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     connected_qubits = get_connected_qubits(gate)
     num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))

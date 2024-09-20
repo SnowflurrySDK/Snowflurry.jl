@@ -4,10 +4,14 @@ AnyonYukonQPU
 AnyonYamaskaQPU
 VirtualQPU
 Client
+get_client
 get_host
 submit_job
 Status
+get_status_type
+get_status_message
 get_status
+read_response_body
 run_job
 transpile_and_run_job
 get_transpiler
@@ -21,4 +25,5 @@ get_adjacency_list
 get_qubits_distance
 is_native_instruction
 is_native_circuit
+print_connectivity
 ```

@@ -48,4 +48,5 @@ number_op
 coherent
 compare_kets
 compare_operators
+get_matrix
 ```

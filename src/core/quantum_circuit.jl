@@ -142,9 +142,86 @@ function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     return true
 end
 
+"""
+    get_num_qubits(circuit::QuantumCircuit)::Int
+
+Returns the number of qubits in a `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2);
+
+julia> get_num_qubits(c)
+2
+
+```
+"""
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count
+
+"""
+    get_num_bits(circuit::QuantumCircuit)::Int
+
+Returns the number of classical bits in a `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, bit_count=3);
+
+julia> get_num_bits(c)
+3
+
+```
+"""
 get_num_bits(circuit::QuantumCircuit)::Int = circuit.bit_count
+
+"""
+    get_name(circuit::QuantumCircuit)::String
+
+Returns the name of the `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, name = "my_circuit");
+
+julia> get_name(c)
+"my_circuit"
+
+```
+"""
 get_name(circuit::QuantumCircuit)::String = circuit.name
+
+"""
+    get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction}
+
+Returns the list of instructions in the `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), control_z(1, 2)]);
+
+julia> get_circuit_instructions(c)
+2-element Vector{AbstractInstruction}:
+ Gate Object: Snowflurry.Hadamard
+Connected_qubits	: [1]
+Operator:
+(2, 2)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+0.7071067811865475 + 0.0im    0.7071067811865475 + 0.0im
+0.7071067811865475 + 0.0im    -0.7071067811865475 + 0.0im
+
+ Gate Object: Snowflurry.ControlZ
+Connected_qubits	: [1, 2]
+Operator:
+(4, 4)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    -1.0 + 0.0im
+
+
+```
+"""
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 
@@ -604,6 +681,29 @@ function format_label(
     end
 end
 
+"""
+    get_display_symbols(gate::AbstractGateSymbol; precision::Integer = 4,)::Vector{String}
+
+Returns a `Vector{String}` of the symbols that describe the `gate`.
+
+Each element in the `Vector` is associated with a qubit on which the `gate` operates. This
+is useful for the placement of the `gate` in a circuit diagram. The optional parameter
+`precision` enables setting the number of digits to keep after the decimal for `gate`
+parameters.
+
+# Examples
+```jldoctest
+julia> get_display_symbols(get_gate_symbol(control_z(1, 2)))
+2-element Vector{String}:
+ "*"
+ "Z"
+
+julia> get_display_symbols(get_gate_symbol(phase_shift(1, π/2)), precision = 3)
+1-element Vector{String}:
+ "P(1.571)"
+
+```
+"""
 function get_display_symbols(
     gate::AbstractGateSymbol;
     precision::Integer = 4,
@@ -640,6 +740,23 @@ function get_display_symbols(gate::Controlled; precision::Integer = 4)::Vector{S
     )
 end
 
+"""
+    get_display_symbols(::Readout; precision::Integer = 4,)::Vector{String}
+
+Returns a `Vector{String}` of the symbols that describe the `Readout`.
+
+Each element in the `Vector` is associated with a qubit on which the `Readout` operates.
+This is useful for the placement of the `Readout` in a circuit diagram. The optional
+parameter `precision` has no effect for `Readout`.
+
+# Examples
+```jldoctest
+julia> get_display_symbols(readout(2, 2))
+1-element Vector{String}:
+ "✲"
+
+```
+"""
 function get_display_symbols(::Readout; precision::Integer = 4)::Vector{String}
 
     num_targets = 1
@@ -687,6 +804,18 @@ gates_display_symbols = Dict(
     Readout => ["✲"],
 )
 
+"""
+    get_instruction_symbol(instruction::AbstractInstruction)::String
+
+Returns the symbol string that is associated with an `instruction`.
+
+# Examples
+```jldoctest
+julia> get_instruction_symbol(control_z(1, 2))
+"cz"
+
+```
+"""
 get_instruction_symbol(gate::Gate) = get_instruction_symbol(get_gate_symbol(gate))
 get_instruction_symbol(readout::Readout) = instruction_symbols[Readout]
 
@@ -725,6 +854,18 @@ instruction_symbols = Dict(
 
 instruction_to_gate_symbol_types = Dict(v => k for (k, v) in instruction_symbols)
 
+"""
+    get_symbol_for_instruction(instruction::String)::DataType
+
+Returns a symbol given the corresponding `String`.
+
+# Examples
+```jldoctest
+julia> get_symbol_for_instruction("cz")
+Snowflurry.ControlZ
+
+```
+"""
 get_symbol_for_instruction(instruction::String)::DataType =
     instruction_to_gate_symbol_types[instruction]
 

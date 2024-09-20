@@ -143,9 +143,9 @@ export
     submit_job,
     get_client,
     print_connectivity,
-    get_connectivity,
-    get_connectivity_label,
-    get_excluded_positions,
+    get_connectivity, # no docs
+    get_connectivity_label, # no docs
+    get_excluded_positions, # no docs
     get_excluded_connections,
     get_adjacency_list,
     path_search,
@@ -155,13 +155,13 @@ export
     is_native_circuit,
     run_job,
     transpile_and_run_job,
-    MockRequestor,
-    HTTPRequestor,
-    get_request,
-    post_request,
+    MockRequestor, # no docs
+    HTTPRequestor, # no docs
+    get_request, # no docs
+    post_request, # no docs
     get_metadata,
     get_transpiler,
-    get_project_id,
+    get_project_id, # no docs
     apply_instruction!,
     get_pauli,
     get_quantum_circuit,
