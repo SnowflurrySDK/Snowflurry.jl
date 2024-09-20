@@ -5,6 +5,7 @@ AnyonYamaskaQPU
 VirtualQPU
 Client
 get_client
+get_project_id
 get_host
 submit_job
 Status
@@ -20,10 +21,13 @@ AllToAllConnectivity
 LineConnectivity
 LatticeConnectivity
 get_excluded_connections
+get_excluded_positions
 path_search
 get_adjacency_list
 get_qubits_distance
 is_native_instruction
 is_native_circuit
 print_connectivity
+get_connectivity
+get_connectivity_label
 ```

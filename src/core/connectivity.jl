@@ -319,6 +319,18 @@ function Base.show(io::IO, connectivity::LineConnectivity)
     end
 end
 
+"""
+    get_connectivity_label(connectivity::AbstractConnectivity)
+
+Returns the label of the connectivity.
+
+# Example
+```jldoctest
+julia> get_connectivity_label(LineConnectivity(6))
+"linear"
+
+```
+"""
 get_connectivity_label(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_connectivity_label, connectivity))
 
@@ -360,9 +372,30 @@ with_excluded_connections(
     excluded_connections,
 )
 
+"""
+    get_excluded_positions(
+        c::Union{LineConnectivity,LatticeConnectivity}
+    )::Vector{Tuple{Int, Int}}
+
+Returns the list of `excluded_connections` of the connectivity.
+
+# Example
+```jldoctest
+julia> get_excluded_positions(LatticeConnectivity(3, 4, [1, 3]))
+2-element Vector{Int64}:
+ 1
+ 3
+
+```
+"""
 get_excluded_positions(c::Union{LineConnectivity,LatticeConnectivity}) =
     c.excluded_positions
 
+"""
+    get_excluded_positions(connectivity::AbstractConnectivity)::Vector{Tuple{Int, Int}}
+
+Throws a NotImplementedError.
+"""
 get_excluded_positions(connectivity::AbstractConnectivity) =
     throw(NotImplementedError(:get_excluded_positions, connectivity))
 

@@ -169,6 +169,35 @@ Client for QPU service:
 """
 get_client(qpu_service::UnionAnyonQPU) = qpu_service.client
 
+"""
+    get_project_id(qpu_service::UnionAnyonQPU)
+
+Returns the project ID that is associated with the `qpu_service`.
+
+# Example
+```jldoctest
+julia> qpu = AnyonYukonQPU(
+           host = "http://example.anyonsys.com",
+           user = "test_user",
+           access_token = "not_a_real_access_token",
+           project_id = "test-project",
+           realm = "test-realm"
+       )
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    test-project
+   qubit_count:   6
+   connectivity_type:  linear
+   realm:         test-realm
+
+
+julia> get_project_id(qpu)
+"test-project"
+
+```
+"""
 get_project_id(qpu_service::UnionAnyonQPU) = qpu_service.project_id
 
 get_realm(qpu_service::UnionAnyonQPU) = get_realm(qpu_service.client)
