@@ -1904,7 +1904,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 2,
-        instructions = [control_z(1, 2)],
+        instructions = [control_z(1, 2), hadamard(1)],
         name = "test-name",
     )
     transpiler = RejectGatesOnExcludedConnectionsTranspiler(connectivity)
@@ -1928,6 +1928,20 @@ end
             transpiler.connectivity,
             "the Snowflurry.ControlZ gate on qubits [3, 4] cannot be applied since " *
             "connection (3, 4) is unavailable",
+        ),
+        transpile(transpiler, invalid_circuit)
+    )
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(2), toffoli(2, 3, 4)],
+        name = "test-name",
+    )
+
+    @test_throws(
+        DomainError(
+            Snowflurry.are_gates_at_excluded_connections,
+            "not implemented for gates with more than 2 qubits",
         ),
         transpile(transpiler, invalid_circuit)
     )
@@ -1976,23 +1990,15 @@ end
     )
     @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 
-    valid_circuit = QuantumCircuit(
+    invalid_circuit = QuantumCircuit(
         qubit_count = 12,
         instructions = [sigma_x(2), controlled(sigma_x(1), [5, 9, 6])],
         name = "test-name",
     )
-    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
-
-    invalid_circuit = QuantumCircuit(
-        qubit_count = 12,
-        instructions = [sigma_x(2), controlled(sigma_x(9), [6, 1, 5])],
-        name = "test-name",
-    )
     @test_throws(
         DomainError(
-            transpiler.connectivity,
-            "the Controlled{Snowflurry.SigmaX} gate on qubits [6, 1, 5, 9] cannot be " *
-            "applied since connection (1, 5) is unavailable",
+            Snowflurry.are_gates_at_excluded_connections,
+            "not implemented for gates with more than 2 qubits",
         ),
         transpile(transpiler, invalid_circuit)
     )

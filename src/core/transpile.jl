@@ -2592,8 +2592,8 @@ end
 
 Throws a `DomainError` if an `Instruction` in the `circuit` operates on an excluded
 connection. The excluded connections are specified with the parameter `excluded_connections`
-in certain `AbstractConnectivity` objects. The `circuit` remains unchanged if no error is
-thrown.
+in certain `AbstractConnectivity` objects. The function returns the same `circuit` if no
+error is thrown.
 
 # Examples
 ```jldoctest
@@ -2684,13 +2684,10 @@ function transpile(
     return circuit
 end
 
-function are_gates_at_excluded_connections(
-    connectivity::AllToAllConnectivity,
-    circuit::QuantumCircuit,
-)::Tuple{Bool,String}
-
-    return (false, "")
-end
+are_gates_at_excluded_connections(
+    ::AllToAllConnectivity,
+    ::QuantumCircuit,
+)::Tuple{Bool,String} = (false, "")
 
 function are_gates_at_excluded_connections(
     connectivity::Union{LineConnectivity,LatticeConnectivity},
@@ -2701,19 +2698,22 @@ function are_gates_at_excluded_connections(
     for instruction in get_circuit_instructions(circuit)
         qubits = get_connected_qubits(instruction)
 
-        for connection in excluded_connections
-            matching_indices = indexin(connection, qubits)
-            found_excluded_connection =
-                nothing ∉ matching_indices &&
-                abs(matching_indices[1] - matching_indices[2]) == 1
-
-            if found_excluded_connection
+        if length(qubits) == 2
+            candidate_connection = Tuple{Int,Int}(sort(qubits))
+            if candidate_connection ∈ excluded_connections
                 gate_name = typeof(get_gate_symbol(instruction))
                 message =
                     "the $gate_name gate on qubits $qubits cannot be applied " *
-                    "since connection $connection is unavailable"
+                    "since connection $candidate_connection is unavailable"
                 return (true, message)
             end
+        elseif length(qubits) > 2
+            throw(
+                DomainError(
+                    are_gates_at_excluded_connections,
+                    "not implemented for gates with more than 2 qubits",
+                ),
+            )
         end
     end
 
