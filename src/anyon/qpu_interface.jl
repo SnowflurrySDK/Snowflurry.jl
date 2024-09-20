@@ -445,7 +445,7 @@ get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qp
 run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
     throw(NotImplementedError(:run_job, qpu))
 
-    """
+"""
     get_connectivity(qpu::AbstractQPU)
 
 Returns the qubit connectivity of a `qpu`.
