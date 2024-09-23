@@ -92,6 +92,13 @@ end
 
 struct CompressSingleQubitGatesTranspiler <: Transpiler end
 
+function rounding_safe_acos(theta::Real, threshold::Real = 1e-10)
+    if 1.0 < abs(theta) < 1.0 + threshold
+        theta = round(theta)
+    end
+    return acos(theta)
+end
+
 # convert a single-target gate to a Universal gate
 function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universal}
     @assert size(op) == (2, 2)
@@ -104,7 +111,7 @@ function as_universal_gate(target::Integer, op::AbstractOperator)::Gate{Universa
     #remove global offset
     matrix *= exp(-im * alpha)
 
-    theta = (2 * acos(real(matrix[1, 1])))
+    theta = (2 * rounding_safe_acos(real(matrix[1, 1])))
 
     if (isapprox(theta, 0.0, atol = 1e-6)) || (isapprox(theta, 2 * π, atol = 1e-6))
         lambda = 0.0
