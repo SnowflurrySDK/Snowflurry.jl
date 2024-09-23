@@ -75,6 +75,18 @@ test_instructions = [
             get_operator(get_gate_symbol(universal_equivalent)),
         )
     end
+
+    # Operations with rounding errors
+    threshold = 1e-12
+    operator = DenseOperator([
+        1.0+threshold 0.0
+        0.0 1.0
+    ])
+    universal_equivalent = Snowflurry.as_universal_gate(target, operator)
+    @test Snowflurry.compare_operators(
+        operator,
+        get_operator(get_gate_symbol(universal_equivalent)),
+    )
 end
 
 @testset "CompressSingleQubitGatesTranspiler" begin
@@ -149,20 +161,6 @@ end
 
     @test gates[1] isa Snowflurry.Gate{Snowflurry.SigmaX}
     @test gates[2] isa Snowflurry.Gate{Snowflurry.ControlX}
-
-    # circuit with rounding error (acos(1.00...02))
-    circuit = QuantumCircuit(
-        qubit_count = 1,
-        instructions = [
-            rotation_z(1, -0.79715247),
-            rotation_z(1, -0.55272686),
-            rotation_z(1, -1.1681045),
-            readout(1, 1),
-        ],
-    )
-
-    transpiled_circuit = transpile(transpiler, circuit)
-    @test compare_circuits(circuit, transpiled_circuit)
 end
 
 @testset "Transpiler" begin
