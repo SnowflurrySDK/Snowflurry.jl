@@ -75,6 +75,18 @@ test_instructions = [
             get_operator(get_gate_symbol(universal_equivalent)),
         )
     end
+
+    # Operations with rounding errors
+    threshold = 1e-12
+    operator = DenseOperator([
+        1.0+threshold 0.0
+        0.0 1.0
+    ])
+    universal_equivalent = Snowflurry.as_universal_gate(target, operator)
+    @test Snowflurry.compare_operators(
+        operator,
+        get_operator(get_gate_symbol(universal_equivalent)),
+    )
 end
 
 @testset "CompressSingleQubitGatesTranspiler" begin
