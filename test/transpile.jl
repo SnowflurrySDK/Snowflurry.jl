@@ -1931,3 +1931,109 @@ end
 
     @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 end
+
+@testset "RejectGatesOnExcludedConnectionsTranspiler for all-to-all" begin
+
+    connectivity = AllToAllConnectivity()
+
+    circuit = QuantumCircuit(
+        qubit_count = 2,
+        instructions = [control_z(1, 2), hadamard(1)],
+        name = "test-name",
+    )
+    transpiler = RejectGatesOnExcludedConnectionsTranspiler(connectivity)
+
+    @test isequal(transpile(transpiler, circuit), circuit)
+end
+
+@testset "RejectGatesOnExcludedConnectionsTranspiler for line connectivity" begin
+
+    excluded_connections = [(3, 4)]
+    connectivity = LineConnectivity(5, Int[], excluded_connections)
+    transpiler = RejectGatesOnExcludedConnectionsTranspiler(connectivity)
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(2), control_z(3, 4)],
+        name = "test-name",
+    )
+    @test_throws(
+        DomainError(
+            transpiler.connectivity,
+            "the Snowflurry.ControlZ gate on qubits [3, 4] cannot be applied since " *
+            "connection (3, 4) is unavailable",
+        ),
+        transpile(transpiler, invalid_circuit)
+    )
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(2), toffoli(2, 3, 4)],
+        name = "test-name",
+    )
+
+    @test_throws(
+        DomainError(
+            Snowflurry.are_gates_at_excluded_connections,
+            "not implemented for gates with more than 2 qubits",
+        ),
+        transpile(transpiler, invalid_circuit)
+    )
+
+    valid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(3), control_z(4, 5)],
+        name = "test-name",
+    )
+
+    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
+
+    valid_circuit = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(5), control_z(2, 3)],
+        name = "test-name",
+    )
+
+    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
+end
+
+@testset "RejectGatesOnExcludedConnectionsTranspiler for lattice connectivity" begin
+
+    excluded_connections = [(5, 1)]
+    connectivity = LatticeConnectivity(3, 4, Int[], excluded_connections)
+    transpiler = RejectGatesOnExcludedConnectionsTranspiler(connectivity)
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 12,
+        instructions = [sigma_x(6), control_z(1, 5)],
+        name = "test-name",
+    )
+    @test_throws(
+        DomainError(
+            transpiler.connectivity,
+            "the Snowflurry.ControlZ gate on qubits [1, 5] cannot be applied since " *
+            "connection (1, 5) is unavailable",
+        ),
+        transpile(transpiler, invalid_circuit)
+    )
+
+    valid_circuit = QuantumCircuit(
+        qubit_count = 12,
+        instructions = [sigma_x(1), control_z(9, 6)],
+        name = "test-name",
+    )
+    @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
+
+    invalid_circuit = QuantumCircuit(
+        qubit_count = 12,
+        instructions = [sigma_x(2), controlled(sigma_x(1), [5, 9, 6])],
+        name = "test-name",
+    )
+    @test_throws(
+        DomainError(
+            Snowflurry.are_gates_at_excluded_connections,
+            "not implemented for gates with more than 2 qubits",
+        ),
+        transpile(transpiler, invalid_circuit)
+    )
+end

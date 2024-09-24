@@ -759,6 +759,11 @@ end
         LatticeConnectivity(6, 4, Int[], [(1, 2)])
     )
 
+    @test_throws(
+        AssertionError("excluded_connections must be unique"),
+        LatticeConnectivity(6, 4, Int[], [(1, 5), (5, 1)])
+    )
+
     excluded_positions = [5, 6, 2]
     connectivity = LatticeConnectivity(6, 4, excluded_positions)
     @test isinf(get_qubits_distance(1, 9, connectivity))
