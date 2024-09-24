@@ -8,17 +8,23 @@ const Metadata = Dict{String,Union{String,Int,Vector{Int},Vector{Tuple{Int,Int}}
 """
     AnyonYukonQPU <: AbstractQPU
 
-A data structure to represent an Anyon System's Yukon generation QPU, 
-consisting of 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)). 
+A data structure that describes an Anyon System QPU of the Yukon generation. 
+The QPU contains 6 qubits in a linear arrangement (see [`LineConnectivity`](@ref)). 
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
-- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
-- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
+- `status_request_throttle ::Function` -- Used to limit the rate of job status requests.
+- `project_id              ::String` -- Used to identify the project for the jobs that are sent to the QPU.
+- `realm                   ::String` -- Optional: Used to identify the host server realm for the submission of requests.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYukonQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
+julia>  qpu = AnyonYukonQPU(
+            host = "http://example.anyonsys.com",
+            user = "test_user",
+            access_token = "not_a_real_access_token",
+            project_id = "test-project",
+            realm = "test-realm"
+        )
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yukon
@@ -65,17 +71,23 @@ end
 """
     AnyonYamaskaQPU <: AbstractQPU
 
-A data structure to represent an Anyon System's Yamaska generation QPU, 
-consisting of 24 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`](@ref)).
+A data structure that describes an Anyon System QPU of the Yamaska generation. 
+The QPU contains 24 qubits in a 2D lattice arrangement (see [`LatticeConnectivity`](@ref)).
 # Fields
 - `client                  ::Client` -- Client to the QPU server.
-- `status_request_throttle ::Function` -- Used to rate-limit job status requests.
-- `project_id              ::String` -- Used to identify which project the jobs sent to this QPU belong to.
-- `realm                   ::String` -- Optional: used to identify to which realm on the host server requests are sent to.
+- `status_request_throttle ::Function` -- Used to limit the rate of job status requests.
+- `project_id              ::String` -- Used to identify the project for the jobs that are sent to the QPU.
+- `realm                   ::String` -- Optional: Used to identify the host server realm for the submission of requests.
 
 # Example
 ```jldoctest
-julia>  qpu = AnyonYamaskaQPU(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", project_id = "test-project", realm = "test-realm")
+julia>  qpu = AnyonYamaskaQPU(
+            host = "http://example.anyonsys.com",
+            user = "test_user",
+            access_token = "not_a_real_access_token",
+            project_id = "test-project",
+            realm = "test-realm"
+        )
 Quantum Processing Unit:
    manufacturer:  Anyon Systems Inc.
    generation:    Yamaska
@@ -410,9 +422,9 @@ end
 """
     get_qubits_distance(target_1::Int, target_2::Int, ::AbstractConnectivity) 
 
-Find the length of the shortest path between target qubits in terms of 
-Manhattan distance, using the Breadth-First Search algorithm, on any 
-`connectivity::AbstractConnectivity`.
+Find the length of the shortest path between target qubits in terms of the
+Manhattan distance. The function uses the Breadth-first search algorithm to determine the
+path length for any `connectivity::AbstractConnectivity`.
 
 # Example
 ```jldoctest
@@ -716,14 +728,19 @@ function is_native_circuit(
 end
 
 """
-    transpile_and_run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer; transpiler::Transpiler = get_transpiler(qpu))
+    transpile_and_run_job(
+        qpu::UnionAnyonQPU,
+        circuit::QuantumCircuit,
+        shot_count::Integer;
+        transpiler::Transpiler = get_transpiler(qpu)
+    )
 
 This method first transpiles the input circuit using either the default
-transpiler, or any other transpiler passed as a key-word argument.
-The transpiled circuit is then run on the AnyonYukonQPU, repeatedly for the
-specified number of repetitions (shot_count).
+transpiler, or any other transpiler passed as a keyword argument.
+The transpiled circuit is then executed on an Anyon QPU, where the number of circuit
+executions is specified by `shot_count`.
 
-Returns the histogram of the completed circuit calculations, along with the job's 
+Returns the histogram of the circuit measurement outcomes along with the job's 
 execution time on the `QPU` (in milliseconds), or an error message.
 
 # Example
@@ -731,7 +748,15 @@ execution time on the `QPU` (in milliseconds), or an error message.
 ```jldoctest  
 julia> qpu = AnyonYukonQPU(client_anyon, "project_id");
 
-julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(3, 3)]), 100)
+julia> circuit = QuantumCircuit(
+                    qubit_count = 3,
+                    instructions = [
+                        sigma_x(3),
+                        control_z(2, 1),
+                        readout(3, 3)
+                    ]);
+
+julia> transpile_and_run_job(qpu, circuit, 100)
 (Dict("001" => 100), 542)
 
 ```
@@ -751,13 +776,14 @@ end
 """
     run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer)
 
-Run a circuit computation on a `QPU` service, repeatedly for the specified
-number of repetitions (shot_count).
-Returns the histogram of the completed circuit calculations, along with the 
-simulation's execution time (in milliseconds) or an error
-message.
-If the circuit received in invalid - for instance, it is missing a `Readout` -
-it is not sent to the host, and an error is throw.
+Submit a circuit to a `QPU` service for execution. The number of circuit executions is
+specified by `shot_count`.
+
+Returns a histogram of the circuit measurement outcomes along with the 
+simulation's execution time (in milliseconds) or an error message.
+
+If `circuit` is invalid - for instance, if it is missing a `Readout` - it is not sent to the
+host and an error is thrown.
 
 # Example
 
@@ -772,7 +798,12 @@ Quantum Processing Unit:
    connectivity_type:  linear
    realm:         test-realm
 
-julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100)
+julia> circuit = QuantumCircuit(
+            qubit_count = 3,
+            instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]
+        );
+
+julia> run_job(qpu, circuit, 100)
 (Dict("001" => 100), 542)
 
 ```

@@ -19,8 +19,11 @@ struct PauliGroupElement
 end
 
 """
-    get_pauli(circuit::QuantumCircuit; imaginary_exponent::Integer=0,
-        negative_exponent::Integer=0)::PauliGroupElement
+    get_pauli(
+        circuit::QuantumCircuit;
+        imaginary_exponent::Integer=0,
+        negative_exponent::Integer=0
+    )::PauliGroupElement
 
 Returns a `PauliGroupElement` given a `circuit` containing Pauli gates.
 
@@ -124,8 +127,12 @@ function assert_exponents_are_in_the_field(
 end
 
 """
-    get_pauli(gate::AbstractGateSymbol, num_qubits::Integer; imaginary_exponent::Integer=0,
-        negative_exponent::Integer=0)::PauliGroupElement
+    get_pauli(
+        gate::AbstractGateSymbol,
+        num_qubits::Integer;
+        imaginary_exponent::Integer=0,
+        negative_exponent::Integer=0
+    )::PauliGroupElement
 
 Returns a `PauliGroupElement` given a `gate` and the number of qubits.
 
