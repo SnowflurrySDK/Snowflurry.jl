@@ -2452,7 +2452,7 @@ struct RejectNonNativeInstructionsTranspiler <: Transpiler
     native_gates::Vector{DataType}
 
     function RejectNonNativeInstructionsTranspiler(
-        connectivity::Union{LineConnectivity,LatticeConnectivity},
+        connectivity::GeometricConnectivity,
         native_gates::Vector{DataType} = set_of_native_gates,
     )
 
@@ -2546,14 +2546,14 @@ q[4]:──X───────
 
 
 julia> custom_circuit = QuantumCircuit(
-           qubit_count = 4,
-           instructions = [toffoli(1, 2, 3)],
-           )
+                  qubit_count = 4,
+                  instructions = [control_x(2, 3)],
+                  )
 Quantum Circuit Object:
    qubit_count: 4 
    bit_count: 4 
-q[1]:──*──
-       |  
+q[1]:─────
+          
 q[2]:──*──
        |  
 q[3]:──X──
@@ -2569,7 +2569,7 @@ ERROR: DomainError with LineConnectivity{4}
 
 julia> custom_transpiler = RejectNonNativeInstructionsTranspiler(
             connectivity,
-            [Snowflurry.Toffoli]
+            [Snowflurry.ControlX]
         );
 
 
@@ -2577,8 +2577,8 @@ julia> transpiled_circuit = transpile(custom_transpiler, custom_circuit)
 Quantum Circuit Object:
    qubit_count: 4 
    bit_count: 4 
-q[1]:──*──
-       |  
+q[1]:─────
+          
 q[2]:──*──
        |  
 q[3]:──X──

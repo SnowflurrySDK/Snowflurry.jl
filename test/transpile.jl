@@ -1802,7 +1802,9 @@ end
 
     connectivities_and_targets = [
         (LineConnectivity(12), (1, 2))
+        (LineConnectivity(12, collect(9:12)), (1, 2))
         (LatticeConnectivity(3, 4), (1, 5))
+        (LatticeConnectivity(3, 4, collect(9:12)), (1, 5))
     ]
 
     for (connectivity, targets) in connectivities_and_targets
@@ -1834,7 +1836,8 @@ end
 
     @test_throws DomainError transpile(default_transpiler, circuit)
 
-    custom_native_gates = [Snowflurry.Toffoli]
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [control_x(2, 3)])
+    custom_native_gates = [Snowflurry.ControlX]
     custom_transpiler =
         RejectNonNativeInstructionsTranspiler(connectivity, custom_native_gates)
 
@@ -1844,6 +1847,13 @@ end
         NotImplementedError,
         RejectNonNativeInstructionsTranspiler(AllToAllConnectivity())
     )
+
+    excluded_positions = [2]
+    connectivity_with_excluded_positions = LineConnectivity(12, excluded_positions)
+    transpiler_with_excluded_positions =
+        RejectNonNativeInstructionsTranspiler(connectivity_with_excluded_positions)
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [sigma_x(2)])
+    @test isequal(transpile(transpiler_with_excluded_positions, circuit), circuit)
 end
 
 @testset "is_native_instruction" begin
@@ -1856,9 +1866,9 @@ end
     @test !is_native_instruction(pi_8_dagger(10), connectivity)
     @test !is_native_instruction(control_z(5, 7), connectivity)
 
-    custom_native_gates = [Snowflurry.Toffoli, Snowflurry.X90]
-    @test is_native_instruction(toffoli(1, 2, 3), connectivity, custom_native_gates)
-    @test !is_native_instruction(toffoli(2, 1, 3), connectivity, custom_native_gates)
+    custom_native_gates = [Snowflurry.ControlX, Snowflurry.X90]
+    @test is_native_instruction(control_x(1, 2), connectivity, custom_native_gates)
+    @test !is_native_instruction(control_x(1, 3), connectivity, custom_native_gates)
 end
 
 @testset "is_native_circuit" begin
@@ -1889,14 +1899,19 @@ end
     @test is_native_circuit(large_circuit, connectivity) ==
           (false, "Circuit qubit count 21 exceeds LineConnectivity qubit count: 20")
 
-    foreign_circuit = QuantumCircuit(qubit_count = 3, instructions = [toffoli(1, 2, 3)])
+    foreign_circuit = QuantumCircuit(qubit_count = 3, instructions = [control_x(1, 2)])
     @test is_native_circuit(foreign_circuit, connectivity) == (
         false,
-        "Instruction type Gate{Snowflurry.Toffoli} with targets [1, 2, 3] is not native " *
+        "Instruction type Gate{Snowflurry.ControlX} with targets [1, 2] is not native " *
         "on the connectivity",
     )
-    @test is_native_circuit(foreign_circuit, connectivity, [Snowflurry.Toffoli]) ==
+    @test is_native_circuit(foreign_circuit, connectivity, [Snowflurry.ControlX]) ==
           (true, "")
+
+    @test_throws(
+        NotImplementedError,
+        is_native_circuit(default_circuit, AllToAllConnectivity())
+    )
 end
 
 @testset "RejectGatesOnExcludedPositionsTranspiler for all-to-all" begin

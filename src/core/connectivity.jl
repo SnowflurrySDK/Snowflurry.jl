@@ -292,6 +292,8 @@ function get_sorted_excluded_connections_for_lattice(
     return sorted_connections
 end
 
+const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
+
 function Base.show(io::IO, connectivity::LatticeConnectivity)
     println(
         io,

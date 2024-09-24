@@ -791,6 +791,11 @@ end
         NonExistentConnectivity(),
     )
 
+    @test_throws NotImplementedError is_native_instruction(
+        sigma_x(1),
+        AllToAllConnectivity(),
+    )
+
     @test_throws NotImplementedError Snowflurry.with_excluded_positions(
         NonExistentConnectivity(),
         Int[],

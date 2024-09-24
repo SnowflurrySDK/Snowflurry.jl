@@ -372,8 +372,6 @@ function get_qubits_distance(
     return length(path) - 1
 end
 
-const GeometricConnectivity = Union{LineConnectivity,LatticeConnectivity}
-
 """
     is_native_instruction(
         gate::Union{Gate},
@@ -386,7 +384,8 @@ possible `native_gates`. The native gates for the Anyon QPUs are used by default
 
 A native instruction is defined as an instruction that is in `native_gates` and that
 satisifies the `connectivity`. It does not check to determine if the `gate` is placed at
-the `excluded_positions` or `excluded_connections` of the `connectivity`.
+the `excluded_positions` or `excluded_connections` of the `connectivity`. The gate must
+operate on less than three qubits.
 
 # Example
 
@@ -402,11 +401,14 @@ true
 julia> is_native_instruction(control_z(1, 3), connectivity)
 false
 
-julia> is_native_instruction(toffoli(1, 2, 3), connectivity)
+julia> is_native_instruction(control_x(1, 2), connectivity)
 false
 
-julia> is_native_instruction(toffoli(1, 2, 3), connectivity, [Snowflurry.Toffoli])
+julia> is_native_instruction(control_x(1, 2), connectivity, [Snowflurry.ControlX])
 true
+
+julia> is_native_instruction(toffoli(1, 2, 3), connectivity, [Snowflurry.Toffoli])
+false
 
 ```
 """
@@ -422,17 +424,23 @@ function is_native_instruction(
         return false
     end
 
-    if gate.symbol isa AbstractControlledGateSymbol
-        for (i_qubit, first_qubit) in enumerate(qubits[1:end-1])
-            next_qubit = qubits[i_qubit+1]
-            distance = get_qubits_distance(first_qubit, next_qubit, connectivity)
-            if distance != 1
-                return false
-            end
+    num_connected_qubits = length(qubits)
+    if num_connected_qubits == 2
+        distance = get_qubits_distance(qubits[1], qubits[2], connectivity)
+        if distance != 1
+            return false
         end
     end
 
+    if num_connected_qubits > 2
+        return false
+    end
+
     return (typeof(get_gate_symbol(gate)) in native_gates)
+end
+
+function is_native_instruction(gate::Gate, connectivity::AllToAllConnectivity)::Bool
+    throw(NotImplementedError(:is_native_instruction, connectivity))
 end
 
 """
@@ -490,7 +498,7 @@ instructions.
 
 # Example
 
-```jldoctest  
+```jldoctest is_native_instruction
 julia> connectivity = LineConnectivity(3)
 LineConnectivity{3}
 1──2──3
@@ -514,6 +522,35 @@ julia> is_native_circuit(native_circuit, connectivity)
 (true, "")
 
 julia> foreign_circuit = QuantumCircuit(
+                  qubit_count = 3,
+                  instructions = [sigma_x(1), control_x(2, 3)]
+              )
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X───────
+               
+q[2]:───────*──
+            |  
+q[3]:───────X──
+               
+
+julia> is_native_circuit(foreign_circuit, connectivity)
+(false, "Instruction type Gate{Snowflurry.ControlX} with targets [2, 3] is not native on the connectivity")
+
+julia> is_native_circuit(
+            foreign_circuit,
+            connectivity,
+            [Snowflurry.ControlX, Snowflurry.SigmaX]
+        )
+(true, "")
+
+```
+
+The folowing circuit is not native because the Toffoli gate is applied to more than two
+qubits:
+```jldoctest is_native_instruction
+julia> foreign_circuit = QuantumCircuit(
            qubit_count = 3,
            instructions = [sigma_x(1), toffoli(1, 2, 3)]
        )
@@ -527,15 +564,12 @@ q[2]:───────*──
 q[3]:───────X──
                
 
-julia> is_native_circuit(foreign_circuit, connectivity)
-(false, "Instruction type Gate{Snowflurry.Toffoli} with targets [1, 2, 3] is not native on the connectivity")
-
 julia> is_native_circuit(
             foreign_circuit,
             connectivity,
             [Snowflurry.Toffoli, Snowflurry.SigmaX]
         )
-(true, "")
+(false, "Instruction type Gate{Snowflurry.Toffoli} with targets [1, 2, 3] is not native on the connectivity")
 
 ```
 """
@@ -565,6 +599,15 @@ function is_native_circuit(
     end
 
     return (true, "")
+end
+
+function is_native_circuit(
+    circuit::QuantumCircuit,
+    connectivity::AllToAllConnectivity,
+    native_gates::Vector{DataType} = set_of_native_gates,
+)::Tuple{Bool,String}
+
+    throw(NotImplementedError(:is_native_circuit, connectivity))
 end
 
 """
