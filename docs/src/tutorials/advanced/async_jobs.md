@@ -12,22 +12,33 @@ DocTestSetup = quote
 end
 ```
 
-In this tutorial we will learn how to run jobs asynchronously using [Julia tasks](https://docs.julialang.org/en/v1/base/parallel/). Asynchronous jobs allow for the code to continue with other computation while waiting for the quantum resources.
+In this tutorial, we will learn how to run jobs asynchronously using
+[Julia tasks](https://docs.julialang.org/en/v1/base/parallel/). The use of asynchronous jobs
+allows other computations to continue while waiting for results from the QPU.
 
 ## Julia tasks
 
-Practical applications of quantum computing typically involve both classical and quantum computation. A quantum processor is indeed a hardware accelerator in this paradigm. In such scenarios, it might take some time for the quantum computer to run the circuit that was submitted to it.
+Practical applications of quantum computing typically involve both classical and quantum
+computation. A quantum processor is a hardware accelerator in this paradigm. It may
+therefore be desirable to continue some of the classical computations while the program
+waits for the quantum hardware to complete its tasks. This is an example of asynchronous
+programming. We recommend that you consult
+[Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/)
+if you are unfamiliar with this concept.
 
-In many cases, it is desirable to be able to continue with some classical computation while the program waits for the quantum hardware to complete its task. This is an example of asynchronous programming. We recommend you consult [Julia's page on asynchronous programming](https://docs.julialang.org/en/v1/manual/asynchronous-programming/) if you are unfamiliar with this concept.
-
-In `Snowflurry`, communicating with a quantum processor will [yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution every time it waits for a response from the quantum computer. This gives you the opportunity to perform work while the quantum computer is running your job.
+In `Snowflurry`, the function that communicates with a quantum processor will
+[yield](https://docs.julialang.org/en/v1/base/parallel/#Base.yield) execution while it
+waits for a response from the quantum computer. This allows other computations to continue
+while the quantum computer is running our job.
 
 
 ## Code
 
-To provide maximum flexibility, Snowflurry does not impose any restrictions on how you parallelize your code. We cannot know what will be best for your code. That is up to you!
+To provide maximum flexibility, Snowflurry does not impose any restrictions on how you
+parallelize your code. We cannot know what will be best for your code. That is up to you!
 
-We will start by importing Snowflurry, building our circuit and defining our QPU as demonstrated in the [Running a Circuit on a Real Hardware](../anyon_qpu.md) tutorial.
+As shown in the [Running a Circuit on a Real Hardware](../anyon_qpu.md) tutorial, we will
+start by importing Snowflurry, building our circuit, and defining our QPU:
 
 ```jldoctest asynchronous_job; output = false
 using Snowflurry
@@ -58,7 +69,8 @@ Quantum Processing Unit:
    realm:         test-realm
 ```
 
-Next, we are going to define and [schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task.
+Next, we are going to define and
+[schedule](https://docs.julialang.org/en/v1/base/parallel/#Base.schedule) our task:
 
 ```jldoctest asynchronous_job; output = false, setup = :(qpu = VirtualQPU()), filter = r".*"
 shot_count = 200
@@ -70,9 +82,10 @@ schedule(task)
 ```
 
 !!! warning
-    Note the last line above. It is important to `schedule` the `task`; otherwise, Julia will not know that it should start it!
+    Do not forget the last line in the previous code block! It is important to `schedule`
+    the `task`, otherwise it will not start!
 
-Next, we need to yield execution of the current thread to the newly scheduled task to ensure that the scheduler starts with the task. Otherwise, the task will be scheduled, but it might not submit a job to the quantum computer any time soon! After yielding once, we can continue to do work before we [fetch](https://docs.julialang.org/en/v1/base/parallel/#Base.fetch-Tuple{task}) the results from that task.
+We then need to yield execution of the current thread to the newly scheduled task:
 
 
 ```jldoctest asynchronous_job; output = false
@@ -94,7 +107,11 @@ fibonacci(30)
 
 ```
 
-After we are done with our work, we can fetch the result of our job.
+This ensures that the scheduler starts the task. Otherwise, it might take a while for our
+task to start and for our jobs to be submitted to the quantum computer! Our program can also
+perform other computations after yielding. We can then
+[fetch](https://docs.julialang.org/en/v1/base/parallel/#Base.fetch-Tuple{task}) the results
+from our task:
 
 ```jldoctest asynchronous_job; output = false, filter = r".*"
 result = fetch(task)
@@ -104,4 +121,4 @@ println(result)
 
 ```
 
-The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/SnowflurrySDK/Snowflurry.jl/blob/main/tutorials/asynchronous_jobs.jl)
+The full code is available at [tutorials/asynchronous\_jobs.jl](https://github.com/SnowflurrySDK/Snowflurry.jl/blob/main/tutorials/asynchronous_jobs.jl).
