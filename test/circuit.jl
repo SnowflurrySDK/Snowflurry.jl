@@ -400,3 +400,30 @@ end
     )
     @test isequal(c0, c6) == false
 end
+
+@testset "update_circuit_qubit_count" begin
+    circuit = QuantumCircuit(
+        qubit_count = 3,
+        bit_count = 4,
+        instructions = [sigma_x(2)],
+        name = "test_circuit",
+    )
+    larger_qubit_count = 5
+    larger_circuit = update_circuit_qubit_count(circuit, larger_qubit_count)
+
+    @test get_num_qubits(larger_circuit) == larger_qubit_count
+    @test get_num_bits(larger_circuit) == get_num_bits(circuit)
+    @test get_name(larger_circuit) == get_name(circuit)
+    @test get_circuit_instructions(larger_circuit) == get_circuit_instructions(circuit)
+
+    smaller_qubit_count = 2
+    smaller_circuit = update_circuit_qubit_count(circuit, smaller_qubit_count)
+
+    @test get_num_qubits(smaller_circuit) == smaller_qubit_count
+    @test get_num_bits(smaller_circuit) == get_num_bits(circuit)
+    @test get_name(smaller_circuit) == get_name(circuit)
+    @test get_circuit_instructions(smaller_circuit) == get_circuit_instructions(circuit)
+
+    too_small_qubit_count = 1
+    @test_throws DomainError update_circuit_qubit_count(circuit, too_small_qubit_count)
+end

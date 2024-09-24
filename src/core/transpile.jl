@@ -1561,6 +1561,20 @@ function transpile(
             gates_block =
                 remap_connections_using_swaps(gates_block, adjacent_mapping, paths)
 
+            maximum_qubit_required = max(instr.connected_qubits...)
+
+            for gate in gates_block
+                maximum_qubit_required =
+                    max(maximum_qubit_required, gate.connected_qubits...)
+            end
+
+            if maximum_qubit_required > output_circuit.qubit_count
+                output_circuit = Snowflurry.update_circuit_qubit_count(
+                    output_circuit,
+                    maximum_qubit_required,
+                )
+            end
+
             push!(output_circuit, gates_block...)
         else
             # no effect for single-target gate

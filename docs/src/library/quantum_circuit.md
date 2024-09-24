@@ -5,6 +5,7 @@ push!
 pop!
 append!
 prepend!
+update_circuit_qubit_count
 simulate
 simulate_shots
 get_measurement_probabilities(circuit::QuantumCircuit)
