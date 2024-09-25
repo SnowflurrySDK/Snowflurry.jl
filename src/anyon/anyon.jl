@@ -439,7 +439,12 @@ function is_native_instruction(
     return (typeof(get_gate_symbol(gate)) in native_gates)
 end
 
-function is_native_instruction(gate::Gate, connectivity::AllToAllConnectivity)::Bool
+function is_native_instruction(
+    ::Gate,
+    connectivity::AbstractConnectivity,
+    ::Vector{DataType} = set_of_native_gates,
+)::Bool
+
     throw(NotImplementedError(:is_native_instruction, connectivity))
 end
 
@@ -479,6 +484,15 @@ function is_native_instruction(
 
     num_qubits = get_num_qubits(connectivity)
     return readout.connected_qubit <= num_qubits
+end
+
+function is_native_instruction(
+    ::Readout,
+    connectivity::AbstractConnectivity,
+    ::Vector{DataType} = set_of_native_gates,
+)::Bool
+
+    throw(NotImplementedError(:is_native_instruction, connectivity))
 end
 
 """
@@ -602,9 +616,9 @@ function is_native_circuit(
 end
 
 function is_native_circuit(
-    circuit::QuantumCircuit,
-    connectivity::AllToAllConnectivity,
-    native_gates::Vector{DataType} = set_of_native_gates,
+    ::QuantumCircuit,
+    connectivity::AbstractConnectivity,
+    ::Vector{DataType} = set_of_native_gates,
 )::Tuple{Bool,String}
 
     throw(NotImplementedError(:is_native_circuit, connectivity))

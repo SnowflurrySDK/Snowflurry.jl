@@ -783,6 +783,10 @@ end
         NonExistentConnectivity(),
     )
     @test_throws NotImplementedError is_native_instruction(
+        readout(1, 1),
+        NonExistentConnectivity(),
+    )
+    @test_throws NotImplementedError is_native_instruction(
         NonExistentInstruction(),
         LineConnectivity(2),
     )

@@ -2460,8 +2460,8 @@ struct RejectNonNativeInstructionsTranspiler <: Transpiler
     end
 
     function RejectNonNativeInstructionsTranspiler(
-        connectivity::AllToAllConnectivity,
-        native_gates::Vector{DataType} = set_of_native_gates,
+        connectivity::AbstractConnectivity,
+        ::Vector{DataType} = set_of_native_gates,
     )
 
         throw(NotImplementedError(:RejectNonNativeInstructionsTranspiler, connectivity))
