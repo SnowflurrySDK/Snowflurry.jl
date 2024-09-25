@@ -1829,61 +1829,89 @@ end
 
         @test isequal(transpile(transpiler, circuit), circuit)
     end
+
+    connectivity = LineConnectivity(12)
+    default_transpiler = RejectNonNativeInstructionsTranspiler(connectivity)
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [toffoli(1, 2, 3)])
+
+    @test_throws DomainError transpile(default_transpiler, circuit)
+
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [control_x(2, 3)])
+    custom_native_gates = [Snowflurry.ControlX]
+    custom_transpiler =
+        RejectNonNativeInstructionsTranspiler(connectivity, custom_native_gates)
+
+    @test isequal(transpile(custom_transpiler, circuit), circuit)
+
+    @test_throws(
+        NotImplementedError,
+        RejectNonNativeInstructionsTranspiler(AllToAllConnectivity())
+    )
+
+    excluded_positions = [2]
+    connectivity_with_excluded_positions = LineConnectivity(12, excluded_positions)
+    transpiler_with_excluded_positions =
+        RejectNonNativeInstructionsTranspiler(connectivity_with_excluded_positions)
+    circuit = QuantumCircuit(qubit_count = 6, instructions = [sigma_x(2)])
+    @test isequal(transpile(transpiler_with_excluded_positions, circuit), circuit)
 end
 
-@testset "is_native_instruction: excluded_positions" begin
+@testset "is_native_instruction" begin
+    connectivity = LineConnectivity(9)
+    @test is_native_instruction(pi_8_dagger(8), connectivity)
+    @test is_native_instruction(control_z(5, 6), connectivity)
+    @test is_native_instruction(readout(7, 7), connectivity)
+    @test !is_native_instruction(readout(10, 10), connectivity)
+    @test !is_native_instruction(toffoli(1, 2, 3), connectivity)
+    @test !is_native_instruction(pi_8_dagger(10), connectivity)
+    @test !is_native_instruction(control_z(5, 7), connectivity)
 
-    excluded_positions = collect(9:12)
+    custom_native_gates = [Snowflurry.ControlX, Snowflurry.X90]
+    @test is_native_instruction(control_x(1, 2), connectivity, custom_native_gates)
+    @test !is_native_instruction(control_x(1, 3), connectivity, custom_native_gates)
+end
 
-    connectivities = [
-        LineConnectivity(20, excluded_positions),
-        LatticeConnectivity(5, 4, excluded_positions),
+@testset "is_native_circuit" begin
+    connectivity = LineConnectivity(20)
+    default_native_instructions = [
+        identity_gate(2),
+        phase_shift(3, 0.2),
+        pi_8(12),
+        pi_8_dagger(11),
+        sigma_x(1),
+        sigma_y(1),
+        sigma_z(2),
+        x_90(1),
+        x_minus_90(1),
+        y_90(1),
+        y_minus_90(1),
+        z_90(1),
+        z_minus_90(1),
+        control_z(19, 20),
+        readout(2, 2),
     ]
 
-    for connectivity in connectivities
-        for target = 1:12
-            input_gates_on_excluded_targets = [
-                phase_shift(target, pi / 3),
-                pi_8(target),
-                pi_8_dagger(target),
-                sigma_x(target),
-                sigma_y(target),
-                sigma_z(target),
-                x_90(target),
-                x_minus_90(target),
-                y_90(target),
-                y_minus_90(target),
-                z_90(target),
-                z_minus_90(target),
-                readout(target, 1),
-            ]
+    default_circuit =
+        QuantumCircuit(qubit_count = 20, instructions = default_native_instructions)
+    @test is_native_circuit(default_circuit, connectivity) == (true, "")
 
-            for instr in input_gates_on_excluded_targets
-                # instr is native iif it targets non-excluded positions
-                @test !is_native_instruction(instr, connectivity) ==
-                      (target in excluded_positions)
-            end
-        end
+    large_circuit = QuantumCircuit(qubit_count = 21)
+    @test is_native_circuit(large_circuit, connectivity) ==
+          (false, "Circuit qubit count 21 exceeds LineConnectivity qubit count: 20")
 
-        for control = 1:20
-            for target = 1:20
-                if target == control
-                    continue
-                end
+    foreign_circuit = QuantumCircuit(qubit_count = 3, instructions = [control_x(1, 2)])
+    @test is_native_circuit(foreign_circuit, connectivity) == (
+        false,
+        "Instruction type Gate{Snowflurry.ControlX} with targets [1, 2] is not native " *
+        "on the connectivity",
+    )
+    @test is_native_circuit(foreign_circuit, connectivity, [Snowflurry.ControlX]) ==
+          (true, "")
 
-                instr = control_z(control, target)
-
-                # instr is native if it is connected to adjacent qubits on 
-                # non-excluded positions, and it doesnt reach across the blocked region
-                @test is_native_instruction(instr, connectivity) == (
-                    (get_qubits_distance(target, control, connectivity) == 1) &&
-                    !(target in excluded_positions) &&
-                    !(control in excluded_positions) &&
-                    ((control < 9 && target < 9) || (control > 12 && target > 12))
-                )
-            end
-        end
-    end
+    @test_throws(
+        NotImplementedError,
+        is_native_circuit(default_circuit, AllToAllConnectivity())
+    )
 end
 
 @testset "RejectGatesOnExcludedPositionsTranspiler for all-to-all" begin

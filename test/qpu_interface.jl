@@ -783,12 +783,21 @@ end
         NonExistentConnectivity(),
     )
     @test_throws NotImplementedError is_native_instruction(
+        readout(1, 1),
+        NonExistentConnectivity(),
+    )
+    @test_throws NotImplementedError is_native_instruction(
         NonExistentInstruction(),
         LineConnectivity(2),
     )
     @test_throws NotImplementedError is_native_instruction(
         NonExistentInstruction(),
         NonExistentConnectivity(),
+    )
+
+    @test_throws NotImplementedError is_native_instruction(
+        sigma_x(1),
+        AllToAllConnectivity(),
     )
 
     @test_throws NotImplementedError Snowflurry.with_excluded_positions(

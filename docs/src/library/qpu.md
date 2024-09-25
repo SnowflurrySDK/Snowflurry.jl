@@ -18,4 +18,6 @@ get_excluded_connections
 path_search
 get_adjacency_list
 get_qubits_distance
+is_native_instruction
+is_native_circuit
 ```
