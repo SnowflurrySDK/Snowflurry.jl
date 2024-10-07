@@ -811,8 +811,8 @@ end
     get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
 Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a `Dict` where
-each key is a qubit index. Every dictionary value is a `Vector` which lists all the qubits
-that are adjacent on the connectivity to the qubit key. Positions in
+each key is a qubit index. Every dictionary value is a `Vector` that lists all the qubits
+which are adjacent on the connectivity to the qubit key. Positions in
 `connectivity.excluded_positions` are not included as keys nor values.
 
 # Example
