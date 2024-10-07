@@ -737,8 +737,8 @@ end
 
 This method first transpiles the input circuit using either the default
 transpiler, or any other transpiler passed as a keyword argument.
-The transpiled circuit is then executed on an Anyon QPU, where the number of circuit
-executions is specified by `shot_count`.
+The transpiled circuit is then submitted for execution on an Anyon QPU. The number of
+circuit executions is specified by `shot_count`.
 
 Returns the histogram of the circuit measurement outcomes along with the job's 
 execution time on the `QPU` (in milliseconds), or an error message.
@@ -776,14 +776,23 @@ end
 """
     run_job(qpu::AnyonYukonQPU, circuit::QuantumCircuit, shot_count::Integer)
 
-Submit a circuit to a `QPU` service for execution. The number of circuit executions is
-specified by `shot_count`.
+Submit a circuit to a `QPU` service for execution. The function does not perform the
+standard transpilation as in [`transpile_and_run_job`](@ref). The number of circuit
+executions is specified by `shot_count`.
 
 Returns a histogram of the circuit measurement outcomes along with the 
 simulation's execution time (in milliseconds) or an error message.
 
-If `circuit` is invalid - for instance, if it is missing a `Readout` - it is not sent to the
-host and an error is thrown.
+If the `circuit` is invalid, it is not sent to the host and an error is thrown. The `circuit`
+can be invalid for the following reasons:
+- The `circuit` contains no `Readout` instructions (see
+    [`CircuitContainsAReadoutTranspiler`](@ref)).
+- Multiple `Readout` instructions have the same destination bits (see
+    [`ReadoutsDoNotConflictTranspiler`](@ref)).
+- The `Readout` instructions are not the last operation on each qubit where a readout is
+    present (see [`ReadoutsAreFinalInstructionsTranspiler`](@ref)).
+- The `circuit` contains a `Controlled` gate that operates on more than two qubits (see
+    [`UnsupportedGatesTranspiler`](@ref)).
 
 # Example
 

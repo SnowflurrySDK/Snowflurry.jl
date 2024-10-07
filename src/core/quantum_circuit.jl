@@ -8,12 +8,18 @@
     )
     QuantumCircuit(circuit::QuantumCircuit)
 
-A data structure for the description of a *quantum circuit*.
+A data structure which describes a *quantum circuit*.
 # Fields
-- `qubit_count::Int` -- Largest qubit index (e.g., specifying `qubit_count=n` enables the use of qubits 1 to n).
-- `bit_count::Int` -- Optional: Number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
-- `instructions::Vector{AbstractInstruction}` -- Optional: Sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on the qubits. Defaults to an empty Vector.
-- `name::String` -- Optional: Name of the circuit and the corresponding job. It is used to identify the job when it is sent to a hardware or virtual QPU. 
+- `qubit_count::Int` -- Largest qubit index (e.g., specifying `qubit_count=n` enables the
+                        use of qubits 1 to n).
+- `bit_count::Int` -- Optional: Number of classical bits (i.e., result register size).
+                      Defaults to `qubit_count` if unspecified.
+- `instructions::Vector{AbstractInstruction}` -- Optional: Sequence of
+                                                 `AbstractInstructions` (`Gates` and
+                                                 `Readouts`) that operate on the qubits.
+                                                 Defaults to an empty Vector.
+- `name::String` -- Optional: Name of the circuit and the corresponding job. It is used to
+                    identify the job when it is sent to a hardware or virtual QPU. 
 
 # Examples
 ```jldoctest

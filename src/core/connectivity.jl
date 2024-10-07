@@ -5,13 +5,20 @@ abstract type AbstractConnectivity end
 """
     LineConnectivity <:AbstractConnectivity
 
-A data structure for the description of the linear qubit connectivity of an Anyon System's
+A data structure which describes the linear qubit connectivity of an Anyon System's
 QPU. This connectivity type is encountered in `QPUs` such as the [`AnyonYukonQPU`](@ref).
 
 # Fields
 - `dimension         ::Int` -- Number of qubits for this connectivity.
-- `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled and cannot perform operations. Elements in `Vector` must be unique.
-- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in `Vector` must be unique.
+- `excluded_positions::Vector{Int}` -- Optional: List of qubits on the connectivity which
+                                       are disabled and cannot perform operations. Elements
+                                       in `Vector` must be unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between
+                                                     qubits which are disabled and cannot
+                                                     perform 2-qubit gates. Elements in
+                                                     `Vector` must be unique. Each
+                                                     connection is provided as a `Tuple` of
+                                                     qubit indices.
 
 !!! note
     Every excluded connection is sorted in ascending order (i.e. connection (2, 1) will be
@@ -106,15 +113,25 @@ end
 """
     LatticeConnectivity <:AbstractConnectivity
 
-A data structure for the description of the two-dimensional lattice qubit connectivity of an
+A data structure which describes the two-dimensional lattice qubit connectivity of an
 Anyon System's QPU. This connectivity type is encountered in `QPUs` such as the
 [`AnyonYamaskaQPU`](@ref).
 
 # Fields
-- `qubits_per_printout_line::Vector{Int}` -- Number of qubits in each line when constructing the printout.
-- `dimensions              ::Vector{Int}` -- Number of rows and columns (turned 45° in the printout).
-- `excluded_positions      ::Vector{Int}` -- Optional: List of qubits on the connectivity which are disabled and cannot perform operations. Elements in `Vector` must be unique.
-- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between qubits which are disabled and cannot perform 2-qubit gates. Elements in `Vector` must be unique.
+- `qubits_per_printout_line::Vector{Int}` -- Number of qubits in each line when constructing
+                                             the printout.
+- `dimensions              ::Vector{Int}` -- Number of rows and columns (turned 45° in the
+                                             printout).
+- `excluded_positions      ::Vector{Int}` -- Optional: List of qubits on the connectivity
+                                             which are disabled and cannot perform
+                                             operations. Elements in `Vector` must be
+                                             unique.
+- `excluded_connections::Vector{Tuple{Int, Int}}` -- Optional: List of connections between
+                                                     qubits which are disabled and cannot
+                                                     perform 2-qubit gates. Elements in
+                                                     `Vector` must be unique. Each
+                                                     connection is provided as a `Tuple` of
+                                                     qubit indices.
 
 
 # Example
@@ -425,7 +442,7 @@ get_excluded_connections(connectivity::AbstractConnectivity) =
 """
     AllToAllConnectivity <:AbstractConnectivity
 
-A data structure for the description of all-to-all qubit connectivity in an Anyon System's
+A data structure which describes the all-to-all qubit connectivity of an Anyon Systems
 QPU. This connectivity type is encountered in simulated `QPUs` such as the
 [`VirtualQPU`](@ref).
 
@@ -547,25 +564,18 @@ Qubits with their index in `path` are highlighted.
 
 # Example
 ```jldoctest
-julia> print_connectivity(LatticeConnectivity(3, 3))
-      1 
+julia> connectivity=LatticeConnectivity(3,3);
+
+julia> path = path_search(1, 3, connectivity);
+
+julia> print_connectivity(connectivity, path)
+     (1)
       | 
- 7 ── 4 ── 2 
+ 7 ──(4)── 2 
       |    | 
-      8 ── 5 ── 3 
+     (8)──(5)──(3)
            |    | 
            9 ── 6 
-
-
-julia> print_connectivity(LatticeConnectivity(3, 3), [2, 6, 3])
-      1 
-      | 
- 7 ── 4 ──(2)
-      |    | 
-      8 ── 5 ──(3)
-           |    | 
-           9 ──(6)
-
 
 ```
 """
@@ -800,11 +810,10 @@ end
 """
     get_adjacency_list(connectivity::AbstractConnectivity)::Dict{Int,Vector{Int}}
 
-Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a Dict with
-`key => value` pairs. Each key corresponds to a qubit index while each value is a `Vector`
-of the qubit indices which are adjacent (neighbors) to the qubit in the `key`. The adjacency
-list depends on the `connectivity`. Positions in `connectivity.excluded_positions` are not
-given a key in the adjacency list.
+Given an object of type `AbstractConnectivity`, `get_adjacency_list` returns a `Dict` where
+each key is a qubit index. Every dictionary value is a `Vector` which lists all the qubits
+that are adjacent on the connectivity to the qubit key. Positions in
+`connectivity.excluded_positions` are not included as keys nor values.
 
 # Example
 ```jldoctest
@@ -853,8 +862,9 @@ Dict{Int64, Vector{Int64}} with 12 entries:
 
 !!! note
     The `get_adjacency_list` function cannot be used for `AllToAllConnectivity` since this
-    type of connecticty places no upper bound on the number of qubits. A finite list of
-    adjacent qubits thus cannot be constructed. 
+    type of connectivity places no upper bound on the number of qubits and all qubits
+    connect to each other by definition. A finite list of adjacent qubits thus cannot be
+    constructed. 
 
 """
 function get_adjacency_list(connectivity::LineConnectivity)::Dict{Int,Vector{Int}}

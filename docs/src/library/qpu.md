@@ -16,7 +16,6 @@ read_response_body
 run_job
 transpile_and_run_job
 get_transpiler
-SequentialTranspiler
 AllToAllConnectivity
 LineConnectivity
 LatticeConnectivity

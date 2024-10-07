@@ -2,6 +2,61 @@ using Snowflurry
 
 abstract type Transpiler end
 
+"""
+    transpile(transpiler::Transpiler, circuit::QuantumCircuit)::QuantumCircuit
+
+Returns a transpiled copy of the `circuit`. The transpilation process depends on the
+`transpiler`.
+
+The following transpilers are available:
+- [`SequentialTranspiler`](@ref)
+- [`CompressSingleQubitGatesTranspiler`](@ref)
+- [`CastSwapToCZGateTranspiler`](@ref)
+- [`CastCXToCZGateTranspiler`](@ref)
+- [`CastISwapToCZGateTranspiler`](@ref)
+- [`CastToffoliToCXGateTranspiler`](@ref)
+- [`CastRootZZToZ90AndCZGateTranspiler`](@ref)
+- [`CastToPhaseShiftAndHalfRotationXTranspiler`](@ref)
+- [`CastUniversalToRzRxRzTranspiler`](@ref)
+- [`CastRxToRzAndHalfRotationXTranspiler`](@ref)
+- [`SimplifyRxGatesTranspiler`](@ref)
+- [`SwapQubitsForAdjacencyTranspiler`](@ref)
+- [`SimplifyRzGatesTranspiler`](@ref)
+- [`CompressRzGatesTranspiler`](@ref)
+- [`RemoveSwapBySwappingGatesTranspiler`](@ref)
+- [`SimplifyTrivialGatesTranspiler`](@ref)
+- [`UnsupportedGatesTranspiler`](@ref)
+- [`ReadoutsAreFinalInstructionsTranspiler`](@ref)
+- [`CircuitContainsAReadoutTranspiler`](@ref)
+- [`ReadoutsDoNotConflictTranspiler`](@ref)
+- [`DecomposeSingleTargetSingleControlGatesTranspiler`](@ref)
+- [`RejectNonNativeInstructionsTranspiler`](@ref)
+- [`RejectGatesOnExcludedPositionsTranspiler`](@ref)
+- [`RejectGatesOnExcludedConnectionsTranspiler`](@ref)
+
+# Example
+
+```jldoctest  
+julia> transpiler = CastCXToCZGateTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [control_x(1, 2)])
+Quantum Circuit Object:
+   qubit_count: 2
+   bit_count: 2
+q[1]:──*──
+       |
+q[2]:──X──
+
+julia> transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+   bit_count: 2
+q[1]:───────*───────
+            |
+q[2]:──H────Z────H──
+
+```
+"""
 transpile(t::Transpiler, ::QuantumCircuit)::QuantumCircuit =
     throw(NotImplementedError(:transpile, t))
 
@@ -100,6 +155,83 @@ function transpile(
     return circuit
 end
 
+"""
+    CompressSingleQubitGatesTranspiler
+
+Transpiler stage which gathers all single-qubit gates sharing a common target in an input 
+circuit and combines them into single `Universal` gates in a new circuit.
+Gate ordering may differ when gates are applied to different qubits, 
+but the input and output circuits perform the same operation on an arbitrary state `Ket`
+(up to a global phase).
+
+# Examples
+```jldoctest
+julia> transpiler = CompressSingleQubitGatesTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X────Y──
+               
+q[2]:──────────
+               
+
+
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(
+                    qubit_count = 3,
+                    instructions = [
+                        sigma_x(1)
+                        sigma_y(1)
+                        control_x(2,3)
+                        phase_shift(1,π/3)
+                    ])
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──X────Y─────────P(1.0472)──
+                                 
+q[2]:────────────*───────────────
+                 |               
+q[3]:────────────X───────────────
+                                 
+
+
+
+julia> transpiled_circuit=transpile(transpiler,circuit)
+Quantum Circuit Object:
+   qubit_count: 3 
+   bit_count: 3 
+q[1]:──U(θ=0.0000,ϕ=-2.0944,λ=0.0000)───────
+                                            
+q[2]:────────────────────────────────────*──
+                                         |  
+q[3]:────────────────────────────────────X──
+                                            
+
+
+
+
+julia> compare_circuits(circuit,transpiled_circuit)
+true
+
+```
+"""
 struct CompressSingleQubitGatesTranspiler <: Transpiler end
 
 function rounding_safe_acos(theta::Real, threshold::Real = 1e-10)
@@ -337,84 +469,6 @@ function find_and_compress_blocks(
 end
 
 
-"""
-    transpile(::CompressSingleQubitGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
-
-Implementation of the `CompressSingleQubitGatesTranspiler` transpiler stage 
-which gathers all single-qubit gates sharing a common target in an input 
-circuit and combines them into single `Universal` gates in a new circuit.
-Gate ordering may differ when gates are applied to different qubits, 
-but the input and output circuits perform the same operation on an arbitrary state `Ket`
-(up to a global phase).
-
-# Examples
-```jldoctest
-julia> transpiler = CompressSingleQubitGatesTranspiler();
-
-julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1), sigma_y(1)])
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──X────Y──
-               
-q[2]:──────────
-               
-
-
-
-julia> transpiled_circuit=transpile(transpiler,circuit)
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──U(θ=0.0000,ϕ=3.1416,λ=0.0000)──
-                                      
-q[2]:─────────────────────────────────
-                                      
-
-
-
-julia> compare_circuits(circuit,transpiled_circuit)
-true
-
-julia> circuit = QuantumCircuit(
-                    qubit_count = 3,
-                    instructions = [
-                        sigma_x(1)
-                        sigma_y(1)
-                        control_x(2,3)
-                        phase_shift(1,π/3)
-                    ])
-Quantum Circuit Object:
-   qubit_count: 3 
-   bit_count: 3 
-q[1]:──X────Y─────────P(1.0472)──
-                                 
-q[2]:────────────*───────────────
-                 |               
-q[3]:────────────X───────────────
-                                 
-
-
-
-julia> transpiled_circuit=transpile(transpiler,circuit)
-Quantum Circuit Object:
-   qubit_count: 3 
-   bit_count: 3 
-q[1]:──U(θ=0.0000,ϕ=-2.0944,λ=0.0000)───────
-                                            
-q[2]:────────────────────────────────────*──
-                                         |  
-q[3]:────────────────────────────────────X──
-                                            
-
-
-
-
-julia> compare_circuits(circuit,transpiled_circuit)
-true
-
-```
-"""
 function transpile(
     ::CompressSingleQubitGatesTranspiler,
     circuit::QuantumCircuit,
@@ -448,14 +502,12 @@ function cast_to_cz(::Swap, connected_qubits::Vector{Int})::AbstractVector{Gate}
     ])
 end
 
-struct CastSwapToCZGateTranspiler <: Transpiler end
-
 """
-    transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastSwapToCZGateTranspiler
 
-Implementation of the `CastSwapToCZGateTranspiler` transpiler stage which
-expands all Swap gates into `CZ` gates and single-qubit gates. The input and output circuits
-perform the same operation on an arbitrary state `Ket` (up to a global phase).
+Transpiler stage which expands all Swap gates into `CZ` gates and single-qubit gates. The
+input and output circuits perform the same operation on an arbitrary state `Ket`
+(up to a global phase).
 
 # Examples
 ```jldoctest
@@ -480,6 +532,8 @@ q[2]:──Y_m90────Z─────────────Y_90──�
 
 ```
 """
+struct CastSwapToCZGateTranspiler <: Transpiler end
+
 function transpile(::CastSwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
@@ -511,14 +565,12 @@ function cast_to_cz(::ControlX, connected_qubits::Vector{Int})::AbstractVector{G
     return Vector{Gate}([hadamard(q2), control_z(q1, q2), hadamard(q2)])
 end
 
-struct CastCXToCZGateTranspiler <: Transpiler end
-
 """
-    transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastCXToCZGateTranspiler
 
-Implementation of the `CastCXToCZGateTranspiler` transpiler stage which
-expands all `CX` gates into `CZ` and `Hadamard` gates. The input and output circuits
-perform the same operation on an arbitrary state `Ket` (up to a global phase).
+Transpiler stage which expands all `CX` gates into `CZ` and `Hadamard` gates. The input and
+output circuits perform the same operation on an arbitrary state `Ket` (up to a global
+phase).
 
 # Examples
 ```jldoctest
@@ -541,6 +593,8 @@ q[1]:───────*───────
 q[2]:──H────Z────H──
 ```
 """
+struct CastCXToCZGateTranspiler <: Transpiler end
+
 function transpile(::CastCXToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
@@ -598,15 +652,12 @@ function cast_to_cz(::ISwapDagger, connected_qubits::Vector{Int})::AbstractVecto
     ])
 end
 
-struct CastISwapToCZGateTranspiler <: Transpiler end
-
 """
-    transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastISwapToCZGateTranspiler
 
-Implementation of the `CastISwapToCZGateTranspiler` transpiler stage which
-expands all `ISwap` and `ISwapDagger` gates into `CZ` gates and single-qubit gates.
-The input and output circuits perform the same operation on an arbitrary state `Ket`
-(up to a global phase).
+Transpiler stage which expands all `ISwap` and `ISwapDagger` gates into `CZ` gates and
+single-qubit gates. The input and output circuits perform the same operation on an arbitrary
+state `Ket` (up to a global phase).
 
 # Examples
 ```jldoctest
@@ -647,6 +698,8 @@ q[2]:───────────X_m90────Z────────
 
 ```
 """
+struct CastISwapToCZGateTranspiler <: Transpiler end
+
 function transpile(::CastISwapToCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
@@ -700,14 +753,12 @@ function cast_to_cx(gate::Toffoli, connected_qubits::Vector{Int})::AbstractVecto
     ])
 end
 
-struct CastToffoliToCXGateTranspiler <: Transpiler end
-
 """
-    transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastToffoliToCXGateTranspiler
 
-Implementation of the `CastToffoliToCXGateTranspiler` transpiler stage which
-expands all Toffoli gates into `CX` gates and single-qubit gates. The input and output
-circuits perform the same operation on an arbitrary state `Ket` (up to a global phase).
+Transpiler stage which expands all Toffoli gates into `CX` gates and single-qubit gates. The
+input and output circuits perform the same operation on an arbitrary state `Ket` (up to a
+global phase).
 
 # Examples
 ```jldoctest
@@ -736,6 +787,8 @@ q[3]:──H────X────T†────X────T────X
 
 ```
 """
+struct CastToffoliToCXGateTranspiler <: Transpiler end
+
 function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
     qubit_count = get_num_qubits(circuit)
     bit_count = get_num_bits(circuit)
@@ -759,13 +812,10 @@ function transpile(::CastToffoliToCXGateTranspiler, circuit::QuantumCircuit)::Qu
     return output
 end
 
-struct CastRootZZToZ90AndCZGateTranspiler <: Transpiler end
-
 """
-    transpile(::CastRootZZToZ90AndCZGateTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastRootZZToZ90AndCZGateTranspiler
 
-Implementation of the `CastRootZZToZ90AndCZGateTranspiler` transpiler stage which
-converts all `RootZZ` and `RootZZDagger` gates into `Z90` 
+Transpiler stage which converts all `RootZZ` and `RootZZDagger` gates into `Z90` 
 (or `ZM90`) gates and a `ControlZ` gate. The input and output circuits
 perform the same operation on an arbitrary state `Ket` (up to a global phase).
 
@@ -806,6 +856,8 @@ q[1]:──Z_m90─────────────*──
 q[2]:───────────Z_m90────Z──
 ```
 """
+struct CastRootZZToZ90AndCZGateTranspiler <: Transpiler end
+
 function transpile(
     ::CastRootZZToZ90AndCZGateTranspiler,
     circuit::QuantumCircuit,
@@ -838,6 +890,96 @@ function transpile(
     return output
 end
 
+"""
+    CastToPhaseShiftAndHalfRotationXTranspiler,
+
+Transpiler stage which converts all single-qubit gates in the input circuit into
+combinations of `PhaseShift` and `RotationX` with angle π/2 in the output circuit. For any
+gate in the input circuit, the number of gates in the output varies between zero and 5. The
+input and output circuits perform the same operation on an arbitrary state `Ket` (up to a
+global phase).
+
+# Fields
+- `atol::Real` -- Absolute tolerance for the comparison of rotation angles (default = 1e-6).
+
+# Examples
+```jldoctest
+julia> transpiler = CastToPhaseShiftAndHalfRotationXTranspiler();
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──X──
+          
+q[2]:─────
+          
+
+
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──Z────X_90────Z────X_m90──
+                                                 
+q[2]:───────────────────────────
+                                                 
+
+
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_y(1)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──Y──
+          
+q[2]:─────
+          
+
+
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2
+   bit_count: 2
+q[1]:──X_90────Z────X_m90──
+
+q[2]:──────────────────────
+                                           
+
+
+
+julia> compare_circuits(circuit, transpiled_circuit)
+true
+
+julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [universal(1, 0., 0., 0.)])
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
+                                      
+q[2]:─────────────────────────────────
+                                      
+
+
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 2 
+   bit_count: 2 
+q[1]:
+     
+q[2]:
+     
+
+
+
+julia> compare_circuits(circuit, transpiled_circuit)
+true
+
+```
+"""
 struct CastToPhaseShiftAndHalfRotationXTranspiler <: Transpiler
     atol::Real
 end
@@ -928,96 +1070,6 @@ function cast_to_phase_shift_and_half_rotation_x(gate::Universal, target::Int; a
     return gate_array
 end
 
-"""
-    transpile(
-        ::CastToPhaseShiftAndHalfRotationXTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
-
-Implementation of the `CastToPhaseShiftAndHalfRotationXTranspiler` transpiler stage 
-which converts all single-qubit gates in the input circuit into combinations of `PhaseShift`
-and `RotationX` with angle π/2 in the output circuit. For any gate in the input circuit,
-the number of gates in the output varies between zero and 5. The input and output circuits
-perform the same operation on an arbitrary state `Ket` (up to a global phase).
-
-# Examples
-```jldoctest
-julia> transpiler = CastToPhaseShiftAndHalfRotationXTranspiler();
-
-julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)])
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──X──
-          
-q[2]:─────
-          
-
-
-
-julia> transpiled_circuit = transpile(transpiler, circuit)
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──Z────X_90────Z────X_m90──
-                                                 
-q[2]:───────────────────────────
-                                                 
-
-
-
-julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [sigma_y(1)])
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──Y──
-          
-q[2]:─────
-          
-
-
-
-julia> transpiled_circuit = transpile(transpiler, circuit)
-Quantum Circuit Object:
-   qubit_count: 2
-   bit_count: 2
-q[1]:──X_90────Z────X_m90──
-
-q[2]:──────────────────────
-                                           
-
-
-
-julia> compare_circuits(circuit, transpiled_circuit)
-true
-
-julia> circuit = QuantumCircuit(qubit_count = 2, instructions = [universal(1, 0., 0., 0.)])
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:──U(θ=0.0000,ϕ=0.0000,λ=0.0000)──
-                                      
-q[2]:─────────────────────────────────
-                                      
-
-
-
-julia> transpiled_circuit = transpile(transpiler, circuit)
-Quantum Circuit Object:
-   qubit_count: 2 
-   bit_count: 2 
-q[1]:
-     
-q[2]:
-     
-
-
-
-julia> compare_circuits(circuit, transpiled_circuit)
-true
-
-```
-"""
 function transpile(
     transpiler_stage::CastToPhaseShiftAndHalfRotationXTranspiler,
     circuit::QuantumCircuit,
@@ -1109,17 +1161,13 @@ function decompose_universal_to_A_B_C_gates(
     return α, as_universal_gate(target, A), as_universal_gate(target, B), C
 end
 
-struct CastUniversalToRzRxRzTranspiler <: Transpiler end
-
 """
-    transpile(::CastUniversalToRzRxRzTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastUniversalToRzRxRzTranspiler
 
-Implementation of the `CastUniversalToRzRxRzTranspiler` transpiler stage 
-which finds `Universal` gates in an input circuit and casts 
-them into a sequence of `PhaseShift` (P), `RotationX` (Rx) and 
-`PhaseShift` (P) gates in a new circuit.
-The input and output circuits perform the same operation on an arbitrary state `Ket`
-(up to a global phase).
+Transpiler stage which finds `Universal` gates in an input circuit and casts them into a
+sequence of `PhaseShift` (P), `RotationX` (Rx) and `PhaseShift` (P) gates in a new circuit.
+The input and output circuits perform the same operation on an arbitrary state `Ket` (up to
+a global phase).
 
 # Examples
 ```jldoctest
@@ -1172,6 +1220,8 @@ true
 
 ```
 """
+struct CastUniversalToRzRxRzTranspiler <: Transpiler end
+
 function transpile(
     ::CastUniversalToRzRxRzTranspiler,
     circuit::QuantumCircuit,
@@ -1226,14 +1276,10 @@ function cast_rx_to_rz_and_half_rotation_x(gate::Gate{RotationX})::Vector{Gate}
     return gate_array
 end
 
-struct CastRxToRzAndHalfRotationXTranspiler <: Transpiler end
-
-
 """
-    transpile(::CastRxToRzAndHalfRotationXTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CastRxToRzAndHalfRotationXTranspiler
 
-Implementation of the `CastRxToRzAndHalfRotationXTranspiler` transpiler stage 
-which finds `RotationX(θ)` gates in an input circuit and converts (casts) 
+Transpiler stage which finds `RotationX(θ)` gates in an input circuit and converts (casts) 
 them into a sequence of gates (`Z90`, `X90`, `PhaseShift(θ)`, `XM90`, and `ZM90`) in a new
 circuit. The input and output circuits perform the same operation on an arbitrary state
 `Ket` (up to a global phase).
@@ -1265,6 +1311,9 @@ true
 
 ```
 """
+struct CastRxToRzAndHalfRotationXTranspiler <: Transpiler end
+
+
 function transpile(
     ::CastRxToRzAndHalfRotationXTranspiler,
     circuit::QuantumCircuit,
@@ -1293,22 +1342,17 @@ function transpile(
     return output_circuit
 end
 
-
-struct SimplifyRxGatesTranspiler <: Transpiler
-    atol::Real
-end
-
-SimplifyRxGatesTranspiler() = SimplifyRxGatesTranspiler(1e-6)
-
 """
-    transpile(::SimplifyRxGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    SimplifyRxGatesTranspiler
 
-Implementation of the `SimplifyRxGatesTranspiler` transpiler stage 
-which finds `RotationX` gates in an input circuit and, based on their 
+Transpiler stage which finds `RotationX` gates in an input circuit and, based on their 
 angle theta, casts them to one of the right-angle `RotationX` gates 
 (`SigmaX`, `X90`, or `XM90`). In the case where `theta≈0.`, the gate is removed.
 The input and output circuits perform the same operation on an arbitrary state `Ket`
 (up to a global phase).
+
+# Fields
+- `atol::Real` -- Absolute tolerance for the comparison of rotation angles (default = 1e-6).
 
 # Examples
 ```jldoctest
@@ -1383,6 +1427,13 @@ true
 
 ```
 """
+struct SimplifyRxGatesTranspiler <: Transpiler
+    atol::Real
+end
+
+SimplifyRxGatesTranspiler() = SimplifyRxGatesTranspiler(1e-6)
+
+
 function transpile(
     transpiler_stage::SimplifyRxGatesTranspiler,
     circuit::QuantumCircuit,
@@ -1413,6 +1464,64 @@ function transpile(
     return output
 end
 
+"""
+    SwapQubitsForAdjacencyTranspiler
+
+Transpiler stage which adds `Swap` gates around multi-qubit gates so that the 
+final `Operator` acts on adjacent qubits. The input and output circuits
+perform the same operation on an arbitrary state `Ket` (up to a global phase).
+
+# Fields
+- `connectivity::AbstractConnectivity` -- Connectivity for the placement of `Swap` gates.
+
+# Examples
+```jldoctest
+julia> transpiler = SwapQubitsForAdjacencyTranspiler(LineConnectivity(6));
+
+julia> circuit = QuantumCircuit(qubit_count = 6, instructions = [toffoli(4, 6, 1)])
+Quantum Circuit Object:
+   qubit_count: 6 
+   bit_count: 6 
+q[1]:──X──
+       |  
+q[2]:──|──
+       |  
+q[3]:──|──
+       |  
+q[4]:──*──
+       |  
+q[5]:──|──
+       |  
+q[6]:──*──
+          
+
+
+
+
+julia> transpiled_circuit = transpile(transpiler, circuit)
+Quantum Circuit Object:
+   qubit_count: 6 
+   bit_count: 6 
+q[1]:───────────────────────────X───────────────────────────
+                                |                           
+q[2]:───────☒───────────────────*───────────────────☒───────
+            |                   |                   |       
+q[3]:──☒────☒──────────────☒────*────☒──────────────☒────☒──
+       |                   |         |                   |  
+q[4]:──☒──────────────☒────☒─────────☒────☒──────────────☒──
+                      |                   |                 
+q[5]:────────────☒────☒───────────────────☒────☒────────────
+                 |                             |            
+q[6]:────────────☒─────────────────────────────☒────────────
+                                                            
+
+
+
+julia> compare_circuits(circuit, transpiled_circuit)
+true
+
+```
+"""
 struct SwapQubitsForAdjacencyTranspiler <: Transpiler
     connectivity::AbstractConnectivity
 end
@@ -1486,62 +1595,7 @@ function remap_connections_using_swaps(
     return gates_block
 end
 
-"""
-    transpile(::SwapQubitsForAdjacencyTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
-Implementation of the `SwapQubitsForAdjacencyTranspiler` transpiler stage 
-which adds `Swap` gates around multi-qubit gates so that the 
-final `Operator` acts on adjacent qubits. The input and output circuits
-perform the same operation on an arbitrary state `Ket` (up to a global phase).
-
-# Examples
-```jldoctest
-julia> transpiler = SwapQubitsForAdjacencyTranspiler(LineConnectivity(6));
-
-julia> circuit = QuantumCircuit(qubit_count = 6, instructions = [toffoli(4, 6, 1)])
-Quantum Circuit Object:
-   qubit_count: 6 
-   bit_count: 6 
-q[1]:──X──
-       |  
-q[2]:──|──
-       |  
-q[3]:──|──
-       |  
-q[4]:──*──
-       |  
-q[5]:──|──
-       |  
-q[6]:──*──
-          
-
-
-
-
-julia> transpiled_circuit = transpile(transpiler, circuit)
-Quantum Circuit Object:
-   qubit_count: 6 
-   bit_count: 6 
-q[1]:───────────────────────────X───────────────────────────
-                                |                           
-q[2]:───────☒───────────────────*───────────────────☒───────
-            |                   |                   |       
-q[3]:──☒────☒──────────────☒────*────☒──────────────☒────☒──
-       |                   |         |                   |  
-q[4]:──☒──────────────☒────☒─────────☒────☒──────────────☒──
-                      |                   |                 
-q[5]:────────────☒────☒───────────────────☒────☒────────────
-                 |                             |            
-q[6]:────────────☒─────────────────────────────☒────────────
-                                                            
-
-
-
-julia> compare_circuits(circuit, transpiled_circuit)
-true
-
-```
-"""
 function transpile(
     transpiler::SwapQubitsForAdjacencyTranspiler,
     circuit::QuantumCircuit,
@@ -1609,23 +1663,19 @@ function transpile(
     return output_circuit
 end
 
-struct SimplifyRzGatesTranspiler <: Transpiler
-    atol::Real
-end
-
-SimplifyRzGatesTranspiler() = SimplifyRzGatesTranspiler(1e-6)
-
 """
-    transpile(::SimplifyRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    SimplifyRzGatesTranspiler
 
-Implementation of the `SimplifyRzGatesTranspiler` transpiler stage 
-which finds `PhaseShift` gates in an input circuit and, based on their 
+Transpiler stage which finds `PhaseShift` gates in an input circuit and, based on their 
 phase angle phi, casts them to one of the right-angle `RotationZ` gates (`SigmaZ`, `Z90`,
 `ZM90`, `Pi8` or `Pi8Dagger`). In the case where `phi≈0.`, the  gate is removed. The input
 and output circuits perform the same operation on an arbitrary state `Ket` (up to a global
 phase). The tolerance  used for `Base.isapprox()` in each case can be set by passing an
 optional argument to the `Transpiler`, e.g:
 `transpiler=SimplifyRzGatesTranspiler(1.0e-10)`
+
+# Fields
+- `atol::Real` -- Absolute tolerance for the comparison of rotation angles (default = 1e-6).
 
 # Examples
 ```jldoctest
@@ -1698,6 +1748,13 @@ true
 
 ```
 """
+struct SimplifyRzGatesTranspiler <: Transpiler
+    atol::Real
+end
+
+SimplifyRzGatesTranspiler() = SimplifyRzGatesTranspiler(1e-6)
+
+
 function transpile(
     transpiler_stage::SimplifyRzGatesTranspiler,
     circuit::QuantumCircuit,
@@ -1727,50 +1784,10 @@ function transpile(
     return output
 end
 
-struct CompressRzGatesTranspiler <: Transpiler end
-
-# construct a PhaseShift gate from an input Operator
-function as_phase_shift_gate(target::Integer, op::AbstractOperator)::Gate{PhaseShift}
-    @assert size(op) == (2, 2) ("Received multi-target Operator: $op")
-
-    matrix = get_matrix(op)
-
-    @assert matrix[1, 2] ≈ ComplexF64(0.0) (
-        "Failed to build a PhaseShift gate from input Operator: $op"
-    )
-    @assert matrix[2, 1] ≈ ComplexF64(0.0) (
-        "Failed to build a PhaseShift gate from input Operator: $op"
-    )
-
-    #find global phase offset angle
-    alpha = atan(imag(matrix[1, 1]), real(matrix[1, 1]))
-
-    #remove global offset
-    matrix *= exp(-im * alpha)
-
-    #find relative phase offset angle
-    phi = atan(imag(matrix[2, 2]), real(matrix[2, 2]))
-
-    return phase_shift(target, phi)
-end
-
-# compress (combine) several Rz-type gates with a common target to a PhaseShift gate
-# Warning: does not assert gates having common target
-function unsafe_compress_to_rz(gates::Vector{Gate}, target::Int)::Gate{PhaseShift}
-    combined_op = eye()
-
-    for gate in gates
-        combined_op = get_operator(get_gate_symbol(gate)) * combined_op
-    end
-
-    return as_phase_shift_gate(target, combined_op)
-end
-
 """
-    transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CompressRzGatesTranspiler
 
-Implementation of the `CompressRzGatesTranspiler` transpiler stage 
-which gathers all Rz-type gates sharing a common target in an input 
+Transpiler stage which gathers all Rz-type gates sharing a common target in an input 
 circuit and combines them into a single PhaseShift gate in a new circuit.
 Gates ordering may differ when gates are applied to different qubits, 
 but the input and output circuits perform the same operation on an arbitrary state `Ket`
@@ -1831,6 +1848,46 @@ true
 
 ```
 """
+struct CompressRzGatesTranspiler <: Transpiler end
+
+# construct a PhaseShift gate from an input Operator
+function as_phase_shift_gate(target::Integer, op::AbstractOperator)::Gate{PhaseShift}
+    @assert size(op) == (2, 2) ("Received multi-target Operator: $op")
+
+    matrix = get_matrix(op)
+
+    @assert matrix[1, 2] ≈ ComplexF64(0.0) (
+        "Failed to build a PhaseShift gate from input Operator: $op"
+    )
+    @assert matrix[2, 1] ≈ ComplexF64(0.0) (
+        "Failed to build a PhaseShift gate from input Operator: $op"
+    )
+
+    #find global phase offset angle
+    alpha = atan(imag(matrix[1, 1]), real(matrix[1, 1]))
+
+    #remove global offset
+    matrix *= exp(-im * alpha)
+
+    #find relative phase offset angle
+    phi = atan(imag(matrix[2, 2]), real(matrix[2, 2]))
+
+    return phase_shift(target, phi)
+end
+
+# compress (combine) several Rz-type gates with a common target to a PhaseShift gate
+# Warning: does not assert gates having common target
+function unsafe_compress_to_rz(gates::Vector{Gate}, target::Int)::Gate{PhaseShift}
+    combined_op = eye()
+
+    for gate in gates
+        combined_op = get_operator(get_gate_symbol(gate)) * combined_op
+    end
+
+    return as_phase_shift_gate(target, combined_op)
+end
+
+
 function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     if length(get_circuit_instructions(circuit)) == 1
@@ -1845,12 +1902,11 @@ function transpile(::CompressRzGatesTranspiler, circuit::QuantumCircuit)::Quantu
     )
 end
 
-struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
-
 """
-    transpile(::RemoveSwapBySwappingGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    RemoveSwapBySwappingGatesTranspiler
 
-Removes the `Swap` gates from the `circuit` assuming all-to-all connectivity.
+Transipler stage which removes the `Swap` gates from the `circuit` assuming all-to-all
+connectivity.
 
 !!! warning "The initial state must be the ground state!"
     This transpiler stage assumes that the input state is ``|0\\rangle^{\\otimes N}``,
@@ -1891,6 +1947,9 @@ q[2]:──H────X──
 
 ```
 """
+struct RemoveSwapBySwappingGatesTranspiler <: Transpiler end
+
+
 function transpile(
     ::RemoveSwapBySwappingGatesTranspiler,
     circuit::QuantumCircuit,
@@ -1940,54 +1999,18 @@ function update_qubit_mapping!(qubit_mapping::Dict{Int,Int}, connected_qubits::V
     qubit_mapping[connected_qubits[2]] = outlet_qubit_2
 end
 
-struct SimplifyTrivialGatesTranspiler <: Transpiler
-    atol::Real
-end
-
-SimplifyTrivialGatesTranspiler() = SimplifyTrivialGatesTranspiler(1e-6)
-
-function is_trivial_gate(gate::Gate; atol = 1e-6)::Bool
-
-    symbol = get_gate_symbol(gate)
-
-    params = get_gate_parameters(symbol)
-
-    if symbol isa Identity
-        return true
-    elseif symbol isa Universal
-        if isapprox(params["theta"], 0.0; atol = atol) &&
-           isapprox(params["phi"], 0.0; atol = atol) &&
-           isapprox(params["lambda"], 0.0; atol = atol)
-            return true
-        end
-    elseif symbol isa Rotation
-        if isapprox(params["theta"], 0.0; atol = atol) &&
-           isapprox(params["phi"], 0.0; atol = atol)
-            return true
-        end
-    elseif symbol isa RotationX || symbol isa RotationY
-        if isapprox(params["theta"], 0.0; atol = atol)
-            return true
-        end
-    elseif symbol isa PhaseShift
-        if isapprox(params["lambda"], 0.0; atol = atol)
-            return true
-        end
-    end
-
-    return false
-end
-
 """
-    transpile(::SimplifyTrivialGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    SimplifyTrivialGatesTranspiler
 
-Implementation of the `SimplifyTrivialGatesTranspiler` transpiler stage 
-which removes gates that have no effect on the state `Ket` (e.g. `Identity`) and 
-parameterized gates with null parameters (e.g. `rotation_x(target, 0.)`).
+Transpiler stage which removes gates that have no effect on the state `Ket` (e.g.
+`Identity`) and parameterized gates with null parameters (e.g. `rotation_x(target, 0.)`).
 The input and output circuits perform the same operation on an arbitrary state `Ket`
 (up to a global phase). The tolerance used for `Base.isapprox()` in each case can be set by
 passing an optional argument to the transpiler (e.g.
 `transpiler=SimplifyTrivialGatesTranspiler(1.0e-10)`).
+
+# Fields
+- `atol::Real` -- Absolute tolerance for the comparison of rotation angles (default = 1e-6).
 
 # Examples
 ```jldoctest
@@ -2054,6 +2077,45 @@ true
 
 ```
 """
+struct SimplifyTrivialGatesTranspiler <: Transpiler
+    atol::Real
+end
+
+SimplifyTrivialGatesTranspiler() = SimplifyTrivialGatesTranspiler(1e-6)
+
+function is_trivial_gate(gate::Gate; atol = 1e-6)::Bool
+
+    symbol = get_gate_symbol(gate)
+
+    params = get_gate_parameters(symbol)
+
+    if symbol isa Identity
+        return true
+    elseif symbol isa Universal
+        if isapprox(params["theta"], 0.0; atol = atol) &&
+           isapprox(params["phi"], 0.0; atol = atol) &&
+           isapprox(params["lambda"], 0.0; atol = atol)
+            return true
+        end
+    elseif symbol isa Rotation
+        if isapprox(params["theta"], 0.0; atol = atol) &&
+           isapprox(params["phi"], 0.0; atol = atol)
+            return true
+        end
+    elseif symbol isa RotationX || symbol isa RotationY
+        if isapprox(params["theta"], 0.0; atol = atol)
+            return true
+        end
+    elseif symbol isa PhaseShift
+        if isapprox(params["lambda"], 0.0; atol = atol)
+            return true
+        end
+    end
+
+    return false
+end
+
+
 function transpile(
     transpiler_stage::SimplifyTrivialGatesTranspiler,
     circuit::QuantumCircuit,
@@ -2078,13 +2140,11 @@ function transpile(
     return output
 end
 
-struct UnsupportedGatesTranspiler <: Transpiler end
-
 """
-    transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    UnsupportedGatesTranspiler
 
-Throws a `NotImplementedError` if a `Controlled` gate that operates on more than two qubits
-is found.
+Transpiler stage which throws a `NotImplementedError` if a `Controlled` gate that operates
+on more than two qubits is found.
 
 # Examples
 ```jldoctest
@@ -2129,6 +2189,9 @@ ERROR: NotImplementedError{Gate{Controlled{Snowflurry.Hadamard}}}(:Transpiler, G
 [...]
 ```
 """
+struct UnsupportedGatesTranspiler <: Transpiler end
+
+
 function transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::QuantumCircuit
 
     for instr in get_circuit_instructions(circuit)
@@ -2142,15 +2205,10 @@ function transpile(::UnsupportedGatesTranspiler, circuit::QuantumCircuit)::Quant
     return circuit
 end
 
-struct ReadoutsAreFinalInstructionsTranspiler <: Transpiler end
-
 """
-    transpile(
-        ::ReadoutsAreFinalInstructionsTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
+    ReadoutsAreFinalInstructionsTranspiler
 
-Ensures that each `Readout` instruction is the last operation 
+Transpiler stage which ensures that each `Readout` instruction is the last operation 
 on each qubit where readouts are present. It also verifies that repeated readouts 
 on the same qubit do not occur. An error is thrown if these verifications fail. 
 This transpiler stage leaves the `QuantumCircuit` unchanged.
@@ -2207,6 +2265,9 @@ ERROR: AssertionError: Found multiple `Readouts` on qubit: 1
 [...]
 ```
 """
+struct ReadoutsAreFinalInstructionsTranspiler <: Transpiler end
+
+
 function transpile(
     ::ReadoutsAreFinalInstructionsTranspiler,
     circuit::QuantumCircuit,
@@ -2243,14 +2304,12 @@ function assert_readouts_are_last_instr(circuit::QuantumCircuit)
 
 end
 
-struct CircuitContainsAReadoutTranspiler <: Transpiler end
-
 """
-    transpile(::CircuitContainsAReadoutTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    CircuitContainsAReadoutTranspiler
 
-Ensures that at least one `Readout` instruction is present in the `QuantumCircuit`. 
-Otherwise, an error is thrown. 
-This transpiler stage leaves the `QuantumCircuit` unchanged.
+A transpiler stage which ensures that at least one `Readout` instruction is present in the
+`QuantumCircuit`. Otherwise, an error is thrown. This transpiler stage leaves the
+`QuantumCircuit` unchanged.
 
 # Examples
 ```jldoctest
@@ -2288,6 +2347,9 @@ ERROR: ArgumentError: QuantumCircuit is missing a `Readout`. Would not return an
 [...]
 ```
 """
+struct CircuitContainsAReadoutTranspiler <: Transpiler end
+
+
 function transpile(
     ::CircuitContainsAReadoutTranspiler,
     circuit::QuantumCircuit,
@@ -2306,13 +2368,11 @@ function transpile(
     )
 end
 
-struct ReadoutsDoNotConflictTranspiler <: Transpiler end
-
 """
-    transpile(::ReadoutsDoNotConflictTranspiler, circuit::QuantumCircuit)::QuantumCircuit
+    ReadoutsDoNotConflictTranspiler
 
-Ensures that each `Readout` instruction present in the `QuantumCircuit` 
-does not have conflicting destination bits, Otherwise, an error is thrown. 
+Transpiler stage which ensures that each `Readout` instruction present in the
+`QuantumCircuit` does not have conflicting destination bits, Otherwise, an error is thrown. 
 This transpiler stage leaves the `QuantumCircuit` unchanged.
 
 # Examples
@@ -2351,6 +2411,9 @@ ERROR: ArgumentError: `Readouts` in `QuantumCircuit` have conflicting destinatio
 [...]
 ```
 """
+struct ReadoutsDoNotConflictTranspiler <: Transpiler end
+
+
 function transpile(
     ::ReadoutsDoNotConflictTranspiler,
     circuit::QuantumCircuit,
@@ -2376,19 +2439,12 @@ function transpile(
     return circuit
 end
 
-struct DecomposeSingleTargetSingleControlGatesTranspiler <: Transpiler end
-
-
 """
-    transpile(
-        ::DecomposeSingleTargetSingleControlGatesTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
+    DecomposeSingleTargetSingleControlGatesTranspiler
 
-Implementation of the `DecomposeSingleTargetSingleControlGatesTranspiler` transpiler stage 
-which finds single-control, single-target `Controlled` gates in an input circuit and casts 
-them into a sequence of `RotationZ` (Rz), `ControlX`, `Universal` (U) and `PhaseShift` (P) 
-gates in a new, equivalent circuit.
+Transpiler stage which finds single-control, single-target `Controlled` gates in an input
+circuit and casts them into a sequence of `RotationZ` (Rz), `ControlX`, `Universal` (U) and
+`PhaseShift` (P) gates in a new, equivalent circuit.
 For reference, see Nielsen and Chuang, "Quantum Computation and Quantum Information",
 p. 180. The input and output circuits perform the same operation on an arbitrary state `Ket`
 (up to a global phase).
@@ -2464,6 +2520,9 @@ julia> simulate(circuit)
 
 ```
 """
+struct DecomposeSingleTargetSingleControlGatesTranspiler <: Transpiler end
+
+
 function transpile(
     ::DecomposeSingleTargetSingleControlGatesTranspiler,
     circuit::QuantumCircuit,
@@ -2533,42 +2592,19 @@ function transpile(
     return output
 end
 
-struct RejectNonNativeInstructionsTranspiler <: Transpiler
-    connectivity::AbstractConnectivity
-    native_gates::Vector{DataType}
-
-    function RejectNonNativeInstructionsTranspiler(
-        connectivity::GeometricConnectivity,
-        native_gates::Vector{DataType} = set_of_native_gates,
-    )
-
-        return new(connectivity, native_gates)
-    end
-
-    function RejectNonNativeInstructionsTranspiler(
-        connectivity::AbstractConnectivity,
-        ::Vector{DataType} = set_of_native_gates,
-    )
-
-        throw(NotImplementedError(:RejectNonNativeInstructionsTranspiler, connectivity))
-    end
-end
-
 """
-    transpile(
-        transpiler::RejectNonNativeInstructionsTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
+    RejectNonNativeInstructionsTranspiler
 
-Throws a `DomainError` if a non-native `Instruction` is found in the `circuit`. The
-`circuit` remains unchanged if no error is thrown.
+Transpiler stage which throws a `DomainError` if a non-native `Instruction` is found in the
+`circuit`. The `circuit` remains unchanged if no error is thrown.
 
 See [`is_native_instruction`](@ref) for additional information about native instructions.
 
-The transpiler `RejectNonNativeInstructionsTranspiler` takes an `AbstractConnectivity` as
-its first argument and an optional list of `native_gates` (`Vector{DataType}`) as its
-second argument. The gates that are native to the Anyon QPUs are used if `native_gates` is
-not provided.
+# Fields
+- connectivity::AbstractConnectivity -- Connectivity which specifies the connections on
+                                        which two-qubit gates can be applied.
+- native_gates::Vector{DataType} -- List of native gates. The gates that are native to the
+                                    Anyon QPUs are used by default.
 
 # Examples
 ```jldoctest
@@ -2674,6 +2710,28 @@ q[4]:─────
 
 ```
 """
+struct RejectNonNativeInstructionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+    native_gates::Vector{DataType}
+
+    function RejectNonNativeInstructionsTranspiler(
+        connectivity::GeometricConnectivity,
+        native_gates::Vector{DataType} = set_of_native_gates,
+    )
+
+        return new(connectivity, native_gates)
+    end
+
+    function RejectNonNativeInstructionsTranspiler(
+        connectivity::AbstractConnectivity,
+        ::Vector{DataType} = set_of_native_gates,
+    )
+
+        throw(NotImplementedError(:RejectNonNativeInstructionsTranspiler, connectivity))
+    end
+end
+
+
 function transpile(
     transpiler::RejectNonNativeInstructionsTranspiler,
     circuit::QuantumCircuit,
@@ -2689,19 +2747,17 @@ function transpile(
     return circuit
 end
 
-struct RejectGatesOnExcludedPositionsTranspiler <: Transpiler
-    connectivity::AbstractConnectivity
-end
-
 """
-    transpile(
-        transpiler::RejectGatesOnExcludedPositionsTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
+   RejectGatesOnExcludedPositionsTranspiler
 
-Throws a `DomainError` if an `Instruction` in the `circuit` operates on an excluded qubit.
-The excluded qubits are specified with the parameter `excluded_positions` in certain
-`AbstractConnectivity` objects. The `circuit` remains unchanged if no error is thrown.
+Transpiler stage which throws a `DomainError` if an `Instruction` in the `circuit` operates
+on an excluded qubit. The excluded qubits are specified with the parameter
+`excluded_positions` in certain `AbstractConnectivity` objects. The `circuit` remains
+unchanged if no error is thrown.
+
+# Fields
+- connectivity::AbstractConnectivity -- Connectivity where the `excluded_positions` are
+                                        specified.
 
 # Examples
 ```jldoctest
@@ -2776,6 +2832,11 @@ q[4]:───────Z──
 
 ```
 """
+struct RejectGatesOnExcludedPositionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+end
+
+
 function transpile(
     transpiler::RejectGatesOnExcludedPositionsTranspiler,
     circuit::QuantumCircuit,
@@ -2821,20 +2882,17 @@ function are_gates_at_excluded_positions(
     return (false, "")
 end
 
-struct RejectGatesOnExcludedConnectionsTranspiler <: Transpiler
-    connectivity::AbstractConnectivity
-end
-
 """
-    transpile(
-        transpiler::RejectGatesOnExcludedConnectionsTranspiler,
-        circuit::QuantumCircuit
-    )::QuantumCircuit
+    RejectGatesOnExcludedConnectionsTranspiler
 
-Throws a `DomainError` if an `Instruction` in the `circuit` operates on an excluded
-connection. The excluded connections are specified with the parameter `excluded_connections`
-in certain `AbstractConnectivity` objects. The function returns the same `circuit` if no
-error is thrown.
+Transpiler stage which throws a `DomainError` if an `Instruction` in the `circuit` operates
+on an excluded connection. The excluded connections are specified with the parameter
+`excluded_connections` in certain `AbstractConnectivity` objects. The function returns the
+same `circuit` if no error is thrown.
+
+# Fields
+- connectivity::AbstractConnectivity -- Connectivity where the `excluded_connections` are
+                                        specified.
 
 # Examples
 ```jldoctest
@@ -2910,6 +2968,11 @@ q[4]:───────Z──
 
 ```
 """
+struct RejectGatesOnExcludedConnectionsTranspiler <: Transpiler
+    connectivity::AbstractConnectivity
+end
+
+
 function transpile(
     transpiler::RejectGatesOnExcludedConnectionsTranspiler,
     circuit::QuantumCircuit,

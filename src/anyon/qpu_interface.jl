@@ -9,10 +9,14 @@ using TOML
 
 A data structure that stores the status of a quantum computation.  
 # Fields
-- `type::String` -- Word describing the status of the computation.
-- `message::String` -- Optional: Message providing additional details about the computation status.
-
-See [get_status](@ref) for more details about possible `type` strings.
+- `type::String` -- One of the declared types, e.g.:
+    - "QUEUED"   : Computation in the queue.
+    - "RUNNING"  : Computation being processed.
+    - "FAILED"   : QPU service has returned an error message.
+    - "SUCCEEDED": Computation has succeeded, results are available.
+    - "CANCELLED": Computation was terminated before completion.
+- `message::String` -- Optional: Message providing additional details about the computation
+    status.
 """
 Base.@kwdef struct Status
     type::String
@@ -24,7 +28,7 @@ end
 
 Returns the type associated with the `Status` of a quantum computation.
 
-See [get_status](@ref) for more details about possible `type` strings.
+See [`Status`](@ref) for more details about possible `type` strings.
 
 # Examples
 ```jldoctest
@@ -173,6 +177,9 @@ Creates a JSON-formatted string that contains the circuit configuration that wil
 to a `QPU` service. The URL for the `QPU` service corresponds to `host` while the number of
 circuit executions is equal to `shot_count`.
 
+!!! note
+    Qubit and bit indices use zero-based indexing in the JSON encoding.
+
 # Examples
 ```jldoctest
 julia> c = QuantumCircuit(
@@ -313,10 +320,11 @@ get_requestor(client::Client) = client.requestor
         machine_name::String
     )
 
-Submit a circuit to a `Client` that a connects to a `QPU` service for a particular machine
-(`machine_name`) and a specified number of circuit executions (`shot_count`). 
+Use a `client` to submit a `circuit` to a QPU service on the host server.  The QPU service
+is specified by the `machine_name`. The number of circuit executions is specified by
+`shot_count`. 
 
-Returns a circuit ID.
+Returns the circuit ID, which can then be used when calling [`get_status`](@ref).
 
 # Example
 
@@ -370,13 +378,7 @@ end
     get_status(client::Client,circuitID::String)::Tuple{Status,Dict{String,Int}}
 
 Obtain the status of a circuit computation which uses a `client` for connection to a `QPU`
-service.
-
-Returns `status`, which is a `Dict` that contains one of the following status["type"]: 
-- "QUEUED"   : Computation in the queue.
-- "RUNNING"  : Computation being processed.
-- "FAILED"   : QPU service has returned an error message.
-- "SUCCEEDED": Computation has succeeded, results are available.
+service. See [`Status`](@ref) for more details about possible statuses.
 
 In the case of status["type"]=="FAILED", the server error is contained in status["message"].
 
