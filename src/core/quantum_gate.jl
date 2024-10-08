@@ -1,19 +1,23 @@
 """
     AbstractGateSymbol
 
-A `GateSymbol` is an instantiation of an `AbstractGateSymbol`, which, when used inside a `Gate` (specifing placement) can be added to a `QuantumCircuit` to apply an operator to one or more `target` qubits.
-`AbstractGateSymbol` is useful to dispatch all `GateSymbols` to default implementation of functions such as get_connected_qubits(). 
-Those functions are then specialized for `GateSymbols` requiring a different implementation. 
+A `GateSymbol` is an instantiation of an `AbstractGateSymbol`. It can be passed as an
+argument to a `Gate` [constuctor](https://docs.julialang.org/en/v1/manual/constructors/),
+where a `Gate` is also associated with `target` qubits. A `Gate` will be placed on those
+`target_qubits` if it is added to a `QuantumCircuit`. `AbstractGateSymbol` is useful for
+dispatching all the `GateSymbols` to default implementations of functions such as
+[`get_connected_qubits()`](@ref). Those functions can be specialized for `GateSymbols`
+requiring a different implementation. 
 
 `AbstractGateSymbol` is an abstract type, which means that it cannot be instantiated. 
-Instead, each concrete type of `GateSymbols` is a struct which is a subtype of `AbstractGateSymbol`.
+Each concrete type of `GateSymbols` is a struct which is a subtype of `AbstractGateSymbol`.
 Each descendant of `AbstractGateSymbol` must implement at least the following methods:
 
 - `get_operator(gate::AbstractGateSymbol, T::Type{<:Complex}=ComplexF64})::AbstractOperator`
 - `get_num_connected_qubits(gate::AbstractGateSymbol)::Integer`
 
 # Examples
-A struct must be defined for each new `GateSymbol` type, such as the following X_45 `GateSymbol` which
+A struct must be defined for each new `GateSymbol` type. The following X_45 `GateSymbol`
 applies a ``45°`` rotation about the ``X`` axis:
 
 ```jldoctest gate_struct
@@ -21,31 +25,34 @@ julia> struct X45 <: AbstractGateSymbol
        end;
 ```
 
-We need to define how many connected qubits our new `GateSymbol` has.
+We need to define how many connected qubits are needed for our new `GateSymbol`:
 ```jldoctest gate_struct
 julia> Snowflurry.get_num_connected_qubits(::X45) = 1
 
 ```
 
-A `Gate` constructor must be defined as:
+A `Gate` constructor must be defined as
 ```jldoctest gate_struct
 julia> x_45(target::Integer) = Gate(X45(), [target]);
 ```
 
-along with an `Operator` constructor, with default precision `ComplexF64`, defined as:
+along with an `Operator` constructor, with default precision `ComplexF64`, which is defined
+as
 ```jldoctest gate_struct
 julia> x_45(T::Type{<:Complex} = ComplexF64) = rotation_x(π/4, T);
 
 ```
 
-To simulate the effect of the gate in a `QuantumCircuit` or when applied to a `Ket`,
-the function `get_operator` must be extended.
+To simulate the effects of the gate in a `QuantumCircuit` or when applied to a `Ket`,
+the function `get_operator` must be extended:
 ```jldoctest gate_struct
-julia> Snowflurry.get_operator(gate::X45, T::Type{<:Complex} = ComplexF64) = rotation_x(π/4, T);
+julia> function Snowflurry.get_operator(gate::X45, T::Type{<:Complex} = ComplexF64)
+          return rotation_x(π/4, T)
+       end
 
 ```
 
-The gate inverse can also be specified by extending the `inv` function.
+The gate inverse can also be specified by extending the `inv` function:
 ```jldoctest gate_struct
 julia> Base.inv(::X45) = Snowflurry.RotationX(-π/4);
 
@@ -78,15 +85,15 @@ Underlying data ComplexF64:
 
 ```
 
-To enable printout of a `QuantumCircuit` containing our new `GateSymbol` type, a display symbol 
-must be defined as follows.
+To enable the printing of a `QuantumCircuit` containing our new `GateSymbol` type, a display
+symbol must be defined as follows:
 ```jldoctest gate_struct
 julia> Snowflurry.gates_display_symbols[X45] = ["X45"];
 
 ```
 
-If this `Gate` is to be sent as an instruction to a hardware QPU, 
-an instruction `String` must be defined.
+If this `Gate` will be sent as an instruction to a hardware QPU, 
+an instruction `String` must be defined:
 ```jldoctest gate_struct
 julia> Snowflurry.instruction_symbols[X45] = "x45";
 
@@ -132,11 +139,37 @@ Base.inv(instr::InstructionType) where {InstructionType<:AbstractInstruction} =
 
 abstract type AbstractControlledGateSymbol <: AbstractGateSymbol end
 
+"""
+    get_gate_parameters(gate::AbstractGateSymbol)::Dict{String,Real}
+
+Returns a `Dict` containing the name and the value of each parameter in a `gate`.
+
+# Examples
+```jldoctest
+julia> get_gate_parameters(get_gate_symbol(universal(1, π/2, π/4, -π/3)))
+Dict{String, Float64} with 3 entries:
+  "theta"  => 1.5708
+  "phi"    => 0.785398
+  "lambda" => -1.0472
+
+```
+"""
 get_gate_parameters(gate::AbstractGateSymbol) = Dict{String,Real}()
 
-# TODO(#293): Change default to throw not implemented
-get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
+"""
+    get_num_connected_qubits(gate::AbstractGateSymbol)::Int
 
+Returns the number of qubits to which the `gate` is applied.
+
+# Examples
+```jldoctest
+julia> get_num_connected_qubits(get_gate_symbol(control_z(1, 3)))
+2
+
+```
+"""
+get_num_connected_qubits(gate::AbstractGateSymbol) = 1 # default value
+# TODO(#293): Change default to throw not implemented
 
 """
     Gate <: AbstractInstruction
@@ -224,10 +257,38 @@ function Base.show(io::IO, gate::Gate)
     end
 end
 
+"""
+    get_gate_symbol(gate::Gate)::AbstractGateSymbol
+
+Returns the symbol that is associated with a `gate`.
+
+# Examples
+```jldoctest
+julia> gate = sigma_x(1);
+
+julia> get_gate_symbol(gate)
+Snowflurry.SigmaX()
+
+```
+"""
 function get_gate_symbol(gate::Gate)::AbstractGateSymbol
     return gate.symbol
 end
 
+"""
+    get_connected_qubits(instruction::AbstractInstruction)::AbstractVector{Int}
+
+Returns the indices of the qubits on which the `instruction` is applied.
+
+# Examples
+```jldoctest
+julia> get_connected_qubits(control_z(1, 3))
+2-element Vector{Int64}:
+ 1
+ 3
+
+```
+"""
 get_connected_qubits(instr::AbstractInstruction)::AbstractVector{Int} =
     throw(NotImplementedError(:get_connected_qubits, instr))
 
@@ -239,12 +300,39 @@ function Base.inv(gate::Gate)::Gate
     return Gate(inv(get_gate_symbol(gate)), get_connected_qubits(gate))
 end
 
+"""
+    get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+
+Returns a list of the control qubits for a `gate`.
+
+# Examples
+```jldoctest
+julia> get_control_qubits(toffoli(1, 4, 6))
+2-element Vector{Int64}:
+ 1
+ 4
+
+```
+"""
 function get_control_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     connected_qubits = get_connected_qubits(gate)
     num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
     return Vector(view(connected_qubits, 1:num_control_qubits))
 end
 
+"""
+    get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
+
+Returns a list of the target qubits for a `gate`.
+
+# Examples
+```jldoctest
+julia> get_target_qubits(toffoli(1, 4, 6))
+1-element Vector{Int64}:
+ 6
+
+```
+"""
 function get_target_qubits(gate::Gate{<:AbstractControlledGateSymbol})
     connected_qubits = get_connected_qubits(gate)
     num_control_qubits = get_num_control_qubits(get_gate_symbol(gate))
@@ -277,12 +365,13 @@ end
 The `Controlled` object allows the construction of a controlled `AbstractGateSymbol` using an `Operator` 
 (the `kernel`) and the corresponding number of control qubits. A helper function, `controlled`
 can be used to easily create both controlled `AbstractGateSymbol`s and controlled `Gate`s.
-The `apply_gate` will call into the optimized routine, and if no such routine is present, it will fall-back
-to casting the operator into the equivalent `DenseOperator` and applying the created operator.
+A call to `apply_gate` will be dispatched to the optimized routine if it exists. Otherwise,
+it will fall back to casting the operator into the equivalent `DenseOperator` and
+applying the created operator.
 
 # Examples
 
-We can use the `controlled` function to create a controlled-Hadamard gate
+We can use the `controlled` function to create a controlled-Hadamard gate:
 
 ```jldoctest controlled_hadamard
 julia> controlled_hadamard = controlled(hadamard(2), [1])
@@ -312,9 +401,10 @@ q[2]:──H──
           
 ```
 
-In general, a `Controlled` with an arbitraty number of targets and controls can be 
-constructed. For instance, the following constructs the equivalent of a `Toffoli` `Gate`, 
-but as a `ConnectedGate{SigmaX}`, with `control_qubits=[1,2]` and `target_qubit=[3]`:
+In general, a `Controlled` struct with an arbitraty number of targets and controls can be 
+constructed. For instance, the following example constructs the equivalent of a `Toffoli`
+`Gate`,  but as a `ConnectedGate{SigmaX}` with `control_qubits=[1,2]` and
+`target_qubit=[3]`:
 
 ```jldoctest 
 julia> toffoli_as_controlled_gate = controlled(sigma_x(3), [1, 2])
@@ -1413,8 +1503,8 @@ I = \\begin{bmatrix}
     \\end{bmatrix}.
 ```
 
-Calling eye(size) will produce an identity matrix `DenseOperator` 
-of dimensions (size,size).
+Calling `eye(size)` will produce an identity matrix `DenseOperator` 
+with dimensions `(size,size)`.
 
 # Examples
 ```jldoctest
@@ -1509,9 +1599,10 @@ Return the `Operator` which applies a ``π/2`` rotation about the ``Z`` axis.
 The `Operator` is defined as:
 ```math
 R_z\\left(\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    e^{-i\\frac{pi}{4} & 0 \\\\[0.5em]
-    0 & e^{i\\frac{pi}{4}}
+    e^{-i\\pi/4} & 0 \\\\[0.5em]
+    0 & e^{i\\pi/4}
 \\end{bmatrix}.
+```
 """
 z_90(T::Type{<:Complex} = ComplexF64) = rotation_z(pi / 2, T)
 
@@ -1522,8 +1613,8 @@ Return the `Operator` which applies a ``-π/2`` rotation about the ``Z`` axis.
 The `Operator` is defined as:
 ```math
 R_z\\left(-\\frac{\\pi}{2}\\right) = \\begin{bmatrix}
-    e^{i\\frac{pi}{4} & 0 \\\\[0.5em]
-    0 & e^{-i\\frac{pi}{4}}
+    e^{i\\pi/4} & 0 \\\\[0.5em]
+    0 & e^{-i\\pi/4}
 \\end{bmatrix}.
 ```
 """
@@ -1532,7 +1623,8 @@ z_minus_90(T::Type{<:Complex} = ComplexF64) = rotation_z(-pi / 2, T)
 """
     rotation(theta, phi)
 
-Return the `Operator` which applies a rotation `theta` about an axis ``\\vec{n}`` defined by: ``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
+Return the `Operator` that applies a rotation `theta` about the axis
+``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
 
 The `Operator` is defined as:
 ```math
@@ -1571,7 +1663,7 @@ rotation_x(theta::Real, T::Type{<:Complex} = ComplexF64) = rotation(theta, 0, T)
 """
     rotation_y(theta)
 
-Return the `Operator` that applies a rotation `theta` about the ``Y`` axis of the `target` qubit.
+Return the `Operator` that applies a rotation `theta` about the ``Y`` axis.
 
 The `Operator` is defined as:
 ```math
@@ -1603,13 +1695,13 @@ phase_shift(phi, T::Type{<:Complex} = ComplexF64) = DiagonalOperator(T[1.0, exp(
 """
     rotation_z(lambda)
 
-Return the `DiagonalOperator` that applies a rotation of `z`.
+Return the `DiagonalOperator` that applies a rotation about the ``Z`` axis.
 
 The `DiagonalOperator` is defined as:
 ```math
 R_z(\\lambda) = \\begin{bmatrix}
-    e^{-i\\frac{\\lambda}{2} & 0 \\\\[0.5em]
-    0 & e^{i\\frac{\\lambda}{2}}
+    e^{-i\\lambda/2} & 0 \\\\[0.5em]
+    0 & e^{i\\lambda/2}
 \\end{bmatrix}.
 ```
 """
@@ -1619,8 +1711,9 @@ rotation_z(lambda, T::Type{<:Complex} = ComplexF64) =
 """
     root_zz()
 
-Return the `DiagonalOperator` that, when applied twice in sequence, applies a rotation of `z` by -pi/2
-on the first qubit and pi/2 on the second.
+Return the `DiagonalOperator` that, when applied twice in sequence, applies rotations about
+the ``Z`` axes of ``-\\frac{\\pi}{2}`` to the first qubit and ``\\frac{\\pi}{2}`` to the
+second one.
 
 The `DiagonalOperator` is defined as:
 ```math
@@ -1660,7 +1753,7 @@ root_zz_dagger(T::Type{<:Complex} = ComplexF64) = DiagonalOperator(
     universal(theta, phi, lambda)
 
 Return the `Operator` which performs a rotation about the angles `theta`, `phi`, and `lambda`.
-See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
+See Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The `Operator` is defined as:
 ```math
@@ -1683,7 +1776,7 @@ universal(theta::Real, phi::Real, lambda::Real, T::Type{<:Complex} = ComplexF64)
 """
     control_x()
 
-Return the controlled-X (or controlled NOT) `Operator`, which is defined as:
+Return the controlled-X (or controlled-NOT) `Operator`, which is defined as:
 ```math
 CX = CNOT = \\begin{bmatrix}
     1 & 0 & 0 & 0 \\\\
@@ -1792,7 +1885,8 @@ iswap_dagger(T::Type{<:Complex} = ComplexF64) = SwapLikeOperator(T(-im))
 """
     sigma_x(target)
 
-Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to the target qubit.
+Return the Pauli-X `Gate`, which applies the [`sigma_x()`](@ref) `AntiDiagonalOperator` to
+the target qubit.
 """
 sigma_x(target::Integer) = Gate(SigmaX(), [target])
 
@@ -1801,7 +1895,7 @@ struct SigmaX <: AbstractGateSymbol end
 """
     get_operator(gate::Gate)
 
-Returns the `Operator` which is associated to a `Gate`.
+Returns the `Operator` which is associated with a `Gate`.
 
 # Examples
 ```jldoctest
@@ -1855,7 +1949,8 @@ get_operator(::Hadamard, T::Type{<:Complex} = ComplexF64) = hadamard(T)
 """
     pi_8(target)
 
-Return a ``π/8`` `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref) `DiagonalOperator` to the `target` qubit.
+Return a ``π/8`` `Gate` (also known as a ``T`` `Gate`), which applies the [`pi_8()`](@ref)
+`DiagonalOperator` to the `target` qubit.
 """
 pi_8(target::Integer) = Gate(Pi8(), [target])
 
@@ -1869,7 +1964,8 @@ Base.inv(::Pi8) = Pi8Dagger()
 """
     pi_8_dagger(target)
 
-Return an adjoint ``π/8`` `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the [`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
+Return an adjoint ``π/8`` `Gate` (also known as a ``T^\\dagger`` `Gate`), which applies the
+[`pi_8_dagger()`](@ref) `Operator` to the `target` qubit.
 """
 pi_8_dagger(target::Integer) = Gate(Pi8Dagger(), [target])
 
@@ -1883,7 +1979,8 @@ Base.inv(::Pi8Dagger) = Pi8()
 """
     x_90(target)
 
-Return a `Gate` that applies a ``90°`` rotation about the ``X`` axis as defined by the [`x_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``X`` axis as defined by the
+[`x_90()`](@ref) `Operator`.
 """
 x_90(target::Integer) = Gate(X90(), [target])
 
@@ -1896,7 +1993,8 @@ Base.inv(::X90) = XM90()
 """
     x_minus_90(target)
 
-Return a `Gate` that applies a ``-90°`` rotation about the ``X`` axis as defined by the [`x_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``X`` axis as defined by the
+[`x_minus_90()`](@ref) `Operator`.
 """
 x_minus_90(target::Integer) = Gate(XM90(), [target])
 
@@ -1909,7 +2007,8 @@ Base.inv(::XM90) = X90()
 """
     y_90(target)
 
-Return a `Gate` that applies a ``90°`` rotation about the ``Y`` axis as defined by the [`y_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``Y`` axis as defined by the
+[`y_90()`](@ref) `Operator`.
 """
 y_90(target::Integer) = Gate(Y90(), [target])
 
@@ -1922,7 +2021,8 @@ Base.inv(::Y90) = YM90()
 """
     y_minus_90(target)
 
-Return a `Gate` that applies a ``-90°`` rotation about the ``Y`` axis as defined by the [`y_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``Y`` axis as defined by the
+[`y_minus_90()`](@ref) `Operator`.
 """
 y_minus_90(target::Integer) = Gate(YM90(), [target])
 
@@ -1935,7 +2035,8 @@ Base.inv(::YM90) = Y90()
 """
     z_90(target)
 
-Return a `Gate` that applies a ``90°`` rotation about the ``Z`` axis as defined by the [`z_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``90°`` rotation about the ``Z`` axis as defined by the
+[`z_90()`](@ref) `Operator`.
 """
 z_90(target::Integer) = Gate(Z90(), [target])
 
@@ -1948,7 +2049,8 @@ Base.inv(::Z90) = ZM90()
 """
     z_minus_90(target)
 
-Return a `Gate` that applies a ``-90°`` rotation about the ``Z`` axis as defined by the [`z_minus_90()`](@ref) `Operator`.
+Return a `Gate` that applies a ``-90°`` rotation about the ``Z`` axis as defined by the
+[`z_minus_90()`](@ref) `Operator`.
 """
 z_minus_90(target::Integer) = Gate(ZM90(), [target])
 
@@ -1962,7 +2064,8 @@ Base.inv(::ZM90) = Z90()
 """
     rotation(target, theta, phi)
 
-Return a gate that applies a rotation `theta` to the `target` qubit about an axis ``\\vec{n}`` defined by: ``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
+Return a gate that applies a rotation `theta` to the `target` qubit about the axis
+``\\vec{n}=\\cos(\\phi)~X+\\sin(\\phi)~Y``.
 
 The corresponding `Operator` is [`rotation(theta, phi)`](@ref).
 """
@@ -2044,7 +2147,8 @@ get_gate_parameters(gate::RotationZ) = Dict("lambda" => gate.lambda)
 """
     phase_shift(target, phi)
 
-Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the [`phase_shift(phi)`](@ref) `DiagonalOperator`.
+Return a `Gate` that applies a phase shift `phi` to the `target` qubit as defined by the
+[`phase_shift(phi)`](@ref) `DiagonalOperator`.
 """
 phase_shift(target::Integer, phi::Real) = Gate(PhaseShift(phi), [target])
 
@@ -2062,7 +2166,7 @@ get_gate_parameters(gate::PhaseShift) = Dict("lambda" => gate.phi)
     universal(target, theta, phi, lambda)
 
 Return a gate which rotates the `target` qubit given the angles `theta`, `phi`, and `lambda`.
-See: Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
+See Theorem 4.1 in [Quantum Computation and Quantum Information by Nielsen and Chuang](https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information).
 
 The corresponding `Operator` is [`universal(theta, phi, lambda)`](@ref).
 """
@@ -2126,7 +2230,8 @@ get_num_target_qubits(::ControlZ) = 1
 """
     control_x(control_qubit, target_qubit)
 
-Return a controlled-X gate (also known as a controlled NOT gate) given a `control_qubit` and a `target_qubit`.
+Return a controlled-X gate (also known as a controlled-NOT gate) given a `control_qubit` and
+a `target_qubit`.
 
 The corresponding `Operator` is [`control_x()`](@ref).
 """
@@ -2146,7 +2251,8 @@ get_num_target_qubits(::ControlX) = 1
 """
     iswap(qubit_1, qubit_2)
 
-Return the imaginary swap `Gate` which applies the imaginary swap `Operator` to `qubit_1` and `qubit_2.`
+Return the imaginary swap `Gate` which applies the imaginary swap `Operator` to `qubit_1`
+and `qubit_2.`
 
 The corresponding `Operator` is [`iswap()`](@ref).
 """
@@ -2184,7 +2290,8 @@ get_num_connected_qubits(::Swap) = 2
 """
     toffoli(control_qubit_1, control_qubit_2, target_qubit)
 
-Return a Toffoli gate (also known as a CCNOT gate) given two control qubits and a `target_qubit`.
+Return a Toffoli gate (also known as a CCNOT gate) given two control qubits and a
+`target_qubit`.
 
 The corresponding `Operator` is [`toffoli()`](@ref).
 """
@@ -2249,7 +2356,8 @@ end
 """
     iswap_dagger(qubit_1, qubit_2)
 
-Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swap `Operator` to `qubit_1` and `qubit_2.`
+Return the adjoint imaginary swap `Gate` which applies the adjoint imaginary swap `Operator`
+to `qubit_1` and `qubit_2.`
 
 The corresponding `Operator` is [`iswap_dagger()`](@ref).
 """
@@ -2270,8 +2378,9 @@ get_num_connected_qubits(::ISwapDagger) = 2
 """
     root_zz(qubit_1, qubit_2)
 
-Return the root of a ZZ `Gate` which, when two are applied in sequence, are equivalent to 
-one rotation_z(-pi/2) `Operator` to `qubit_1` and one rotation_z(pi/2) to `qubit_2.`
+Return the root of a ZZ `Gate`. The application of two ZZ gates in sequence is equivalent to 
+the application of one `rotation_z(-π/2)` `Operator` to `qubit_1` and one
+`rotation_z(π/2)` `Operator` to `qubit_2`.
 
 
 The corresponding `Operator` is [`root_zz()`](@ref).

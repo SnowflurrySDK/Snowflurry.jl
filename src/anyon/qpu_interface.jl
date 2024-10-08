@@ -4,12 +4,53 @@ using HTTP
 using JSON
 using TOML
 
+"""
+    Status
+
+A data structure that stores the status of a quantum computation.  
+# Fields
+- `type::String` -- One of the declared types, e.g.:
+    - "QUEUED"   : Computation in the queue.
+    - "RUNNING"  : Computation being processed.
+    - "FAILED"   : QPU service has returned an error message.
+    - "SUCCEEDED": Computation has succeeded, results are available.
+    - "CANCELLED": Computation was terminated before completion.
+- `message::String` -- Optional: Message providing additional details about the computation
+    status.
+"""
 Base.@kwdef struct Status
     type::String
     message::String = ""
 end
 
+"""
+    get_status_type(s::Status)::String
+
+Returns the type associated with the `Status` of a quantum computation.
+
+See [`Status`](@ref) for more details about possible `type` strings.
+
+# Examples
+```jldoctest
+julia> get_status_type(Status(type = "SUCCEEDED"))
+"SUCCEEDED"
+
+```
+"""
 get_status_type(s::Status) = s.type
+
+"""
+    get_status_message(s::Status)::String
+
+Returns the message associated with the `Status` of a quantum computation.
+
+# Examples
+```jldoctest
+julia> get_status_message(Status(type = "FAILED", message = "something failed"))
+"something failed"
+
+```
+"""
 get_status_message(s::Status) = s.message
 
 function Base.show(io::IO, status::Status)
@@ -132,12 +173,20 @@ get_request(
 """
     serialize_job(circuit::QuantumCircuit,shot_count::Integer,host::String)
 
-Creates a JSON-formatted String containing the circuit configuration to be sent 
-to a `QPU` service located at the URL specified by `host`, along with the number of shots requested.
+Creates a JSON-formatted string that contains the circuit configuration that will be sent 
+to a `QPU` service. The URL for the `QPU` service corresponds to `host` while the number of
+circuit executions is equal to `shot_count`.
+
+!!! note
+    Qubit and bit indices use zero-based indexing in the JSON encoding.
 
 # Examples
 ```jldoctest
-julia> c = QuantumCircuit(qubit_count = 2, instructions = [sigma_x(1)], name = "sigma_x job")
+julia> c = QuantumCircuit(
+            qubit_count = 2,
+            instructions = [sigma_x(1)],
+            name = "sigma_x job"
+        )
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -199,16 +248,21 @@ end
 """
     Client
 
-A data structure to represent a *Client* to a QPU service.  
+A data structure that represents a *client* for connection to a QPU service.  
 # Fields
 - `host::String` -- URL of the QPU server.
 - `user::String` -- Username.
 - `access_token::String` -- User access token.
-- `realm::String` -- Optional: realm on the host to which the submitted jobs are sent to.
+- `realm::String` -- Optional: Used to identify the host server realm for the submission of requests.
 
 # Example
 ```jldoctest
-julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token", realm = "test_realm")
+julia> c = Client(
+            host = "http://example.anyonsys.com",
+            user = "test_user",
+            access_token = "not_a_real_access_token",
+            realm = "test_realm"
+        )
 Client for QPU service:
    host:         http://example.anyonsys.com
    user:         test_user 
@@ -237,11 +291,15 @@ end
 """
     get_host(Client)
 
-Returns host URL of a `Client` to a `QPU` service.  
+Returns the host URL of a `Client` for connection to a `QPU` service.  
 
 # Example
 ```jldoctest
-julia> c = Client(host = "http://example.anyonsys.com", user = "test_user", access_token = "not_a_real_access_token");
+julia> c = Client(
+            host = "http://example.anyonsys.com",
+            user = "test_user",
+            access_token = "not_a_real_access_token"
+        );
 
 julia> get_host(c)
 "http://example.anyonsys.com"
@@ -254,16 +312,30 @@ get_requestor(client::Client) = client.requestor
 
 
 """
-    submit_job(client::Client, circuit::QuantumCircuit, shot_count::Integer, project_id::String, machine_name::String)
+    submit_job(
+        client::Client,
+        circuit::QuantumCircuit,
+        shot_count::Integer,
+        project_id::String,
+        machine_name::String
+    )
 
-Submit a circuit to a `Client` of `QPU` service, requesting a 
-particular machine (`machine_name`), a number of repetitions (`shot_count`). 
-Returns circuitID.
+Use a `client` to submit a `circuit` to a QPU service on the host server.  The QPU service
+is specified by the `machine_name`. The number of circuit executions is specified by
+`shot_count`. 
+
+Returns the circuit ID, which can then be used when calling [`get_status`](@ref).
 
 # Example
 
 ```jldoctest mylabel
-julia> submit_job(client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
+julia> circuit = QuantumCircuit(
+            qubit_count = 3,
+            instructions = [sigma_x(3), control_z(2, 1),
+            readout(1, 1)]
+        );
+
+julia> submit_job(client, circuit, 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 ```
@@ -305,16 +377,12 @@ end
 """
     get_status(client::Client,circuitID::String)::Tuple{Status,Dict{String,Int}}
 
-Obtain the status of a circuit computation through a `Client` of a `QPU` service.
-Returns status::Dict containing status["type"]: 
-    -"QUEUED"   : Computation in queue
-    -"RUNNING"  : Computation being processed
-    -"FAILED"   : QPU service has returned an error message
-    -"SUCCEEDED": Computation is completed, result is available.
+Obtain the status of a circuit computation which uses a `client` for connection to a `QPU`
+service. See [`Status`](@ref) for more details about possible statuses.
 
 In the case of status["type"]=="FAILED", the server error is contained in status["message"].
 
-In the case of status["type"]=="SUCCEEDED", the second element in the return Tuple is 
+In the case of status["type"]=="SUCCEEDED", the second element in the return tuple is 
 the histogram of the job results, as computed on the `QPU`, and the third element is the 
 job's execution time on the `QPU`, in milliseconds. 
 
@@ -322,7 +390,13 @@ job's execution time on the `QPU`, in milliseconds.
 
 
 ```jldoctest
-julia> jobID = submit_job(submit_job_client, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1)]), 100, "project_id", "yukon")
+julia> circuit = QuantumCircuit(
+            qubit_count = 3,
+            instructions = [sigma_x(3), control_z(2, 1),
+            readout(1, 1)]
+        );
+
+julia> jobID = submit_job(submit_job_client, circuit, 100, "project_id", "yukon")
 "8050e1ed-5e4c-4089-ab53-cccda1658cd0"
 
 julia> get_status(submit_job_client, jobID)
@@ -408,12 +482,43 @@ get_transpiler(qpu::AbstractQPU) = throw(NotImplementedError(:get_transpiler, qp
 run_job(qpu::AbstractQPU, circuit::QuantumCircuit, shot_count::Integer) =
     throw(NotImplementedError(:run_job, qpu))
 
+"""
+    get_connectivity(qpu::AbstractQPU)
+
+Returns the qubit connectivity of a `qpu`.
+
+# Example
+
+```jldoctest
+julia> qpu = AnyonYukonQPU(
+       host = "http://example.anyonsys.com",
+       user = "test_user",
+       access_token = "not_a_real_access_token",
+       project_id = "test-project",
+       realm = "test-realm"
+       )
+Quantum Processing Unit:
+   manufacturer:  Anyon Systems Inc.
+   generation:    Yukon
+   serial_number: ANYK202201
+   project_id:    test-project
+   qubit_count:   6
+   connectivity_type:  linear
+   realm:         test-realm
+
+
+julia> get_connectivity(qpu)
+LineConnectivity{6}
+1──2──3──4──5──6
+
+```
+"""
 get_connectivity(qpu::AbstractQPU) = throw(NotImplementedError(:get_connectivity, qpu))
 
 """
     VirtualQPU
 
-A data structure to represent a Quantum Simulator.  
+The data structure for a quantum simulator.  
 
 # Example
 ```jldoctest
@@ -448,6 +553,36 @@ function Base.show(io::IO, qpu::VirtualQPU)
     println(io, "   package:     $(metadata["package"])")
 end
 
+"""
+    read_response_body(body::Base.CodeUnits{UInt8,String})::String
+
+Returns a `String` from Unicode code units.
+
+See the [Julia documentation](https://docs.julialang.org/en/v1/base/strings/#lib-strings)
+for more details about code units.
+
+# Example
+```jldoctest
+julia> string = "my string"
+"my string"
+
+julia> body = codeunits(string)
+9-element Base.CodeUnits{UInt8, String}:
+ 0x6d
+ 0x79
+ 0x20
+ 0x73
+ 0x74
+ 0x72
+ 0x69
+ 0x6e
+ 0x67
+
+julia> read_response_body(body)
+"my string"
+
+```
+"""
 read_response_body(body::Base.CodeUnits{UInt8,String}) =
     read_response_body(convert(Vector{UInt8}, body))
 
@@ -460,19 +595,35 @@ function read_response_body(body::Vector{UInt8})::String
 end
 
 """
-    transpile_and_run_job(qpu::VirtualQPU, circuit::QuantumCircuit,shot_count::Integer; transpiler::Transpiler = get_transpiler(qpu))
+    transpile_and_run_job(
+        qpu::VirtualQPU,
+        circuit::QuantumCircuit,
+        shot_count::Integer;
+        transpiler::Transpiler = get_transpiler(qpu)
+    )
 
 This method first transpiles the input circuit using either the default transpiler,
-or any other transpiler passed as a key-word argument.
-The transpiled circuit is then run on a `QPU` simulator, repeatedly for the specified
-number of repetitions (shot_count). Returns the histogram of the
-completed circuit calculations, or an error message.
+or any other transpiler passed as a keyword argument.
+The transpiled circuit is then executed on a `QPU` simulator, where the number of circuit
+executions is specified by `shot_count`.
+
+Returns the histogram of the circuit measurement outcomes, or an error message.
 
 # Example
 ```jldoctest; filter =  r", [0-9]+" => ", 132"
-julia> qpu=VirtualQPU();
+julia> qpu = VirtualQPU();
 
-julia> transpile_and_run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]) ,100)
+julia> circuit = QuantumCircuit(
+                    qubit_count = 3,
+                    instructions = [
+                        sigma_x(3),
+                        control_z(2, 1),
+                        readout(1, 1),
+                        readout(2, 2),
+                        readout(3, 3)
+                    ]);
+
+julia> transpile_and_run_job(qpu, circuit,100)
 (Dict("001" => 100), 132)
 
 ```
@@ -492,15 +643,28 @@ end
 """
     run_job(qpu::VirtualQPU, circuit::QuantumCircuit, shot_count::Integer)
 
-Run a circuit computation on a `QPU` simulator, repeatedly for the specified
-number of repetitions (shot_count). Returns the histogram of the
-completed circuit measurements, as prescribed by the `Readouts` present.
+Execute a circuit on a `QPU` simulator. The number of circuit executions is specified by
+`shot_count`.
+
+Returns a histogram of the circuit measurement outcomes as prescribed by the
+`Readout` instructions in the `circuit`.
 
 # Example
 ```jldoctest; filter =  r", [0-9]+" => ", 147"
 julia> qpu = VirtualQPU();
 
-julia> run_job(qpu, QuantumCircuit(qubit_count = 3, instructions = [sigma_x(3), control_z(2, 1), readout(1, 1), readout(2, 2), readout(3, 3)]), 100)
+julia> circuit = QuantumCircuit(
+            qubit_count = 3,
+            instructions = [
+                sigma_x(3),
+                control_z(2, 1),
+                readout(1, 1),
+                readout(2, 2),
+                readout(3, 3)
+            ]
+        );
+
+julia> run_job(qpu, circuit, 100)
 (Dict("001" => 100), 147)
 
 ```

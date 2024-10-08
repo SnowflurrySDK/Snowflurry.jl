@@ -41,6 +41,18 @@ function get_connected_qubits(readout::Readout)::AbstractVector{Int}
     return Vector{Int}([readout.connected_qubit])
 end
 
+"""
+    get_destination_bit(readout::Readout)::Int
+
+Returns the index of the classical bit to which the outcome of the `readout` is sent.
+
+# Examples
+```jldoctest
+julia> get_destination_bit(readout(2, 3))
+3
+
+```
+"""
 get_destination_bit(readout::Readout)::Int = readout.destination_bit
 
 function Base.isequal(i0::Readout, i1::Readout)::Bool

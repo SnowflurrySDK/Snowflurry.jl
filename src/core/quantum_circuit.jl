@@ -1,14 +1,25 @@
 
 """
-    QuantumCircuit(qubit_count::Int, bit_count::Int, instructions::Vector{AbstractInstruction}, name::String = "default")
+    QuantumCircuit(
+        qubit_count::Int,
+        bit_count::Int,
+        instructions::Vector{AbstractInstruction},
+        name::String = "default"
+    )
     QuantumCircuit(circuit::QuantumCircuit)
 
-A data structure to represent a *quantum circuit*.
+A data structure which describes a *quantum circuit*.
 # Fields
-- `qubit_count::Int` -- largest qubit index (e.g., specifying `qubit_count=n` enables the use of qubits 1 to n).
-- `bit_count::Int` -- Optional: number of classical bits (i.e., result register size). Defaults to `qubit_count` if unspecified.
-- `instructions::Vector{AbstractInstruction}` -- Optional: the sequence of `AbstractInstructions` (`Gates` and `Readouts`) that operate on qubits. Defaults to empty Vector.
-- `name::String` -- Optional: name of the circuit job, used to identify it when sending to a hardware or virtual QPU. 
+- `qubit_count::Int` -- Largest qubit index (e.g., specifying `qubit_count=n` enables the
+                        use of qubits 1 to n).
+- `bit_count::Int` -- Optional: Number of classical bits (i.e., result register size).
+                      Defaults to `qubit_count` if unspecified.
+- `instructions::Vector{AbstractInstruction}` -- Optional: Sequence of
+                                                 `AbstractInstructions` (`Gates` and
+                                                 `Readouts`) that operate on the qubits.
+                                                 Defaults to an empty Vector.
+- `name::String` -- Optional: Name of the circuit and the corresponding job. It is used to
+                    identify the job when it is sent to a hardware or virtual QPU. 
 
 # Examples
 ```jldoctest
@@ -21,10 +32,19 @@ q[1]:
 q[2]:
 ```
 
-A `QuantumCircuit` can be initialized containing [`Gates`](@ref Gate) and [`Readouts`](@ref Readout):
+A `QuantumCircuit` can be initialized with [`Gate`](@ref Gate) and [`Readout`](@ref Readout)
+structs:
 
 ```jldoctest circuit
-julia> c = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), sigma_x(2), control_x(1, 2), readout(1, 1), readout(2, 2)])
+julia> c = QuantumCircuit(
+            qubit_count = 2,
+            instructions = [
+                hadamard(1),
+                sigma_x(2),
+                control_x(1, 2),
+                readout(1, 1),
+                readout(2, 2)
+            ])
 Quantum Circuit Object:
    qubit_count: 2 
    bit_count: 2 
@@ -34,7 +54,7 @@ q[2]:───────X────X─────────✲──
                               
 ```
 
-A deep copy of a `QuantumCircuit` can be obtained with the following command:
+A deep copy of a `QuantumCircuit` can be obtained with the following function:
 
 ```jldoctest circuit
 julia> c_copy = QuantumCircuit(c)
@@ -142,9 +162,86 @@ function Base.isequal(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     return true
 end
 
+"""
+    get_num_qubits(circuit::QuantumCircuit)::Int
+
+Returns the number of qubits in a `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2);
+
+julia> get_num_qubits(c)
+2
+
+```
+"""
 get_num_qubits(circuit::QuantumCircuit)::Int = circuit.qubit_count
+
+"""
+    get_num_bits(circuit::QuantumCircuit)::Int
+
+Returns the number of classical bits in a `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, bit_count=3);
+
+julia> get_num_bits(c)
+3
+
+```
+"""
 get_num_bits(circuit::QuantumCircuit)::Int = circuit.bit_count
+
+"""
+    get_name(circuit::QuantumCircuit)::String
+
+Returns the name of the `circuit` and the corresponding job.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, name = "my_circuit");
+
+julia> get_name(c)
+"my_circuit"
+
+```
+"""
 get_name(circuit::QuantumCircuit)::String = circuit.name
+
+"""
+    get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction}
+
+Returns the list of instructions in the `circuit`.
+
+# Examples
+```jldoctest
+julia> c = QuantumCircuit(qubit_count = 2, instructions = [hadamard(1), control_z(1, 2)]);
+
+julia> get_circuit_instructions(c)
+2-element Vector{AbstractInstruction}:
+ Gate Object: Snowflurry.Hadamard
+Connected_qubits	: [1]
+Operator:
+(2, 2)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+0.7071067811865475 + 0.0im    0.7071067811865475 + 0.0im
+0.7071067811865475 + 0.0im    -0.7071067811865475 + 0.0im
+
+ Gate Object: Snowflurry.ControlZ
+Connected_qubits	: [1, 2]
+Operator:
+(4, 4)-element Snowflurry.DenseOperator:
+Underlying data ComplexF64:
+1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    1.0 + 0.0im    0.0 + 0.0im
+0.0 + 0.0im    0.0 + 0.0im    0.0 + 0.0im    -1.0 + 0.0im
+
+
+```
+"""
 get_circuit_instructions(circuit::QuantumCircuit)::Vector{AbstractInstruction} =
     circuit.instructions
 
@@ -357,16 +454,15 @@ end
 """
     compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
 
-Tests for equivalence of two [`QuantumCircuit`](@ref) based on their effect on an 
-arbitrary input state (a Ket). `QuantumCircuit` are equivalent if they both 
-yield the same output for any input, up to a global phase.
-`QuantumCircuit` with different ordering of gates that apply on different 
-targets can also be equivalent. 
+Tests for the equivalence of two [`QuantumCircuit`](@ref) objects based on their effect
+on an arbitrary input state (a `Ket`). The circuits are equivalent if they both 
+yield the same output for any input, up to a global phase. Circuits with gates that are
+applied in a different order and to different targets can also be equivalent. 
 !!! note 
-    If there are `Readouts` are present on either `QuantumCircuit`, 
+    If there are `Readout` instructions present on either `QuantumCircuit`, 
     `compare_circuits` checks that both circuits have readouts targeting
-    the same qubits, and that no operations exist on those qubits following
-    readouts.
+    the same qubits and that no operations exist on those qubits after
+    readout.
 
 
 # Examples
@@ -392,7 +488,10 @@ q[1]:──P(3.1416)──
 julia> compare_circuits(c0, c1)
 true            
 
-julia> c0 = QuantumCircuit(qubit_count = 3, instructions = [sigma_x(1), sigma_y(1), control_x(2, 3)])
+julia> c0 = QuantumCircuit(
+                qubit_count = 3,
+                instructions = [sigma_x(1), sigma_y(1), control_x(2, 3)]
+            )
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -405,7 +504,10 @@ q[3]:────────────X──
 
 
 
-julia> c1 = QuantumCircuit(qubit_count = 3, instructions = [control_x(2, 3), sigma_x(1), sigma_y(1)])
+julia> c1 = QuantumCircuit(
+                qubit_count = 3,
+                instructions = [control_x(2, 3), sigma_x(1), sigma_y(1)]
+            )
 Quantum Circuit Object:
    qubit_count: 3 
    bit_count: 3 
@@ -501,9 +603,12 @@ function compile_readouts_and_apply_gates!(ψ::Ket, c::QuantumCircuit)::Set{Int}
 end
 
 """
-    circuit_contains_gate_type(circuit::QuantumCircuit, gate_type::Type{<: AbstractGateSymbol})::Bool
+    circuit_contains_gate_type(
+        circuit::QuantumCircuit,
+        gate_type::Type{<: AbstractGateSymbol}
+    )::Bool
 
-Determines whether a type of gate is present in a circuit.
+Determines if a type of gate is present in a circuit.
 
 # Examples
 ```jldoctest
@@ -604,6 +709,29 @@ function format_label(
     end
 end
 
+"""
+    get_display_symbols(gate::AbstractGateSymbol; precision::Integer = 4,)::Vector{String}
+
+Returns a `Vector{String}` of the symbols that describe the `gate`.
+
+Each element in the `Vector` is associated with a qubit on which the `gate` operates. This
+is useful for the placement of the `gate` in a circuit diagram. The optional parameter
+`precision` enables setting the number of digits to keep after the decimal for `gate`
+parameters.
+
+# Examples
+```jldoctest
+julia> get_display_symbols(get_gate_symbol(control_z(1, 2)))
+2-element Vector{String}:
+ "*"
+ "Z"
+
+julia> get_display_symbols(get_gate_symbol(phase_shift(1, π/2)), precision = 3)
+1-element Vector{String}:
+ "P(1.571)"
+
+```
+"""
 function get_display_symbols(
     gate::AbstractGateSymbol;
     precision::Integer = 4,
@@ -640,6 +768,23 @@ function get_display_symbols(gate::Controlled; precision::Integer = 4)::Vector{S
     )
 end
 
+"""
+    get_display_symbols(::Readout; precision::Integer = 4,)::Vector{String}
+
+Returns a `Vector{String}` of the symbols that describe the `Readout`.
+
+Each element in the `Vector` is associated with a qubit on which the `Readout` operates.
+This is useful for the placement of the `Readout` in a circuit diagram. The optional
+parameter `precision` has no effect for `Readout`.
+
+# Examples
+```jldoctest
+julia> get_display_symbols(readout(2, 2))
+1-element Vector{String}:
+ "✲"
+
+```
+"""
 function get_display_symbols(::Readout; precision::Integer = 4)::Vector{String}
 
     num_targets = 1
@@ -687,6 +832,18 @@ gates_display_symbols = Dict(
     Readout => ["✲"],
 )
 
+"""
+    get_instruction_symbol(instruction::AbstractInstruction)::String
+
+Returns the symbol string that is associated with an `instruction`.
+
+# Examples
+```jldoctest
+julia> get_instruction_symbol(control_z(1, 2))
+"cz"
+
+```
+"""
 get_instruction_symbol(gate::Gate) = get_instruction_symbol(get_gate_symbol(gate))
 get_instruction_symbol(readout::Readout) = instruction_symbols[Readout]
 
@@ -725,6 +882,18 @@ instruction_symbols = Dict(
 
 instruction_to_gate_symbol_types = Dict(v => k for (k, v) in instruction_symbols)
 
+"""
+    get_symbol_for_instruction(instruction::String)::DataType
+
+Returns a symbol given the corresponding `String`.
+
+# Examples
+```jldoctest
+julia> get_symbol_for_instruction("cz")
+Snowflurry.ControlZ
+
+```
+"""
 get_symbol_for_instruction(instruction::String)::DataType =
     instruction_to_gate_symbol_types[instruction]
 
@@ -1005,14 +1174,21 @@ end
 """
     simulate(circuit::QuantumCircuit)::Ket
 
-Simulates and returns the wavefunction of the quantum device after running `circuit`, 
-assuming an initial state Ket ψ corresponding to the 0th Fock basis, i.e.: 
-`ψ = fock(0, 2^get_num_qubits(circuit))`.
+Performs an ideal simulation of the `circuit` and returns the final quantum state (i.e. the
+wave function). The simulator assumes that the initial state ``\\Psi`` corresponds to the
+zeroth Fock basis, i.e.: `ψ = fock(0, 2^get_num_qubits(circuit))`. The zeroth Fock basis
+corresponds to the initial state of most superconducting quantum processors, i.e.:
+```math
+|\\Psi\\rangle = |0\\rangle^{\\otimes n},
+```
+where ``n`` is the number of qubits.
 
 !!! note
-    The input `circuit` must not include `Readouts`. For simulating `circuits` including `Readouts`, use [`simulate_shots`](@ref).
+    The input `circuit` must not include `Readout` instructions. Use
+        [`simulate_shots`](@ref) for the simulation of `circuits` with `Readout`
+        instructions.
 
-Employs the approach described in Listing 5 of
+The simulation utilizes the approach described in Listing 5 of
 [Suzuki *et. al.* (2021)](https://doi.org/10.22331/q-2021-10-06-559).
 
 # Examples
@@ -1069,8 +1245,10 @@ end
 """
     simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
 
-Emulates a quantum computer by running a circuit for a given number of shots and returning measurement results, as prescribed by the `Readouts` present in the circuit. 
-The distribution of measured states corresponds to the coefficients in the resulting state Ket. 
+Emulates a quantum computer by running a circuit for a given number of shots and returning
+measurement results, as prescribed by the `Readout` instructions present in the circuit. 
+The distribution of measured states depends on the coefficients of the resulting state
+Ket.
 
 # Examples
 ```jldoctest simulate_shots; filter = r"00|11"
@@ -1240,23 +1418,26 @@ end
 
 
 """
-    get_measurement_probabilities(circuit::QuantumCircuit,
-        [target_qubits::Vector{<:Integer}])::AbstractVector{<:Real}
+    get_measurement_probabilities(
+        circuit::QuantumCircuit,
+        [target_qubits::Vector{<:Integer}]
+    )::AbstractVector{<:Real}
 
-Returns a vector listing the measurement probabilities for the `target_qubits` in the `circuit`.
+Returns a list of the measurement probabilities for the `target_qubits` in the `circuit`.
 
 If no `target_qubits` are provided, the probabilities are computed for all the qubits.
 
 The measurement probabilities are listed from the smallest to the largest computational
 basis state. For instance, for a 2-qubit [`QuantumCircuit`](@ref), the probabilities are listed
-for \$\\left|00\\right\\rangle\$, \$\\left|10\\right\\rangle\$, \$\\left|01\\right\\rangle\$, and \$\\left|11\\right\\rangle\$.
+for \$\\left|00\\right\\rangle\$, \$\\left|01\\right\\rangle\$, \$\\left|10\\right\\rangle\$, and \$\\left|11\\right\\rangle\$.
 !!! note
-    By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
-    \$\\left|10\\right\\rangle\$ has qubit 1 in state \$\\left|1\\right\\rangle\$ and qubit 2 in state \$\\left|0\\right\\rangle\$
+    By convention, qubit 1 is the leftmost bit, followed by every subsequent qubit. 
+    The notation \$\\left|10\\right\\rangle\$ indicates that qubit 1 is in state
+    \$\\left|1\\right\\rangle\$ and qubit 2 in state \$\\left|0\\right\\rangle\$.
 
 # Examples
 The following example constructs a `QuantumCircuit` where the probability of measuring \$\\left|10\\right\\rangle\$
-is 50% and the probability of measuring \$\\left|11\\right\\rangle\$ is also 50%.
+is 50% and the probability of measuring \$\\left|11\\right\\rangle\$ is also 50%:
 
 ```jldoctest get_circuit_measurement_probabilities
 julia> circuit = QuantumCircuit(qubit_count = 2);
@@ -1281,7 +1462,7 @@ julia> get_measurement_probabilities(circuit)
 
 ```
 
-For the same `circuit`, the probability of measuring qubit 2 and finding 1 is 100%.
+For the same `circuit`, the probability of measuring qubit 2 and finding 1 is 100%:
 ```jldoctest get_circuit_measurement_probabilities
 julia> target_qubit = [2];
 
@@ -1356,11 +1537,14 @@ function Base.inv(circuit::QuantumCircuit)
 end
 
 """
-    get_num_gates_per_type(circuit::QuantumCircuit)::AbstractDict{<: AbstractString, <:Integer}
+    get_num_gates_per_type(
+        circuit::QuantumCircuit
+    )::AbstractDict{<: AbstractString, <:Integer}
 
 Returns a dictionary listing the number of gates of each type found in the `circuit`.
 
-The dictionary keys are the instruction_symbol of the gates while the values are the number of gates found.
+The dictionary keys are the instruction symbols of the gates while the values are the number
+of gates found.
 
 # Examples
 ```jldoctest
@@ -1433,14 +1617,16 @@ julia> get_num_gates(c)
 get_num_gates(circuit::QuantumCircuit)::Integer = length(get_circuit_instructions(circuit))
 
 """
-    permute_qubits!(circuit::QuantumCircuit,
-        qubit_mapping::AbstractDict{T,T}) where T<:Integer
+    permute_qubits!(
+        circuit::QuantumCircuit,
+        qubit_mapping::AbstractDict{T,T}
+    ) where T<:Integer
 
 Modifies a `circuit` by moving the gates to other qubits based on a `qubit_mapping`.
 
 The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
 qubits. The key indicates which target qubit to change while the associated value specifies
-the new qubit. All the keys in the dictionary must also be present as values and vice versa.
+the new qubit. All the keys in the dictionary must be present as values and vice versa.
 
 For instance, `Dict(1 => 2)` is not a valid `qubit_mapping`, but `Dict(1 => 2, 2 => 1)` is valid.
 
@@ -1517,15 +1703,17 @@ function unsafe_permute_qubits!(
 end
 
 """
-    permute_qubits(circuit::QuantumCircuit,
-        qubit_mapping::AbstractDict{T,T})::QuantumCircuit where {T<:Integer}
+    permute_qubits(
+        circuit::QuantumCircuit,
+        qubit_mapping::AbstractDict{T,T}
+    )::QuantumCircuit where {T<:Integer}
 
 Returns a `QuantumCircuit` that is a copy of `circuit` but where the gates have been moved
 to other qubits based on a `qubit_mapping`.
 
 The dictionary `qubit_mapping` contains key-value pairs describing how to update the target
 qubits. The key indicates which target qubit to change while the associated value specifies
-the new qubit. All the keys in the dictionary must also be present as values and vice versa.
+the new qubit. All the keys in the dictionary must be present as values and vice versa.
 
 For instance, `Dict(1=>2)` is not a valid `qubit_mapping`, but `Dict(1=>2, 2=>1)` is valid.
 

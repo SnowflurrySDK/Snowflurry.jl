@@ -1,7 +1,7 @@
 """
 A `Ket` represents a *quantum wavefunction* and is mathematically equivalent to a column vector of complex values. The norm of a Ket should always be unity.  
 A `Ket` representing a system with a qubit count of \$n=2\$ has \$2^n\$ states. 
-By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
+By convention, qubit 1 is the leftmost bit, followed by every subsequent qubit. 
 Hence, a 2-qubit `Ket` has 4 complex-valued coefficients \$a_{ij}\$, each corresponding to state \$\\left|ij\\right\\rangle\$, in the following order:
 ```math
 \\psi = \\begin{bmatrix}
@@ -474,7 +474,7 @@ end
 
     AntiDiagonalOperator{N,T<:Complex}<:AbstractOperator
 
-A structure representing a anti-diagonal quantum `Operator` (i.e., a complex matrix of element type T, with non-zero elements all lying on the cross-diagonal).
+A structure representing an anti-diagonal quantum `Operator` (i.e., a complex matrix of element type T, with non-zero elements all lying on the cross-diagonal).
 The equivalent dense matrix would have size NxN.
 
 # Examples
@@ -978,6 +978,26 @@ end
 get_embed_operator(op::AbstractOperator, target_body_index::Int, system::MultiBodySystem) =
     get_embed_operator(DenseOperator(op), target_body_index, system)
 
+"""
+    get_matrix(op::AbstractOperator)
+
+Returns the `Matrix` associated with operator `op`.
+
+# Examples
+```jldoctest
+julia> z = sparse(sigma_z())
+(2, 2)-element Snowflurry.SparseOperator:
+Underlying data ComplexF64:
+ 1.0 + 0.0im        ⋅     
+      ⋅       -1.0 + 0.0im
+
+julia> z_matrix = get_matrix(z)
+2×2 Matrix{ComplexF64}:
+ 1.0+0.0im   0.0+0.0im
+ 0.0+0.0im  -1.0+0.0im
+
+```
+"""
 get_matrix(op::AbstractOperator) = throw(NotImplementedError(:get_matrix, op))
 
 function Base.show(io::IO, x::DenseOperator)
@@ -1381,8 +1401,9 @@ end
 """
     coherent(alpha, hspace_size)
 
-Returns a coherent state for the parameter `alpha` in a Fock space of size `hspace_size`.
-Note that |alpha|^2 is equal to the photon number of the coherent state. 
+Returns a coherent state for the parameter `alpha` (\$\\alpha\$) in a Fock space of size
+`hspace_size`. Note that \$|\\alpha|^2\$ is equal to the photon number of the coherent
+state. 
 
     # Examples
 ```jldoctest
@@ -1466,7 +1487,7 @@ The measurement probabilities are listed from the smallest to the largest comput
 basis state. For instance, for a 2-qubit `Ket`, the probabilities are listed for \$\\left|00\\right\\rangle\$, 
 \$\\left|10\\right\\rangle\$, \$\\left|01\\right\\rangle\$, and \$\\left|11\\right\\rangle\$. 
 !!! note
-    By convention, qubit 1 is the leftmost digit, followed by every subsequent qubit. 
+    By convention, qubit 1 is the leftmost bit, followed by every subsequent qubit. 
     \$\\left|10\\right\\rangle\$ has qubit 1 in state \$\\left|1\\right\\rangle\$ and qubit 2 in state \$\\left|0\\right\\rangle\$
 
 # Examples

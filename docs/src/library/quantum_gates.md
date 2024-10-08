@@ -38,4 +38,11 @@ apply_instruction!
 get_operator
 inv(gate::AbstractGateSymbol)
 move_instruction
+get_gate_symbol
+get_connected_qubits
+get_num_connected_qubits
+get_control_qubits
+get_target_qubits
+get_destination_bit
+get_gate_parameters
 ```
