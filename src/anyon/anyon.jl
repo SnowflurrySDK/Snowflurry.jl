@@ -381,6 +381,8 @@ function get_metadata(client::Client, qpu::UnionAnyonQPU)::Metadata
     if haskey(machineMetadata, "disconnectedQubits")
         output["excluded_positions"] =
             convert(Vector{Int}, machineMetadata["disconnectedQubits"])
+        # Convert from 0 based to 1 based indices
+        output["excluded_positions"] .+= 1
     else
         output["excluded_positions"] = Vector{Int}()
     end
@@ -413,7 +415,8 @@ function convert_excluded_connections(
         if length(connection) != 2
             throw(ErrorException("the coupler $connection does not involve 2 qubits"))
         end
-        converted_connections[i_connection] = (connection[1], connection[2])
+        # Convert from 0 based to 1 based indices
+        converted_connections[i_connection] = (connection[1] + 1, connection[2] + 1)
     end
 
     return converted_connections
