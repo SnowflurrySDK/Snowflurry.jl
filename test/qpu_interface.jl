@@ -528,6 +528,10 @@ end
         Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
         Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
     )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [3, 2, 1]),
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+    )
 
     @test !isequal(
         LineConnectivity(4),
@@ -540,6 +544,14 @@ end
     @test isequal(
         Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
         Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(2, 1), (2, 3)]),
+    )
+    @test isequal(
+        LineConnectivity(4,Int64[], [(1, 2), (2, 3)]),
+        LineConnectivity(4,Int64[], [(3, 2), (2, 1)]),
     )
 
     @test !isequal(LatticeConnectivity(4, 3), LineConnectivity(4))
@@ -558,6 +570,10 @@ end
     )
     @test isequal(
         Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [3, 2, 1]),
         Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
     )
 
@@ -1624,7 +1640,7 @@ end
             host = expected_host,
             user = expected_user,
             access_token = expected_access_token,
-            requestor = requestor = MockRequestor(
+            requestor = MockRequestor(
                 make_request_checker(
                     "",
                     Dict("machineName" => qpu_name),

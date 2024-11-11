@@ -412,10 +412,10 @@ end
 
 function convert_excluded_connections(
     excluded_connections::Vector{Vector{Int}},
-)::Vector{Tuple{Int,Int}}
+)::ExcludedConnections
 
     num_connections = length(excluded_connections)
-    converted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    converted_connections = ExcludedConnections(undef, num_connections)
 
     for (i_connection, connection) in enumerate(excluded_connections)
         if length(connection) != 2

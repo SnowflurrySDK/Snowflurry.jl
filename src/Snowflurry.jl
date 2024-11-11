@@ -48,6 +48,7 @@ export
     AnyonYamaskaQPU,
     VirtualQPU,
     Metadata,
+    ExcludedConnections,
     Client,
     Status,
     NotImplementedError,
