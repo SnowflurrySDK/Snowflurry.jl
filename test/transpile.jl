@@ -1920,7 +1920,7 @@ end
 
     circuit = QuantumCircuit(
         qubit_count = 2,
-        instructions = [control_z(1, 2)],
+        instructions = [control_z(1, 2), readout(1, 1)],
         name = "test-name",
     )
     transpiler = RejectGatesOnExcludedPositionsTranspiler(connectivity)
@@ -1936,14 +1936,28 @@ end
 
     invalid_circuit = QuantumCircuit(
         qubit_count = 4,
-        instructions = [sigma_x(4), control_z(1, 2)],
+        instructions = [sigma_x(4), control_z(1, 2), readout(1, 1)],
         name = "test-name",
     )
-    @test_throws DomainError transpile(transpiler, invalid_circuit)
+    @test_throws DomainError(
+        connectivity,
+        "the Gate{Snowflurry.ControlZ} on qubits [1, 2] cannot be applied " *
+        "since qubit 2 is unavailable",
+    ) transpile(transpiler, invalid_circuit)
+
+    circuit_with_invalid_readout = QuantumCircuit(
+        qubit_count = 4,
+        instructions = [sigma_x(4), control_z(1, 3), readout(2, 1)],
+        name = "test-name",
+    )
+    @test_throws DomainError(
+        connectivity,
+        "the Readout on qubits [2] cannot be applied " * "since qubit 2 is unavailable",
+    ) transpile(transpiler, circuit_with_invalid_readout)
 
     valid_circuit = QuantumCircuit(
         qubit_count = 4,
-        instructions = [sigma_x(1), control_z(3, 4)],
+        instructions = [sigma_x(1), control_z(3, 4), readout(1, 1)],
         name = "test-name",
     )
 
@@ -1958,14 +1972,21 @@ end
 
     invalid_circuit = QuantumCircuit(
         qubit_count = 7,
-        instructions = [sigma_x(1), control_z(4, 7)],
+        instructions = [sigma_x(1), control_z(4, 7), readout(4, 1)],
         name = "test-name",
     )
     @test_throws DomainError transpile(transpiler, invalid_circuit)
 
+    circuit_with_invalid_readout = QuantumCircuit(
+        qubit_count = 5,
+        instructions = [sigma_x(5), control_z(1, 4), readout(2, 1)],
+        name = "test-name",
+    )
+    @test_throws DomainError transpile(transpiler, circuit_with_invalid_readout)
+
     valid_circuit = QuantumCircuit(
         qubit_count = 5,
-        instructions = [sigma_x(5), control_z(1, 4)],
+        instructions = [sigma_x(5), control_z(1, 4), readout(4, 1)],
         name = "test-name",
     )
 
@@ -2000,7 +2021,7 @@ end
     @test_throws(
         DomainError(
             transpiler.connectivity,
-            "the Snowflurry.ControlZ gate on qubits [3, 4] cannot be applied since " *
+            "the Gate{Snowflurry.ControlZ} on qubits [3, 4] cannot be applied since " *
             "connection (3, 4) is unavailable",
         ),
         transpile(transpiler, invalid_circuit)
@@ -2045,13 +2066,13 @@ end
 
     invalid_circuit = QuantumCircuit(
         qubit_count = 12,
-        instructions = [sigma_x(6), control_z(1, 5)],
+        instructions = [sigma_x(6), control_z(1, 5), readout(1, 1)],
         name = "test-name",
     )
     @test_throws(
         DomainError(
             transpiler.connectivity,
-            "the Snowflurry.ControlZ gate on qubits [1, 5] cannot be applied since " *
+            "the Gate{Snowflurry.ControlZ} on qubits [1, 5] cannot be applied since " *
             "connection (1, 5) is unavailable",
         ),
         transpile(transpiler, invalid_circuit)
@@ -2059,14 +2080,14 @@ end
 
     valid_circuit = QuantumCircuit(
         qubit_count = 12,
-        instructions = [sigma_x(1), control_z(9, 6)],
+        instructions = [sigma_x(1), control_z(9, 6), readout(1, 1)],
         name = "test-name",
     )
     @test isequal(transpile(transpiler, valid_circuit), valid_circuit)
 
     invalid_circuit = QuantumCircuit(
         qubit_count = 12,
-        instructions = [sigma_x(2), controlled(sigma_x(1), [5, 9, 6])],
+        instructions = [sigma_x(2), controlled(sigma_x(1), [5, 9, 6]), readout(1, 1)],
         name = "test-name",
     )
     @test_throws(

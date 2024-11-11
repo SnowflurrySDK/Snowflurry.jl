@@ -2870,9 +2870,9 @@ function are_gates_at_excluded_positions(
         qubits = get_connected_qubits(instruction)
         for qubit in qubits
             if qubit in excluded_positions
-                gate_name = typeof(get_gate_symbol(instruction))
+                instruction_name = "$(typeof(instruction))"
                 message =
-                    "the $gate_name gate on qubits $qubits cannot be applied " *
+                    "the $instruction_name on qubits $qubits cannot be applied " *
                     "since qubit $qubit is unavailable"
                 return (true, message)
             end
@@ -3005,9 +3005,9 @@ function are_gates_at_excluded_connections(
         if length(qubits) == 2
             candidate_connection = Tuple{Int,Int}(sort(qubits))
             if candidate_connection ∈ excluded_connections
-                gate_name = typeof(get_gate_symbol(instruction))
+                instruction_name = "$(typeof(instruction))"
                 message =
-                    "the $gate_name gate on qubits $qubits cannot be applied " *
+                    "the $instruction_name on qubits $qubits cannot be applied " *
                     "since connection $candidate_connection is unavailable"
                 return (true, message)
             end
