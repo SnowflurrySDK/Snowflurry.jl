@@ -2794,7 +2794,7 @@ ERROR: DomainError with LineConnectivity{4}
 1──2──3──4
 excluded positions: [2]
 :
-the Snowflurry.ControlZ gate on qubits [1, 2] cannot be applied since qubit 2 is unavailable
+the Gate{Snowflurry.ControlZ} on qubits [1, 2] cannot be applied since qubit 2 is unavailable
 [...]
 
 julia> valid_circuit = QuantumCircuit(
@@ -2931,7 +2931,7 @@ ERROR: DomainError with LineConnectivity{4}
 1──2──3──4
 excluded connections: [(2, 3)]
 :
-the Snowflurry.ControlZ gate on qubits [3, 2] cannot be applied since connection (2, 3) is unavailable
+the Gate{Snowflurry.ControlZ} on qubits [3, 2] cannot be applied since connection (2, 3) is unavailable
 [...]
 
 julia> valid_circuit = QuantumCircuit(
