@@ -63,6 +63,18 @@ struct LineConnectivity <: AbstractConnectivity
     end
 end
 
+function Base.isequal(c0::LineConnectivity, c1::LineConnectivity)::Bool
+    if c0.dimension != c1.dimension
+        return false
+    end
+
+    if c0.excluded_connections != c1.excluded_connections
+        return false
+    end
+
+    return c0.excluded_positions == c1.excluded_positions
+end
+
 function get_sorted_excluded_connections_for_line(
     dimension::Int,
     excluded_connections::Vector{Tuple{Int,Int}},
@@ -251,6 +263,18 @@ struct LatticeConnectivity <: AbstractConnectivity
             sorted_connections,
         )
     end
+end
+
+function Base.isequal(c0::LatticeConnectivity, c1::LatticeConnectivity)::Bool
+    if c0.dimensions != c1.dimensions
+        return false
+    end
+
+    if c0.excluded_connections != c1.excluded_connections
+        return false
+    end
+
+    return c0.excluded_positions == c1.excluded_positions
 end
 
 function get_sorted_excluded_connections_for_lattice(
