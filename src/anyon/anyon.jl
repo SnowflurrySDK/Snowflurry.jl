@@ -219,11 +219,17 @@ get_num_qubits(qpu::UnionAnyonQPU) = get_num_qubits(qpu.connectivity)
 function get_connectivity(qpu::UnionAnyonQPU)
     md = get_metadata(qpu)
 
+    connectivity = qpu.connectivity
+
     if length(md["excluded_positions"]) > 0
-        return with_excluded_positions(qpu.connectivity, md["excluded_positions"])
+        connectivity = with_excluded_positions(connectivity, md["excluded_positions"])
     end
 
-    return qpu.connectivity
+    if length(md["excluded_connections"]) > 0
+        connectivity = with_excluded_connections(connectivity, md["excluded_connections"])
+    end
+
+    return connectivity
 end
 
 """
@@ -406,10 +412,10 @@ end
 
 function convert_excluded_connections(
     excluded_connections::Vector{Vector{Int}},
-)::Vector{Tuple{Int,Int}}
+)::ExcludedConnections
 
     num_connections = length(excluded_connections)
-    converted_connections = Vector{Tuple{Int,Int}}(undef, num_connections)
+    converted_connections = ExcludedConnections(undef, num_connections)
 
     for (i_connection, connection) in enumerate(excluded_connections)
         if length(connection) != 2

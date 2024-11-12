@@ -511,6 +511,93 @@ end
 
 end
 
+@testset "AbstractConnectivity: isequal" begin
+
+    @test isequal(LineConnectivity(4), LineConnectivity(4))
+    @test !isequal(LineConnectivity(4), LineConnectivity(5))
+
+    @test !isequal(
+        LineConnectivity(4),
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+    )
+    @test !isequal(
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [4]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [3, 2, 1]),
+        Snowflurry.with_excluded_positions(LineConnectivity(4), [1, 2, 3]),
+    )
+
+    @test !isequal(
+        LineConnectivity(4),
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2)]),
+    )
+    @test !isequal(
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2)]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(1, 2), (2, 3)]),
+        Snowflurry.with_excluded_connections(LineConnectivity(4), [(2, 1), (2, 3)]),
+    )
+    @test isequal(
+        LineConnectivity(4, Int64[], [(1, 2), (2, 3)]),
+        LineConnectivity(4, Int64[], [(3, 2), (2, 1)]),
+    )
+
+    @test !isequal(LatticeConnectivity(4, 3), LineConnectivity(4))
+
+    @test isequal(LatticeConnectivity(4, 3), LatticeConnectivity(4, 3))
+    @test !isequal(LatticeConnectivity(4, 3), LatticeConnectivity(4, 4))
+    @test !isequal(LatticeConnectivity(4, 3), LatticeConnectivity(3, 3))
+
+    @test !isequal(
+        LatticeConnectivity(4, 3),
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+    )
+    @test !isequal(
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [4]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [3, 2, 1]),
+        Snowflurry.with_excluded_positions(LatticeConnectivity(4, 3), [1, 2, 3]),
+    )
+
+    @test !isequal(
+        LatticeConnectivity(4, 3),
+        Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4)]),
+    )
+    @test !isequal(
+        Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4), (2, 4)]),
+        Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4)]),
+    )
+    @test isequal(
+        Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4), (2, 4)]),
+        Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4), (2, 4)]),
+    )
+
+    @test isequal(
+        LatticeConnectivity(4, 3, Int64[], [(1, 4), (2, 4)]),
+        LatticeConnectivity(4, 3, Int64[], [(4, 2), (4, 1)]),
+    )
+
+end
+
+
 
 @testset "AbstractConnectivity: excluded positions and connections" begin
 
@@ -1507,6 +1594,70 @@ end
             shot_count;
             transpiler = Snowflurry.get_anyon_transpiler(connectivity = connectivity),
         ) # no error thrown
+    end
+end
+
+@testset "get_connectivity on AnyonYukonQPU and AnyonYamaskaQPU given excluded positions" begin
+
+    expected_yukon_connectivity = Snowflurry.with_excluded_connections(
+        Snowflurry.with_excluded_positions(Snowflurry.AnyonYukonConnectivity, [3, 4, 5, 6]),
+        [(4, 5), (5, 6)],
+    )
+
+    expected_yamaska_connectivity = Snowflurry.with_excluded_connections(
+        Snowflurry.with_excluded_positions(
+            Snowflurry.AnyonYamaskaConnectivity,
+            [7, 8, 9, 10, 11, 12],
+        ),
+        [(7, 12), (12, 8)],
+    )
+
+    test_specs = [
+        (
+            "yukon",
+            AnyonYukonQPU,
+            yukonMetadataWithExcludedComponents,
+            expected_yukon_connectivity,
+        ),
+        (
+            "yamaska",
+            AnyonYamaskaQPU,
+            yamaskaMetadataWithExcludedComponents,
+            expected_yamaska_connectivity,
+        ),
+    ]
+
+    expected_project_id = ""
+
+    function not_implemented_request_checker(
+        url::String,
+        user::String,
+        input_access_token::String,
+        body::String,
+        realm::String,
+    )
+        throw(ErrorException("request checker should not be called during test"))
+    end
+
+    for (qpu_name, QPU, metadata, expected_connectivity) in test_specs
+
+        test_client = Client(
+            host = expected_host,
+            user = expected_user,
+            access_token = expected_access_token,
+            requestor = MockRequestor(
+                make_request_checker(
+                    "",
+                    Dict("machineName" => qpu_name),
+                    return_metadata = metadata,
+                ),
+                not_implemented_request_checker,
+            ),
+        )
+
+        qpu = QPU(test_client, expected_project_id, status_request_throttle = no_throttle)
+
+        @test isequal(expected_connectivity, get_connectivity(qpu))
     end
 end
 
