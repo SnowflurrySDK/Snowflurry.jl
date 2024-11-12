@@ -550,8 +550,8 @@ end
         Snowflurry.with_excluded_connections(LineConnectivity(4), [(2, 1), (2, 3)]),
     )
     @test isequal(
-        LineConnectivity(4,Int64[], [(1, 2), (2, 3)]),
-        LineConnectivity(4,Int64[], [(3, 2), (2, 1)]),
+        LineConnectivity(4, Int64[], [(1, 2), (2, 3)]),
+        LineConnectivity(4, Int64[], [(3, 2), (2, 1)]),
     )
 
     @test !isequal(LatticeConnectivity(4, 3), LineConnectivity(4))
@@ -588,6 +588,11 @@ end
     @test isequal(
         Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4), (2, 4)]),
         Snowflurry.with_excluded_connections(LatticeConnectivity(4, 3), [(1, 4), (2, 4)]),
+    )
+
+    @test isequal(
+        LatticeConnectivity(4, 3, Int64[], [(1, 4), (2, 4)]),
+        LatticeConnectivity(4, 3, Int64[], [(4, 2), (4, 1)]),
     )
 
 end

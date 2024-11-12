@@ -285,7 +285,7 @@ function Base.isequal(ep0::ExcludedConnections, ep1::ExcludedConnections)::Bool
     end
 
     for ec in ep0
-        @assert ec[1]<ec[2] "tuple $ec in ExcludedConnections is not sorted"
+        @assert ec[1] < ec[2] "tuple $ec in ExcludedConnections is not sorted"
         if !(ec ∈ ep1)
             return false
         end
