@@ -85,7 +85,7 @@ jobs:
     # GitHub does not support having environment variables isolated to jobs. To
     # get that effect we use the thunderhead environment to isolate credentials
     # to submit CI/CD jobs and not to deploy to the thunderhead environment.
-    runs-on: thunderhead
+    runs-on: ubuntu-latest
     environment: thunderhead-dev
     # don't run on draft PRs
     if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
