@@ -1,31 +1,22 @@
 using Snowflurry
 
-circuit = QuantumCircuit(qubit_count = 2, name = "bell_state")
+circuit = QuantumCircuit(qubit_count = 3, name = "3 qubit GHZ")
 
 push!(circuit, hadamard(1))
 push!(circuit, control_x(1, 2))
+push!(circuit, control_x(2, 3))
 push!(circuit, readout(1, 1))
 push!(circuit, readout(2, 2))
-
-user = ENV["THUNDERHEAD_USER"]
-token = ENV["THUNDERHEAD_API_TOKEN"]
-host = ENV["THUNDERHEAD_HOST"]
-project_id = ENV["THUNDERHEAD_PROJECT_ID"]
-realm = ENV["THUNDERHEAD_REALM"]
-
+push!(circuit, readout(3, 3))
 
 qpu = AnyonYukonQPU(
-    host = host,
-    user = user,
-    access_token = token,
-    project_id = project_id,
-    realm = realm,
+    host = "https://manager.anyonlabs.com",
+    user = "richard_feynman",
+    access_token = "*********",
+    realm = "anyon",
 )
 
-transpiler = get_transpiler(qpu)
-transpiled_circuit = transpile(transpiler, circuit)
-
-shot_count = 200
-result, qpu_time = run_job(qpu, transpiled_circuit, shot_count)
+shot_count = 1000
+result, qpu_time = transpile_and_run_job(qpu, transpiled_circuit, shot_count)
 
 println(result)
