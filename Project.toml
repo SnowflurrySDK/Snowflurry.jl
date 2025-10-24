@@ -1,6 +1,6 @@
 name = "Snowflurry"
 uuid = "7bd9edc1-4fdc-40a1-a0f6-da58fb4f45ec"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Alireza Yazdi <alireza@anyonsys.com>", "Paul Le Roux <pleroux@anyonsys.com>", "Facundo Sosa-Rey <facundo@anyonsys.com>", "Thomas McKee <tmckee@anyonsys.com>", "Nicolas Poirier <nicolas@anyonsys.com>"]
 
 [deps]
