@@ -558,11 +558,11 @@ function compare_circuits(c0::QuantumCircuit, c1::QuantumCircuit)::Bool
     )
 
     #non-normalized ket with different scalar at each position
-    ψ_0 = Ket([v for v = 1:2^num_qubits])
+    ψ_0 = Ket([v for v = 1:(2^num_qubits)])
 
     readouts_present_on_qubits_c0 = compile_readouts_and_apply_gates!(ψ_0, c0)
 
-    ψ_1 = Ket([v for v = 1:2^num_qubits])
+    ψ_1 = Ket([v for v = 1:(2^num_qubits)])
 
     readouts_present_on_qubits_c1 = compile_readouts_and_apply_gates!(ψ_1, c1)
 
@@ -682,7 +682,7 @@ function format_label(
     num_params = length(gate_params)
 
     symbol_gate = symbol_specs[num_targets] #label with %s fields is at index=num_targets
-    fields = symbol_specs[num_targets+1:end]
+    fields = symbol_specs[(num_targets+1):end]
     repetitions = length(fields)
 
     # create format specifier of correct precision: 
@@ -705,7 +705,7 @@ function format_label(
     if num_targets == 1
         return [label_with_params]
     else
-        return vcat(symbol_specs[1:end-num_params-1], label_with_params)
+        return vcat(symbol_specs[1:(end-num_params-1)], label_with_params)
     end
 end
 
@@ -1065,7 +1065,7 @@ function add_coupling_lines_to_circuit_layout!(
     num_right_chars = 2 + ceil(Int, length_difference / 2)
     min_wire = 2 * (minimum(get_connected_qubits(instr)) - 1) + 1
     max_wire = 2 * (maximum(get_connected_qubits(instr)) - 1) + 1
-    for i_wire = min_wire+1:max_wire-1
+    for i_wire = (min_wire+1):(max_wire-1)
         if iseven(i_wire)
             circuit_layout[i_wire, i_step+1] =
                 ' '^num_left_chars * "|" * ' '^num_right_chars
@@ -1156,7 +1156,7 @@ function get_split_circuit_layout(
         if char_count > useable_width
             push!(
                 split_layout,
-                hcat(circuit_layout[:, 1], circuit_layout[:, first_gate_step:i_step-1]),
+                hcat(circuit_layout[:, 1], circuit_layout[:, first_gate_step:(i_step-1)]),
             )
             char_count = num_qubit_label_chars + num_chars_in_step
             first_gate_step = i_step
@@ -1355,7 +1355,7 @@ function simulate_shots(c::QuantumCircuit, shots_count::Int = 100)
     for i in range(0, length = length(amplitudes))
         s = bitstring(i)
         n = length(s)
-        s_trimed = s[n-qubit_count+1:n]
+        s_trimed = s[(n-qubit_count+1):n]
         push!(labels, s_trimed)
     end
 

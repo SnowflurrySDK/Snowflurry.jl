@@ -186,7 +186,7 @@ end
 
     job_str = make_job_str(expected_machine_name)
     @test circuit_json ==
-          job_str[1:length(job_str)-1] *
+          job_str[1:(length(job_str)-1)] *
           ",\"circuit\":{\"operations\":" *
           expected_operations_substr
 
@@ -943,7 +943,7 @@ end
 
         for (irow, qubit_count) in enumerate(qubits_per_printout_line)
             offset = offsets[irow]
-            qubit_placement[irow, 1+offset:qubit_count+offset] = qubit_numbering[irow]
+            qubit_placement[irow, (1+offset):(qubit_count+offset)] = qubit_numbering[irow]
         end
 
         qubit_coordinates = Dict{Int,CartesianIndex{2}}()

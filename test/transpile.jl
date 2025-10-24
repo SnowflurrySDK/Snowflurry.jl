@@ -861,7 +861,7 @@ end
         qubit_count = qubit_count,
         instructions = vcat(
             hadamard(1),
-            [control_x(i, i + 1) for i ∈ 1:qubit_count-1],
+            [control_x(i, i + 1) for i ∈ 1:(qubit_count-1)],
             [default_readout],
         ),
         name = "test-name",

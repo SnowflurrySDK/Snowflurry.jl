@@ -37,7 +37,7 @@ end
 
     N_targets = 2
 
-    diag_op = DiagonalOperator(ComplexF64[exp(im * n * pi / 4.0) for n = 1:2^N_targets])
+    diag_op = DiagonalOperator(ComplexF64[exp(im * n * pi / 4.0) for n = 1:(2^N_targets)])
 
     ψ = Ket([1.0, 10.0, 100.0, 1000.0])
 
@@ -63,11 +63,11 @@ end
 
     N_targets = 3
 
-    diag_op = DiagonalOperator(ComplexF64[exp(im * n * pi / 4.0) for n = 1:2^N_targets])
+    diag_op = DiagonalOperator(ComplexF64[exp(im * n * pi / 4.0) for n = 1:(2^N_targets)])
 
     qubit_count = 3
 
-    ψ = Ket([10^v for v = 1:2^qubit_count])
+    ψ = Ket([10^v for v = 1:(2^qubit_count)])
 
     target_qubit_1 = 1
     target_qubit_2 = 2

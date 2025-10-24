@@ -470,7 +470,7 @@ function get_operator(gate::Controlled, T::Type{<:Complex} = ComplexF64)
 
     op = get_matrix(eye(2^num_connected_qubits))
 
-    op[end-(2^num_kernel_qubits)+1:end, end-(2^num_kernel_qubits)+1:end] =
+    op[(end-(2^num_kernel_qubits)+1):end, (end-(2^num_kernel_qubits)+1):end] =
         get_matrix(get_operator(gate.kernel))
 
     return DenseOperator(convert(Matrix{T}, op))
@@ -1086,7 +1086,7 @@ function apply_operator!(
         # compute matrix-vector multiply
         for y = 0:(matrix_dim-1)
             @inbounds buffer_list[y+1] = 0
-            for x = 0:matrix_dim-1
+            for x = 0:(matrix_dim-1)
                 @inbounds buffer_list[y+1] +=
                     matrix[Int(x * matrix_dim + y + 1)] *
                     state.data[Int(basis_0 ⊻ matrix_mask_list[x+1] + 1)]

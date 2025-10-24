@@ -336,7 +336,8 @@ end
     @test get_instruction_symbol(get_gate_symbol(zm90)) == "z_minus_90"
     @test get_symbol_for_instruction("z_minus_90") == Snowflurry.ZM90
     @test get_display_symbols(get_gate_symbol(zm90)) == ["Z_m90"]
-    @test get_matrix(get_operator(get_gate_symbol(zm90))) ≈ (1 / sqrt(2.0)) * [
+    @test get_matrix(get_operator(get_gate_symbol(zm90))) ≈
+          (1 / sqrt(2.0)) * [
         1+im 0
         0 1-im
     ]
@@ -587,7 +588,7 @@ end
     controlled_hadamard_kernel_2_3 = controlled(hadamard(3), [2])
     controlled_hadamard_dense_2_3 = Gate(ControlledHadamard(), [2, 3])
 
-    ψ_input = Ket([ComplexF64(v) for v = 1:2^4])
+    ψ_input = Ket([ComplexF64(v) for v = 1:(2^4)])
 
     @test controlled_hadamard_kernel_2_3 * ψ_input ≈ controlled_hadamard_dense_2_3 * ψ_input
 
@@ -664,7 +665,7 @@ end
                 DenseGate(get_operator(get_gate_symbol(c_gate))),
                 get_connected_qubits(c_gate),
             )
-            ψ_input = Ket([ComplexF64(v) for v = 1:2^qubit_count])
+            ψ_input = Ket([ComplexF64(v) for v = 1:(2^qubit_count)])
 
             @test c_gate * ψ_input ≈ equivalent_dense_gate * ψ_input
         end
@@ -705,7 +706,7 @@ end
                 DenseGate(get_operator(get_gate_symbol(c_gate))),
                 get_connected_qubits(c_gate),
             )
-            ψ_input = Ket([ComplexF64(v) for v = 1:2^qubit_count])
+            ψ_input = Ket([ComplexF64(v) for v = 1:(2^qubit_count)])
 
             @test c_gate * ψ_input ≈ equivalent_dense_gate * ψ_input
         end
@@ -776,7 +777,7 @@ end
                 DenseGate(get_operator(get_gate_symbol(c_gate))),
                 get_connected_qubits(c_gate),
             )
-            ψ_input = Ket([ComplexF64(v) for v = 1:2^qubit_count])
+            ψ_input = Ket([ComplexF64(v) for v = 1:(2^qubit_count)])
 
             @test c_gate * ψ_input ≈ equivalent_dense_gate * ψ_input
         end

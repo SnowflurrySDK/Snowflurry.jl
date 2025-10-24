@@ -1550,7 +1550,7 @@ function remap_qubits_to_adjacent(
     for pos in connected_qubits[sorting_order[2:end]]
         path = path_search(min_qubit, pos, connectivity, excluded)
         @assert length(path) > 0 "cannot find path on connectivity given excluded positions"
-        push!(paths, path[1:end-1])
+        push!(paths, path[1:(end-1)])
 
         # avoid collisions between assigned destinations and future path searches
         if min_qubit != path[end-1]
@@ -1560,7 +1560,7 @@ function remap_qubits_to_adjacent(
     end
 
     adjacent_mapping = [path[end] for path in paths]
-    paths = [path[1:end-1] for path in paths]
+    paths = [path[1:(end-1)] for path in paths]
 
     # reorder in same unsorted order as input
     adjacent_mapping = adjacent_mapping[mapped_indices]

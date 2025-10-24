@@ -537,7 +537,7 @@ function print_connectivity(
 )
     dim = connectivity.dimension
 
-    diagram = [string(n) * "──" for n = 1:dim-1]
+    diagram = [string(n) * "──" for n = 1:(dim-1)]
     push!(diagram, string(dim))
 
     output_str = *(diagram...)
@@ -673,7 +673,7 @@ len_connect_sym = length(connect_symbol)
 function create_str_template(ncols::Int, left_padding::Vector{String})
     # create string template for ncols: 
     # e.g.: ""%s──%s──%s"" for 3 columns
-    line_segments = ["%s" * connect_symbol for _ = 1:ncols-1]
+    line_segments = ["%s" * connect_symbol for _ = 1:(ncols-1)]
     push!(line_segments, "%s")
     return *(left_padding..., line_segments...)
 end
@@ -727,8 +727,8 @@ function format_vertical_connections(
     str_template = create_str_template(ncols, left_padding_global)
 
     # vertical lines
-    right_padding = string([" " for _ = 1:div(symbol_width + 1, 2)]...)
-    left_padding = string([" " for _ = 1:div(symbol_width + 2, 2)]...)
+    right_padding = string([" " for _ = 1:div(symbol_width+1, 2)]...)
+    left_padding = string([" " for _ = 1:div(symbol_width+2, 2)]...)
 
     padded_vertical_symbol = left_padding * "|" * right_padding
 
@@ -757,12 +757,12 @@ function get_lattice_offsets(
             num_vertical_lines[irow] = count
 
         elseif next_count == count
-            offsets[irow+1:end] = [v + 1 for v in offsets[irow+1:end]]
+            offsets[(irow+1):end] = [v + 1 for v in offsets[(irow+1):end]]
             offsets_vertical_lines[irow] += 1
             num_vertical_lines[irow] = next_count - 1
 
         elseif next_count < count
-            offsets[irow+1:end] = [v + 1 for v in offsets[irow+1:end]]
+            offsets[(irow+1):end] = [v + 1 for v in offsets[(irow+1):end]]
             offsets_vertical_lines[irow] += 1
             num_vertical_lines[irow] = next_count
         end
@@ -795,7 +795,7 @@ function get_adjacency_list(connectivity::LatticeConnectivity)::Dict{Int,Vector{
 
     for (irow, qubit_count) in enumerate(qubits_per_printout_line)
         offset = offsets[irow]
-        qubit_placement[irow, 1+offset:qubit_count+offset] = qubit_numbering[irow]
+        qubit_placement[irow, (1+offset):(qubit_count+offset)] = qubit_numbering[irow]
     end
 
     for (target, ind) in zip(qubit_placement, CartesianIndices(qubit_placement))
