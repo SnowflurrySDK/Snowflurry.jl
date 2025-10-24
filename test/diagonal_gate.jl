@@ -9,7 +9,7 @@ using StaticArrays
     target = 1
 
     ϕ = π
-    ψ = Ket([v for v = 1:2^qubit_count])
+    ψ = Ket([v for v = 1:(2^qubit_count)])
 
     phase_gate = phase_shift(target, ϕ)
 
@@ -40,7 +40,7 @@ using StaticArrays
 
     apply_instruction!(ψ, phase_gate)
 
-    ψ_z = Ket([v for v = 1:2^qubit_count])
+    ψ_z = Ket([v for v = 1:(2^qubit_count)])
 
     ZGate = sigma_z(target)
     apply_instruction!(ψ_z, ZGate)
@@ -64,7 +64,7 @@ end
 
     ϕ = π
 
-    ψ = Ket([v for v = 1:2^qubit_count])
+    ψ = Ket([v for v = 1:(2^qubit_count)])
 
     phase_gate = phase_shift(target, ϕ)
 
@@ -86,7 +86,7 @@ end
     qubit_count = 3
     target = 1
 
-    input_array = [v for v = 1:2^qubit_count]
+    input_array = [v for v = 1:(2^qubit_count)]
 
     ψ_z = Ket(input_array)
 
@@ -101,7 +101,7 @@ end
 
     qubit_count = 1
 
-    ψ_z = Ket([v for v = 1:2^qubit_count])
+    ψ_z = Ket([v for v = 1:(2^qubit_count)])
 
     @test expected_value(get_operator(get_gate_symbol(z_gate)), ψ_z) == ComplexF64(-3.0)
 
@@ -117,7 +117,7 @@ end
     qubit_count = 3
     target = 1
 
-    ψ = Ket([v for v = 1:2^qubit_count])
+    ψ = Ket([v for v = 1:(2^qubit_count)])
 
     T_gate = pi_8(target)
     apply_instruction!(ψ, T_gate)

@@ -12,21 +12,24 @@ no_throttle = () -> Snowflurry.default_status_request_throttle(0)
 
 expected_qpu_time = 542
 
-make_sumbit_job_str(machine_name) =
-    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"qpuTimeMilliSeconds\":$expected_qpu_time}"
+make_sumbit_job_str(
+    machine_name,
+) = "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\",\"qpuTimeMilliSeconds\":$expected_qpu_time}"
 
-make_job_str(machine_name) =
-    "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\"}"
+make_job_str(
+    machine_name,
+) = "{\"shotCount\":100,\"name\":\"default\",\"machineName\":\"$machine_name\",\"projectID\":\"project_id\",\"type\":\"circuit\"}"
 
-make_common_substring(machine_name) =
-    "{\"job\":$(make_job_str(machine_name)),\"circuit\":{\"operations\":"
+make_common_substring(
+    machine_name,
+) = "{\"job\":$(make_job_str(machine_name)),\"circuit\":{\"operations\":"
 
 function make_expected_job_submit_response(
     machine_name::String,
     operations_str::String,
 )::String
     job_str = make_job_str(machine_name)
-    return job_str[1:length(job_str)-1] * ",\"circuit\":{\"operations\":" * operations_str
+    return job_str[1:(length(job_str)-1)] * ",\"circuit\":{\"operations\":" * operations_str
 end
 
 common_substring_yukon =

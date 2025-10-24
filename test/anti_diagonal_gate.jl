@@ -85,7 +85,7 @@ end
     qubit_count = 3
     target = 1
 
-    ψ = Ket([v for v = 1:2^qubit_count])
+    ψ = Ket([v for v = 1:(2^qubit_count)])
 
     Y_gate = sigma_y(target)
 

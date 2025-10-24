@@ -297,7 +297,7 @@ function Base.:*(p1::PauliGroupElement, p2::PauliGroupElement)::PauliGroupElemen
     twice_num_qubits = nrows(new_u)
     num_qubits = Int(twice_num_qubits / 2)
     capital_u = zero_matrix(GF(2), twice_num_qubits, twice_num_qubits)
-    capital_u[1:num_qubits, num_qubits+1:twice_num_qubits] =
+    capital_u[1:num_qubits, (num_qubits+1):twice_num_qubits] =
         identity_matrix(GF(2), num_qubits)
     new_epsilon =
         p1.epsilon + p2.epsilon + p1.delta * p2.delta + transpose(p2.u) * capital_u * p1.u

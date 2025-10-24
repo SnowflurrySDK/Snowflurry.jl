@@ -1437,7 +1437,7 @@ julia> expected_value(number_op(20), ψ)
 """
 function coherent(alpha, hspace_size)
     ψ = fock(0, hspace_size)
-    for i = 1:hspace_size-1
+    for i = 1:(hspace_size-1)
         ψ += (alpha^i) / (sqrt(factorial(i))) * fock(i, hspace_size)
     end
     ψ = exp(-0.5 * abs2(alpha)) * ψ
@@ -1801,7 +1801,7 @@ function genlaguerre(x, alpha, n)
         return L_1
     end
 
-    for k = 1:n-1
+    for k = 1:(n-1)
         result = (2.0 * k + 1.0 + alpha - x) * L_1 - (k + alpha) * L_0
         result = result / (k + 1.0)
         L_0 = L_1
